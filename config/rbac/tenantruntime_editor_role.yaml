@@ -1,0 +1,29 @@
+# hello-k8s-ai 自身不使用此辅助角色。
+# 该角色授予对应 platform.study.com 资源的读写权限，不包含 RBAC 管理权限。
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: tenantruntime-editor-role
+rules:
+- apiGroups:
+  - platform.study.com
+  resources:
+  - tenantruntimes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.study.com
+  resources:
+  - tenantruntimes/status
+  verbs:
+  - get

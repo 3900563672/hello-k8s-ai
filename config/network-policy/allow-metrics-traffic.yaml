@@ -1,0 +1,25 @@
+# 仅允许带 metrics: enabled Label 的 Namespace 中的 Pod 访问 Metrics 端点。
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: allow-metrics-traffic
+  namespace: system
+spec:
+  podSelector:
+    matchLabels:
+      control-plane: controller-manager
+      app.kubernetes.io/name: hello-k8s-ai
+  policyTypes:
+    - Ingress
+  ingress:
+    # 允许带 metrics: enabled Label 的任意 Namespace 入站访问。
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            metrics: enabled  # Only from namespaces with this label
+      ports:
+        - port: 8443
+          protocol: TCP

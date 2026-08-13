@@ -1,0 +1,50 @@
+resources:
+# 全部 RBAC 绑定到部署 Namespace 中的该 ServiceAccount。
+# 若 Manager 使用已有 ServiceAccount，可注释此资源；修改名称时同步更新
+# RoleBinding 与 ClusterRoleBinding 的 subjects。
+- service_account.yaml
+- role.yaml
+- role_binding.yaml
+- leader_election_role.yaml
+- leader_election_role_binding.yaml
+# 下列 RBAC 使用认证和授权保护 Metrics 端点，只允许已授权的用户与 ServiceAccount 访问。
+# 如需关闭该保护，请注释对应权限。
+# 参考：https://book.kubebuilder.io/reference/metrics.html
+- metrics_auth_role.yaml
+- metrics_auth_role_binding.yaml
+- metrics_reader_role.yaml
+# 每个 CRD 默认提供 Admin、Editor 和 Viewer 辅助角色，便于集群管理员授权。
+# hello-k8s-ai 自身不使用这些角色；不需要时可注释下列资源。
+- tenant_admin_role.yaml
+- tenant_editor_role.yaml
+- tenant_viewer_role.yaml
+- simulatorinstance_admin_role.yaml
+- simulatorinstance_editor_role.yaml
+- simulatorinstance_viewer_role.yaml
+- orchestrator_admin_role.yaml
+- orchestrator_editor_role.yaml
+- orchestrator_viewer_role.yaml
+- workernode_admin_role.yaml
+- workernode_editor_role.yaml
+- workernode_viewer_role.yaml
+- tenantruntime_admin_role.yaml
+- tenantruntime_editor_role.yaml
+- tenantruntime_viewer_role.yaml
+- tenantperformance_admin_role.yaml
+- tenantperformance_editor_role.yaml
+- tenantperformance_viewer_role.yaml
+- tenantnodepolicy_admin_role.yaml
+- tenantnodepolicy_editor_role.yaml
+- tenantnodepolicy_viewer_role.yaml
+- tenantmodelpolicy_admin_role.yaml
+- tenantmodelpolicy_editor_role.yaml
+- tenantmodelpolicy_viewer_role.yaml
+- modelnodepolicy_admin_role.yaml
+- modelnodepolicy_editor_role.yaml
+- modelnodepolicy_viewer_role.yaml
+- model_admin_role.yaml
+- model_editor_role.yaml
+- model_viewer_role.yaml
+- simulator_service_account.yaml
+- simulator_clusterrole.yaml
+- simulator_clusterrolebinding.yaml

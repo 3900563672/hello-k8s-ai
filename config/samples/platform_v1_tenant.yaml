@@ -1,0 +1,11 @@
+apiVersion: platform.study.com/v1
+kind: Tenant
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: tenant-sample
+spec:
+  displayName: 演示租户
+  priority: P3
+  qps: 10

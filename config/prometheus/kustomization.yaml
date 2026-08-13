@@ -1,0 +1,10 @@
+resources:
+- monitor.yaml
+
+# [PROMETHEUS-WITH-CERTS] 下列 patch 让 ../prometheus 中的 ServiceMonitor
+# 安全引用 cert-manager 创建和管理的证书。还需在 config/default/kustomization.yaml
+# 中启用 [METRICS WITH CERTMANAGER] patch，将 metrics-server-cert Secret 挂载到 Manager Deployment。
+#patches:
+#  - path: monitor_tls_patch.yaml
+#    target:
+#      kind: ServiceMonitor

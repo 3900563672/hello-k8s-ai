@@ -1,0 +1,24 @@
+# 此文件依赖当前目录外的 Service 名称与 Namespace，不能单独运行。
+# 请通过 config/default 调用。
+resources:
+- bases/platform.study.com_models.yaml
+- bases/platform.study.com_modelnodepolicies.yaml
+- bases/platform.study.com_tenantmodelpolicies.yaml
+- bases/platform.study.com_tenantnodepolicies.yaml
+- bases/platform.study.com_tenantperformances.yaml
+- bases/platform.study.com_tenantruntimes.yaml
+- bases/platform.study.com_workernodes.yaml
+- bases/platform.study.com_orchestrators.yaml
+- bases/platform.study.com_simulatorinstances.yaml
+- bases/platform.study.com_tenants.yaml
+# +kubebuilder:scaffold:crdkustomizeresource
+
+patches:
+# [WEBHOOK] 启用 Webhook 时，解除所有带 [WEBHOOK] 前缀部分的注释。
+# 下列 patch 用于为各 CRD 启用转换 Webhook。
+# +kubebuilder:scaffold:crdkustomizewebhookpatch
+
+# [WEBHOOK] 启用 Webhook 时，解除下列配置的注释。
+# 该配置声明 Kustomize 如何处理 CRD 中的引用。
+#configurations:
+#- kustomizeconfig.yaml

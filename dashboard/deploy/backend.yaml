@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s-ai-dashboard-backend
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+    app.kubernetes.io/component: dashboard-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+        app.kubernetes.io/component: dashboard-backend
+    spec:
+      serviceAccountName: hello-k8s-ai-dashboard-backend
+      automountServiceAccountToken: true
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: backend
+        image: hello-k8s-ai-dashboard-backend:dev
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: HTTP_ADDRESS
+          value: :8080
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: hello-k8s-ai-dashboard-postgresql
+              key: DATABASE_URL
+        - name: DATABASE_REQUIRED
+          value: "true"
+        - name: PROMETHEUS_URL
+          value: http://hello-k8s-ai-prometheus:9090
+        - name: JAEGER_URL
+          value: http://hello-k8s-ai-jaeger:16686
+        - name: K8S_CLUSTER_NAME
+          value: docker-desktop
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: docker-desktop
+        - name: LOG_LEVEL
+          value: info
+        - name: SNAPSHOT_INTERVAL
+          value: 30s
+        - name: SNAPSHOT_RETENTION
+          value: 720h
+        ports:
+        - name: http
+          containerPort: 8080
+        startupProbe:
+          httpGet:
+            path: /api/v1/health/live
+            port: http
+          periodSeconds: 3
+          failureThreshold: 40
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health/ready
+            port: http
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 4
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health/live
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      terminationGracePeriodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-k8s-ai-dashboard-backend
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+spec:
+  selector:
+    app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http

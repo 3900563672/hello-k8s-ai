@@ -1,0 +1,228 @@
+# 为全部资源设置 Namespace。
+namespace: hello-k8s-ai-system
+
+# 该字段会添加到全部资源名称前，并应与上方 Namespace 的前缀（连字符前的部分）一致。
+namePrefix: hello-k8s-ai-
+
+# 添加到全部资源及 Selector 的 Label。
+#labels:
+#- includeSelectors: true
+#  pairs:
+#    someName: someValue
+
+resources:
+- ../crd
+- ../rbac
+- ../manager
+# [WEBHOOK] 启用 Webhook 时，解除所有带 [WEBHOOK] 前缀部分的注释，
+# 包括 crd/kustomization.yaml 中的对应配置。
+#- ../webhook
+# [CERTMANAGER] 启用 cert-manager 时，解除全部 [CERTMANAGER] 配置的注释；同时必须启用 [WEBHOOK]。
+#- ../certmanager
+# [PROMETHEUS] 启用 Prometheus Monitor 时，解除全部 [PROMETHEUS] 配置的注释。
+#- ../prometheus
+# [METRICS] 暴露 Controller Manager Metrics Service。
+- metrics_service.yaml
+# [NETWORK POLICY] 使用 NetworkPolicy 保护 /metrics 端点与 Webhook Server。
+# 只有位于带 metrics: enabled Label 的 Namespace 中的 Pod 才能采集 Metrics。
+# 只有位于带 webhooks: enabled Label 的 Namespace 中的 CR 才能访问 Webhook Server。
+#- ../network-policy
+
+# 启用 Metrics 时解除 patches 的注释。
+patches:
+# [METRICS] 下列 patch 通过 :8443 端口和 HTTPS 启用 Metrics 端点。
+# 参考：https://book.kubebuilder.io/reference/metrics
+- path: manager_metrics_patch.yaml
+  target:
+    kind: Deployment
+
+# 同时启用 Metrics 与 cert-manager 时，解除 patches 的注释。
+# [METRICS-WITH-CERTS] 下列 patch 使用 cert-manager 自签名证书保护 Metrics。
+#- path: cert_metrics_manager_patch.yaml
+#  target:
+#    kind: Deployment
+
+# [WEBHOOK] 启用 Webhook 时，解除所有带 [WEBHOOK] 前缀部分的注释，
+# 包括 crd/kustomization.yaml 中的对应配置。
+#- path: manager_webhook_patch.yaml
+#  target:
+#    kind: Deployment
+
+# [CERTMANAGER] 启用 cert-manager 时，解除全部 [CERTMANAGER] 配置的注释。
+# 解除下列 replacements 的注释以添加 cert-manager CA 注入 Annotation。
+#replacements:
+# - source: # 解除该块的注释以启用 Metrics 证书。
+#     kind: Service
+#     version: v1
+#     name: controller-manager-metrics-service
+#     fieldPath: metadata.name
+#   targets:
+#     - select:
+#         kind: Certificate
+#         group: cert-manager.io
+#         version: v1
+#         name: metrics-certs
+#       fieldPaths:
+#         - spec.dnsNames.0
+#         - spec.dnsNames.1
+#       options:
+#         delimiter: '.'
+#         index: 0
+#         create: true
+#     - select: # 设置 Prometheus ServiceMonitor TLS 配置中的 Service 名称。
+#         kind: ServiceMonitor
+#         group: monitoring.coreos.com
+#         version: v1
+#         name: controller-manager-metrics-monitor
+#       fieldPaths:
+#         - spec.endpoints.0.tlsConfig.serverName
+#       options:
+#         delimiter: '.'
+#         index: 0
+#         create: true
+
+# - source:
+#     kind: Service
+#     version: v1
+#     name: controller-manager-metrics-service
+#     fieldPath: metadata.namespace
+#   targets:
+#     - select:
+#         kind: Certificate
+#         group: cert-manager.io
+#         version: v1
+#         name: metrics-certs
+#       fieldPaths:
+#         - spec.dnsNames.0
+#         - spec.dnsNames.1
+#       options:
+#         delimiter: '.'
+#         index: 1
+#         create: true
+#     - select: # 设置 Prometheus ServiceMonitor TLS 配置中的 Service Namespace。
+#         kind: ServiceMonitor
+#         group: monitoring.coreos.com
+#         version: v1
+#         name: controller-manager-metrics-monitor
+#       fieldPaths:
+#         - spec.endpoints.0.tlsConfig.serverName
+#       options:
+#         delimiter: '.'
+#         index: 1
+#         create: true
+
+# - source: # 存在 Webhook 时解除该块的注释。
+#     kind: Service
+#     version: v1
+#     name: webhook-service
+#     fieldPath: .metadata.name # Service 名称。
+#   targets:
+#     - select:
+#         kind: Certificate
+#         group: cert-manager.io
+#         version: v1
+#         name: serving-cert
+#       fieldPaths:
+#         - .spec.dnsNames.0
+#         - .spec.dnsNames.1
+#       options:
+#         delimiter: '.'
+#         index: 0
+#         create: true
+# - source:
+#     kind: Service
+#     version: v1
+#     name: webhook-service
+#     fieldPath: .metadata.namespace # Service 所在 Namespace。
+#   targets:
+#     - select:
+#         kind: Certificate
+#         group: cert-manager.io
+#         version: v1
+#         name: serving-cert
+#       fieldPaths:
+#         - .spec.dnsNames.0
+#         - .spec.dnsNames.1
+#       options:
+#         delimiter: '.'
+#         index: 1
+#         create: true
+
+# - source: # 存在 ValidatingWebhook 时解除该块的注释。
+#     kind: Certificate
+#     group: cert-manager.io
+#     version: v1
+#     name: serving-cert # 名称应与 certificate.yaml 一致。
+#     fieldPath: .metadata.namespace # Certificate CR 所在 Namespace。
+#   targets:
+#     - select:
+#         kind: ValidatingWebhookConfiguration
+#       fieldPaths:
+#         - .metadata.annotations.[cert-manager.io/inject-ca-from]
+#       options:
+#         delimiter: '/'
+#         index: 0
+#         create: true
+# - source:
+#     kind: Certificate
+#     group: cert-manager.io
+#     version: v1
+#     name: serving-cert
+#     fieldPath: .metadata.name
+#   targets:
+#     - select:
+#         kind: ValidatingWebhookConfiguration
+#       fieldPaths:
+#         - .metadata.annotations.[cert-manager.io/inject-ca-from]
+#       options:
+#         delimiter: '/'
+#         index: 1
+#         create: true
+
+# - source: # 存在 DefaultingWebhook 时解除该块的注释。
+#     kind: Certificate
+#     group: cert-manager.io
+#     version: v1
+#     name: serving-cert
+#     fieldPath: .metadata.namespace # Certificate CR 所在 Namespace。
+#   targets:
+#     - select:
+#         kind: MutatingWebhookConfiguration
+#       fieldPaths:
+#         - .metadata.annotations.[cert-manager.io/inject-ca-from]
+#       options:
+#         delimiter: '/'
+#         index: 0
+#         create: true
+# - source:
+#     kind: Certificate
+#     group: cert-manager.io
+#     version: v1
+#     name: serving-cert
+#     fieldPath: .metadata.name
+#   targets:
+#     - select:
+#         kind: MutatingWebhookConfiguration
+#       fieldPaths:
+#         - .metadata.annotations.[cert-manager.io/inject-ca-from]
+#       options:
+#         delimiter: '/'
+#         index: 1
+#         create: true
+
+# - source: # 存在 ConversionWebhook 时解除该块的注释。
+#     kind: Certificate
+#     group: cert-manager.io
+#     version: v1
+#     name: serving-cert
+#     fieldPath: .metadata.namespace # Certificate CR 所在 Namespace。
+#   targets: # 下列脚手架标记用于生成目标 CRD，不能删除或解除注释。
+# +kubebuilder:scaffold:crdkustomizecainjectionns
+# - source:
+#     kind: Certificate
+#     group: cert-manager.io
+#     version: v1
+#     name: serving-cert
+#     fieldPath: .metadata.name
+#   targets: # 下列脚手架标记用于生成目标 CRD，不能删除或解除注释。
+# +kubebuilder:scaffold:crdkustomizecainjectionname

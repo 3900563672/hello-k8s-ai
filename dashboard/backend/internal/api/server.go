@@ -1,0 +1,88 @@
+package api
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/clock"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/kubernetes"
+	jaegerprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/jaeger"
+	prometheusprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/prometheus"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/readmodel"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/store"
+)
+
+type Dependencies struct {
+	Config     config.Config
+	Logger     *slog.Logger
+	Cache      *kubernetes.Cache
+	Aggregator *readmodel.Aggregator
+	Gateway    *kubernetes.Gateway
+	Store      store.Store
+	Prometheus *prometheusprovider.Client
+	Jaeger     *jaegerprovider.Client
+	Clock      *clock.Clock
+	Events     *EventBus
+}
+
+type Server struct {
+	config     config.Config
+	logger     *slog.Logger
+	cache      *kubernetes.Cache
+	aggregator *readmodel.Aggregator
+	gateway    *kubernetes.Gateway
+	store      store.Store
+	prometheus *prometheusprovider.Client
+	jaeger     *jaegerprovider.Client
+	clock      *clock.Clock
+	events     *EventBus
+}
+
+func NewServer(dependencies Dependencies) *Server {
+	return &Server{
+		config:     dependencies.Config,
+		logger:     dependencies.Logger,
+		cache:      dependencies.Cache,
+		aggregator: dependencies.Aggregator,
+		gateway:    dependencies.Gateway,
+		store:      dependencies.Store,
+		prometheus: dependencies.Prometheus,
+		jaeger:     dependencies.Jaeger,
+		clock:      dependencies.Clock,
+		events:     dependencies.Events,
+	}
+}
+
+func (server *Server) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v1/health/live", server.handleLive)
+	mux.HandleFunc("GET /api/v1/health/ready", server.handleReady)
+	mux.HandleFunc("GET /api/v1/capabilities", server.handleCapabilities)
+	mux.HandleFunc("GET /api/v1/bootstrap", server.handleBootstrap)
+	mux.HandleFunc("GET /api/v1/configuration", server.handleConfiguration)
+	mux.HandleFunc("POST /api/v1/configuration:apply", server.handleApplyConfiguration)
+	mux.HandleFunc("DELETE /api/v1/configuration/{kind}/{name}", server.handleDeleteConfiguration)
+	mux.HandleFunc("GET /api/v1/traffic", server.handleTraffic)
+	mux.HandleFunc("PATCH /api/v1/tenants/{name}/traffic", server.handleTenantTraffic)
+	mux.HandleFunc("GET /api/v1/metrics", server.handleMetrics)
+	mux.HandleFunc("GET /api/v1/metrics/query", server.handleMetrics)
+	mux.HandleFunc("GET /api/v1/traces", server.handleTraces)
+	mux.HandleFunc("GET /api/v1/traces/{traceID}", server.handleTraceDetail)
+	mux.HandleFunc("GET /api/v1/events", server.handleEvents)
+	mux.HandleFunc("GET /api/v1/replay", server.handleReplay)
+	mux.HandleFunc("GET /api/v1/replay/frame", server.handleOverview)
+	mux.HandleFunc("GET /api/v1/overview", server.handleOverview)
+	mux.HandleFunc("GET /api/v1/clock", server.handleClock)
+	mux.HandleFunc("GET /api/v1/stream", server.handleStream)
+
+	var handler http.Handler = mux
+	handler = idempotencyMiddleware(server.store, server.config.HTTP.MaxBodyBytes, server.logger, handler)
+	handler = requestTimeoutMiddleware(server.config.HTTP.WriteTimeout, handler)
+	handler = corsMiddleware(server.config.HTTP.AllowedOrigins, handler)
+	handler = securityHeadersMiddleware(handler)
+	handler = loggingMiddleware(server.logger, handler)
+	handler = recoveryMiddleware(server.logger, handler)
+	handler = requestIDMiddleware(handler)
+	return handler
+}

@@ -1,0 +1,35 @@
+/bin/
+/dist/
+/cover.out
+/Dockerfile.cross
+/.runtime/
+/.verify/
+**/.audit/
+**/.idea/
+/output/
+/tmp/
+
+# Local environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Archives
+*.tar.gz
+*.zip
+
+# Backup files
+*.bak
+*.backup.*
+# Archives
+*.tar.gz
+
+# Backup files
+*.bak
+*.backup.*
+Dockerfile.backup.*
+
+# Logs
+*.log

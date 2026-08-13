@@ -1,0 +1,10 @@
+## 项目样例资源 ##
+resources:
+- platform_v1_model.yaml
+- platform_v1_modelnodepolicy.yaml
+- platform_v1_tenantmodelpolicy.yaml
+- platform_v1_tenantnodepolicy.yaml
+- platform_v1_workernode.yaml
+- platform_v1_orchestrator.yaml
+- platform_v1_tenant.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

@@ -1,0 +1,4 @@
+# 增加通过 HTTPS 暴露 Metrics 端点所需的参数。
+- op: add
+  path: /spec/template/spec/containers/0/args/0
+  value: --metrics-bind-address=:8443

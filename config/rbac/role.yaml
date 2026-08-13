@@ -1,0 +1,86 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.study.com
+  resources:
+  - modelnodepolicies
+  - models
+  - orchestrators
+  - tenantnodepolicies
+  - tenants
+  - workernodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - platform.study.com
+  resources:
+  - orchestrators/status
+  - simulatorinstances/status
+  - tenantmodelpolicies/status
+  - tenantperformances/status
+  - tenantruntimes/status
+  - workernodes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - platform.study.com
+  resources:
+  - simulatorinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.study.com
+  resources:
+  - tenantmodelpolicies
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.study.com
+  resources:
+  - tenantperformances
+  - tenantruntimes
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch

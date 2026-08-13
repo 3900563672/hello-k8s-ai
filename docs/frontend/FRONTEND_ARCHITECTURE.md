@@ -1,0 +1,125 @@
+# Frontend 架构
+
+## 1. 定位
+
+Frontend 是控制面的人类界面，不是业务事实源。它负责：
+
+- 展示 Backend 规范化后的当前态、历史快照、指标和 Trace。
+- 收集用户配置并调用受控命令 API。
+- 管理时间游标、页面布局、Traffic 场景草稿等纯客户端交互状态。
+- 明确展示 offline、partial、stale、historical 和 read-only 状态。
+
+它不应：直接访问 Kubernetes/Prometheus/Jaeger/PostgreSQL；在浏览器重算扩缩容；用 localStorage/Mock 代替生产数据；在历史模式提交命令。
+
+## 2. 技术与入口
+
+| 项目 | 当前实现 |
+| --- | --- |
+| Framework | React 19.2 |
+| Language/Build | TypeScript 6、Vite 8 |
+| Router | React Router 7 |
+| Remote state | TanStack Query 5 |
+| Client/UI state | Zustand 5 |
+| Charts | ECharts 6 |
+| Forms/Validation | react-hook-form、Zod |
+| Styling | Tailwind CSS 4、Radix/shadcn primitives |
+| App entry | `src/main.tsx` -> `src/app/App.tsx` -> `src/app/router.tsx` |
+
+生产容器由 Node 24 构建，再由 unprivileged Nginx 1.29 提供静态文件和 `/api/` 代理。
+
+## 3. 组件分层
+
+```mermaid
+flowchart TB
+  APP["App / QueryClient / Router"] --> L["MainLayout"]
+  L --> NAV["Sidebar + ClusterStatus"]
+  L --> TIME["Global TimeTravelBar"]
+  L --> PAGE["Config / Traffic / Data Overview"]
+  PAGE --> Q["TanStack Query hooks"]
+  PAGE --> Z["Zustand selectors/actions"]
+  Q --> EP["Typed endpoint modules"]
+  EP --> HTTP["api client"]
+```
+
+### 目录职责
+
+| 路径 | 职责 |
+| --- | --- |
+| `src/app/` | Provider、Router、lazy route、全局错误边界。 |
+| `src/components/features/` | Config、Traffic、Trace/Data Overview 业务 UI。 |
+| `src/components/shared/` | Layout、TimeTravelBar、通用对话框和反馈。 |
+| `src/api/endpoints/` | 每个领域的 HTTP/SSE 调用。 |
+| `src/api/queries/` | TanStack Query key、query/mutation 组合。 |
+| `src/stores/` | control plane、time、traffic 等客户端状态。 |
+| `src/types/` | API 与页面领域类型。 |
+| `src/lib/` | 常量、格式化、验证、client ID。 |
+
+## 4. 状态所有权
+
+| 状态 | 所有者 | 持久性 | 原因 |
+| --- | --- | --- | --- |
+| Configuration/Traffic/Overview/Trace | TanStack Query | 内存缓存，可 refetch | 远端服务状态，不能由 Zustand 复制。 |
+| Cluster/provider/clock 能力 | `controlPlaneSlice` + Backend sync | 内存 | 跨页面连接与能力提示。 |
+| latest/historical、selected snapshot、viewport | `timeSlice` | 内存 | 全局浏览上下文，不是服务事实。 |
+| Traffic templates/overlays | `trafficSlice` | 内存草稿 | 尚未提交控制面，刷新会丢失。 |
+| 表单临时值/对话框 | React local/form state | 组件生命周期 | 不需要全局共享。 |
+
+生产路径不写 localStorage。旧文档中的配置、模板、805 mock 切面持久化说明已废弃。
+
+## 5. 远端同步
+
+`useBackendSync` 在应用外壳层工作：
+
+1. 首次读取 `/bootstrap` 和 replay timeline。
+2. 创建 `/stream` EventSource。
+3. 收到 `resource.changed` 后 350ms debounce，失效/刷新相关 queries。
+4. 每 30 秒安全轮询，覆盖 SSE 丢包、代理断线或服务重启。
+5. 如果收到 `resync-required` 或连接恢复，做完整 REST resync。
+
+```mermaid
+sequenceDiagram
+  participant UI as React
+  participant Q as Query Cache
+  participant B as Backend
+  UI->>B: GET bootstrap + page data
+  B-->>UI: envelope + source versions
+  UI->>B: EventSource /stream
+  B-->>UI: resource.changed
+  UI->>Q: invalidate after debounce
+  Q->>B: REST refetch
+  B-->>Q: authoritative read model
+```
+
+SSE 是通知，不是数据源。事件本身不包含页面完整状态，也不提供持久重放。
+
+## 6. 时间模式
+
+- **Latest**：请求不带 `at`，读 Backend live cache，可使用支持的 mutation。
+- **Historical**：从 replay timeline 选择 snapshot，查询带 `at`，页面只读。
+- Backend 把距现在 2 秒内的 `at` 视为 live；更旧时间点查数据库最后一个 `captured_at <= at` 的 snapshot。
+- 逻辑时钟当前等于 UTC 真实时间，rate=1，不支持 pause/seek。
+
+Frontend 不能仅通过 UI 插值声称 Simulator 在倍速运行。
+
+## 7. API 客户端约定
+
+- 默认 base URL `/api/v1`，可由 `VITE_API_BASE_URL` 覆盖。
+- 解析统一 `{data, meta}` envelope；错误解析 `{error, meta}` problem。
+- mutation 生成 `Idempotency-Key`，配置更新带 resourceVersion/If-Match 语义。
+- 历史模式禁用写按钮，而不只依赖 Backend 拒绝。
+- 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
+
+## 8. 设计系统原则
+
+- 颜色与徽标表达数据语义：Ready/Running、Pending/Stale、Failed/Unavailable 必须同时有文字，不能只靠颜色。
+- 时间、QPS、毫秒、请求数、GPU/并发单位要从 API unit 或字段语义明确格式化。
+- Source freshness 和更新时间应靠近对应数据，而不是只在全局角落显示。
+- 历史模式使用明显只读标识；危险删除和流量提交需要确认。
+- 大型对象列表优先表格/筛选，Trace 使用树，指标使用时间序列；不要用同一种卡片承载所有信息。
+
+## 9. 已知前端技术债
+
+- Traffic Overlay 未提交 Backend，且刷新会丢失；页面需明确标记 Draft。
+- Traffic QPS 当前趋势更接近单点/本地曲线，尚未完整使用 Prometheus 历史曲线。
+- 缺少组件与浏览器 E2E 测试；`npm run check` 主要验证 lint、build 和状态契约。
+- Route 名 `/trace` 已承载 Data View，多年后可能与产品信息架构冲突，应在稳定 API 前统一命名。

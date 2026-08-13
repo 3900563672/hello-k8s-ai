@@ -1,0 +1,30 @@
+# 为 Manager 使用 Metrics Server 证书补充参数、Volume 和端口。
+
+# 挂载 Metrics Server 证书。
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    mountPath: /tmp/k8s-metrics-server/metrics-certs
+    name: metrics-certs
+    readOnly: true
+
+# 设置 Metrics Server 的 --metrics-cert-path 参数。
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --metrics-cert-path=/tmp/k8s-metrics-server/metrics-certs
+
+# 配置 Metrics Server 证书 Volume。
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: metrics-certs
+    secret:
+      secretName: metrics-server-cert
+      optional: false
+      items:
+        - key: ca.crt
+          path: ca.crt
+        - key: tls.crt
+          path: tls.crt
+        - key: tls.key
+          path: tls.key

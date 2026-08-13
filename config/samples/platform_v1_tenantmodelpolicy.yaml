@@ -1,0 +1,13 @@
+apiVersion: platform.study.com/v1
+kind: TenantModelPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: tenantmodelpolicy-sample
+spec:
+  tenantRef:
+    name: tenant-sample
+  modelRef:
+    name: model-sample
+  effect: Allow

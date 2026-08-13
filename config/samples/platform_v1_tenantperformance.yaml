@@ -1,0 +1,10 @@
+apiVersion: platform.study.com/v1
+kind: TenantPerformance
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: tenantperformance-sample
+spec:
+  tenantRef:
+    name: tenant-sample

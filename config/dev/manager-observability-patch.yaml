@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s-ai-controller-manager
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/version: dev
+    spec:
+      containers:
+      - name: manager
+        args:
+        - --leader-elect
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=:8443
+        - --simulator-metrics-port=9090
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: SIMULATOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SIMULATOR_IMAGE
+          value: hello-k8s-ai-simulator:dev
+        - name: SIMULATOR_IMAGE_PULL_POLICY
+          value: IfNotPresent
+        - name: SIMULATOR_SERVICE_ACCOUNT
+          value: hello-k8s-ai-simulator-sa
+        - name: APP_VERSION
+          value: dev
+        - name: K8S_CLUSTER_NAME
+          value: docker-desktop
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: docker-desktop
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://hello-k8s-ai-otel-collector.hello-k8s-ai-system.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_INSECURE
+          value: "true"
+        - name: OTEL_TRACES_SAMPLER
+          value: parentbased_traceidratio
+        - name: OTEL_TRACES_SAMPLER_ARG
+          value: "1.0"
+        - name: SIMULATOR_OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://hello-k8s-ai-otel-collector.hello-k8s-ai-system.svc.cluster.local:4317
+        - name: SIMULATOR_OTEL_SDK_DISABLED
+          value: "false"
+        - name: SIMULATOR_OTEL_EXPORTER_OTLP_INSECURE
+          value: "true"
+        - name: SIMULATOR_OTEL_TRACES_SAMPLER
+          value: parentbased_traceidratio
+        - name: SIMULATOR_OTEL_TRACES_SAMPLER_ARG
+          value: "1.0"
+        - name: SIMULATOR_K8S_CLUSTER_NAME
+          value: docker-desktop
+        - name: SIMULATOR_DEPLOYMENT_ENVIRONMENT
+          value: docker-desktop
+        - name: SIMULATOR_APP_VERSION
+          value: dev
+        resources:
+          requests:
+            cpu: 20m
+            memory: 96Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi

@@ -1,0 +1,342 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-k8s-ai-grafana-datasources
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    deleteDatasources:
+    - name: Prometheus
+      orgId: 1
+    - name: Jaeger
+      orgId: 1
+    datasources:
+    - name: Prometheus
+      uid: prometheus
+      type: prometheus
+      access: proxy
+      url: http://hello-k8s-ai-prometheus:9090
+      isDefault: true
+      editable: false
+      jsonData:
+        httpMethod: POST
+        timeInterval: 10s
+    - name: Jaeger
+      uid: jaeger
+      type: jaeger
+      access: proxy
+      url: http://hello-k8s-ai-jaeger:16686
+      editable: false
+      jsonData:
+        nodeGraph:
+          enabled: true
+        tracesToMetrics:
+          datasourceUid: prometheus
+          spanStartTimeShift: -5m
+          spanEndTimeShift: 5m
+          tags:
+          - key: service.name
+            value: service_name
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-k8s-ai-grafana-dashboard-provider
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+    - name: hello-k8s-ai
+      orgId: 1
+      folder: Hello K8s AI
+      type: file
+      disableDeletion: true
+      editable: false
+      updateIntervalSeconds: 30
+      options:
+        path: /etc/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-k8s-ai-grafana-dashboard
+data:
+  hello-k8s-ai.json: |
+    {
+      "annotations": {"list": []},
+      "editable": false,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": true,
+          "keepTime": true,
+          "tags": [],
+          "targetBlank": true,
+          "title": "在 Jaeger 中查看 Trace",
+          "type": "link",
+          "url": "http://localhost:16686"
+        }
+      ],
+      "panels": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "id": 1,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "sum by (controller, outcome) (rate(hello_k8s_ai_controller_reconcile_outcomes_total[$__rate_interval]))", "legendFormat": "{{controller}} / {{outcome}}", "refId": "A"}],
+          "title": "控制器 Reconcile 速率",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 0.01}]}, "unit": "percentunit"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+          "id": 2,
+          "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+          "targets": [{"expr": "sum(rate(hello_k8s_ai_controller_reconcile_outcomes_total{outcome=\"error\"}[$__rate_interval])) / clamp_min(sum(rate(hello_k8s_ai_controller_reconcile_outcomes_total[$__rate_interval])), 1e-9)", "refId": "A"}],
+          "title": "Reconcile 错误比例",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+          "id": 3,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "sum by (action, reason) (increase(hello_k8s_ai_orchestrator_decisions_total[$__range]))", "legendFormat": "{{action}} / {{reason}}", "refId": "A"}],
+          "title": "当前时段扩缩容决策",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+          "id": 4,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "sum by (direction, outcome) (rate(hello_k8s_ai_orchestrator_scaling_operations_total[$__rate_interval]))", "legendFormat": "{{direction}} / {{outcome}}", "refId": "A"}],
+          "title": "扩缩容执行结果",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+          "id": 5,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "hello_k8s_ai_simulator_ttft_seconds{tenant=~\"$tenant\", model=~\"$model\"}", "legendFormat": "{{tenant}} / {{model}} / {{pod}}", "refId": "A"}],
+          "title": "模拟 TTFT",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+          "id": 6,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "hello_k8s_ai_simulator_queue_depth{tenant=~\"$tenant\", model=~\"$model\"}", "legendFormat": "{{tenant}} / {{model}} / {{pod}}", "refId": "A"}],
+          "title": "模拟队列深度",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "qps"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
+          "id": 7,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "hello_k8s_ai_simulator_assigned_qps{tenant=~\"$tenant\", model=~\"$model\"}", "legendFormat": "{{tenant}} / {{model}}", "refId": "A"}],
+          "title": "实例池分配 QPS",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16},
+          "id": 8,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [
+            {"expr": "hello_k8s_ai_simulator_effective_score{tenant=~\"$tenant\", model=~\"$model\"}", "legendFormat": "有效分 / {{tenant}} / {{model}}", "refId": "A"},
+            {"expr": "hello_k8s_ai_simulator_pool_score{tenant=~\"$tenant\", model=~\"$model\"}", "legendFormat": "运行分 / {{tenant}} / {{model}}", "refId": "B"}
+          ],
+          "title": "有效分与运行分",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "qps"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 16, "y": 16},
+          "id": 9,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [
+            {"expr": "sum(rate(hello_k8s_ai_traffic_requested_qps_sum[$__rate_interval])) / clamp_min(sum(rate(hello_k8s_ai_traffic_requested_qps_count[$__rate_interval])), 1e-9)", "legendFormat": "请求 QPS", "refId": "A"},
+            {"expr": "sum(rate(hello_k8s_ai_traffic_allocated_qps_sum[$__rate_interval])) / clamp_min(sum(rate(hello_k8s_ai_traffic_allocated_qps_count[$__rate_interval])), 1e-9)", "legendFormat": "成功分配 QPS", "refId": "B"}
+          ],
+          "title": "流量分配均值",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 0, "y": 24},
+          "id": 10,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [{"expr": "sum by (result) (rate(hello_k8s_ai_performance_samples_total[$__rate_interval]))", "legendFormat": "{{result}}", "refId": "A"}],
+          "title": "性能样本分类",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 8, "y": 24},
+          "id": 11,
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+          "targets": [
+            {"expr": "sum(rate(otelcol_exporter_sent_spans[$__rate_interval]))", "legendFormat": "已发送", "refId": "A"},
+            {"expr": "sum(rate(otelcol_exporter_send_failed_spans[$__rate_interval]))", "legendFormat": "发送失败", "refId": "B"}
+          ],
+          "title": "Trace 管道吞吐",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 16, "y": 24},
+          "id": 12,
+          "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+          "targets": [{"expr": "hello_k8s_ai_simulator_leader{tenant=~\"$tenant\", model=~\"$model\"}", "legendFormat": "{{tenant}} / {{model}} / {{pod}}", "refId": "A"}],
+          "title": "模拟器 Leader",
+          "type": "stat"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 41,
+      "tags": ["hello-k8s-ai", "controllers", "simulator"],
+      "templating": {
+        "list": [
+          {"current": {"selected": false, "text": "All", "value": "$__all"}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(hello_k8s_ai_simulator_ttft_seconds, tenant)", "includeAll": true, "label": "租户", "multi": true, "name": "tenant", "query": {"query": "label_values(hello_k8s_ai_simulator_ttft_seconds, tenant)", "refId": "PrometheusVariableQueryEditor-VariableQuery"}, "refresh": 1, "sort": 1, "type": "query"},
+          {"current": {"selected": false, "text": "All", "value": "$__all"}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(hello_k8s_ai_simulator_ttft_seconds{tenant=~\"$tenant\"}, model)", "includeAll": true, "label": "模型", "multi": true, "name": "model", "query": {"query": "label_values(hello_k8s_ai_simulator_ttft_seconds{tenant=~\"$tenant\"}, model)", "refId": "PrometheusVariableQueryEditor-VariableQuery"}, "refresh": 1, "sort": 1, "type": "query"}
+        ]
+      },
+      "time": {"from": "now-30m", "to": "now"},
+      "timezone": "browser",
+      "title": "Hello K8s AI 可观测性总览",
+      "uid": "hello-k8s-ai-overview",
+      "version": 1
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s-ai-grafana
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: observability-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grafana
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grafana
+        app.kubernetes.io/component: observability-ui
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: grafana
+        image: grafana/grafana:13.1.3
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: Viewer
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: "true"
+        - name: GF_ANALYTICS_REPORTING_ENABLED
+          value: "false"
+        - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+          value: "false"
+        ports:
+        - name: http
+          containerPort: 3000
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 384Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+        - name: tmp
+          mountPath: /tmp
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+          readOnly: true
+        - name: dashboard-provider
+          mountPath: /etc/grafana/provisioning/dashboards
+          readOnly: true
+        - name: dashboard
+          mountPath: /etc/grafana/dashboards
+          readOnly: true
+      volumes:
+      - name: data
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+      - name: datasources
+        configMap:
+          name: hello-k8s-ai-grafana-datasources
+      - name: dashboard-provider
+        configMap:
+          name: hello-k8s-ai-grafana-dashboard-provider
+      - name: dashboard
+        configMap:
+          name: hello-k8s-ai-grafana-dashboard
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-k8s-ai-grafana
+  labels:
+    app.kubernetes.io/name: grafana
+spec:
+  selector:
+    app.kubernetes.io/name: grafana
+  ports:
+  - name: http
+    port: 3000
+    targetPort: http

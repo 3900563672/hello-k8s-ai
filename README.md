@@ -1,0 +1,98 @@
+# hello-k8s-ai
+
+hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型和逻辑 WorkerNode；六个 Controller 将策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
+
+第一次接手项目时，请先读 [docs/AI_CONTEXT.md](docs/AI_CONTEXT.md)，再按 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。
+
+## 最省事的部署方式
+
+本仓库只复用 Docker Desktop 已有的 Kubernetes 集群，不创建、不重置、也不删除集群。默认且唯一支持的本地部署目标是当前 Context `docker-desktop`。
+
+覆盖旧项目文件后，在项目根目录执行：
+
+```bash
+bash setup.sh
+```
+
+这一个命令会：
+
+1. 清理已确认废弃的旧文档、旧 Kind 配置、缓存和重复锁文件。
+2. 检查当前 Context、API Server、全部 Node、`standard` StorageClass 和 Docker Desktop 资源。
+3. 构建 Controller、Simulator、Backend、Frontend 四个项目镜像。
+4. 预拉取 PostgreSQL、Prometheus、OpenTelemetry Collector、Jaeger、Grafana 镜像。
+5. 把所有运行镜像导入当前 10 个 Kubernetes Node 的 containerd，避免 `ImagePullBackOff`。
+6. 部署 CRD、Controller、可观测性、PostgreSQL、Backend 与 Frontend。
+7. 按当前 Worker Node 动态创建演示 WorkerNode 与 Node Policy，不写死节点名。
+8. 验证 CR/Controller/Simulator、Metrics、Trace、数据库快照、Backend API 与 Frontend 页面。
+9. 启动本地端口转发。
+
+首次构建需要下载基础镜像和依赖，时间取决于网络；脚本对镜像拉取有重试，任一步失败都会停止并将诊断保存到 `.runtime/last-failure.log`。
+
+## 前置条件
+
+- Docker Desktop 已启动，Kubernetes 已启用。
+- `kubectl config current-context` 输出 `docker-desktop`。
+- Docker CLI 与 `kubectl` 可用。
+- Kubernetes Node 是 Docker Desktop 管理的本地容器。
+- 存在 `standard` StorageClass。
+
+部署不要求本机安装 Go、Node.js、npm、kind 或独立 Kustomize；编译在 Docker 中完成，清单由 `kubectl` 内置 Kustomize 处理。
+
+## 部署后访问
+
+| 组件 | 地址 |
+| --- | --- |
+| Dashboard | `http://localhost:8080` |
+| Grafana | `http://localhost:3000` |
+| Prometheus | `http://localhost:9090` |
+| Jaeger | `http://localhost:16686` |
+
+常用命令：
+
+```bash
+make cluster-status  # 查看工作负载、CR、PVC 与 Backend 状态
+make cluster-open    # 端口转发中断后重新启动
+make cluster-urls    # 只打印访问地址
+make cluster-down    # 停止工作负载，保留集群、CRD、CR、Secret 与 PVC
+```
+
+`make cluster-down` 不会删除 `docker-desktop`，也不会碰旁边的 `minikserve-demo` Kind 集群。
+
+## 系统边界
+
+```mermaid
+flowchart TB
+  F["React Frontend"] --> B["Dashboard Backend"]
+  B --> K["Kubernetes API / CRD"]
+  B --> D["PostgreSQL 历史与审计"]
+  K --> C["6 个 Controller"]
+  C --> S["Simulator Pod"]
+  S --> K
+  C --> O["Prometheus / OpenTelemetry"]
+  S --> O
+  O --> J["Jaeger / Grafana"]
+  O --> B
+  J --> B
+```
+
+Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存历史快照、事件、审计和幂等记录；Prometheus 保存时序指标；Jaeger 保存 Trace。Frontend 不直接访问这些基础设施，只调用 Backend。
+
+## 当前能力
+
+| 能力 | 状态 |
+| --- | --- |
+| 10 个 CRD、6 个 Controller、Simulator | 已实现 |
+| Backend Kubernetes cache、PostgreSQL、Prometheus、Jaeger 聚合 | 已实现 |
+| React Config、Traffic、Data Overview | 已接真实 Backend；Traffic Overlay 提交仍是部分实现 |
+| Docker Desktop 完整栈一键部署 | 已实现；需要在目标机器执行真实运行验收 |
+| 生产认证、HA、备份、持久化可观测存储 | 未实现；当前仍是本地开发/演示拓扑 |
+
+详细部署、验证与排障见：
+
+- [本地运行](docs/getting-started/LOCAL_RUN.md)
+- [部署架构](docs/getting-started/DEPLOYMENT.md)
+- [验证指南](docs/getting-started/VERIFICATION.md)
+- [集群信息](docs/operations/CLUSTER_INFORMATION.md)
+- [排障](docs/operations/TROUBLESHOOTING.md)
+
+Kind 只保留给隔离的自动化 E2E，测试集群固定为 `hello-k8s-ai-test-e2e`，与日常 `docker-desktop` 部署无关。

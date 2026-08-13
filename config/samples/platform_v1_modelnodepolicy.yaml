@@ -1,0 +1,13 @@
+apiVersion: platform.study.com/v1
+kind: ModelNodePolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: modelnodepolicy-sample
+spec:
+  modelRef:
+    name: model-sample
+  nodeRef:
+    name: workernode-sample
+  effect: Allow

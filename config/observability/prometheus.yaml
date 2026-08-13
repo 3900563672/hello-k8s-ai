@@ -1,0 +1,200 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-k8s-ai-prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+      evaluation_interval: 10s
+      external_labels:
+        cluster: docker-desktop
+        environment: docker-desktop
+
+    rule_files:
+    - /etc/prometheus/rules.yml
+
+    scrape_configs:
+    - job_name: prometheus
+      static_configs:
+      - targets: ["127.0.0.1:9090"]
+
+    - job_name: hello-k8s-ai-controller
+      scheme: https
+      authorization:
+        type: Bearer
+        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tls_config:
+        insecure_skip_verify: true
+      static_configs:
+      - targets: ["hello-k8s-ai-controller-manager-metrics-service:8443"]
+
+    - job_name: otel-collector
+      static_configs:
+      - targets: ["hello-k8s-ai-otel-collector:8888"]
+
+    - job_name: jaeger
+      static_configs:
+      - targets: ["hello-k8s-ai-jaeger:8888"]
+
+    - job_name: hello-k8s-ai-simulator
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: ["hello-k8s-ai-system"]
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_platform_study_com_managed_by]
+        regex: simulator-instance-controller
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_phase]
+        regex: Running
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: metrics
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+      - source_labels: [__meta_kubernetes_pod_annotation_platform_study_com_instance_name]
+        target_label: simulator_instance
+      - source_labels: [__meta_kubernetes_pod_annotation_platform_study_com_tenant_name]
+        target_label: tenant
+      - source_labels: [__meta_kubernetes_pod_annotation_platform_study_com_model_name]
+        target_label: model
+  rules.yml: |
+    groups:
+    - name: hello-k8s-ai-recording
+      interval: 30s
+      rules:
+      - record: hello_k8s_ai:controller_reconcile_error_ratio:rate5m
+        expr: sum(rate(hello_k8s_ai_controller_reconcile_outcomes_total{outcome="error"}[5m])) / clamp_min(sum(rate(hello_k8s_ai_controller_reconcile_outcomes_total[5m])), 1e-9)
+      - record: hello_k8s_ai:controller_reconcile_duration_seconds:p95_5m
+        expr: histogram_quantile(0.95, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket[5m])))
+    - name: hello-k8s-ai-alerts
+      interval: 30s
+      rules:
+      - alert: HelloK8sAITargetDown
+        expr: up{job!="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hello K8s AI 抓取目标不可用"
+          description: "{{ $labels.job }} / {{ $labels.instance }} 已连续 2 分钟无法被 Prometheus 抓取。"
+      - alert: HelloK8sAIControllerErrorRatioHigh
+        expr: hello_k8s_ai:controller_reconcile_error_ratio:rate5m > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "控制器 Reconcile 错误比例偏高"
+          description: "最近 5 分钟控制器 Reconcile 错误比例超过 5%。"
+      - alert: HelloK8sAITraceExportFailure
+        expr: sum(rate(otelcol_exporter_send_failed_spans[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OpenTelemetry Collector 导出 Trace 失败"
+          description: "Collector 向 Jaeger 导出 span 时持续出现失败。"
+      - alert: HelloK8sAISimulatorLeaderMissing
+        expr: sum by (simulator_instance) (hello_k8s_ai_simulator_leader) == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "模拟器实例池没有状态上报 Leader"
+          description: "SimulatorInstance {{ $labels.simulator_instance }} 已连续 1 分钟没有 Leader。"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s-ai-prometheus
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: metrics-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prometheus
+        app.kubernetes.io/component: metrics-backend
+    spec:
+      serviceAccountName: hello-k8s-ai-prometheus
+      automountServiceAccountToken: true
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v3.13.2
+        imagePullPolicy: IfNotPresent
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=24h
+        - --web.enable-lifecycle
+        ports:
+        - name: http
+          containerPort: 9090
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+          readOnly: true
+        - name: data
+          mountPath: /prometheus
+      volumes:
+      - name: config
+        configMap:
+          name: hello-k8s-ai-prometheus-config
+      - name: data
+        emptyDir: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-k8s-ai-prometheus
+  labels:
+    app.kubernetes.io/name: prometheus
+spec:
+  selector:
+    app.kubernetes.io/name: prometheus
+  ports:
+  - name: http
+    port: 9090
+    targetPort: http

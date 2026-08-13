@@ -1,0 +1,25 @@
+# Prometheus Metrics 监控 Service。
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: controller-manager-metrics-monitor
+  namespace: system
+spec:
+  endpoints:
+    - path: /metrics
+      port: https # Ensure this is the name of the port that exposes HTTPS metrics
+      scheme: https
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        # insecureSkipVerify: true 会关闭证书校验，存在中间人攻击风险，不建议用于生产环境。
+        # 生产环境应启用 cert-manager，并应用 config/prometheus/servicemonitor_tls_patch.yaml，
+        # 从 metrics-server-cert Secret 安全引用证书。
+        insecureSkipVerify: true
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      app.kubernetes.io/name: hello-k8s-ai

@@ -1,0 +1,13 @@
+apiVersion: platform.study.com/v1
+kind: Orchestrator
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: orchestrator-sample
+spec:
+  tenantRef:
+    name: tenant-sample
+  minReplicas: 1
+  maxReplicas: 10
+  allowScaleToZero: true

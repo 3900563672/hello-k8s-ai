@@ -1,0 +1,11 @@
+apiVersion: platform.study.com/v1
+kind: WorkerNode
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: workernode-sample
+spec:
+  displayName: 演示计算节点
+  gpu: 8000
+  maxConcurrency: 160

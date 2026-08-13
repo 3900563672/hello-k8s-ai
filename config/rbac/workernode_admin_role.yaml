@@ -1,0 +1,23 @@
+# hello-k8s-ai 自身不使用此辅助角色。
+# 该角色授予对应 platform.study.com 资源的完整管理权限，供集群管理员按需绑定。
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: workernode-admin-role
+rules:
+- apiGroups:
+  - platform.study.com
+  resources:
+  - workernodes
+  verbs:
+  - '*'
+- apiGroups:
+  - platform.study.com
+  resources:
+  - workernodes/status
+  verbs:
+  - get

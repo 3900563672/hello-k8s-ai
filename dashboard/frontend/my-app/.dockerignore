@@ -1,0 +1,8 @@
+node_modules
+dist
+verification/dist
+.git
+.gitignore
+*.log
+DOCS
+.audit

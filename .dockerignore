@@ -1,0 +1,17 @@
+# 默认排除全部内容，只把 Controller 与 Simulator 构建需要的文件放入上下文。
+**
+
+# Go module 与源码目录。
+!go.mod
+!go.sum
+!api/
+!api/**/*.go
+!cmd/
+!cmd/**/*.go
+!internal/
+!internal/**/*.go
+!simulator/
+!simulator/**/*.go
+
+# 镜像构建不需要测试文件。
+**/*_test.go

@@ -1,0 +1,12 @@
+apiVersion: platform.study.com/v1
+kind: Model
+metadata:
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai
+    app.kubernetes.io/managed-by: kustomize
+  name: model-sample
+spec:
+  displayName: 演示模型
+  gpuUnits: 800
+  maxConcurrency: 16
+  coldStartMs: 30000

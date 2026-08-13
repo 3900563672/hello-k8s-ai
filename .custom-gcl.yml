@@ -1,0 +1,9 @@
+# 配置 golangci-lint 模块插件。执行 make lint 时会自动构建包含下列插件的二进制。
+#
+# 参考：https://golangci-lint.run/plugins/module-plugins/
+version: v2.12.2
+plugins:
+  # logcheck 校验结构化日志调用及参数，例如键值对数量是否匹配。
+  - module: "sigs.k8s.io/logtools"
+    import: "sigs.k8s.io/logtools/logcheck/gclplugin"
+    version: latest

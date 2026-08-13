@@ -1,0 +1,54 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hello-k8s-ai-dashboard-backend
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+rules:
+- apiGroups: [platform.study.com]
+  resources:
+  - models
+  - workernodes
+  - tenants
+  - tenantmodelpolicies
+  - tenantnodepolicies
+  - modelnodepolicies
+  - orchestrators
+  - simulatorinstances
+  - tenantperformances
+  - tenantruntimes
+  verbs: [get, list, watch]
+- apiGroups: [platform.study.com]
+  resources:
+  - models
+  - workernodes
+  - tenants
+  - tenantmodelpolicies
+  - tenantnodepolicies
+  - modelnodepolicies
+  - orchestrators
+  verbs: [create, update, patch, delete]
+- apiGroups: [""]
+  resources: [pods, nodes, services, events]
+  verbs: [get, list, watch]
+- apiGroups: [apps]
+  resources: [deployments, replicasets]
+  verbs: [get, list, watch]
+- apiGroups: [coordination.k8s.io]
+  resources: [leases]
+  verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hello-k8s-ai-dashboard-backend
+  labels:
+    app.kubernetes.io/name: hello-k8s-ai-dashboard-backend
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: hello-k8s-ai-dashboard-backend
+subjects:
+- kind: ServiceAccount
+  name: hello-k8s-ai-dashboard-backend
+  namespace: hello-k8s-ai-system

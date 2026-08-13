@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# WorkerNode 与两类 Node Policy 由部署脚本按目标集群节点动态生成。
+resources:
+- ../samples
+
+patches:
+- target:
+    group: platform.study.com
+    version: v1
+    kind: WorkerNode
+    name: workernode-sample
+  patch: |-
+    $patch: delete
+    apiVersion: platform.study.com/v1
+    kind: WorkerNode
+    metadata:
+      name: workernode-sample
+- target:
+    group: platform.study.com
+    version: v1
+    kind: TenantNodePolicy
+    name: tenantnodepolicy-sample
+  patch: |-
+    $patch: delete
+    apiVersion: platform.study.com/v1
+    kind: TenantNodePolicy
+    metadata:
+      name: tenantnodepolicy-sample
+- target:
+    group: platform.study.com
+    version: v1
+    kind: ModelNodePolicy
+    name: modelnodepolicy-sample
+  patch: |-
+    $patch: delete
+    apiVersion: platform.study.com/v1
+    kind: ModelNodePolicy
+    metadata:
+      name: modelnodepolicy-sample
+
+labels:
+- pairs:
+    app.kubernetes.io/part-of: hello-k8s-ai
+    app.kubernetes.io/managed-by: local-deployer

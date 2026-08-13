@@ -1,0 +1,316 @@
+# 默认 Controller 镜像名。保留 IMG 变量兼容已有 Kubebuilder/CI 命令。
+IMG ?= hello-k8s-ai-controller:dev
+# 用于生成代码头部的年份，一般不用改
+YEAR ?= $(shell date +%Y)
+
+# 只有开发类 target 才需要 Go；完整栈部署只依赖 Docker 和 kubectl。
+ifneq (,$(shell command -v go 2>/dev/null))
+  ifeq (,$(shell go env GOBIN))
+    GOBIN=$(shell go env GOPATH)/bin
+  else
+    GOBIN=$(shell go env GOBIN)
+  endif
+else
+  GOBIN=$(CURDIR)/bin
+endif
+
+# 用什么构建镜像，默认 docker，也能换成 podman
+CONTAINER_TOOL ?= docker
+
+# 本地完整栈固定复用 Docker Desktop 已有 Kubernetes 集群。
+KUBE_CONTEXT ?= docker-desktop
+NAMESPACE ?= hello-k8s-ai-system
+# MANAGER_IMG 默认跟随 IMG，保证 `make docker-build IMG=...` 等旧用法仍然有效。
+MANAGER_IMG ?= $(IMG)
+SIMULATOR_IMG ?= hello-k8s-ai-simulator:dev
+BACKEND_IMG ?= hello-k8s-ai-dashboard-backend:dev
+FRONTEND_IMG ?= hello-k8s-ai-dashboard-frontend:dev
+ROOT_DOCKERFILE ?= Dockerfile
+# 演示环境的模型能力基准分；生产环境应由独立运维流程维护。
+DEMO_MODEL_ABSOLUTE_SCORE ?= 100
+
+# bash 模式，出错就停
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
+
+.PHONY: all
+all: build
+
+##@ 通用
+
+.PHONY: help
+help: ## 打印帮助
+	@awk 'BEGIN {FS = ":.*##"; printf "\n用法：\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+##@ 开发
+
+.PHONY: manifests
+manifests: controller-gen ## 生成 CRD、RBAC、webhook 配置
+	"$(CONTROLLER_GEN)" rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+.PHONY: generate
+generate: controller-gen ## 生成 DeepCopy 等代码
+	"$(CONTROLLER_GEN)" object:headerFile="hack/boilerplate.go.txt",year=$(YEAR) paths="./..."
+
+.PHONY: fmt
+fmt: ## go fmt
+	go fmt ./...
+
+.PHONY: vet
+vet: ## go vet
+	go vet ./...
+
+.PHONY: test
+test: vet ## 跑单元测试（不会重新生成或改写 CRD/API）
+	go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
+
+# e2e 使用独立集群，避免测试清理误删日常开发集群。
+E2E_KIND_CLUSTER ?= hello-k8s-ai-test-e2e
+
+.PHONY: setup-test-e2e
+setup-test-e2e: ## 创建 Kind 集群（没有才建）
+	@command -v $(KIND) >/dev/null 2>&1 || { \
+		echo "Kind 没装，先装一下"; \
+		exit 1; \
+	}
+	@case "$$($(KIND) get clusters)" in \
+		*"$(E2E_KIND_CLUSTER)"*) \
+			echo "集群 $(E2E_KIND_CLUSTER) 已经在了，跳过";; \
+		*) \
+			echo "建 Kind 集群 $(E2E_KIND_CLUSTER) ..."; \
+			$(KIND) create cluster --name $(E2E_KIND_CLUSTER) ;; \
+	esac
+
+.PHONY: test-e2e
+test-e2e: setup-test-e2e vet ## 跑 e2e 测试（使用仓库中已有 CRD）
+	KIND=$(KIND) KIND_CLUSTER=$(E2E_KIND_CLUSTER) go test -tags=e2e ./test/e2e/ -v -ginkgo.v
+	$(MAKE) cleanup-test-e2e
+
+.PHONY: cleanup-test-e2e
+cleanup-test-e2e: ## 删掉 Kind 集群
+	@$(KIND) delete cluster --name $(E2E_KIND_CLUSTER)
+
+.PHONY: lint
+lint: golangci-lint ## lint 检查
+	"$(GOLANGCI_LINT)" run
+
+.PHONY: lint-fix
+lint-fix: golangci-lint ## lint 并自动修
+	"$(GOLANGCI_LINT)" run --fix
+
+.PHONY: lint-config
+lint-config: golangci-lint ## 检查 lint 配置是否有效
+	"$(GOLANGCI_LINT)" config verify
+
+##@ 构建
+
+.PHONY: build
+build: vet ## 编译 manager（不会重新生成或改写 CRD/API）
+	go build -o bin/manager cmd/main.go
+
+.PHONY: run
+run: vet ## 本地跑 controller
+	go run ./cmd/main.go
+
+# Dockerfile 同时提供 manager/simulator 两个显式 target。
+# manager 被放在 Dockerfile 最后，保证误用 `docker build .` 时默认也得到 Controller 镜像。
+# Makefile 内所有正式构建仍显式指定 --target，避免依赖 Dockerfile 阶段顺序。
+.PHONY: docker-build
+docker-build: docker-build-manager ## 兼容旧命令；始终构建 manager 镜像
+
+.PHONY: docker-build-manager
+docker-build-manager: ## 构建 manager 镜像并校验入口和 /manager 二进制
+	$(CONTAINER_TOOL) build --target manager -f $(ROOT_DOCKERFILE) -t $(MANAGER_IMG) .
+	@entrypoint="$$( $(CONTAINER_TOOL) image inspect --format '{{json .Config.Entrypoint}}' $(MANAGER_IMG) )"; \
+		test "$$entrypoint" = '["/manager"]' || { echo "manager 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
+		cid="$$( $(CONTAINER_TOOL) create $(MANAGER_IMG) )"; \
+		trap '$(CONTAINER_TOOL) rm -f "$$cid" >/dev/null 2>&1 || true' EXIT; \
+		$(CONTAINER_TOOL) export "$$cid" | tar -tf - | sed 's#^\./##' | grep -qx 'manager' || { echo "manager 镜像缺少 /manager"; exit 1; }; \
+		echo "manager 镜像校验通过：$(MANAGER_IMG)"
+
+.PHONY: docker-build-simulator
+docker-build-simulator: ## 构建 simulator 镜像并校验入口和 /simulator 二进制
+	$(CONTAINER_TOOL) build --target simulator -f $(ROOT_DOCKERFILE) -t $(SIMULATOR_IMG) .
+	@entrypoint="$$( $(CONTAINER_TOOL) image inspect --format '{{json .Config.Entrypoint}}' $(SIMULATOR_IMG) )"; \
+		test "$$entrypoint" = '["/simulator"]' || { echo "simulator 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
+		cid="$$( $(CONTAINER_TOOL) create $(SIMULATOR_IMG) )"; \
+		trap '$(CONTAINER_TOOL) rm -f "$$cid" >/dev/null 2>&1 || true' EXIT; \
+		$(CONTAINER_TOOL) export "$$cid" | tar -tf - | sed 's#^\./##' | grep -qx 'simulator' || { echo "simulator 镜像缺少 /simulator"; exit 1; }; \
+		echo "simulator 镜像校验通过：$(SIMULATOR_IMG)"
+
+.PHONY: docker-push
+docker-push: ## 兼容旧命令；推送 manager 镜像
+	$(CONTAINER_TOOL) push $(MANAGER_IMG)
+
+.PHONY: docker-push-manager
+docker-push-manager: ## 推送 manager 镜像
+	$(CONTAINER_TOOL) push $(MANAGER_IMG)
+
+.PHONY: docker-push-simulator
+docker-push-simulator: ## 推送 simulator 镜像
+	$(CONTAINER_TOOL) push $(SIMULATOR_IMG)
+
+.PHONY: docker-build-local
+docker-build-local: docker-build-manager docker-build-simulator ## 构建并校验本地完整栈四个项目镜像
+	$(CONTAINER_TOOL) build -t $(BACKEND_IMG) dashboard/backend
+	$(CONTAINER_TOOL) build -t $(FRONTEND_IMG) dashboard/frontend/my-app
+
+# 跨平台构建。显式 target，避免再次把 simulator 误打成 controller。
+PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+BUILDX_BUILDER ?= hello-k8s-ai-builder
+.PHONY: docker-buildx
+docker-buildx: ## 跨平台构建并推送 manager
+	- $(CONTAINER_TOOL) buildx create --name $(BUILDX_BUILDER)
+	$(CONTAINER_TOOL) buildx use $(BUILDX_BUILDER)
+	$(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --target manager --tag $(MANAGER_IMG) -f $(ROOT_DOCKERFILE) .
+	- $(CONTAINER_TOOL) buildx rm $(BUILDX_BUILDER)
+
+.PHONY: docker-buildx-simulator
+docker-buildx-simulator: ## 跨平台构建并推送 simulator
+	- $(CONTAINER_TOOL) buildx create --name $(BUILDX_BUILDER)
+	$(CONTAINER_TOOL) buildx use $(BUILDX_BUILDER)
+	$(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --target simulator --tag $(SIMULATOR_IMG) -f $(ROOT_DOCKERFILE) .
+	- $(CONTAINER_TOOL) buildx rm $(BUILDX_BUILDER)
+
+.PHONY: build-installer
+build-installer: kustomize ## 用仓库中已有 CRD 生成一键安装的 all-in-one yaml
+	mkdir -p dist
+	cd config/manager && "$(KUSTOMIZE)" edit set image hello-k8s-ai-controller=$(MANAGER_IMG)
+	"$(KUSTOMIZE)" build config/default > dist/install.yaml
+
+##@ 部署
+
+ifndef ignore-not-found
+  ignore-not-found = false
+endif
+
+.PHONY: install
+install: kustomize ## 安装仓库中已有 CRD
+	@out="$$( "$(KUSTOMIZE)" build config/crd 2>/dev/null || true )"; \
+	if [ -n "$$out" ]; then echo "$$out" | "$(KUBECTL)" apply -f -; else echo "没有可安装的 CRD，跳过。"; fi
+
+.PHONY: uninstall
+uninstall: kustomize ## 卸载仓库中已有 CRD
+	@out="$$( "$(KUSTOMIZE)" build config/crd 2>/dev/null || true )"; \
+	if [ -n "$$out" ]; then echo "$$out" | "$(KUBECTL)" delete --ignore-not-found=$(ignore-not-found) -f -; else echo "没有可删除的 CRD，跳过。"; fi
+
+.PHONY: deploy
+deploy: kustomize ## 部署 controller（不会重新生成 CRD）
+	cd config/manager && "$(KUSTOMIZE)" edit set image hello-k8s-ai-controller=$(MANAGER_IMG)
+	"$(KUSTOMIZE)" build config/default | "$(KUBECTL)" apply -f -
+
+.PHONY: undeploy
+undeploy: kustomize ## 卸载 controller
+	"$(KUSTOMIZE)" build config/default | "$(KUBECTL)" delete --ignore-not-found=$(ignore-not-found) -f -
+
+##@ Docker Desktop 本地完整栈
+
+.PHONY: cluster-up
+cluster-up: ## 复用当前 docker-desktop，一键构建、部署、验收并打开本地端口
+	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" \
+		MANAGER_IMG="$(MANAGER_IMG)" SIMULATOR_IMG="$(SIMULATOR_IMG)" \
+		BACKEND_IMG="$(BACKEND_IMG)" FRONTEND_IMG="$(FRONTEND_IMG)" \
+		DEMO_MODEL_ABSOLUTE_SCORE="$(DEMO_MODEL_ABSOLUTE_SCORE)" \
+		CONTAINER_TOOL="$(CONTAINER_TOOL)" ./hack/local-cluster.sh up
+
+.PHONY: cluster-status
+cluster-status: ## 查看完整栈、CR、PVC 与 API 健康状态
+	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh status
+
+.PHONY: cluster-open
+cluster-open: ## 启动 Dashboard、Grafana、Prometheus、Jaeger 本地端口
+	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh open
+
+.PHONY: cluster-urls
+cluster-urls: ## 打印本地访问地址
+	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh urls
+
+.PHONY: cluster-down
+cluster-down: ## 停止项目工作负载并保留集群、CRD、CR 与数据库 PVC
+	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh down
+
+.PHONY: cluster-render
+cluster-render: ## 使用 kubectl 内置 Kustomize 渲染完整栈
+	@"$(KUBECTL)" kustomize config/dev
+	@"$(KUBECTL)" kustomize dashboard/deploy
+
+.PHONY: cleanup-obsolete
+cleanup-obsolete: ## 覆盖旧目录后清理已确认废弃的文件
+	@./hack/cleanup-obsolete.sh
+
+##@ 工具依赖
+
+# 本地 bin 目录
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p "$(LOCALBIN)"
+
+KUBECTL ?= kubectl
+KIND ?= kind
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+
+# 工具版本，可按需改
+KUSTOMIZE_VERSION ?= v5.8.1
+CONTROLLER_TOOLS_VERSION ?= v0.21.0
+ENVTEST_VERSION ?= release-0.24
+
+# envtest 用的 K8s 版本，根据 go.mod 里 k8s.io/api 自动取
+ENVTEST_K8S_VERSION ?= $(shell v='$(call gomodver,k8s.io/api)'; \
+  [ -n "$$v" ] || { echo "无法从 k8s.io/api 版本推导 ENVTEST_K8S_VERSION，请手工设置" >&2; exit 1; }; \
+  printf '%s\n' "$$v" | sed -E 's/^v?[0-9]+\.([0-9]+).*/1.\1/')
+
+GOLANGCI_LINT_VERSION ?= v2.12.2
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## 本地装 kustomize
+$(KUSTOMIZE): $(LOCALBIN)
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## 本地装 controller-gen
+$(CONTROLLER_GEN): $(LOCALBIN)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
+
+.PHONY: setup-envtest
+setup-envtest: envtest ## 下载 envtest 二进制
+	@echo "准备 envtest (K8s $(ENVTEST_K8S_VERSION))..."
+	@"$(ENVTEST)" use $(ENVTEST_K8S_VERSION) --bin-dir "$(LOCALBIN)" -p path || { \
+		echo "envtest 二进制拉取失败"; \
+		exit 1; \
+	}
+
+.PHONY: envtest
+envtest: $(ENVTEST) ## 本地装 setup-envtest
+$(ENVTEST): $(LOCALBIN)
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT) ## 本地装 golangci-lint
+$(GOLANGCI_LINT): $(LOCALBIN)
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+	@test -f .custom-gcl.yml && { \
+		echo "有自定义插件，重新编译 golangci-lint ..." && \
+		$(GOLANGCI_LINT) custom --destination $(LOCALBIN) --name golangci-lint-custom && \
+		mv -f $(LOCALBIN)/golangci-lint-custom $(GOLANGCI_LINT); \
+	} || true
+
+# go-install-tool: 如果没有或者版本不对就 go install，然后链接到固定路径
+define go-install-tool
+@[ -f "$(1)-$(3)" ] && [ "$$(readlink -- "$(1)" 2>/dev/null)" = "$(1)-$(3)" ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "下载 $${package}" ;\
+rm -f "$(1)" ;\
+GOBIN="$(LOCALBIN)" go install $${package} ;\
+mv "$(LOCALBIN)/$$(basename "$(1)")" "$(1)-$(3)" ;\
+} ;\
+ln -sf "$$(realpath "$(1)-$(3)")" "$(1)"
+endef
+
+# 从 go.mod 中取某个模块的版本
+define gomodver
+$(shell go list -m -f '{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}' $(1) 2>/dev/null)
+endef
