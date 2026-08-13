@@ -125,7 +125,7 @@ docker-build-manager: ## 构建 manager 镜像并校验入口和 /manager 二进
 		test "$$entrypoint" = '["/manager"]' || { echo "manager 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
 		cid="$$( $(CONTAINER_TOOL) create $(MANAGER_IMG) )"; \
 		trap '$(CONTAINER_TOOL) rm -f "$$cid" >/dev/null 2>&1 || true' EXIT; \
-		$(CONTAINER_TOOL) export "$$cid" | tar -tf - | sed 's#^\./##' | grep -qx 'manager' || { echo "manager 镜像缺少 /manager"; exit 1; }; \
+		$(CONTAINER_TOOL) export "$$cid" | tar -tf - | sed 's#^\./##' | grep -x 'manager' >/dev/null || { echo "manager 镜像缺少 /manager"; exit 1; }; \
 		echo "manager 镜像校验通过：$(MANAGER_IMG)"
 
 .PHONY: docker-build-simulator
@@ -135,7 +135,7 @@ docker-build-simulator: ## 构建 simulator 镜像并校验入口和 /simulator 
 		test "$$entrypoint" = '["/simulator"]' || { echo "simulator 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
 		cid="$$( $(CONTAINER_TOOL) create $(SIMULATOR_IMG) )"; \
 		trap '$(CONTAINER_TOOL) rm -f "$$cid" >/dev/null 2>&1 || true' EXIT; \
-		$(CONTAINER_TOOL) export "$$cid" | tar -tf - | sed 's#^\./##' | grep -qx 'simulator' || { echo "simulator 镜像缺少 /simulator"; exit 1; }; \
+		$(CONTAINER_TOOL) export "$$cid" | tar -tf - | sed 's#^\./##' | grep -x 'simulator' >/dev/null || { echo "simulator 镜像缺少 /simulator"; exit 1; }; \
 		echo "simulator 镜像校验通过：$(SIMULATOR_IMG)"
 
 .PHONY: docker-push
