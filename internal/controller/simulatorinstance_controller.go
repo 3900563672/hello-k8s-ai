@@ -108,7 +108,7 @@ func (r *SimulatorInstanceReconciler) Reconcile(
 		if !controllerutil.ContainsFinalizer(&instance, simInstanceFinalizer) {
 			return ctrl.Result{}, nil
 		}
-		deleted, err := r.deleteDeployment(ctx, &instance)
+		deleted, err := r.deleteDeploymentObjects(ctx, &instance)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -142,17 +142,17 @@ func (r *SimulatorInstanceReconciler) Reconcile(
 	deploymentCtx, deploymentSpan := startOperation(
 		ctx,
 		"simulator-instance",
-		"reconcile-deployment",
+		"reconcile-deployments",
 		attribute.Int("placement.eligible_node_count", len(eligibleNodes)),
 	)
-	deployment, err := r.ensureDeploymentObject(deploymentCtx, &instance, eligibleNodes)
+	deploymentState, err := r.reconcileDeploymentObjects(deploymentCtx, &instance, eligibleNodes)
 	observability.EndSpan(deploymentSpan, err)
-	observeOperation("simulator-instance", "reconcile-deployment", err)
+	observeOperation("simulator-instance", "reconcile-deployments", err)
 	if err != nil {
 		_ = r.updateInstanceDeploymentStatus(ctx, instance.Name, nil, len(eligibleNodes), err)
 		return ctrl.Result{}, err
 	}
-	if err := r.updateInstanceDeploymentStatus(ctx, instance.Name, deployment, len(eligibleNodes), nil); err != nil {
+	if err := r.updateInstanceDeploymentStatus(ctx, instance.Name, deploymentState, len(eligibleNodes), nil); err != nil {
 		return ctrl.Result{}, err
 	}
 	runtimeCtx, runtimeSpan := startOperation(ctx, "simulator-instance", "update-tenant-runtime")
@@ -163,39 +163,58 @@ func (r *SimulatorInstanceReconciler) Reconcile(
 		return ctrl.Result{}, err
 	}
 
-	logger.V(1).Info("simulator deployment reconciled", "deployment", client.ObjectKeyFromObject(deployment))
+	logger.V(1).Info(
+		"simulator deployments reconciled",
+		"deploymentCount",
+		len(deploymentState.Deployments),
+		"desiredReplicas",
+		deploymentState.DesiredReplicas,
+	)
 	return ctrl.Result{}, nil
 }
 
-func (r *SimulatorInstanceReconciler) ensureDeploymentObject(
+func (r *SimulatorInstanceReconciler) ensurePlacementDeployment(
 	ctx context.Context,
 	instance *platformv1.SimulatorInstance,
-	eligibleNodes []string,
+	name string,
+	replicaCount int,
+	targetNodes []string,
+	placementNode string,
 ) (*appsv1.Deployment, error) {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName(instance.Name),
+			Name:      name,
 			Namespace: r.simulatorNamespace(),
 		},
 	}
-	replicas := int32(instance.Spec.Replicas)
+	replicas := int32(replicaCount)
 	if replicas < 0 {
-		return nil, fmt.Errorf("simulator instance %q has invalid replicas %d", instance.Name, replicas)
+		return nil, fmt.Errorf("simulator instance %q has invalid placement replicas %d", instance.Name, replicas)
 	}
 
 	_, err := controllerutil.CreateOrPatch(ctx, r.Client, deployment, func() error {
 		labels := ensureStringMap(&deployment.Labels)
 		annotations := ensureStringMap(&deployment.Annotations)
 		setWorkloadIdentity(labels, annotations, instance)
+		setPlacementIdentity(labels, annotations, placementNode)
 
 		selectorValue := labelValue(instance.Name)
+		selectorLabels := map[string]string{instanceLabelKey: selectorValue}
+		if deployment.Name != deploymentName(instance.Name) && placementNode != "" {
+			selectorLabels[placementLabelKey] = labelValue(placementNode)
+		}
 		if deployment.CreationTimestamp.IsZero() {
 			deployment.Spec.Selector = &metav1.LabelSelector{
-				MatchLabels: map[string]string{instanceLabelKey: selectorValue},
+				MatchLabels: selectorLabels,
 			}
 		}
-		if deployment.Spec.Selector == nil || deployment.Spec.Selector.MatchLabels[instanceLabelKey] != selectorValue {
+		if deployment.Spec.Selector == nil {
 			return fmt.Errorf("deployment %s/%s has an incompatible immutable selector", deployment.Namespace, deployment.Name)
+		}
+		for key, value := range selectorLabels {
+			if deployment.Spec.Selector.MatchLabels[key] != value {
+				return fmt.Errorf("deployment %s/%s has an incompatible immutable selector", deployment.Namespace, deployment.Name)
+			}
 		}
 
 		deployment.Spec.Replicas = new(replicas)
@@ -203,12 +222,13 @@ func (r *SimulatorInstanceReconciler) ensureDeploymentObject(
 		deployment.Spec.Template.Labels = copyStringMap(deployment.Spec.Template.Labels)
 		deployment.Spec.Template.Annotations = copyStringMap(deployment.Spec.Template.Annotations)
 		setWorkloadIdentity(deployment.Spec.Template.Labels, deployment.Spec.Template.Annotations, instance)
+		setPlacementIdentity(deployment.Spec.Template.Labels, deployment.Spec.Template.Annotations, placementNode)
 		maps.Copy(deployment.Spec.Template.Labels, deployment.Spec.Selector.MatchLabels)
 
 		podSpec := &deployment.Spec.Template.Spec
 		podSpec.ServiceAccountName = r.simulatorServiceAccount()
 		podSpec.TerminationGracePeriodSeconds = new(int64(15))
-		setRequiredNodeAffinity(podSpec, eligibleNodes)
+		setRequiredNodeAffinity(podSpec, targetNodes)
 		upsertSimulatorContainer(
 			podSpec,
 			r.simulatorImage(),
@@ -227,6 +247,16 @@ func (r *SimulatorInstanceReconciler) ensureDeploymentObject(
 		return nil, fmt.Errorf("ensure deployment %s/%s: %w", deployment.Namespace, deployment.Name, err)
 	}
 	return deployment, nil
+}
+
+func setPlacementIdentity(labels, annotations map[string]string, nodeName string) {
+	if nodeName == "" {
+		delete(labels, placementLabelKey)
+		delete(annotations, placementNodeAnnotation)
+		return
+	}
+	labels[placementLabelKey] = labelValue(nodeName)
+	annotations[placementNodeAnnotation] = nodeName
 }
 
 func setWorkloadIdentity(labels, annotations map[string]string, instance *platformv1.SimulatorInstance) {
@@ -408,29 +438,10 @@ func (r *SimulatorInstanceReconciler) eligibleNodesForInstance(
 	), nil
 }
 
-func (r *SimulatorInstanceReconciler) deleteDeployment(ctx context.Context, instance *platformv1.SimulatorInstance) (bool, error) {
-	var deployment appsv1.Deployment
-	key := client.ObjectKey{Name: deploymentName(instance.Name), Namespace: r.simulatorNamespace()}
-	if err := r.Get(ctx, key, &deployment); err != nil {
-		if apierrors.IsNotFound(err) {
-			return true, nil
-		}
-		return false, fmt.Errorf("get deployment %s before delete: %w", key, err)
-	}
-	if deployment.DeletionTimestamp.IsZero() {
-		if err := r.Delete(ctx, &deployment, &client.DeleteOptions{
-			PropagationPolicy: new(metav1.DeletePropagationBackground),
-		}); err != nil && !apierrors.IsNotFound(err) {
-			return false, fmt.Errorf("delete deployment %s: %w", key, err)
-		}
-	}
-	return false, nil
-}
-
 func (r *SimulatorInstanceReconciler) updateInstanceDeploymentStatus(
 	ctx context.Context,
 	instanceName string,
-	deployment *appsv1.Deployment,
+	deploymentState *simulatorDeploymentState,
 	eligibleNodeCount int,
 	reconcileErr error,
 ) error {
@@ -442,8 +453,8 @@ func (r *SimulatorInstanceReconciler) updateInstanceDeploymentStatus(
 		before := instance.DeepCopy()
 		condition := metav1.Condition{Type: conditionTypeReady, ObservedGeneration: instance.Generation}
 		instance.Status.AvailableReplicas = 0
-		if deployment != nil {
-			instance.Status.AvailableReplicas = int(deployment.Status.AvailableReplicas)
+		if deploymentState != nil {
+			instance.Status.AvailableReplicas = deploymentState.AvailableReplicas
 		}
 
 		switch {
@@ -462,13 +473,12 @@ func (r *SimulatorInstanceReconciler) updateInstanceDeploymentStatus(
 			condition.Status = metav1.ConditionFalse
 			condition.Reason = "NoEligibleNodes"
 			condition.Message = "no node is allowed by the current tenant/model node policies"
-		case deploymentFailed(deployment):
+		case deploymentState != nil && deploymentState.Failed:
 			instance.Status.Phase = phaseFailed
 			condition.Status = metav1.ConditionFalse
 			condition.Reason = "DeploymentFailed"
 			condition.Message = "the simulator Deployment reports ReplicaFailure"
-		case deployment != nil && deployment.Spec.Replicas != nil &&
-			deployment.Status.AvailableReplicas >= *deployment.Spec.Replicas:
+		case deploymentState != nil && deploymentState.AvailableReplicas >= instance.Spec.Replicas:
 			instance.Status.Phase = phaseRunning
 			condition.Status = metav1.ConditionTrue
 			condition.Reason = "DeploymentAvailable"
@@ -525,16 +535,28 @@ func (r *SimulatorInstanceReconciler) reconcileTenantRuntime(ctx context.Context
 			continue
 		}
 		desiredReplicas += int32(instance.Spec.Replicas)
-		var deployment appsv1.Deployment
-		err := r.Get(ctx, client.ObjectKey{Name: deploymentName(instance.Name), Namespace: r.simulatorNamespace()}, &deployment)
-		if apierrors.IsNotFound(err) {
+		plan, persisted, planErr := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
+		if planErr != nil || (persisted && nodePlacementReplicaCount(plan) != instance.Spec.Replicas) {
+			failed = true
 			continue
 		}
+		desiredNames, planErr := deploymentNamesForPlacementPlan(instance.Name, plan, persisted)
+		if planErr != nil {
+			failed = true
+			continue
+		}
+		deployments, err := r.listInstanceDeployments(ctx, instance.Name)
 		if err != nil {
 			return err
 		}
-		readyReplicas += deployment.Status.AvailableReplicas
-		failed = failed || deploymentFailed(&deployment)
+		for j := range deployments {
+			deployment := &deployments[j]
+			if _, desired := desiredNames[deployment.Name]; !desired {
+				continue
+			}
+			readyReplicas += deployment.Status.AvailableReplicas
+			failed = failed || deploymentFailed(deployment)
+		}
 	}
 
 	runtimeObject := &platformv1.TenantRuntime{ObjectMeta: metav1.ObjectMeta{Name: tenantName}}
@@ -685,6 +707,7 @@ func (r *SimulatorInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			(oldInstance.Spec.Replicas != newInstance.Spec.Replicas ||
 				oldInstance.Spec.TenantRef.Name != newInstance.Spec.TenantRef.Name ||
 				oldInstance.Spec.ModelRef.Name != newInstance.Spec.ModelRef.Name ||
+				oldInstance.Annotations[nodePlacementsAnnotation] != newInstance.Annotations[nodePlacementsAnnotation] ||
 				!oldInstance.DeletionTimestamp.Equal(newInstance.DeletionTimestamp))
 	})
 

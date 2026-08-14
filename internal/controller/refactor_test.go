@@ -117,16 +117,22 @@ func TestDecideAtScaleUpCooldownAndScaleDownFloor(t *testing.T) {
 	now := time.Date(2026, time.August, 9, 12, 0, 0, 0, time.UTC)
 	// 创建一个需要扩容的场景：TTFT 超标
 	input := DecisionInput{
-		AvgTTFT:           600,
-		HasTTFT:           true,
-		TTFTThresholdUp:   500,
-		AvailableModels:   []ModelInfo{{Name: "model-a", GPUUnits: 1, AbsoluteScore: 100, MaxConcurrency: 1}},
-		AvailableNodes:    []NodeInfo{{Name: "node-a", RemainingGPU: 2, RemainingConcurrency: 2}},
-		ExistingInstances: []InstanceInfo{{Name: "instance-a", ModelName: "model-a", CurrentReplicas: 1}},
+		AvgTTFT:         600,
+		HasTTFT:         true,
+		TTFTThresholdUp: 500,
+		AvailableModels: []ModelInfo{{Name: "model-a", GPUUnits: 1, AbsoluteScore: 100, MaxConcurrency: 1}},
+		AvailableNodes:  []NodeInfo{{Name: "node-a", RemainingGPU: 2, RemainingConcurrency: 2}},
+		ExistingInstances: []InstanceInfo{{
+			Name:            "instance-a",
+			ModelName:       "model-a",
+			CurrentReplicas: 1,
+			PlacementReady:  true,
+			PlacementPlan:   nodePlacementPlan{Version: placementPlanVersion, PrimaryNode: "node-a", Placements: []nodePlacement{{NodeName: "node-a", Replicas: 1}}},
+		}},
 	}
 
 	decision := DecideAt(input, now)
-	if decision.Action != ScaleUp || decision.TargetReplicas != 2 {
+	if decision.Action != ScaleUp || decision.TargetReplicas != 2 || decision.NodeName != "node-a" {
 		t.Fatalf("scale-up decision = %+v", decision)
 	}
 
@@ -149,10 +155,22 @@ func TestDecideAtScaleUpCooldownAndScaleDownFloor(t *testing.T) {
 		QueueThresholdUp:   100,
 		QueueThresholdDown: 30,
 		MinReplicas:        1,
-		ExistingInstances:  []InstanceInfo{{Name: "instance-a", CurrentReplicas: 2}},
+		ExistingInstances: []InstanceInfo{{
+			Name:            "instance-a",
+			CurrentReplicas: 2,
+			PlacementReady:  true,
+			PlacementPlan: nodePlacementPlan{
+				Version:     placementPlanVersion,
+				PrimaryNode: "node-a",
+				Placements: []nodePlacement{
+					{NodeName: "node-a", Replicas: 1},
+					{NodeName: "node-b", Replicas: 1},
+				},
+			},
+		}},
 	}
 	decision = DecideAt(input, now)
-	if decision.Action != ScaleDown || decision.TargetReplicas != 1 {
+	if decision.Action != ScaleDown || decision.TargetReplicas != 1 || decision.NodeName != "node-b" {
 		t.Fatalf("scale-down decision = %+v", decision)
 	}
 }
@@ -166,11 +184,18 @@ func TestDecideAtSupportsScaleToZeroAndMaximum(t *testing.T) {
 		MinReplicas:      1,
 		MaxReplicas:      5,
 		ExistingInstances: []InstanceInfo{{
-			Name: "instance-a", CurrentReplicas: 1,
+			Name:            "instance-a",
+			CurrentReplicas: 1,
+			PlacementReady:  true,
+			PlacementPlan: nodePlacementPlan{
+				Version:     placementPlanVersion,
+				PrimaryNode: "node-a",
+				Placements:  []nodePlacement{{NodeName: "node-a", Replicas: 1}},
+			},
 		}},
 	}
 	decision := DecideAt(input, now)
-	if decision.Action != ScaleDown || decision.TargetReplicas != 0 {
+	if decision.Action != ScaleDown || decision.TargetReplicas != 0 || decision.NodeName != "node-a" {
 		t.Fatalf("scale-to-zero decision = %+v", decision)
 	}
 
@@ -185,6 +210,39 @@ func TestDecideAtSupportsScaleToZeroAndMaximum(t *testing.T) {
 	}
 	if decision := DecideAt(input, now); decision.Action != NoOp {
 		t.Fatalf("maxReplicas decision = %+v, want NoOp", decision)
+	}
+}
+
+func TestDecideAtRebalancesPlacementAfterPolicyChange(t *testing.T) {
+	now := time.Date(2026, time.August, 14, 12, 0, 0, 0, time.UTC)
+	input := DecisionInput{
+		TenantQPS: 10,
+		AvailableModels: []ModelInfo{{
+			Name:              "model-a",
+			GPUUnits:          1,
+			MaxConcurrency:    1,
+			EligibleNodeNames: map[string]bool{"node-b": true},
+		}},
+		AvailableNodes: []NodeInfo{{Name: "node-b", RemainingGPU: 2, RemainingConcurrency: 2}},
+		ExistingInstances: []InstanceInfo{{
+			Name:            "instance-a",
+			ModelName:       "model-a",
+			CurrentReplicas: 1,
+			PlacementReady:  true,
+			PlacementPlan: nodePlacementPlan{
+				Version:     placementPlanVersion,
+				PrimaryNode: "node-a",
+				Placements:  []nodePlacement{{NodeName: "node-a", Replicas: 1}},
+			},
+		}},
+	}
+
+	decision := DecideAt(input, now)
+	if decision.Action != Rebalance ||
+		decision.SourceNodeName != "node-a" ||
+		decision.NodeName != "node-b" ||
+		decision.TargetReplicas != 1 {
+		t.Fatalf("rebalance decision = %+v", decision)
 	}
 }
 

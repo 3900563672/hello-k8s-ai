@@ -14,12 +14,15 @@ const (
 	NoOp DecisionAction = iota
 	ScaleUp
 	ScaleDown
+	Rebalance
 )
 
 type Decision struct {
 	Action           DecisionAction
 	Reason           string
 	InstanceName     string
+	SourceNodeName   string
+	NodeName         string
 	ObservedReplicas int
 	TargetReplicas   int
 	EffectiveScore   int
@@ -43,6 +46,9 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 	totalReplicas := 0
 	for _, instance := range input.ExistingInstances {
 		totalReplicas += nonNegative(instance.CurrentReplicas)
+	}
+	if decision, needed := placementRebalanceDecision(input); needed {
+		return decision
 	}
 
 	// 地板：至少要保持的副本数（考虑最小副本、零流量等）
@@ -79,6 +85,7 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 			Action:           ScaleUp,
 			Reason:           scaleUpReason(input, needBootstrap),
 			InstanceName:     candidate.InstanceName,
+			NodeName:         candidate.NodeName,
 			ObservedReplicas: candidate.TargetReplicas - 1,
 			TargetReplicas:   candidate.TargetReplicas,
 			EffectiveScore:   candidate.EffectiveScore,
@@ -114,19 +121,90 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 		return cmp.Compare(left.Name, right.Name)
 	})
 	for _, instance := range candidates {
-		if instance.CurrentReplicas == 0 || totalReplicas-1 < floor {
+		if instance.CurrentReplicas == 0 || !instance.PlacementReady || totalReplicas-1 < floor {
+			continue
+		}
+		nodeName, found := scaleDownPlacementNode(instance.PlacementPlan)
+		if !found {
 			continue
 		}
 		return Decision{
 			Action:           ScaleDown,
 			Reason:           scaleDownReason(input),
 			InstanceName:     instance.Name,
+			NodeName:         nodeName,
 			ObservedReplicas: instance.CurrentReplicas,
 			TargetReplicas:   instance.CurrentReplicas - 1,
 			RequeueAfter:     time.Duration(input.ScaleDownCooldown) * time.Second,
 		}
 	}
 	return Decision{Action: NoOp, Reason: "no_scale_down_candidate"}
+}
+
+// placementRebalanceDecision 在节点策略收窄后，一次迁移一个副本。
+// 该动作不改变总副本数，优先于性能驱动的扩缩容。
+func placementRebalanceDecision(input DecisionInput) (Decision, bool) {
+	models := make(map[string]ModelInfo, len(input.AvailableModels))
+	for _, model := range input.AvailableModels {
+		models[model.Name] = model
+	}
+	nodes := append([]NodeInfo(nil), input.AvailableNodes...)
+	slices.SortFunc(nodes, func(left, right NodeInfo) int {
+		if left.RemainingGPU != right.RemainingGPU {
+			return cmp.Compare(right.RemainingGPU, left.RemainingGPU)
+		}
+		if left.RemainingConcurrency != right.RemainingConcurrency {
+			return cmp.Compare(right.RemainingConcurrency, left.RemainingConcurrency)
+		}
+		return cmp.Compare(left.Name, right.Name)
+	})
+	nodeExists := make(map[string]bool, len(nodes))
+	for _, node := range nodes {
+		nodeExists[node.Name] = true
+	}
+
+	instances := append([]InstanceInfo(nil), input.ExistingInstances...)
+	slices.SortFunc(instances, func(left, right InstanceInfo) int {
+		return cmp.Compare(left.Name, right.Name)
+	})
+	for _, instance := range instances {
+		if !instance.PlacementReady || instance.CurrentReplicas == 0 {
+			continue
+		}
+		model, exists := models[instance.ModelName]
+		if !exists {
+			continue
+		}
+		for _, placement := range sortedNodePlacements(instance.PlacementPlan.Placements) {
+			allowed := nodeExists[placement.NodeName]
+			if model.EligibleNodeNames != nil {
+				allowed = allowed && model.EligibleNodeNames[placement.NodeName]
+			}
+			if allowed {
+				continue
+			}
+			for _, node := range nodes {
+				if model.EligibleNodeNames != nil && !model.EligibleNodeNames[node.Name] {
+					continue
+				}
+				if node.RemainingGPU < model.GPUUnits || node.RemainingConcurrency < model.MaxConcurrency {
+					continue
+				}
+				return Decision{
+					Action:           Rebalance,
+					Reason:           "placement_policy_changed",
+					InstanceName:     instance.Name,
+					SourceNodeName:   placement.NodeName,
+					NodeName:         node.Name,
+					ObservedReplicas: instance.CurrentReplicas,
+					TargetReplicas:   instance.CurrentReplicas,
+					EffectiveScore:   instance.EffectiveScore,
+				}, true
+			}
+			return Decision{Action: NoOp, Reason: "placement_rebalance_blocked"}, true
+		}
+	}
+	return Decision{}, false
 }
 
 // 根据扩容触发原因生成具体 reason 字符串

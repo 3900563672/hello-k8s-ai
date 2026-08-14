@@ -50,7 +50,9 @@ func findBestPlacement(models []ModelInfo, nodes []NodeInfo, instances []Instanc
 		modelInstances := instancesByModel[model.Name]
 		for _, instance := range modelInstances {
 			// 防止极端副本数导致溢出
-			if instance.CurrentReplicas < 0 || instance.CurrentReplicas == int(^uint(0)>>1) {
+			if instance.CurrentReplicas < 0 ||
+				instance.CurrentReplicas == int(^uint(0)>>1) ||
+				(instance.CurrentReplicas > 0 && !instance.PlacementReady) {
 				continue
 			}
 			for _, node := range nodes {

@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -269,9 +270,100 @@ var _ = Describe("Manager", Ordered, func() {
 			Eventually(verifyMetricsAvailable, 2*time.Minute).Should(Succeed())
 		})
 
-		// +kubebuilder:scaffold:e2e-webhooks-checks
+		It("should schedule a planned replica on the selected node", func() {
+			By("reading the node that already runs the controller")
+			cmd := exec.Command(
+				"kubectl", "get", "pod", controllerPodName,
+				"-n", namespace,
+				"-o", "jsonpath={.spec.nodeName}",
+			)
+			nodeName, err := utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+			nodeName = strings.TrimSpace(nodeName)
+			Expect(nodeName).NotTo(BeEmpty())
 
-		// TODO: 补充项目 CR 到 Controller 状态收敛的 E2E 断言。
+			const instanceName = "placement-e2e-instance"
+			manifest := fmt.Sprintf(`
+apiVersion: platform.study.com/v1
+kind: TenantNodePolicy
+metadata:
+  name: placement-e2e-tenant-node
+spec:
+  tenantRef:
+    name: placement-e2e-tenant
+  nodeRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: ModelNodePolicy
+metadata:
+  name: placement-e2e-model-node
+spec:
+  modelRef:
+    name: placement-e2e-model
+  nodeRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: SimulatorInstance
+metadata:
+  name: %s
+  annotations:
+    platform.study.com/node-placements: '{"version":1,"primaryNode":"%s","placements":[{"nodeName":"%s","replicas":1}]}'
+spec:
+  tenantRef:
+    name: placement-e2e-tenant
+  modelRef:
+    name: placement-e2e-model
+  replicas: 1
+  traffic:
+    qps: 0
+`, nodeName, nodeName, instanceName, nodeName, nodeName)
+			cmd = exec.Command("kubectl", "apply", "-f", "-")
+			cmd.Stdin = strings.NewReader(manifest)
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+			DeferCleanup(func() {
+				cleanup := exec.Command(
+					"kubectl",
+					"delete",
+					"simulatorinstance/"+instanceName,
+					"tenantnodepolicy/placement-e2e-tenant-node",
+					"modelnodepolicy/placement-e2e-model-node",
+					"--ignore-not-found",
+				)
+				_, _ = utils.Run(cleanup)
+			})
+
+			By("checking the required node affinity materialized by the controller")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "deployment", "simulator-"+instanceName,
+					"-n", namespace,
+					"-o", "jsonpath={.spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]}",
+				)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(strings.TrimSpace(output)).To(Equal(nodeName))
+			}).Should(Succeed())
+
+			By("checking the node selected by Kubernetes Scheduler")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "pods",
+					"-n", namespace,
+					"-l", "platform.study.com/instance="+instanceName,
+					"-o", "jsonpath={.items[0].spec.nodeName}",
+				)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(strings.TrimSpace(output)).To(Equal(nodeName))
+			}).Should(Succeed())
+		})
+
+		// +kubebuilder:scaffold:e2e-webhooks-checks
 	})
 })
 

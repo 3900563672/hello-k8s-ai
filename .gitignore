@@ -8,6 +8,7 @@
 **/.idea/
 /output/
 /tmp/
+/project-review/
 
 # Local environment
 .env

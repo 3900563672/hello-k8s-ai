@@ -11,6 +11,7 @@ import (
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -86,6 +87,11 @@ type NodeInfo struct {
 	RemainingConcurrency int // 还剩多少并发
 }
 
+type nodeLogicalUsage struct {
+	GPU         int
+	Concurrency int
+}
+
 type InstanceInfo struct {
 	Name              string
 	ModelName         string
@@ -94,6 +100,8 @@ type InstanceInfo struct {
 	HasEffectiveScore bool   // 是否已经有有效分数（没被初始化过就是 false）
 	LastScaleTrigger  string // 上次扩缩的 triggerID，对比用
 	PendingScalePlan  string // 上一次没执行完的扩缩计划
+	PlacementPlan     nodePlacementPlan
+	PlacementReady    bool // true 表示放置计划或旧 Pod 实际落点与当前副本数一致
 }
 
 // dependencyNotReadyError 表示某个依赖资源还没就绪，外部可以据此判断是重试还是报错。
@@ -290,13 +298,20 @@ func decisionTriggerID(
 
 	// 每个实例的当前状态
 	for _, instance := range instances {
+		placements := make([]string, 0, len(instance.PlacementPlan.Placements))
+		for _, placement := range sortedNodePlacements(instance.PlacementPlan.Placements) {
+			placements = append(placements, fmt.Sprintf("%s=%d", placement.NodeName, placement.Replicas))
+		}
 		parts = append(parts, fmt.Sprintf(
-			"instance:%s:%s:%d:%d:%t",
+			"instance:%s:%s:%d:%d:%t:%t:%s:%s",
 			instance.Name,
 			instance.ModelName,
 			instance.CurrentReplicas,
 			instance.EffectiveScore,
 			instance.HasEffectiveScore,
+			instance.PlacementReady,
+			instance.PlacementPlan.PrimaryNode,
+			strings.Join(placements, ","),
 		))
 	}
 
@@ -404,6 +419,10 @@ func (r *OrchestratorReconciler) collectAvailableNodes(ctx context.Context, tena
 		}
 	}
 	slices.Sort(names)
+	expectedUsage, err := r.collectExpectedNodeUsage(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	nodes := make([]NodeInfo, 0, len(names))
 	for _, name := range names {
@@ -411,14 +430,106 @@ func (r *OrchestratorReconciler) collectAvailableNodes(ctx context.Context, tena
 		if err := r.Get(ctx, client.ObjectKey{Name: name}, &node); err != nil {
 			return nil, fmt.Errorf("get allowed worker node %q: %w", name, err)
 		}
-		// 剩余资源 = 总容量 - 已用，负数归零
+		// 已调度 Pod 和尚未物化的放置计划取较大值，避免控制器状态回写前重复占用同一容量。
+		usedGPU := max(node.Status.UsedGPU, expectedUsage[node.Name].GPU)
+		usedConcurrency := max(node.Status.UsedConcurrency, expectedUsage[node.Name].Concurrency)
 		nodes = append(nodes, NodeInfo{
 			Name:                 node.Name,
-			RemainingGPU:         nonNegative(node.Spec.GPU - node.Status.UsedGPU),
-			RemainingConcurrency: nonNegative(node.Spec.MaxConcurrency - node.Status.UsedConcurrency),
+			RemainingGPU:         nonNegative(node.Spec.GPU - usedGPU),
+			RemainingConcurrency: nonNegative(node.Spec.MaxConcurrency - usedConcurrency),
 		})
 	}
 	return nodes, nil
+}
+
+// collectExpectedNodeUsage 合并实际 Pod 与尚未物化的放置计划。
+// 实际 Pod 防止 WorkerNode.status 回写延迟；计划差额用于给刚批准但尚未调度的副本预留容量。
+func (r *OrchestratorReconciler) collectExpectedNodeUsage(ctx context.Context) (map[string]nodeLogicalUsage, error) {
+	var models platformv1.ModelList
+	if err := r.List(ctx, &models); err != nil {
+		return nil, fmt.Errorf("list models while calculating placement reservations: %w", err)
+	}
+	modelByName := make(map[string]*platformv1.Model, len(models.Items))
+	for i := range models.Items {
+		modelByName[models.Items[i].Name] = &models.Items[i]
+	}
+
+	var pods corev1.PodList
+	if err := r.List(ctx, &pods); err != nil {
+		return nil, fmt.Errorf("list pods while calculating placement reservations: %w", err)
+	}
+	usage := make(map[string]nodeLogicalUsage)
+	observed := make(map[string]map[string]int)
+	for i := range pods.Items {
+		pod := &pods.Items[i]
+		if pod.Spec.NodeName == "" ||
+			pod.Status.Phase == corev1.PodSucceeded ||
+			pod.Status.Phase == corev1.PodFailed ||
+			(pod.Labels[instanceLabelKey] == "" && pod.Annotations[instanceNameAnnotation] == "") {
+			continue
+		}
+		modelName := pod.Annotations[modelNameAnnotation]
+		if modelName == "" {
+			modelName = pod.Labels[modelLabelKey]
+		}
+		model := modelByName[modelName]
+		if model == nil || !model.DeletionTimestamp.IsZero() {
+			continue
+		}
+		current := usage[pod.Spec.NodeName]
+		current.GPU += nonNegative(model.Spec.GPUUnits)
+		current.Concurrency += nonNegative(model.Spec.MaxConcurrency)
+		usage[pod.Spec.NodeName] = current
+
+		instanceName := pod.Annotations[instanceNameAnnotation]
+		if instanceName == "" {
+			continue
+		}
+		counts := observed[instanceName]
+		if counts == nil {
+			counts = make(map[string]int)
+			observed[instanceName] = counts
+		}
+		counts[pod.Spec.NodeName]++
+	}
+
+	var instances platformv1.SimulatorInstanceList
+	if err := r.List(ctx, &instances); err != nil {
+		return nil, fmt.Errorf("list simulator instances while calculating placement reservations: %w", err)
+	}
+	for i := range instances.Items {
+		instance := &instances.Items[i]
+		if !instance.DeletionTimestamp.IsZero() || instance.Annotations[nodePlacementsAnnotation] == "" {
+			continue
+		}
+		plan, _, err := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
+		if err != nil {
+			return nil, fmt.Errorf("decode node placements on simulator instance %q: %w", instance.Name, err)
+		}
+		if nodePlacementReplicaCount(plan) != instance.Spec.Replicas {
+			return nil, fmt.Errorf(
+				"simulator instance %q has %d replicas but its node placement plan contains %d",
+				instance.Name,
+				instance.Spec.Replicas,
+				nodePlacementReplicaCount(plan),
+			)
+		}
+		model := modelByName[instance.Spec.ModelRef.Name]
+		if model == nil || !model.DeletionTimestamp.IsZero() {
+			continue
+		}
+		for _, placement := range plan.Placements {
+			pending := placement.Replicas - observed[instance.Name][placement.NodeName]
+			if pending <= 0 {
+				continue
+			}
+			current := usage[placement.NodeName]
+			current.GPU += pending * nonNegative(model.Spec.GPUUnits)
+			current.Concurrency += pending * nonNegative(model.Spec.MaxConcurrency)
+			usage[placement.NodeName] = current
+		}
+	}
+	return usage, nil
 }
 
 // collectExistingInstances 收集该租户下所有未删除的实例，并按名称排序保证稳定。
@@ -426,6 +537,41 @@ func (r *OrchestratorReconciler) collectExistingInstances(ctx context.Context, t
 	var instances platformv1.SimulatorInstanceList
 	if err := r.List(ctx, &instances, client.MatchingFields{orchSimIndex: tenantName}); err != nil {
 		return nil, fmt.Errorf("list simulator instances for tenant %q: %w", tenantName, err)
+	}
+
+	legacyNames := make(map[string]struct{})
+	for i := range instances.Items {
+		instance := &instances.Items[i]
+		if instance.DeletionTimestamp.IsZero() &&
+			instance.Spec.Replicas > 0 &&
+			instance.Annotations[nodePlacementsAnnotation] == "" {
+			legacyNames[instance.Name] = struct{}{}
+		}
+	}
+
+	observedPlacements := make(map[string]map[string]int)
+	if len(legacyNames) > 0 {
+		var pods corev1.PodList
+		if err := r.List(ctx, &pods); err != nil {
+			return nil, fmt.Errorf("list simulator pods while resolving legacy placements: %w", err)
+		}
+		for i := range pods.Items {
+			pod := &pods.Items[i]
+			instanceName := pod.Annotations[instanceNameAnnotation]
+			if _, needed := legacyNames[instanceName]; !needed ||
+				pod.Labels[managedByLabelKey] != managedByLabelVal ||
+				pod.Spec.NodeName == "" ||
+				pod.Status.Phase == corev1.PodSucceeded ||
+				pod.Status.Phase == corev1.PodFailed {
+				continue
+			}
+			counts := observedPlacements[instanceName]
+			if counts == nil {
+				counts = make(map[string]int)
+				observedPlacements[instanceName] = counts
+			}
+			counts[pod.Spec.NodeName]++
+		}
 	}
 
 	result := make([]InstanceInfo, 0, len(instances.Items))
@@ -440,6 +586,33 @@ func (r *OrchestratorReconciler) collectExistingInstances(ctx context.Context, t
 			CurrentReplicas:  instance.Spec.Replicas,
 			LastScaleTrigger: instance.Annotations[lastScaleTriggerKey],
 			PendingScalePlan: instance.Annotations[pendingScalePlanKey],
+		}
+		plan, persisted, err := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
+		if err != nil {
+			return nil, fmt.Errorf("decode node placements on simulator instance %q: %w", instance.Name, err)
+		}
+		switch {
+		case persisted:
+			if nodePlacementReplicaCount(plan) != instance.Spec.Replicas {
+				return nil, fmt.Errorf(
+					"simulator instance %q has %d replicas but its node placement plan contains %d",
+					instance.Name,
+					instance.Spec.Replicas,
+					nodePlacementReplicaCount(plan),
+				)
+			}
+			info.PlacementPlan = plan
+			info.PlacementReady = true
+		case instance.Spec.Replicas == 0:
+			info.PlacementPlan = nodePlacementPlan{Version: placementPlanVersion}
+			info.PlacementReady = true
+		default:
+			plan, err = newNodePlacementPlan(observedPlacements[instance.Name])
+			if err != nil {
+				return nil, fmt.Errorf("build observed node placements for simulator instance %q: %w", instance.Name, err)
+			}
+			info.PlacementPlan = plan
+			info.PlacementReady = nodePlacementReplicaCount(plan) == instance.Spec.Replicas
 		}
 		if instance.Status.EffectiveScore != nil {
 			info.EffectiveScore = *instance.Status.EffectiveScore

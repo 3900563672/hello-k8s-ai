@@ -175,6 +175,8 @@ func (r *OrchestratorReconciler) Reconcile(
 		attribute.String("scaling.action", action),
 		attribute.String("scaling.reason", reason),
 		attribute.String("scaling.trigger_id", input.TriggerID),
+		attribute.String("placement.source_node_name", decision.SourceNodeName),
+		attribute.String("placement.node_name", decision.NodeName),
 		attribute.Int("scaling.target_replicas", decision.TargetReplicas),
 		attribute.Int("performance.ttft_ms", input.AvgTTFT),
 		attribute.Int("performance.queue_depth", input.AvgQueue),
@@ -234,6 +236,8 @@ func decisionActionLabel(action DecisionAction) string {
 		return "scale_up"
 	case ScaleDown:
 		return "scale_down"
+	case Rebalance:
+		return "rebalance"
 	default:
 		return "no_op"
 	}

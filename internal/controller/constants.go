@@ -9,9 +9,10 @@ const (
 	policyEffectAllow = "Allow"
 	policyEffectDeny  = "Deny"
 
-	// 扩缩容方向：ScaleUp 扩容，ScaleDown 缩容
-	scalingActionUp   = "ScaleUp"
-	scalingActionDown = "ScaleDown"
+	// 扩缩与放置动作
+	scalingActionUp        = "ScaleUp"
+	scalingActionDown      = "ScaleDown"
+	scalingActionRebalance = "Rebalance"
 
 	// 资源运行阶段
 	phaseRunning = "Running" // 正常运行

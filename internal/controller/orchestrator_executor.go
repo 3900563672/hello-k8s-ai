@@ -10,6 +10,7 @@ import (
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,6 +26,8 @@ type scalingPlan struct {
 	OrchestratorName string      `json:"orchestratorName"`
 	Action           string      `json:"action"`
 	InstanceName     string      `json:"instanceName"`
+	SourceNodeName   string      `json:"sourceNodeName,omitempty"`
+	NodeName         string      `json:"nodeName"`
 	OldReplicas      int         `json:"oldReplicas"`
 	NewReplicas      int         `json:"newReplicas"`
 	EffectiveScore   int         `json:"effectiveScore,omitempty"`
@@ -55,6 +58,12 @@ func (r *OrchestratorReconciler) applyDecision(
 	if decision.TargetReplicas < 0 {
 		return fmt.Errorf("refusing to write invalid replicas %d", decision.TargetReplicas)
 	}
+	if decision.NodeName == "" {
+		return fmt.Errorf("refusing to apply a scaling decision without a placement node")
+	}
+	if decision.Action == Rebalance && decision.SourceNodeName == "" {
+		return fmt.Errorf("refusing to rebalance without a source node")
+	}
 
 	plan := scalingPlan{
 		TriggerID:        input.TriggerID,
@@ -62,6 +71,8 @@ func (r *OrchestratorReconciler) applyDecision(
 		OrchestratorName: input.OrchestratorName,
 		Action:           actionToString(decision.Action),
 		InstanceName:     decision.InstanceName,
+		SourceNodeName:   decision.SourceNodeName,
+		NodeName:         decision.NodeName,
 		OldReplicas:      decision.ObservedReplicas,
 		NewReplicas:      decision.TargetReplicas,
 		EffectiveScore:   decision.EffectiveScore,
@@ -78,6 +89,7 @@ func (r *OrchestratorReconciler) applyDecision(
 		"persist-scale-plan",
 		attribute.String("scaling.direction", direction),
 		attribute.String(traceAttributeSimulatorInstanceName, plan.InstanceName),
+		attribute.String("placement.node_name", plan.NodeName),
 		attribute.Int("scaling.old_replicas", plan.OldReplicas),
 		attribute.Int("scaling.new_replicas", plan.NewReplicas),
 	)
@@ -122,17 +134,100 @@ func (r *OrchestratorReconciler) persistScalePlan(ctx context.Context, plan scal
 				instance.Spec.Replicas,
 			)
 		}
+		placementPlan, persisted, err := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
+		if err != nil {
+			return fmt.Errorf("decode node placements on simulator instance %q: %w", instance.Name, err)
+		}
+		if !persisted {
+			if instance.Spec.Replicas == 0 {
+				placementPlan = nodePlacementPlan{Version: placementPlanVersion}
+			} else {
+				placementPlan, err = r.observeNodePlacementPlan(ctx, instance.Name)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		if nodePlacementReplicaCount(placementPlan) != plan.OldReplicas {
+			return fmt.Errorf(
+				"%w: instance %q expected %d placed replicas, found %d",
+				errStaleDecision,
+				instance.Name,
+				plan.OldReplicas,
+				nodePlacementReplicaCount(placementPlan),
+			)
+		}
+		switch plan.Action {
+		case scalingActionUp:
+			placementPlan, err = addNodePlacement(placementPlan, plan.NodeName)
+		case scalingActionDown:
+			placementPlan, err = removeNodePlacement(placementPlan, plan.NodeName)
+		case scalingActionRebalance:
+			placementPlan, err = removeNodePlacement(placementPlan, plan.SourceNodeName)
+			if err == nil {
+				placementPlan, err = addNodePlacement(placementPlan, plan.NodeName)
+			}
+		default:
+			err = fmt.Errorf("unsupported scaling action %q", plan.Action)
+		}
+		if err != nil {
+			return fmt.Errorf("update node placement plan for simulator instance %q: %w", instance.Name, err)
+		}
+		if nodePlacementReplicaCount(placementPlan) != plan.NewReplicas {
+			return fmt.Errorf(
+				"node placement plan for simulator instance %q contains %d replicas after scaling, want %d",
+				instance.Name,
+				nodePlacementReplicaCount(placementPlan),
+				plan.NewReplicas,
+			)
+		}
+		placementPayload, err := encodeNodePlacementPlan(placementPlan)
+		if err != nil {
+			return err
+		}
 		annotations := ensureStringMap(&instance.Annotations)
 		annotations[lastScaleTriggerKey] = plan.TriggerID
 		annotations[pendingScalePlanKey] = string(payload)
+		annotations[nodePlacementsAnnotation] = placementPayload
 		instance.Spec.Replicas = plan.NewReplicas
 		// 利用 resourceVersion 防止并发覆盖
 		return r.Update(ctx, &instance)
 	})
 }
 
+// observeNodePlacementPlan 从旧版单 Deployment 的已调度 Pod 中恢复逐节点副本分布。
+// 只有观察到的副本总数与 spec.replicas 一致时，调用方才会接受这份迁移快照。
+func (r *OrchestratorReconciler) observeNodePlacementPlan(
+	ctx context.Context,
+	instanceName string,
+) (nodePlacementPlan, error) {
+	var pods corev1.PodList
+	if err := r.List(ctx, &pods, client.MatchingLabels{managedByLabelKey: managedByLabelVal}); err != nil {
+		return nodePlacementPlan{}, fmt.Errorf("list simulator pods for instance %q: %w", instanceName, err)
+	}
+	counts := make(map[string]int)
+	for i := range pods.Items {
+		pod := &pods.Items[i]
+		if pod.Annotations[instanceNameAnnotation] != instanceName ||
+			pod.Spec.NodeName == "" ||
+			pod.Status.Phase == corev1.PodSucceeded ||
+			pod.Status.Phase == corev1.PodFailed {
+			continue
+		}
+		counts[pod.Spec.NodeName]++
+	}
+	plan, err := newNodePlacementPlan(counts)
+	if err != nil {
+		return nodePlacementPlan{}, fmt.Errorf("build observed node placements for instance %q: %w", instanceName, err)
+	}
+	return plan, nil
+}
+
 // completeScalePlan 完成扩缩容计划的收尾工作：写入有效分数、记录状态、清除待处理注解。
 func (r *OrchestratorReconciler) completeScalePlan(ctx context.Context, plan scalingPlan) error {
+	if plan.Action == scalingActionRebalance {
+		return r.clearPendingScalePlan(ctx, plan.InstanceName, plan.TriggerID)
+	}
 	// 扩容时才需要更新有效分数，缩容不用
 	if plan.Action == scalingActionUp {
 		if err := r.updateInstanceEffectiveScore(ctx, plan.InstanceName, plan.EffectiveScore); err != nil {
@@ -274,6 +369,8 @@ func actionToString(action DecisionAction) string {
 		return scalingActionUp
 	case ScaleDown:
 		return scalingActionDown
+	case Rebalance:
+		return scalingActionRebalance
 	default:
 		return ""
 	}
