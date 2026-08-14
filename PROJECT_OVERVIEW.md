@@ -80,24 +80,25 @@ hello-k8s-ai 采用 Kubernetes Controller Pattern 设计。
          Simulator
               |
               v
-模拟性能 / 状态数据
-|
-+---------+----------+
-|                    |
-v                    v
+      模拟性能 / 状态数据
+              |
+    +---------+-----------+
+    |                     |
+    v                     v
 
-Metrics Pipeline Event Storage
-| |
-v v
-Prometheus / OTel PostgreSQL
-|
-v
-Jaeger
-
+   Metrics Pipeline Event Storage
+    |                     |
+    v                     v
+   Prometheus / OTel PostgreSQL
+    |                     |
+    v                     v
+ Granafa                Jaeger
+    |                     |
+    v                     v    
+    +---------+-----------+
               |
               v
-
-      Dashboard 展示
+         Dashboard 展示
 ```
 
 ---
@@ -145,21 +146,18 @@ Backend 是 Dashboard 与 Kubernetes 集群之间的控制层。
 Backend 主要连接：
 
 ```text
-Frontend
-|
-|
-Backend
-|
-+--+-------------+
-| |
-v v
+       Frontend
+          |
+          |
+       Backend
+          |
+          |
+  +-------+-------+
+  |               ^
+  v               |
+Kubernetes    PostgreSQL
+API Server        
 
-Kubernetes PostgreSQL
-API Server |
-|
-v
-
-      历史调度数据
 ```
 
 Backend 不直接负责调度。
@@ -194,9 +192,9 @@ api/
 例如：
 
 ```text
-AIWorkload
-AICluster
-SchedulingPolicy
+tenant
+model
+workerNode
 ```
 
 等 Kubernetes 自定义资源。
@@ -207,16 +205,16 @@ SchedulingPolicy
 
 ```text
 用户配置
-|
-v
+   |
+   v
 
 Backend
-|
-v
+   |
+   v
 
 Kubernetes API
-|
-v
+   |
+   v  
 
 CR Instance
 ```
@@ -291,20 +289,20 @@ Simulator 负责：
 
 ```text
 Controller
-|
-v
+    |
+    v
 
 Scheduler Decision
-|
-v
+    |
+    v
 
 Simulator
-|
-v
+    |
+    v
 
 Performance Data
-|
-v
+    |
+    v
 
 Controller Next Decision
 ```
@@ -344,12 +342,12 @@ Dashboard 展示流程：
 
 ```text
 Database
-|
-v
+   |
+   v
 
 Backend Query
-|
-v
+   |
+   v
 
 Frontend Display
 ```
@@ -378,25 +376,28 @@ Frontend Display
 链路：
 
 ```text
-Controller
-|
-|
-Simulator
-|
-|
-Metrics / Trace
-|
-|
-+----------------+
-| |
-v v
-
-Prometheus OpenTelemetry
-
-             |
-             v
-
-           Jaeger
+           Controller
+               |
+               |
+           Simulator
+               |
+               |
+         Metrics / Trace
+               |
+               |
+      +--------+---------+
+      |                  |
+      v                  v
+      
+  Prometheus       OpenTelemetry
+      
+      |                  |
+      v                  v
+      +--------+---------+
+               |
+               v
+      
+             Jaeger
 ```
 
 ---
@@ -408,19 +409,19 @@ Prometheus OpenTelemetry
 用户进入 Dashboard：
 
 ```text
-Frontend
-
-↓
-
-填写 AI 调度任务配置
-
-↓
-
-点击应用
-
-↓
-
-发送 Backend 请求
+    Frontend
+       
+       ↓
+       
+ AI 调度任务配置
+       
+       ↓
+       
+    点击应用
+       
+       ↓
+       
+ 发送 Backend 请求
 ```
 
 ### 4.2 CR 创建阶段
@@ -430,18 +431,18 @@ Backend 根据用户配置生成 Kubernetes Resource。
 流程：
 
 ```text
-Backend
-
-↓
-
-Kubernetes API
-
-↓
-
+   Backend
+      
+      ↓
+      
+  Kubernetes API
+      
+      ↓
+      
 创建 CR Instance
-
-↓
-
+      
+      ↓
+      
 Controller Watch
 ```
 
@@ -459,19 +460,19 @@ Controller 检测到 CR 变化。
 流程：
 
 ```text
-CR Change
-
-↓
-
+     CR Change
+        
+        ↓
+        
 Controller Reconcile
-
-↓
-
+        
+        ↓
+        
 Scheduling Decision
-
-↓
-
-Simulator
+        
+        ↓
+        
+     Simulator
 ```
 
 ### 4.4 模拟运行阶段
@@ -487,19 +488,19 @@ Simulator 根据 Controller 决策产生：
 形成闭环：
 
 ```text
-Controller
-
-↓
-
-Simulator
-
-↓
-
-Performance Feedback
-
-↓
-
-Controller
+      Controller
+          
+          ↓
+          
+      Simulator
+          
+          ↓
+          
+ Performance Feedback
+          
+          ↓
+          
+     Controller
 ```
 
 ### 4.5 数据回流阶段
@@ -513,27 +514,27 @@ Controller
 分别进入：
 
 ```text
-Metrics
-
-↓
-
-Prometheus
-
-Trace
-
-↓
-
-OpenTelemetry
-
-↓
-
-Jaeger
-
-Event
-
-↓
-
-PostgreSQL
+    Metrics
+       
+       ↓
+       
+   Prometheus
+       
+     Trace
+       
+       ↓
+       
+   OpenTelemetry
+       
+       ↓
+       
+     Jaeger
+       
+     Event
+       
+       ↓
+       
+   PostgreSQL
 ```
 
 Frontend 最终通过 Backend 查询数据库展示。
@@ -545,39 +546,39 @@ Frontend 最终通过 Backend 查询数据库展示。
 整体资源关系：
 
 ```text
-User
-
-|
-
-Frontend
-
-|
-
-Backend
-
-|
-
-CR
-
-|
-
-Kubernetes API
-
-|
-
-Controller
-
-|
-
-Simulator
-
-|
-
-Status Update
-
-|
-
-CR Status
+       User
+        
+        |
+        
+     Frontend
+        
+        |
+        
+     Backend
+        
+        |
+        
+       CR
+        
+        |
+        
+  Kubernetes API
+        
+        |
+        
+    Controller
+        
+        |
+        
+    Simulator
+        
+        |
+        
+  Status Update
+        
+        |
+        
+    CR Status
 ```
 
 核心关系：
@@ -590,15 +591,15 @@ CR Status
 符合 Kubernetes：
 
 ```text
-Desired State
-
-↓
-
-Controller
-
-↓
-
-Actual State
+   Desired State
+   
+         ↓
+   
+     Controller
+   
+         ↓
+   
+     Actual State
 ```
 
 模型。
@@ -609,39 +610,39 @@ Actual State
 
 ```text
 hello-k8s-ai
-
-├── api/
-│
-│ Kubernetes CRD 定义
-│ Resource 类型
-│
-├── cmd/
-│
-│ 程序入口
-│
-├── internal/
-│
-│ 核心业务逻辑
-│ Controller
-│ Backend
-│
-├── simulator/
-│
-│ AI workload 模拟
-│ 性能数据生成
-│
-├── dashboard/
-│
-│ Frontend
-│ Backend API
-│
-├── config/
-│
-│ Kubernetes 部署配置
-│
-└── docs/
-
-项目文档
+     
+     ├── api/
+     │
+     │ Kubernetes CRD 定义
+     │ Resource 类型
+     │
+     ├── cmd/
+     │
+     │ 程序入口
+     │
+     ├── internal/
+     │
+     │ 核心业务逻辑
+     │ Controller
+     │ Backend
+     │
+     ├── simulator/
+     │
+     │ AI workload 模拟
+     │ 性能数据生成
+     │
+     ├── dashboard/
+     │
+     │ Frontend
+     │ Backend API
+     │
+     ├── config/
+     │
+     │ Kubernetes 部署配置
+     │
+     └── docs/
+     
+     项目文档
 ```
 
 ---
@@ -722,49 +723,49 @@ config/
 第一次接触项目：
 
 ```text
-README
-
-↓
-
-docs/INDEX.md
-
-↓
-
-docs/AI_CONTEXT.md
-
-↓
-
+      README
+     
+        ↓
+     
+  docs/INDEX.md
+     
+        ↓
+     
+ docs/AI_CONTEXT.md
+     
+        ↓
+     
 PROJECT_OVERVIEW.md
-
-↓
-
-api/
-
-↓
-
-internal/
-
-↓
-
-simulator/
-
-↓
-
-dashboard/
+     
+        ↓
+     
+       api/
+     
+         ↓
+     
+      internal/
+     
+         ↓
+     
+     simulator/
+     
+         ↓
+     
+     dashboard/
 ```
 
 关注调度逻辑：
 
 ```text
-api/
-
-↓
-
-internal/
-
-↓
-
-simulator/
+     api/
+      
+      ↓
+      
+   internal/
+      
+      ↓
+      
+  simulator/
 ```
 
 关注用户功能：
@@ -772,17 +773,17 @@ simulator/
 ```text
 dashboard/
 
-↓
+    ↓
 
-backend/
+ backend/
 ```
 
 关注部署：
 
 ```text
-config/
+       config/
 
-↓
+         ↓
 
 docs/getting-started/
 ```
