@@ -430,6 +430,12 @@ func TestSimulatorInstancePlacementCreatesNodePinnedDeployments(t *testing.T) {
 		if deployment.Spec.Template.Annotations[placementNodeAnnotation] != nodeName {
 			t.Fatalf("Deployment %q placement annotation = %q", name, deployment.Spec.Template.Annotations[placementNodeAnnotation])
 		}
+		podSecurityContext := deployment.Spec.Template.Spec.SecurityContext
+		if podSecurityContext == nil ||
+			podSecurityContext.SeccompProfile == nil ||
+			podSecurityContext.SeccompProfile.Type != corev1.SeccompProfileTypeRuntimeDefault {
+			t.Fatalf("Deployment %q does not use the RuntimeDefault seccomp profile", name)
+		}
 	}
 	assertPlacementDeployment(deploymentName(instance.Name), "node-a", 1)
 	secondaryName := placementDeploymentName(instance.Name, "node-b")

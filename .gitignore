@@ -9,6 +9,7 @@
 /output/
 /tmp/
 /project-review/
+/change-history/
 
 # Local environment
 .env

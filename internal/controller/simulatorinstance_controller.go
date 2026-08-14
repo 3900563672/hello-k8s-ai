@@ -228,6 +228,12 @@ func (r *SimulatorInstanceReconciler) ensurePlacementDeployment(
 		podSpec := &deployment.Spec.Template.Spec
 		podSpec.ServiceAccountName = r.simulatorServiceAccount()
 		podSpec.TerminationGracePeriodSeconds = new(int64(15))
+		if podSpec.SecurityContext == nil {
+			podSpec.SecurityContext = &corev1.PodSecurityContext{}
+		}
+		podSpec.SecurityContext.SeccompProfile = &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileTypeRuntimeDefault,
+		}
 		setRequiredNodeAffinity(podSpec, targetNodes)
 		upsertSimulatorContainer(
 			podSpec,

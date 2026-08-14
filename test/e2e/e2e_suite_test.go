@@ -34,6 +34,8 @@ import (
 var (
 	// managerImage 是用于测试的 manager 镜像名
 	managerImage = "example.com/hello-k8s-ai:v0.0.1"
+	// simulatorImage 是放置测试实际运行的 Simulator 镜像名
+	simulatorImage = "example.com/hello-k8s-ai-simulator:v0.0.1"
 	// shouldCleanupCertManager 标记本 suite 是否自己安装了 CertManager，用于后续清理
 	shouldCleanupCertManager = false
 )
@@ -60,6 +62,15 @@ var _ = BeforeSuite(func() {
 	By("loading the manager image on Kind")
 	err = utils.LoadImageToKindClusterWithName(managerImage)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the manager image into Kind")
+
+	By("building the simulator image")
+	cmd = exec.Command("make", "docker-build-simulator", fmt.Sprintf("SIMULATOR_IMG=%s", simulatorImage))
+	_, err = utils.Run(cmd)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to build the simulator image")
+
+	By("loading the simulator image on Kind")
+	err = utils.LoadImageToKindClusterWithName(simulatorImage)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the simulator image into Kind")
 
 	configureKubectlKubeRC()
 	setupCertManager()

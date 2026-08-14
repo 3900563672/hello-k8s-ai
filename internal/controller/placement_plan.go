@@ -168,9 +168,9 @@ func removeNodePlacement(plan nodePlacementPlan, nodeName string) (nodePlacement
 // scaleDownPlacementNode 优先回收非主节点，避免主 Deployment 在普通缩容时更名或重建。
 func scaleDownPlacementNode(plan nodePlacementPlan) (string, bool) {
 	placements := sortedNodePlacements(plan.Placements)
-	for i := len(placements) - 1; i >= 0; i-- {
-		if placements[i].NodeName != plan.PrimaryNode {
-			return placements[i].NodeName, true
+	for _, placement := range slices.Backward(placements) {
+		if placement.NodeName != plan.PrimaryNode {
+			return placement.NodeName, true
 		}
 	}
 	if len(placements) == 0 {

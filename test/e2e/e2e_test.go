@@ -46,6 +46,12 @@ const metricsServiceName = "hello-k8s-ai-controller-manager-metrics-service"
 // 用于读取 metrics 的 RoleBinding 名称
 const metricsRoleBindingName = "hello-k8s-ai-metrics-binding"
 
+// Controller Deployment 名称
+const controllerDeploymentName = "hello-k8s-ai-controller-manager"
+
+// 放置链路 E2E 使用的 SimulatorInstance 名称
+const placementE2EInstanceName = "placement-e2e-instance"
+
 var _ = Describe("Manager", Ordered, func() {
 	var controllerPodName string
 
@@ -71,6 +77,17 @@ var _ = Describe("Manager", Ordered, func() {
 		cmd = exec.Command("make", "deploy", fmt.Sprintf("IMG=%s", managerImage))
 		_, err = utils.Run(cmd)
 		Expect(err).NotTo(HaveOccurred(), "Failed to deploy the controller-manager")
+
+		By("configuring the controller to use the simulator image loaded into Kind")
+		cmd = exec.Command(
+			"kubectl", "set", "env",
+			"deployment/"+controllerDeploymentName,
+			"-n", namespace,
+			"SIMULATOR_IMAGE="+simulatorImage,
+			"SIMULATOR_IMAGE_PULL_POLICY=Never",
+		)
+		_, err = utils.Run(cmd)
+		Expect(err).NotTo(HaveOccurred(), "Failed to configure the simulator image")
 	})
 
 	// 测试结束清理：删除 metrics 的 curl pod，卸载 controller，卸载 CRD，删除 namespace
@@ -282,7 +299,6 @@ var _ = Describe("Manager", Ordered, func() {
 			nodeName = strings.TrimSpace(nodeName)
 			Expect(nodeName).NotTo(BeEmpty())
 
-			const instanceName = "placement-e2e-instance"
 			manifest := fmt.Sprintf(`
 apiVersion: platform.study.com/v1
 kind: TenantNodePolicy
@@ -320,7 +336,7 @@ spec:
   replicas: 1
   traffic:
     qps: 0
-`, nodeName, nodeName, instanceName, nodeName, nodeName)
+`, nodeName, nodeName, placementE2EInstanceName, nodeName, nodeName)
 			cmd = exec.Command("kubectl", "apply", "-f", "-")
 			cmd.Stdin = strings.NewReader(manifest)
 			_, err = utils.Run(cmd)
@@ -329,7 +345,7 @@ spec:
 				cleanup := exec.Command(
 					"kubectl",
 					"delete",
-					"simulatorinstance/"+instanceName,
+					"simulatorinstance/"+placementE2EInstanceName,
 					"tenantnodepolicy/placement-e2e-tenant-node",
 					"modelnodepolicy/placement-e2e-model-node",
 					"--ignore-not-found",
@@ -340,13 +356,13 @@ spec:
 			By("checking the required node affinity materialized by the controller")
 			Eventually(func(g Gomega) {
 				cmd := exec.Command(
-					"kubectl", "get", "deployment", "simulator-"+instanceName,
+					"kubectl", "get", "deployment", "simulator-"+placementE2EInstanceName,
 					"-n", namespace,
-					"-o", "jsonpath={.spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]}",
+					"-o", `jsonpath={.spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]}{"|"}{.spec.template.spec.securityContext.seccompProfile.type}`,
 				)
 				output, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(strings.TrimSpace(output)).To(Equal(nodeName))
+				g.Expect(strings.TrimSpace(output)).To(Equal(nodeName + "|RuntimeDefault"))
 			}).Should(Succeed())
 
 			By("checking the node selected by Kubernetes Scheduler")
@@ -354,13 +370,30 @@ spec:
 				cmd := exec.Command(
 					"kubectl", "get", "pods",
 					"-n", namespace,
-					"-l", "platform.study.com/instance="+instanceName,
-					"-o", "jsonpath={.items[0].spec.nodeName}",
+					"-l", "platform.study.com/instance="+placementE2EInstanceName,
+					"-o", `jsonpath={range .items[*]}{.spec.nodeName}{"\n"}{end}`,
 				)
 				output, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(strings.TrimSpace(output)).To(Equal(nodeName))
+				podNodes := utils.GetNonEmptyLines(output)
+				g.Expect(podNodes).To(HaveLen(1))
+				g.Expect(strings.TrimSpace(podNodes[0])).To(Equal(nodeName))
 			}).Should(Succeed())
+
+			By("waiting for the simulator pod to become ready")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "pods",
+					"-n", namespace,
+					"-l", "platform.study.com/instance="+placementE2EInstanceName,
+					"-o", `jsonpath={range .items[*]}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}`,
+				)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				readyStates := utils.GetNonEmptyLines(output)
+				g.Expect(readyStates).To(HaveLen(1))
+				g.Expect(strings.TrimSpace(readyStates[0])).To(Equal("True"))
+			}, 3*time.Minute, time.Second).Should(Succeed())
 		})
 
 		// +kubebuilder:scaffold:e2e-webhooks-checks
