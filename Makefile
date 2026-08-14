@@ -64,8 +64,41 @@ vet: ## go vet
 test: vet ## 跑单元测试（不会重新生成或改写 CRD/API）
 	go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
+.PHONY: fmt-check
+fmt-check: ## 检查全部 Go 源码格式，不改写文件
+	@files="$$(find api cmd internal simulator test dashboard/backend -type f -name '*.go' -print0 | xargs -0 gofmt -l)"; \
+	if [ -n "$$files" ]; then \
+		echo "以下 Go 文件需要执行 gofmt："; \
+		echo "$$files"; \
+		exit 1; \
+	fi
+
+.PHONY: test-backend
+test-backend: ## 检查 Dashboard Backend
+	cd dashboard/backend && go vet ./... && go test ./... -count=1
+
+.PHONY: test-e2e-compile
+test-e2e-compile: ## 只编译 E2E 测试，不创建集群
+	go test -tags=e2e ./test/e2e -run '^$$' -count=1
+
+.PHONY: test-frontend
+test-frontend: ## 检查 Frontend lint、类型、构建和状态验证
+	cd dashboard/frontend/my-app && npm ci && npm run check
+
+.PHONY: verify-deploy
+verify-deploy: kustomize ## 检查脚本语法并渲染全部部署清单
+	bash -n setup.sh hack/local-cluster.sh hack/cleanup-obsolete.sh
+	"$(KUSTOMIZE)" build config/dev >/dev/null
+	"$(KUSTOMIZE)" build config/demo >/dev/null
+	"$(KUSTOMIZE)" build dashboard/deploy >/dev/null
+
+.PHONY: verify
+verify: fmt-check test test-backend test-e2e-compile test-frontend verify-deploy lint ## 执行提交前完整静态验证
+
 # e2e 使用独立集群，避免测试清理误删日常开发集群。
 E2E_KIND_CLUSTER ?= hello-k8s-ai-test-e2e
+# 固定 Kind 节点镜像，避免 CI 因 latest 指向变化而漂移。
+KIND_NODE_IMAGE ?= kindest/node:v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
 
 .PHONY: setup-test-e2e
 setup-test-e2e: ## 创建 Kind 集群（没有才建）
@@ -78,13 +111,17 @@ setup-test-e2e: ## 创建 Kind 集群（没有才建）
 			echo "集群 $(E2E_KIND_CLUSTER) 已经在了，跳过";; \
 		*) \
 			echo "建 Kind 集群 $(E2E_KIND_CLUSTER) ..."; \
-			$(KIND) create cluster --name $(E2E_KIND_CLUSTER) ;; \
+			$(KIND) create cluster --name $(E2E_KIND_CLUSTER) --image "$(KIND_NODE_IMAGE)" ;; \
 	esac
 
 .PHONY: test-e2e
 test-e2e: setup-test-e2e vet ## 跑 e2e 测试（使用仓库中已有 CRD）
-	KIND=$(KIND) KIND_CLUSTER=$(E2E_KIND_CLUSTER) go test -tags=e2e ./test/e2e/ -v -ginkgo.v
-	$(MAKE) cleanup-test-e2e
+	@status=0; \
+	KIND=$(KIND) KIND_CLUSTER=$(E2E_KIND_CLUSTER) go test -tags=e2e ./test/e2e/ -v -ginkgo.v || status=$$?; \
+	cleanup_status=0; \
+	$(MAKE) cleanup-test-e2e || cleanup_status=$$?; \
+	if [ "$$status" -ne 0 ]; then exit "$$status"; fi; \
+	exit "$$cleanup_status"
 
 .PHONY: cleanup-test-e2e
 cleanup-test-e2e: ## 删掉 Kind 集群

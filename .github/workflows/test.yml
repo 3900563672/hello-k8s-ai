@@ -1,4 +1,4 @@
-name: 单元测试
+name: 源码与部署验证
 
 on:
   push:
@@ -7,11 +7,12 @@ on:
 permissions: {}
 
 jobs:
-  test:
+  controller:
     permissions:
       contents: read
-    name: Ubuntu 单元测试
+    name: Controller 单元测试
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: 检出代码
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -23,7 +24,93 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: 执行测试
+      - name: 检查依赖文件
         run: |
           go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: 检查格式并执行测试
+        run: |
+          make fmt-check
           make test
+          go test -race ./internal/controller -count=1
+
+  backend:
+    permissions:
+      contents: read
+    name: Backend 测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: 配置 Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version-file: dashboard/backend/go.mod
+          cache-dependency-path: dashboard/backend/go.sum
+
+      - name: 检查依赖并执行测试
+        working-directory: dashboard/backend
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          go vet ./...
+          go test -race ./... -count=1
+
+  frontend:
+    permissions:
+      contents: read
+    name: Frontend 检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: dashboard/frontend/my-app
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: dashboard/frontend/my-app/package-lock.json
+
+      - name: 安装依赖并执行完整检查
+        run: |
+          npm ci
+          npm run check
+
+  deployment:
+    permissions:
+      contents: read
+    name: 生成文件、部署清单与镜像
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: 配置 Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version-file: go.mod
+
+      - name: 检查生成文件与部署清单
+        run: |
+          make manifests generate YEAR=2026
+          git diff --exit-code -- api/v1 config/crd config/rbac
+          make verify-deploy
+          git diff --check
+
+      - name: 构建并校验全部项目镜像
+        run: make docker-build-local

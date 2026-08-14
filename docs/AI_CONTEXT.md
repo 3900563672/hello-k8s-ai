@@ -143,21 +143,23 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 ## 9. 验证基线
 
-2026-08-13 部署改造的静态验证：
+2026-08-14 源码校正后的本地验证：
 
-- `hack/local-cluster.sh`、`hack/cleanup-obsolete.sh`、`setup.sh` 通过 `bash -n`。
-- Makefile 在本机没有 Go 的情况下可正常解析并列出 `cluster-*` target。
-- Kustomize：`config/dev`、`config/demo`、`dashboard/deploy` 均可成功渲染。
+- 恢复被误删的 `internal/controller/constants.go` 后，根 Go module 的测试、vet 和 golangci-lint v2.12.2 通过。
+- Dashboard Backend 的测试与 vet 通过；E2E 源码可独立编译。
+- `setup.sh`、`hack/local-cluster.sh`、`hack/cleanup-obsolete.sh` 通过 `bash -n`。
+- `config/dev`、`config/demo`、`dashboard/deploy` 均可成功进行 Kustomize 渲染。
+- Frontend 源码完成独立语法解析；当前交付环境无法访问 npm registry，因此完整 `npm ci && npm run check` 交由 CI 执行，不伪造结果。
 
-当前交付环境没有 Go、Docker、kubectl 和目标集群，因此不能代替用户机器执行镜像构建、Pod Ready、Prometheus target、Jaeger Trace 或页面访问验收。部署脚本会在用户机器上逐门验证，失败时停止并写入 `.runtime/last-failure.log`。
+当前交付环境没有 Docker、kubectl、Kind 和目标集群，不能代替用户机器执行镜像启动、Pod Ready、Prometheus target、Jaeger Trace、数据库或页面访问验收。`make cluster-up` 会在用户机器上逐门验证，失败时停止并写入 `.runtime/last-failure.log`。
 
-用户提供的 2026-08-13 集群快照显示：Context 为 `docker-desktop`，1 个 control-plane + 9 个 worker 均 Ready，Kubernetes v1.36.1，默认 `standard` StorageClass 可用；旧 Controller 因 `controller:latest` 不存在而 `ImagePullBackOff`。这是外部快照，不是本交付环境重新执行的结果。
+GitHub Actions 现在分别验证 Controller、Backend、Frontend、生成文件、部署渲染、四类镜像和固定版本 Kind E2E。E2E 无论成功或失败都会兜底清理独立测试集群。
 
 ## 10. 推荐下一步顺序
 
 1. 补最小 Frontend 组件测试。
 2. 把 Traffic Overlay 明确转成可预览、可提交、可审计的 Tenant QPS 命令。
-3. 在 CI 中执行独立 Kind 全栈 E2E，并覆盖部署脚本的失败诊断路径。
+3. 把现有 Controller/Simulator Kind E2E 扩展到 Dashboard 与可观测组件的完整栈验收。
 4. 补认证授权、Secret/TLS/NetworkPolicy、PostgreSQL 备份与可观测存储持久化。
 5. 评审 `SimulationRun/SimulationClock` API 后再实现逻辑时间，禁止只在前端伪造倍速。
 

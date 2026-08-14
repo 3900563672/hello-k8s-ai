@@ -12,6 +12,7 @@ jobs:
       contents: read
     name: Ubuntu 代码检查
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: 检出代码
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

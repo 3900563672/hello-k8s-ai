@@ -12,6 +12,10 @@ jobs:
       contents: read
     name: Ubuntu E2E 测试
     runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      E2E_KIND_CLUSTER: hello-k8s-ai-test-e2e
+      KIND_NODE_IMAGE: kindest/node:v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
     steps:
       - name: 检出代码
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -23,16 +27,20 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: 安装最新版 Kind
+      - name: 安装固定版本 Kind
         run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-$(go env GOARCH)
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
+          go install sigs.k8s.io/kind@v0.32.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: 验证 Kind 安装
         run: kind version
 
-      - name: 执行 E2E 测试
+      - name: 检查依赖并执行 E2E
         run: |
           go mod tidy
+          git diff --exit-code -- go.mod go.sum
           make test-e2e
+
+      - name: 清理 E2E 集群
+        if: always()
+        run: make cleanup-test-e2e || true

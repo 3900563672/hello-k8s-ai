@@ -95,6 +95,6 @@
 
 ## 文档状态说明
 
-- 本体系基于 2026-08-12 源码审计，并于 2026-08-13 更新 Docker Desktop 完整部署流程。
-- 2026-08-13 部署改造已通过 Shell 语法、Make target 与 `config/dev`、`config/demo`、`dashboard/deploy` Kustomize 渲染检查。
-- 用户提供了 `docker-desktop` 集群快照，但当前交付环境没有 kubectl、Docker 和目标集群，尚未代替用户执行真实运行验收；见 [CLUSTER_INFORMATION.md](operations/CLUSTER_INFORMATION.md)。
+- 本体系基于 2026-08-12 源码审计，并在 2026-08-13 至 2026-08-14 同步了 Docker Desktop 部署、Orchestrator 放置契约和 Model 能力基准链路。
+- 2026-08-14 已复核根 Go module、Dashboard Backend、E2E 编译、Shell 语法和三套 Kustomize 渲染；完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。
+- 当前交付环境没有 kubectl、Docker、Kind 和目标集群，真实运行结论仍以 `make cluster-up` 或 CI Kind E2E 的实际输出为准；见 [CLUSTER_INFORMATION.md](operations/CLUSTER_INFORMATION.md)。

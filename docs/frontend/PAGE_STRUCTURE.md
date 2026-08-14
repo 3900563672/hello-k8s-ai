@@ -48,7 +48,7 @@ Backend 数据经 Query/同步 hook 更新；跨页面选择存入 `controlPlane
 
 ### 当前页面内容
 
-- Model：displayName、gpuUnits、maxConcurrency、coldStartMs、performance 参数。
+- Model：displayName、absoluteScore、gpuUnits、maxConcurrency、coldStartMs、performance 参数。
 - WorkerNode：displayName、gpu、maxConcurrency；表格可显示 status 使用量。
 - Tenant：displayName、priority、qps、TTFT/Queue 上下阈值。
 - 创建、重命名（实际修改 displayName，不改 metadata.name）、删除和批量操作。
