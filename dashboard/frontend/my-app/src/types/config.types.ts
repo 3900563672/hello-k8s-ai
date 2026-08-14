@@ -13,6 +13,7 @@ export interface ModelSpec {
     displayName: string
     gpuUnits: number
     maxConcurrency: number
+    absoluteScore: number
     coldStartMs: number
     performance: ModelPerformance
 }

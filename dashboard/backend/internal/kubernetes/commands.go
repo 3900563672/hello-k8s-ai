@@ -153,6 +153,11 @@ func validateIntent(intent ApplyIntent) (ResourceDescriptor, error) {
 	if intent.Spec == nil {
 		return ResourceDescriptor{}, errors.New("spec is required")
 	}
+	if descriptor.Kind == "Model" {
+		if _, exists := intent.Spec["absoluteScore"]; !exists {
+			return ResourceDescriptor{}, errors.New("Model 缺少必填字段 spec.absoluteScore")
+		}
+	}
 	allowed := writableSpecFields[descriptor.Kind]
 	for field := range intent.Spec {
 		if _, ok := allowed[field]; !ok {
@@ -163,7 +168,7 @@ func validateIntent(intent ApplyIntent) (ResourceDescriptor, error) {
 }
 
 var writableSpecFields = map[string]map[string]struct{}{
-	"Model":      fields("displayName", "gpuUnits", "maxConcurrency", "coldStartMs", "performance"),
+	"Model":      fields("displayName", "gpuUnits", "maxConcurrency", "absoluteScore", "coldStartMs", "performance"),
 	"WorkerNode": fields("displayName", "gpu", "maxConcurrency"),
 	"Tenant": fields(
 		"displayName", "priority", "qps", "ttftThresholdMs", "queueThreshold",

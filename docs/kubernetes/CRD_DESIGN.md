@@ -33,25 +33,26 @@ Backend 通过 dynamic informer 读取全部 CRD；Command Gateway 只允许写 
 | spec | `displayName` | 非空展示名 | 用户/Backend |
 | spec | `gpuUnits` | >=1；约定 800 表示 0.8 卡一类业务单位 | 用户/Backend |
 | spec | `maxConcurrency` | >=1 | 用户/Backend |
+| spec | `absoluteScore` | >=1；单个已预热副本的理想能力基准，调度必填 | 用户/Backend |
 | spec | `coldStartMs` | >=0 | 用户/Backend |
 | spec.performance | `prefillBaseMs` | 默认 50ms | 用户/Backend |
 | spec.performance | `prefillPerTokenUs` | 默认 500us/token | 用户/Backend |
 | spec.performance | `decodePerTokenMs` | 默认 20ms/token | 用户/Backend |
-| status | `absoluteScore` | 单个已预热副本理想能力基准 | 当前无项目内 Controller writer；外部后端/运维 |
+| status | `absoluteScore` | 旧版本兼容字段 | 禁止新增写入；Orchestrator 仅在 Spec 缺失的旧对象上回退读取 |
 | status | `conditions` | 当前实现通常为空 | 未定义内部 writer |
 
 ### 生命周期与关联
 
 - 被 TenantModelPolicy、ModelNodePolicy 和 SimulatorInstance 引用。
 - TenantModelPolicy Controller watch Model generation；Model 删除/失效会阻止或清理实例。
-- Simulator 读取性能参数；Orchestrator 要求 `absoluteScore` 才能选择扩容目标。
+- Simulator 读取性能参数；Orchestrator 从 `spec.absoluteScore` 取得首次调度分数。
 - 删除前应检查引用；Kubernetes CRD schema 当前不提供跨对象 referential integrity。
 
 ### Dashboard / Backend
 
-- Config 页面展示和编辑 Spec；Data View 展示 Status/关联实例。
+- Config 页面展示和编辑包含 `absoluteScore` 的 Spec；Data View 展示 Status/关联实例。
 - Backend dynamic cache 读取；Mapper 转成 ModelConfig/overview。
-- `absoluteScore` 当前 UI 没有可靠写入入口，是必须明确的运维缺口。
+- Backend Command Gateway 将 `absoluteScore` 列入 Model Spec 白名单，并在缺失时拒绝请求。
 
 ## 3. WorkerNode
 

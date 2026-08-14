@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronDown, Gauge, Timer } from 'lucide-react'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -157,6 +157,35 @@ export const ModelForm = memo(function ModelForm({
                                             className={`${configInputClass} tabular-nums`}
                                         />
                                     </FormControl>
+                                    <FormMessage className="text-xs text-[#FF7373]" />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="absoluteScore"
+                            render={({ field }) => (
+                                <FormItem className="sm:col-span-2">
+                                    <FormLabel className={configLabelClass}>能力基准分</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            {...field}
+                                            value={Number.isNaN(field.value) ? '' : field.value}
+                                            onChange={(event) =>
+                                                field.onChange(
+                                                    numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
+                                                )
+                                            }
+                                            className={`${configInputClass} tabular-nums`}
+                                        />
+                                    </FormControl>
+                                    <FormDescription className="text-xs leading-5 text-[#596579]">
+                                        单个预热副本的理想能力分，Orchestrator 使用该值比较扩容候选。
+                                    </FormDescription>
                                     <FormMessage className="text-xs text-[#FF7373]" />
                                 </FormItem>
                             )}

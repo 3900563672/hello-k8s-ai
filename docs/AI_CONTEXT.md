@@ -8,7 +8,7 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 项目不是生产推理网关；当前 Simulator 模拟推理工作负载。它也不是一个由 PostgreSQL 驱动的控制平面：Kubernetes API Server 才是配置和最新收敛状态的主要事实来源。
 
-## 2. 当前状态基线（2026-08-13）
+## 2. 当前状态基线（2026-08-14）
 
 ### 已实现
 
@@ -51,6 +51,7 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 | 对象/字段 | 唯一或主要写入者 | 备注 |
 | --- | --- | --- |
 | 用户可写 CR `spec` | kubectl / Dashboard Backend Command Gateway | Backend 仅允许 7 种配置 CR；不允许写派生 CR。 |
+| `Model.spec.absoluteScore` | kubectl / Dashboard Backend Command Gateway | 必填正整数；模型能力配置的唯一权威来源。旧 `status.absoluteScore` 只读兼容。 |
 | `SimulatorInstance.spec.replicas` | Orchestrator | TenantModelPolicy 创建时初始为 0。 |
 | `SimulatorInstance.spec.traffic.qps` | Traffic Controller | Frontend 应改 Tenant.spec.qps，而不是直接改实例分配。 |
 | `SimulatorInstance.status.phase/availableReplicas/Ready` | SimulatorInstance Controller | 从 Deployment 收敛状态获得。 |
@@ -133,7 +134,7 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 - Traffic Overlay 是本地草稿；页面有真实数据不等于场景已写回控制平面。
 - `TenantRuntime.status.instanceCount` 的实现含义是可用 Replica 总数。
-- `Model.status.absoluteScore` 当前没有项目内 Controller 写入；本地部署脚本为 `model-sample` 注入演示分数，其他环境必须由独立运维流程提供。
+- `Model.spec.absoluteScore` 是用户/Backend 提供的必填能力基准；旧 `status.absoluteScore` 仅用于滚动升级兼容，不应再写入。
 - TenantNodePolicy、ModelNodePolicy 的 Status 当前没有 writer；空 Conditions 不等于失败。
 - Backend watch ReplicaSet 并记录事件，但 Workloads DTO 当前未直接展示 ReplicaSet。
 - 数据库有 `clock_state` 表，但运行时 Clock 仍是不可控制的真实 UTC、rate=1。

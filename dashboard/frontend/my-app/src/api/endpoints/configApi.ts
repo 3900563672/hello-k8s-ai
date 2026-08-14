@@ -37,6 +37,8 @@ const toModel = (resource: BackendResource<ModelSpec & Record<string, unknown>>)
     displayName: resource.spec.displayName,
     gpuUnits: resource.spec.gpuUnits,
     maxConcurrency: resource.spec.maxConcurrency,
+    absoluteScore: resource.spec.absoluteScore
+        ?? (typeof resource.status.absoluteScore === 'number' ? resource.status.absoluteScore : 0),
     coldStartMs: resource.spec.coldStartMs,
     performance: resource.spec.performance,
     status: resource.status,
@@ -76,6 +78,7 @@ const modelSpec = (model: Model): ModelSpec => ({
     displayName: model.displayName,
     gpuUnits: model.gpuUnits,
     maxConcurrency: model.maxConcurrency,
+    absoluteScore: model.absoluteScore,
     coldStartMs: model.coldStartMs,
     performance: model.performance,
 })

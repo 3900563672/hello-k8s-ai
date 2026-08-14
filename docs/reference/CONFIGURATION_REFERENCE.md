@@ -23,7 +23,7 @@
 
 OTel 通用：`OTEL_EXPORTER_OTLP_ENDPOINT`、`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`、`OTEL_EXPORTER_OTLP_INSECURE`、`OTEL_SDK_DISABLED`、`OTEL_TRACES_SAMPLER`、`OTEL_TRACES_SAMPLER_ARG`。`SIMULATOR_` 前缀变量由 Manager 注入到动态 Pod。
 
-本地演示使用 Make 变量 `DEMO_MODEL_ABSOLUTE_SCORE`，默认 100。`make cluster-up` 会通过 Status subresource 写入 `Model.status.absoluteScore`，避免 Orchestrator 因缺少放置分数而停滞；该变量不是生产默认值。
+本地演示使用 Make 变量 `DEMO_MODEL_ABSOLUTE_SCORE`，默认 100。`make cluster-up` 会把它写入 `Model.spec.absoluteScore`；生产 Model 也必须显式提供自己的正整数基准分。升级时，脚本会把仍在旧 `status.absoluteScore` 中的正数复制到 Spec，但不会为完全缺失的模型猜测分数。
 
 ## 2. Simulator
 

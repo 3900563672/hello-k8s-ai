@@ -14,8 +14,8 @@
 
 | 资源 | 字段 | 写入者 | 读取者 | 禁止者/备注 |
 | --- | --- | --- | --- | --- |
-| Model | `spec.*` | 用户/Backend | Policy、Instance、Orchestrator、Simulator、WorkerUsage | Controller 不应规范化后回写 Spec |
-| Model | `status.absoluteScore` | 外部后端/运维（当前无内部 writer） | Orchestrator | 需要未来明确 writer/RBAC/API |
+| Model | `spec.*`（含 `absoluteScore`） | 用户/Backend | Policy、Instance、Orchestrator、Simulator、WorkerUsage | `absoluteScore` 必填且 >=1；Controller 不回写 Spec |
+| Model | `status.absoluteScore` | 无新 writer | Orchestrator（仅升级兼容） | Deprecated；禁止 Backend/Controller 新写入 |
 | WorkerNode | `spec.*` | 用户/Backend | Instance、Orchestrator | - |
 | WorkerNode | `status.used*`, Conditions | WorkerNodeUsage | Orchestrator/Backend | Backend 不写 |
 | Tenant | `spec.*` | 用户/Backend | Traffic/Performance/Orchestrator | Traffic PATCH 只改 qps |

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
@@ -182,6 +183,25 @@ func (r *OrchestratorReconciler) Reconcile(
 		attribute.Int("performance.queue_depth", input.AvgQueue),
 	)
 
+	// 旧对象可能在升级后仍没有能力基准分。明确暴露配置问题，避免误报为容量不足。
+	if decision.Action == NoOp && decision.Reason == reasonModelAbsoluteScoreMissing {
+		_, missingModels := placementModelScoreState(input.AvailableModels, input.ExistingInstances)
+		message := "实例引用的允许模型缺少 spec.absoluteScore"
+		if len(missingModels) > 0 {
+			message += ": " + strings.Join(missingModels, ", ")
+		}
+		if err := r.setOrchestratorReadyCondition(
+			ctx,
+			config.Name,
+			metav1.ConditionFalse,
+			"ModelScoreMissing",
+			message,
+		); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: orchestratorSyncPeriod}, nil
+	}
+
 	// 如果连一个有效的性能指标都没有，不能做决策，等下一轮
 	if !input.HasTTFT && !input.HasQueue && decision.Action == NoOp {
 		if err := r.setOrchestratorReadyCondition(
@@ -278,8 +298,7 @@ func nextOrchestratorRequeue(requested time.Duration) time.Duration {
 	return min(requested, orchestratorSyncPeriod)
 }
 
-// initializeEffectiveScores 为还没有有效分数的实例计算初始分数。
-// 已有分数的实例保持稳定，直到下一次扩容重新计算。
+// initializeEffectiveScores 为新实例写入初始分数，并在 Model 配置变化后刷新已有实例。
 func (r *OrchestratorReconciler) initializeEffectiveScores(ctx context.Context, input DecisionInput) error {
 	// 把模型信息放到 map 里方便查找
 	models := make(map[string]ModelInfo, len(input.AvailableModels))
@@ -287,17 +306,25 @@ func (r *OrchestratorReconciler) initializeEffectiveScores(ctx context.Context, 
 		models[model.Name] = model
 	}
 	for _, instance := range input.ExistingInstances {
-		// 已经有分数就跳过
-		if instance.HasEffectiveScore {
-			continue
-		}
 		model, ok := models[instance.ModelName]
 		if !ok {
 			continue
 		}
-		// 在可用节点里找一个最好的分数
-		score, found := bestEffectiveScoreForModel(model, input.AvailableNodes)
-		if !found {
+
+		score := scoreModel(model)
+		if score <= 0 {
+			continue
+		}
+		// 休眠实例首次初始化时仍要求至少有一个可行节点；已有副本只同步模型配置，
+		// 不应因节点剩余容量已被自身占满而保留旧分数。
+		if instance.CurrentReplicas == 0 {
+			var found bool
+			score, found = bestEffectiveScoreForModel(model, input.AvailableNodes)
+			if !found {
+				continue
+			}
+		}
+		if instance.HasEffectiveScore && instance.EffectiveScore == score {
 			continue
 		}
 		if err := r.updateInstanceEffectiveScore(ctx, instance.Name, score); err != nil {

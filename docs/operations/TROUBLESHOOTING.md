@@ -112,7 +112,7 @@ kubectl auth can-i --as=system:serviceaccount:hello-k8s-ai-system:hello-k8s-ai-s
 
 Score 可能为 0：
 
-- `effectiveScore` 未写（通常 Model.absoluteScore 缺失或尚未扩容决策）。
+- `effectiveScore` 未写（通常旧 Model 尚未迁移 `spec.absoluteScore`，或尚未发生扩容决策）。
 - 冷启动前半段 factor=0。
 - availableReplicas=0。
 - Simulator observedAt 已过期，Traffic 忽略。
@@ -140,10 +140,12 @@ sum(instance.spec.traffic.qps for tenant) == tenant.spec.qps
 - 上/下阈值：扩容是 TTFT OR Queue 高；缩容是 TTFT AND Queue 低。
 - 对应方向 cooldown 是否未结束。
 - min/max/allowScaleToZero。
-- Model.status.absoluteScore 是否存在。
+- Model.spec.absoluteScore 是否为正整数；旧对象可暂时回退读取 status，但应尽快迁移。
 - Policy 候选和 WorkerNode 剩余 GPU/concurrency。
 - 实例 `pending-scale-plan` annotation 是否卡住。
 - Orchestrator Conditions/lastScaling、metrics/Trace。
+
+若 Condition Reason 是 `ModelScoreMissing`，先补齐 Model Spec；它与 `no_feasible_placement` 表示的策略/容量不足不是同一问题。
 
 不要只看 CPU；当前算法不使用 CPU 指标。
 

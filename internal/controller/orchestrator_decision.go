@@ -17,6 +17,8 @@ const (
 	Rebalance
 )
 
+const reasonModelAbsoluteScoreMissing = "model_absolute_score_missing"
+
 type Decision struct {
 	Action           DecisionAction
 	Reason           string
@@ -79,7 +81,7 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 		// 找个最合适的实例扩容
 		candidate, found := findBestPlacement(input.AvailableModels, input.AvailableNodes, input.ExistingInstances)
 		if !found {
-			return Decision{Action: NoOp, Reason: "no_feasible_placement"}
+			return placementUnavailableDecision(input.AvailableModels, input.ExistingInstances)
 		}
 		return Decision{
 			Action:           ScaleUp,
@@ -139,6 +141,37 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 		}
 	}
 	return Decision{Action: NoOp, Reason: "no_scale_down_candidate"}
+}
+
+func placementUnavailableDecision(models []ModelInfo, instances []InstanceInfo) Decision {
+	hasValidScore, missingModels := placementModelScoreState(models, instances)
+	if !hasValidScore && len(missingModels) > 0 {
+		return Decision{Action: NoOp, Reason: reasonModelAbsoluteScoreMissing}
+	}
+	return Decision{Action: NoOp, Reason: "no_feasible_placement"}
+}
+
+// placementModelScoreState 只检查已有实例引用的可用模型。
+// 有任一模型具备有效分数时，后续失败仍按容量或策略问题处理；只有全部候选都缺分数时，
+// 才把原因明确标记为模型配置缺失。
+func placementModelScoreState(models []ModelInfo, instances []InstanceInfo) (bool, []string) {
+	instanceModels := make(map[string]struct{}, len(instances))
+	for _, instance := range instances {
+		instanceModels[instance.ModelName] = struct{}{}
+	}
+
+	missing := make([]string, 0)
+	for _, model := range models {
+		if _, referenced := instanceModels[model.Name]; !referenced {
+			continue
+		}
+		if model.AbsoluteScore > 0 {
+			return true, nil
+		}
+		missing = append(missing, model.Name)
+	}
+	slices.Sort(missing)
+	return false, slices.Compact(missing)
 }
 
 // placementRebalanceDecision 在节点策略收窄后，一次迁移一个副本。

@@ -56,6 +56,11 @@ type ModelSpec struct {
 	// +required
 	MaxConcurrency int `json:"maxConcurrency"`
 
+	// 单个已预热副本在理想条件下的能力基准分，用于 Orchestrator 调度
+	// +kubebuilder:validation:Minimum=1
+	// +required
+	AbsoluteScore int `json:"absoluteScore"`
+
 	// 冷启动时间，单位 ms
 	// +kubebuilder:validation:Minimum=0
 	// +required
@@ -68,7 +73,8 @@ type ModelSpec struct {
 
 // ModelStatus 运行时状态，由控制器维护
 type ModelStatus struct {
-	// 单个已预热副本在理想条件下的能力基准分数，由后端或运维维护
+	// 旧版本的能力基准分，仅用于升级兼容；新配置写入 spec.absoluteScore
+	// Deprecated: use spec.absoluteScore.
 	// +optional
 	AbsoluteScore *int `json:"absoluteScore,omitempty"`
 
@@ -85,6 +91,7 @@ type ModelStatus struct {
 // +kubebuilder:printcolumn:name="DisplayName",type=string,JSONPath=`.spec.displayName`
 // +kubebuilder:printcolumn:name="GPUUnits",type=integer,JSONPath=`.spec.gpuUnits`
 // +kubebuilder:printcolumn:name="MaxConcurrency",type=integer,JSONPath=`.spec.maxConcurrency`
+// +kubebuilder:printcolumn:name="AbsoluteScore",type=integer,JSONPath=`.spec.absoluteScore`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Model 是描述模型基本属性和性能的集群级资源。

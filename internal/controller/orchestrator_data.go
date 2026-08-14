@@ -351,19 +351,27 @@ func (r *OrchestratorReconciler) collectAvailableModels(ctx context.Context, ten
 		if err := r.Get(ctx, client.ObjectKey{Name: name}, &model); err != nil {
 			return nil, fmt.Errorf("get allowed model %q: %w", name, err)
 		}
-		score := 0
-		if model.Status.AbsoluteScore != nil {
-			score = nonNegative(*model.Status.AbsoluteScore)
-		}
 		models = append(models, ModelInfo{
 			Name:           model.Name,
 			GPUUnits:       model.Spec.GPUUnits,
-			AbsoluteScore:  score,
+			AbsoluteScore:  modelAbsoluteScore(&model),
 			ColdStartMs:    model.Spec.ColdStartMs,
 			MaxConcurrency: model.Spec.MaxConcurrency,
 		})
 	}
 	return models, nil
+}
+
+// modelAbsoluteScore 读取当前 Spec 配置。旧 Status 只在升级窗口内作为兼容回退，
+// 不再接受新的写入者。
+func modelAbsoluteScore(model *platformv1.Model) int {
+	if score := nonNegative(model.Spec.AbsoluteScore); score > 0 {
+		return score
+	}
+	if model.Status.AbsoluteScore != nil {
+		return nonNegative(*model.Status.AbsoluteScore)
+	}
+	return 0
 }
 
 // attachEligibleNodes 根据 TenantNodePolicy 和 ModelNodePolicy，给每个模型算出可以部署的节点列表。

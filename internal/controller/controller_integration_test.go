@@ -46,6 +46,119 @@ func TestTenantModelPolicyReconcilerCreatesDormantInstance(t *testing.T) {
 	}
 }
 
+func TestCollectAvailableModelsUsesSpecAbsoluteScore(t *testing.T) {
+	scheme := newControllerTestScheme(t)
+	legacyScoreA := 40
+	legacyScoreB := 70
+	modelA := &platformv1.Model{
+		ObjectMeta: metav1.ObjectMeta{Name: "model-a"},
+		Spec: platformv1.ModelSpec{
+			GPUUnits:       1,
+			MaxConcurrency: 2,
+			AbsoluteScore:  120,
+		},
+		Status: platformv1.ModelStatus{AbsoluteScore: &legacyScoreA},
+	}
+	modelB := &platformv1.Model{
+		ObjectMeta: metav1.ObjectMeta{Name: "model-b"},
+		Spec: platformv1.ModelSpec{
+			GPUUnits:       1,
+			MaxConcurrency: 2,
+		},
+		Status: platformv1.ModelStatus{AbsoluteScore: &legacyScoreB},
+	}
+	policies := []client.Object{
+		&platformv1.TenantModelPolicy{
+			ObjectMeta: metav1.ObjectMeta{Name: "allow-model-a"},
+			Spec: platformv1.TenantModelPolicySpec{
+				TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+				ModelRef:  platformv1.ObjectRef{Name: modelA.Name},
+				Effect:    policyEffectAllow,
+			},
+		},
+		&platformv1.TenantModelPolicy{
+			ObjectMeta: metav1.ObjectMeta{Name: "allow-model-b"},
+			Spec: platformv1.TenantModelPolicySpec{
+				TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+				ModelRef:  platformv1.ObjectRef{Name: modelB.Name},
+				Effect:    policyEffectAllow,
+			},
+		},
+	}
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithObjects(modelA, modelB).
+		WithObjects(policies...).
+		WithIndex(&platformv1.TenantModelPolicy{}, orchPolicyIndex, func(obj client.Object) []string {
+			policy := obj.(*platformv1.TenantModelPolicy)
+			return []string{policy.Spec.TenantRef.Name}
+		}).
+		Build()
+	reconciler := &OrchestratorReconciler{Client: kubernetesClient, Scheme: scheme}
+
+	models, err := reconciler.collectAvailableModels(context.Background(), "tenant-a")
+	if err != nil {
+		t.Fatalf("collect available models: %v", err)
+	}
+	if len(models) != 2 {
+		t.Fatalf("models = %#v, want two models", models)
+	}
+	if models[0].Name != modelA.Name || models[0].AbsoluteScore != 120 {
+		t.Fatalf("model-a = %#v, want spec score 120", models[0])
+	}
+	if models[1].Name != modelB.Name || models[1].AbsoluteScore != legacyScoreB {
+		t.Fatalf("model-b = %#v, want legacy score %d", models[1], legacyScoreB)
+	}
+}
+
+func TestInitializeEffectiveScoresRefreshesExistingInstance(t *testing.T) {
+	scheme := newControllerTestScheme(t)
+	oldScore := 80
+	instance := &platformv1.SimulatorInstance{
+		ObjectMeta: metav1.ObjectMeta{Name: "instance-a"},
+		Spec: platformv1.SimulatorInstanceSpec{
+			TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+			ModelRef:  platformv1.ObjectRef{Name: "model-a"},
+			Replicas:  1,
+		},
+		Status: platformv1.SimulatorInstanceStatus{EffectiveScore: &oldScore},
+	}
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&platformv1.SimulatorInstance{}).
+		WithObjects(instance).
+		Build()
+	reconciler := &OrchestratorReconciler{Client: kubernetesClient, Scheme: scheme}
+	input := DecisionInput{
+		AvailableModels: []ModelInfo{{
+			Name:           "model-a",
+			AbsoluteScore:  137,
+			GPUUnits:       1,
+			MaxConcurrency: 1,
+		}},
+		// 模拟节点剩余容量已经被当前副本占满；配置分仍应同步。
+		AvailableNodes: []NodeInfo{{Name: "node-a"}},
+		ExistingInstances: []InstanceInfo{{
+			Name:              instance.Name,
+			ModelName:         "model-a",
+			CurrentReplicas:   1,
+			EffectiveScore:    oldScore,
+			HasEffectiveScore: true,
+		}},
+	}
+
+	if err := reconciler.initializeEffectiveScores(context.Background(), input); err != nil {
+		t.Fatalf("refresh effective score: %v", err)
+	}
+	var got platformv1.SimulatorInstance
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: instance.Name}, &got); err != nil {
+		t.Fatalf("get SimulatorInstance: %v", err)
+	}
+	if got.Status.EffectiveScore == nil || *got.Status.EffectiveScore != 137 {
+		t.Fatalf("effective score = %v, want 137", got.Status.EffectiveScore)
+	}
+}
+
 func TestWorkerNodeUsageIsGlobalAndResetsUnusedNodes(t *testing.T) {
 	scheme := newControllerTestScheme(t)
 	if err := corev1.AddToScheme(scheme); err != nil {

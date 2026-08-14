@@ -32,7 +32,7 @@
 | Reconcile | 从当前输入计算并应用差异的可重入循环 | 每事件只执行一次的 handler |
 | Replay | 当前产品中 snapshot timeline/frame | 完整逻辑时间重演 |
 | Resource Event | Backend 观察到的对象变化记录 | 无损审计/事件溯源 |
-| Score | Simulator 计算的冷启动/可用副本池能力 | Model absoluteScore/effectiveScore |
+| Score | Simulator 计算的冷启动/可用副本池能力 | `Model.spec.absoluteScore` 配置基线 / Instance effectiveScore |
 | SSE | Backend 到浏览器的失效通知流 | 持久事件总线 |
 | Status | Controller/Simulator 的观测与派生输出 | 用户配置入口 |
 | TenantRuntime.instanceCount | 当前实现的可用副本合计 | SimulatorInstance CR 数 |

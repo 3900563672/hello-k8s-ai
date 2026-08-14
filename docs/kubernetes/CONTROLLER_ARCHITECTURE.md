@@ -195,7 +195,7 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 - Orchestrator 对应 Tenant 存在。
 - 同 Tenant 恰有一个 Orchestrator 和一个 TenantPerformance。
 - TenantPerformance Phase Running。
-- Model `status.absoluteScore` 与 WorkerNode 剩余容量足以选择扩容目标。
+- Model `spec.absoluteScore` 有效，且 WorkerNode 剩余容量足以选择扩容目标。
 
 ### 决策规则
 
@@ -212,8 +212,10 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 - Policy 过滤合法 Model/WorkerNode 组合。
 - 剩余容量 = WorkerNode Spec - Status used。
 - GPU 和 concurrency 是硬门；不足则不可选。
-- effectiveScore = Model.absoluteScore × cold start weight，weight 下限约 0.7。
+- effectiveScore = Model.spec.absoluteScore × cold start weight，weight 下限约 0.7。
+- Model 分数更新后，Orchestrator 会刷新已有副本的 effectiveScore；休眠实例首次初始化仍要求存在可行节点。
 - 扩容选择高分且可容纳目标；缩容优先副本较多、effectiveScore 较低的实例，保持确定性排序。
+- 旧 Model 同时缺少 Spec 与旧 Status 分数时，决策原因为 `model_absolute_score_missing`，Orchestrator Ready Condition 为 `ModelScoreMissing`；不再伪装成容量不足。
 
 ### 输出字段/资源
 

@@ -18,7 +18,7 @@
 | Backend 写命令 | 完成（基础） | 7 类 CR 白名单、dry-run、resourceVersion、幂等、审计 | 用户身份/授权；跨对象原子语义；细粒度策略验证 |
 | Backend 历史 | 部分完成 | resource_events、30s snapshots、30d retention、`at` | 备份、压缩/分区、长期策略、事件溯源/确定性重放 |
 | Prometheus/Jaeger API | 完成（基础） | 命名查询、过滤、超时、partial、Trace 树 | Jaeger v2 legacy Query API 运行复验；大规模查询保护 |
-| Frontend Config | 基本完成 | 真实 GET/apply/delete、历史只读、并发版本 | Policy/Orchestrator UI；组件测试 |
+| Frontend Config | 基本完成 | 真实 GET/apply/delete、Model 能力基准分、历史只读、并发版本 | Policy/Orchestrator UI；组件测试 |
 | Frontend Traffic | 部分完成 | 真实 baseline、模板/画布/预览 | Overlay -> Tenant QPS 命令、确认/回滚/审计、真实趋势曲线 |
 | Frontend Data View/Trace | 完成（整合页） | `/trace` DataOverview、指标、资源、事件、Trace tree | 单独 Dashboard landing、深链/筛选增强、性能优化 |
 | SSE/刷新 | 完成（弱实时） | resource.changed、debounce、30s poll、resync-required | durable cursor/重放；慢客户端丢事件监控 |
@@ -39,7 +39,6 @@
 
 - 把当前本地完整栈验收复刻到独立 CI Kind E2E，并归档失败证据。
 - 为 Traffic Overlay 增加 Preview -> Confirm -> PATCH -> Observe 的真实闭环。
-- 为非演示环境明确并校验 `Model.status.absoluteScore` 的提供方式；目前无内部 Controller writer。
 - 验证 Jaeger 2.20 部署是否持续提供 Backend 使用的 legacy Query API。
 - 为 Backend mutation 记录真实调用者身份，而不是只记录请求。
 
@@ -81,7 +80,7 @@ flowchart TB
 ### R3 - 产品闭环
 
 - Traffic Overlay 真实提交与差异预览。
-- Policy、Orchestrator、绝对分数管理界面。
+- Policy、Orchestrator 管理界面。
 - Dashboard landing、资源详情、调度解释和故障行动建议。
 - 正式 OpenAPI/客户端生成和兼容版本策略。
 

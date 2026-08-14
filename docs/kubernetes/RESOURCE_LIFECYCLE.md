@@ -21,13 +21,13 @@ stateDiagram-v2
 建议顺序：
 
 1. WorkerNode（metadata.name 与实际 Node 对齐）。
-2. Model（包括资源/性能参数，并以明确流程提供 absoluteScore）。
+2. Model（包括资源/性能参数和必填的 `spec.absoluteScore`）。
 3. Tenant（QPS 与迟滞阈值）。
 4. TenantNodePolicy / ModelNodePolicy。
 5. TenantModelPolicy Allow。
 6. Orchestrator。
 
-顺序不是 API 强制事务；Controller 会等待缺失依赖。先创建 Allow 但 Model 不存在时不应生成可运行工作负载。
+顺序不是 API 强制事务；Controller 会等待缺失依赖。CRD 会拒绝没有正数 `spec.absoluteScore` 的新 Model；先创建 Allow 但 Model 不存在时不应生成可运行工作负载。
 
 ## 3. SimulatorInstance 生命周期
 

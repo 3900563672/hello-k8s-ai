@@ -108,4 +108,4 @@
 - Alertmanager/on-call/runbook。
 - NetworkPolicy/TLS/Secret 管理。
 - 修正 Traffic/UI 误导语义。
-- 明确 `absoluteScore` writer 和逻辑时间不是现有能力。
+- 为 `absoluteScore` 校准值建立版本与审计策略；逻辑时间仍不是现有能力。

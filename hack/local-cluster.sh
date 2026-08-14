@@ -416,6 +416,7 @@ wait_for_demo_runtime() {
 deploy_control_plane() {
   kube apply -k "$ROOT_DIR/config/dev"
   wait_for_crds
+  migrate_legacy_model_scores
 
   local deployment
   local deployments=(
@@ -440,6 +441,22 @@ deploy_dashboard() {
   restart_and_wait_deployment hello-k8s-ai-dashboard-frontend
 }
 
+migrate_legacy_model_scores() {
+  local records name spec_score legacy_score
+  records="$(kube get models.platform.study.com \
+    -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.absoluteScore}{"|"}{.status.absoluteScore}{"\n"}{end}' \
+    2>/dev/null || true)"
+
+  while IFS='|' read -r name spec_score legacy_score; do
+    [[ -n "$name" ]] || continue
+    if [[ ! "$spec_score" =~ ^[1-9][0-9]*$ && "$legacy_score" =~ ^[1-9][0-9]*$ ]]; then
+      kube patch model.platform.study.com "$name" --type=merge \
+        --patch "{\"spec\":{\"absoluteScore\":$legacy_score}}" >/dev/null
+      log "已迁移旧 Model 能力基准分：$name -> spec.absoluteScore=$legacy_score"
+    fi
+  done <<<"$records"
+}
+
 deploy_demo() {
   [[ "$DEMO_MODEL_ABSOLUTE_SCORE" =~ ^[1-9][0-9]*$ ]] || fail \
     "DEMO_MODEL_ABSOLUTE_SCORE 必须是正整数。"
@@ -450,9 +467,8 @@ deploy_demo() {
     apply_worker_resources "$node"
   done
 
-  kube patch model.platform.study.com model-sample \
-    --subresource=status --type=merge \
-    --patch "{\"status\":{\"absoluteScore\":$DEMO_MODEL_ABSOLUTE_SCORE}}" >/dev/null
+  kube patch model.platform.study.com model-sample --type=merge \
+    --patch "{\"spec\":{\"absoluteScore\":$DEMO_MODEL_ABSOLUTE_SCORE}}" >/dev/null
   kube annotate orchestrator.platform.study.com orchestrator-sample \
     platform.study.com/local-deploy-trigger="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --overwrite >/dev/null

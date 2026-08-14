@@ -287,6 +287,177 @@ var _ = Describe("Manager", Ordered, func() {
 			Eventually(verifyMetricsAvailable, 2*time.Minute).Should(Succeed())
 		})
 
+		It("创建 Model 时必须提供调度分数", func() {
+			const (
+				modelName        = "absolute-score-e2e-model"
+				tenantName       = "absolute-score-e2e-tenant"
+				instanceName     = tenantName + "-" + modelName
+				orchestratorName = "absolute-score-e2e-orchestrator"
+			)
+			cmd := exec.Command(
+				"kubectl", "get", "pod", controllerPodName,
+				"-n", namespace,
+				"-o", "jsonpath={.spec.nodeName}",
+			)
+			nodeName, err := utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+			nodeName = strings.TrimSpace(nodeName)
+			Expect(nodeName).NotTo(BeEmpty())
+
+			DeferCleanup(func() {
+				cmd := exec.Command(
+					"kubectl", "delete",
+					"simulatorinstance/"+instanceName,
+					"tenantmodelpolicy/absolute-score-e2e-tenant-model",
+					"tenantnodepolicy/absolute-score-e2e-tenant-node",
+					"modelnodepolicy/absolute-score-e2e-model-node",
+					"orchestrator/"+orchestratorName,
+					"tenant/"+tenantName,
+					"model/"+modelName,
+					"workernode/"+nodeName,
+					"--ignore-not-found",
+				)
+				_, _ = utils.Run(cmd)
+			})
+
+			By("拒绝没有 spec.absoluteScore 的 Model")
+			missingScoreManifest := fmt.Sprintf(`
+apiVersion: platform.study.com/v1
+kind: Model
+metadata:
+  name: %s
+spec:
+  displayName: E2E 模型
+  gpuUnits: 1
+  maxConcurrency: 1
+  coldStartMs: 0
+`, modelName)
+			cmd = exec.Command("kubectl", "apply", "-f", "-")
+			cmd.Stdin = strings.NewReader(missingScoreManifest)
+			_, err = utils.Run(cmd)
+			Expect(err).To(HaveOccurred(), "CRD 必须拒绝没有 absoluteScore 的 Model")
+
+			By("接受并保留正数 spec.absoluteScore")
+			validManifest := strings.Replace(
+				missingScoreManifest,
+				"  coldStartMs: 0\n",
+				"  absoluteScore: 137\n  coldStartMs: 0\n",
+				1,
+			)
+			cmd = exec.Command("kubectl", "apply", "-f", "-")
+			cmd.Stdin = strings.NewReader(validManifest)
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+
+			cmd = exec.Command(
+				"kubectl", "get", "model/"+modelName,
+				"-o", "jsonpath={.spec.absoluteScore}",
+			)
+			output, err := utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(strings.TrimSpace(output)).To(Equal("137"))
+
+			By("通过公开入口创建首次扩容所需的控制面资源")
+			controlPlaneManifest := fmt.Sprintf(`
+apiVersion: platform.study.com/v1
+kind: WorkerNode
+metadata:
+  name: %s
+spec:
+  displayName: E2E 节点
+  gpu: 8
+  maxConcurrency: 8
+---
+apiVersion: platform.study.com/v1
+kind: Tenant
+metadata:
+  name: %s
+spec:
+  displayName: E2E 租户
+  priority: P3
+  qps: 1
+  ttftThresholdMs: 500
+  queueThreshold: 100
+  ttftScaleDownThresholdMs: 200
+  queueScaleDownThreshold: 30
+---
+apiVersion: platform.study.com/v1
+kind: TenantNodePolicy
+metadata:
+  name: absolute-score-e2e-tenant-node
+spec:
+  tenantRef:
+    name: %s
+  nodeRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: ModelNodePolicy
+metadata:
+  name: absolute-score-e2e-model-node
+spec:
+  modelRef:
+    name: %s
+  nodeRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: TenantModelPolicy
+metadata:
+  name: absolute-score-e2e-tenant-model
+spec:
+  tenantRef:
+    name: %s
+  modelRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: Orchestrator
+metadata:
+  name: %s
+spec:
+  tenantRef:
+    name: %s
+  scaleUpCooldownSeconds: 0
+  scaleDownCooldownSeconds: 0
+  minReplicas: 1
+  maxReplicas: 2
+`, nodeName, tenantName, tenantName, nodeName, modelName, nodeName, tenantName, modelName, orchestratorName, tenantName)
+			cmd = exec.Command("kubectl", "apply", "-f", "-")
+			cmd.Stdin = strings.NewReader(controlPlaneManifest)
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("等待 Orchestrator 在首次选点中使用 Model 分数")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "simulatorinstance/"+instanceName,
+					"-o", `jsonpath={.spec.replicas}{"|"}{.status.effectiveScore}`,
+				)
+				result, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(strings.TrimSpace(result)).To(Equal("1|137"))
+			}).Should(Succeed())
+
+			By("确认首个 Pod 在选定节点就绪")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "pods",
+					"-n", namespace,
+					"-l", "platform.study.com/instance="+instanceName,
+					"-o", `jsonpath={range .items[*]}{.spec.nodeName}{"|"}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}`,
+				)
+				result, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				pods := utils.GetNonEmptyLines(result)
+				g.Expect(pods).To(HaveLen(1))
+				g.Expect(strings.TrimSpace(pods[0])).To(Equal(nodeName + "|True"))
+			}, 3*time.Minute, time.Second).Should(Succeed())
+		})
+
 		It("should schedule a planned replica on the selected node", func() {
 			By("reading the node that already runs the controller")
 			cmd := exec.Command(

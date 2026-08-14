@@ -3,6 +3,7 @@ import type { Model, Node, Tenant } from '@/types/config.types'
 export const DEFAULT_MODEL: Omit<Model, 'name' | 'displayName'> = {
     gpuUnits: 1,
     maxConcurrency: 1,
+    absoluteScore: 100,
     coldStartMs: 0,
     performance: {
         prefillBaseMs: 0,

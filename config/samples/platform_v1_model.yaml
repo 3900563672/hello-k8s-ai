@@ -9,4 +9,5 @@ spec:
   displayName: 演示模型
   gpuUnits: 800
   maxConcurrency: 16
+  absoluteScore: 100
   coldStartMs: 30000

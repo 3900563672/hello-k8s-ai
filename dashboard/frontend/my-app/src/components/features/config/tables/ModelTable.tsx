@@ -40,6 +40,15 @@ const columns: ColumnDef<Model>[] = [
             <span className="tabular-nums text-[#B7C2D1]">{formatNumber.format(row.original.maxConcurrency)}</span>
         ),
     },
+    {
+        accessorKey: 'absoluteScore',
+        header: '基准分',
+        cell: ({ row }) => row.original.absoluteScore > 0 ? (
+            <span className="tabular-nums text-[#B7C2D1]">{formatNumber.format(row.original.absoluteScore)}</span>
+        ) : (
+            <span className="text-[#FFB86B]">待配置</span>
+        ),
+    },
 ]
 
 export function ModelTable(props: ModelTableProps) {

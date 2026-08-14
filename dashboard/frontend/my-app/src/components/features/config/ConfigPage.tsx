@@ -101,6 +101,7 @@ const modelFormValues = (model: Model): ModelFormValues => ({
     displayName: model.displayName,
     gpuUnits: model.gpuUnits,
     maxConcurrency: model.maxConcurrency,
+    absoluteScore: model.absoluteScore,
     coldStartMs: model.coldStartMs,
     performance: { ...model.performance },
 })

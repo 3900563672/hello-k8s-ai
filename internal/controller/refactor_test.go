@@ -213,6 +213,63 @@ func TestDecideAtSupportsScaleToZeroAndMaximum(t *testing.T) {
 	}
 }
 
+func TestDecideAtReportsMissingModelAbsoluteScore(t *testing.T) {
+	now := time.Date(2026, time.August, 14, 12, 0, 0, 0, time.UTC)
+	input := DecisionInput{
+		TenantQPS: 10,
+		AvailableModels: []ModelInfo{{
+			Name:           "model-a",
+			GPUUnits:       1,
+			MaxConcurrency: 1,
+		}},
+		AvailableNodes: []NodeInfo{{
+			Name:                 "node-a",
+			RemainingGPU:         2,
+			RemainingConcurrency: 2,
+		}},
+		ExistingInstances: []InstanceInfo{{Name: "instance-a", ModelName: "model-a"}},
+	}
+
+	decision := DecideAt(input, now)
+	if decision.Action != NoOp || decision.Reason != reasonModelAbsoluteScoreMissing {
+		t.Fatalf("missing-score decision = %+v", decision)
+	}
+
+	// 如果另一个实际候选模型已有分数，失败原因仍应归入容量或策略，而不是错误归咎于缺分数模型。
+	input.AvailableModels = append(input.AvailableModels, ModelInfo{
+		Name:           "model-b",
+		GPUUnits:       3,
+		MaxConcurrency: 1,
+		AbsoluteScore:  100,
+	})
+	input.ExistingInstances = append(input.ExistingInstances, InstanceInfo{Name: "instance-b", ModelName: "model-b"})
+	decision = DecideAt(input, now)
+	if decision.Action != NoOp || decision.Reason != "no_feasible_placement" {
+		t.Fatalf("mixed-score decision = %+v", decision)
+	}
+}
+
+func TestModelAbsoluteScorePrefersSpecAndSupportsLegacyStatus(t *testing.T) {
+	legacyScore := 80
+	model := &platformv1.Model{
+		Spec:   platformv1.ModelSpec{AbsoluteScore: 120},
+		Status: platformv1.ModelStatus{AbsoluteScore: &legacyScore},
+	}
+	if got := modelAbsoluteScore(model); got != 120 {
+		t.Fatalf("spec score = %d, want 120", got)
+	}
+
+	model.Spec.AbsoluteScore = 0
+	if got := modelAbsoluteScore(model); got != legacyScore {
+		t.Fatalf("legacy score = %d, want %d", got, legacyScore)
+	}
+
+	model.Status.AbsoluteScore = nil
+	if got := modelAbsoluteScore(model); got != 0 {
+		t.Fatalf("missing score = %d, want 0", got)
+	}
+}
+
 func TestDecideAtRebalancesPlacementAfterPolicyChange(t *testing.T) {
 	now := time.Date(2026, time.August, 14, 12, 0, 0, 0, time.UTC)
 	input := DecisionInput{

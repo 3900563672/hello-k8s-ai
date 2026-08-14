@@ -262,7 +262,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 
 | CRD | Spec 主要字段 | Status 主要字段 | 用途/生命周期 | Dashboard/Backend |
 | --- | --- | --- | --- | --- |
-| Model | displayName、gpuUnits、maxConcurrency、coldStartMs、performance | absoluteScore、conditions | 模型成本/服务时间；被 Policy/Instance 引用 | Config/Data View；dynamic cache |
+| Model | displayName、gpuUnits、maxConcurrency、absoluteScore、coldStartMs、performance | 旧 absoluteScore（兼容）、conditions | 模型成本/服务时间；被 Policy/Instance 引用 | Config/Data View；dynamic cache |
 | WorkerNode | displayName、gpu、maxConcurrency | usedGPU、usedConcurrency | 业务容量；同名关联 core Node | Config/Data View；与 Node/Pod 聚合 |
 | Tenant | displayName、priority、qps、TTFT/Queue up/down | conditions | 请求与 SLO；控制环主入口 | Config/Traffic/Data View |
 | TenantModelPolicy | tenantRef、modelRef、effect | Ready Condition | 显式 Allow，Deny 优先；决定 Instance 存在 | Backend可写，UI暂未编辑 |
@@ -273,7 +273,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 | TenantRuntime | tenantRef | instanceCount、phase | Instance Controller派生；instanceCount实为可用副本合计 | Backend DTO称 readyReplicaCount |
 | Orchestrator | tenantRef、cooldown、allowZero、min/max | lastScaling、up/down time、conditions | 每Tenant扩缩策略 | Backend可写，UI暂未编辑 |
 
-重要：Model.status.absoluteScore 当前无项目内 Controller writer，却是 Orchestrator 放置输入；必须由明确外部/运维流程提供。TenantNodePolicy/ModelNodePolicy Status 无 writer，空 Conditions 不代表失败。
+重要：Model.spec.absoluteScore 是调度必填配置，由用户/Backend 提供；旧 Status 字段只用于升级兼容。TenantNodePolicy/ModelNodePolicy Status 无 writer，空 Conditions 不代表失败。
 
 ## 5.2 字段所有权
 
@@ -487,7 +487,7 @@ Backend get/list/watch 全10 CRD；create/update/patch/delete仅7配置CR；只�
 
 | 领域 | 做成了什么 | 还不够好 | 优先变化 |
 | --- | --- | --- | --- |
-| 控制面 | 10 CRD、6 Controller、字段所有权、恢复计划 | absoluteScore无内部writer、部分Policy无Status | 明确输入/状态与版本升级 |
+| 控制面 | 10 CRD、6 Controller、字段所有权、恢复计划、Model 分数输入闭环 | 部分Policy无Status | API 版本升级与兼容 |
 | Simulator | Leader/Tick/离散事件/指标/Trace | 非确定、池级近似、leader切换重置 | SimulationRun/seed/clock/checkpoint |
 | Backend | cache/read model/API/DB/providers/SSE | batch非原子、actor未认证、resource events可丢 | IAM、contract、recovery/metrics |
 | Frontend | 真实Config/Traffic基线/Data Overview | Overlay未提交、UI覆盖不全 | 产品命令闭环与E2E |
@@ -506,7 +506,7 @@ OIDC、用户/租户授权、可信 audit actor、Secret manager、TLS/mTLS、de
 
 ### 阶段三：产品闭环
 
-Traffic Preview/Confirm/PATCH/Observe；Policy/Orchestrator/absoluteScore UI；独立 Dashboard landing/路由命名；正式 OpenAPI/客户端生成与契约测试。
+Traffic Preview/Confirm/PATCH/Observe；Policy/Orchestrator UI；独立 Dashboard landing/路由命名；正式 OpenAPI/客户端生成与契约测试。
 
 ### 阶段四：可重复仿真
 

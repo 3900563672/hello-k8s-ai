@@ -106,7 +106,7 @@ PostgreSQL 有 `clock_state` scaffold，Frontend 有时间条，但 Controller/S
 
 ### 若干技术债
 
-- `Model.status.absoluteScore` 对 Orchestrator 很重要，却没有项目内 writer 或明确输入流程。
+- Model 能力基准分已迁入必填的 `spec.absoluteScore`，由用户/Backend 维护；旧 Status 仅保留升级兼容。
 - `TenantRuntime.status.instanceCount` 命名与实现含义不一致。
 - ReplicaSet 被 watch/持久化但不直接出现在 Workloads DTO。
 - Backend 批量配置不是跨对象原子事务；API/文案必须避免暗示原子性。

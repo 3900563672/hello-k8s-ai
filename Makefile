@@ -26,7 +26,7 @@ SIMULATOR_IMG ?= hello-k8s-ai-simulator:dev
 BACKEND_IMG ?= hello-k8s-ai-dashboard-backend:dev
 FRONTEND_IMG ?= hello-k8s-ai-dashboard-frontend:dev
 ROOT_DOCKERFILE ?= Dockerfile
-# 演示环境的模型能力基准分；生产环境应由独立运维流程维护。
+# 演示 Model.spec.absoluteScore 的初始能力基准分。
 DEMO_MODEL_ABSOLUTE_SCORE ?= 100
 
 # bash 模式，出错就停

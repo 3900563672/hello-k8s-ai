@@ -73,6 +73,7 @@ curl -sS -X POST "$API/configuration:apply" \
         "displayName": "Demo Model",
         "gpuUnits": 800,
         "maxConcurrency": 16,
+        "absoluteScore": 100,
         "coldStartMs": 30000,
         "performance": {
           "prefillBaseMs": 50,
@@ -120,7 +121,7 @@ curl -sS -X POST "$API/configuration:apply" \
 JSON
 ```
 
-这只是示例的一部分：要调度 Pod，还需要与真实 Node 同名的 WorkerNode 和 Node Policies；Model.absoluteScore 需由有权限的外部流程或运维提供（本地演示由 `make cluster-up` 注入）。批次先全量 dry-run、再顺序写，仍非跨对象原子事务。
+这只是示例的一部分：要调度 Pod，还需要与真实 Node 同名的 WorkerNode 和 Node Policies。`Model.spec.absoluteScore` 是必填正整数，可由 Dashboard 或该 API 维护。批次先全量 dry-run、再顺序写，仍非跨对象原子事务。
 
 ## 5. 更新资源
 
