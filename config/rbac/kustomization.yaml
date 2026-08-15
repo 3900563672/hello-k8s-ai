@@ -21,6 +21,9 @@ resources:
 - simulatorinstance_admin_role.yaml
 - simulatorinstance_editor_role.yaml
 - simulatorinstance_viewer_role.yaml
+- simulationclock_admin_role.yaml
+- simulationclock_editor_role.yaml
+- simulationclock_viewer_role.yaml
 - orchestrator_admin_role.yaml
 - orchestrator_editor_role.yaml
 - orchestrator_viewer_role.yaml

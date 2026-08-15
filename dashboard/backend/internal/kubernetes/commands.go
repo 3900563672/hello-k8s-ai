@@ -142,6 +142,78 @@ func (gateway *Gateway) SetTenantQPS(ctx context.Context, name string, qps int, 
 	return gateway.cache.clients.Dynamic.Resource(descriptor.GVR).Update(ctx, existing, options)
 }
 
+// SetSimulationRate 更新集群唯一的 SimulationClock/default。
+func (gateway *Gateway) SetSimulationRate(
+	ctx context.Context,
+	rate int,
+	resourceVersion string,
+	dryRun bool,
+) (*unstructured.Unstructured, string, error) {
+	if rate < 1 || rate > 20 {
+		return nil, "", errors.New("rate must be between 1 and 20")
+	}
+	descriptor, _ := DescriptorForKind("SimulationClock")
+	resourceClient := gateway.cache.clients.Dynamic.Resource(descriptor.GVR)
+	options := metav1.UpdateOptions{}
+	createOptions := metav1.CreateOptions{}
+	if dryRun {
+		options.DryRun = []string{metav1.DryRunAll}
+		createOptions.DryRun = []string{metav1.DryRunAll}
+	}
+
+	existing, err := resourceClient.Get(ctx, "default", metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		if resourceVersion != "" {
+			return nil, "", apierrors.NewConflict(
+				descriptor.GVR.GroupResource(),
+				"default",
+				errors.New("resource does not exist at expected resourceVersion"),
+			)
+		}
+		object := &unstructured.Unstructured{Object: map[string]any{
+			"apiVersion": descriptor.GVR.GroupVersion().String(),
+			"kind":       descriptor.Kind,
+			"metadata": map[string]any{
+				"name": "default",
+				"labels": map[string]any{
+					"app.kubernetes.io/managed-by": "hello-k8s-ai-dashboard",
+				},
+			},
+			"spec": map[string]any{"rate": int64(rate)},
+		}}
+		created, createErr := resourceClient.Create(ctx, object, createOptions)
+		if createErr == nil {
+			return created, "create", nil
+		}
+		// Controller 也会补建默认 Clock；两者并发时读取胜出的对象后继续更新。
+		if !apierrors.IsAlreadyExists(createErr) {
+			return nil, "", createErr
+		}
+		existing, err = resourceClient.Get(ctx, "default", metav1.GetOptions{})
+		if err != nil {
+			return nil, "", err
+		}
+	}
+	if err != nil {
+		return nil, "", err
+	}
+	if resourceVersion != "" && existing.GetResourceVersion() != resourceVersion {
+		return nil, "", apierrors.NewConflict(
+			descriptor.GVR.GroupResource(),
+			"default",
+			fmt.Errorf("expected resourceVersion %s, current object has %s", resourceVersion, existing.GetResourceVersion()),
+		)
+	}
+	if err := unstructured.SetNestedField(existing.Object, int64(rate), "spec", "rate"); err != nil {
+		return nil, "", fmt.Errorf("set SimulationClock spec.rate: %w", err)
+	}
+	updated, err := resourceClient.Update(ctx, existing, options)
+	if err != nil {
+		return nil, "", err
+	}
+	return updated, "update", nil
+}
+
 func validateIntent(intent ApplyIntent) (ResourceDescriptor, error) {
 	descriptor, exists := DescriptorForKind(intent.Kind)
 	if !exists || !descriptor.UserWritable {

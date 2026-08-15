@@ -29,14 +29,16 @@ const (
 
 // Simulator 把本地模拟引擎的计算结果写回 SimulatorInstance 的状态。
 type Simulator struct {
-	client     client.Client
-	name       string
-	interval   time.Duration
-	startTime  time.Time
-	engine     *SimEngine
-	now        func() time.Time // 可注入的时间源，测试用
-	reporterID string
-	metrics    *simulatorMetrics
+	client   client.Client
+	name     string
+	interval time.Duration
+	engine   *SimEngine
+	// simulationElapsed 只由成功读取配置后的 tick 推进，不使用墙钟差值。
+	// 这样 Controller 卡顿恢复后不会一次性制造突发请求。
+	simulationElapsed time.Duration
+	now               func() time.Time // 可注入的时间源，测试用
+	reporterID        string
+	metrics           *simulatorMetrics
 }
 
 // Run 主循环，定期执行 reconcile 直到 context 结束或实例被删除。
@@ -73,6 +75,9 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 	queueLength := 0
 	avgTTFT := 0
 	factor := 0.0
+	timeScale := platformv1.DefaultSimulationRate
+	simulationStep := time.Duration(0)
+	simulationElapsed := s.simulationElapsed
 	hasTTFT := false
 
 	// 创建 trace span，记录每次模拟调用的输入输出
@@ -102,6 +107,9 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 			attribute.Int("simulator.available_replicas", availableReplicas),
 			attribute.Int("simulator.effective_score", effectiveScore),
 			attribute.Int("simulator.pool_score", poolScore),
+			attribute.Int("simulator.time_scale", timeScale),
+			attribute.Float64("simulator.step_seconds", simulationStep.Seconds()),
+			attribute.Float64("simulator.elapsed_seconds", simulationElapsed.Seconds()),
 			attribute.Float64("simulator.cold_start_factor", factor),
 			attribute.Int("performance.queue_depth", queueLength),
 			attribute.Int("performance.ttft_ms", avgTTFT),
@@ -126,11 +134,14 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 		return fmt.Errorf("model %q has invalid maxConcurrency %d", model.Name, model.Spec.MaxConcurrency)
 	}
 
-	// 取 EffectiveScore，同时算冷启动因子
+	// 取 EffectiveScore，并按本轮倍速推进模拟时间。
 	if instance.Status.EffectiveScore != nil {
 		effectiveScore = max(0, *instance.Status.EffectiveScore)
 	}
-	factor = coldStartFactorAt(s.currentTime(), s.startTime, int64(model.Spec.ColdStartMs))
+	timeScale = normalizedTimeScale(instance.Spec.TimeScale)
+	simulationStep = s.advanceSimulationTime(timeScale)
+	simulationElapsed = s.simulationElapsed
+	factor = coldStartFactorForElapsed(simulationElapsed, int64(model.Spec.ColdStartMs))
 	perReplicaScore := scaledScore(effectiveScore, factor)
 	availableReplicas = max(0, instance.Status.AvailableReplicas)
 	poolScore = saturatingMultiply(perReplicaScore, availableReplicas)
@@ -152,7 +163,7 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 
 	// 驱动模拟引擎前进一步
 	avgTTFT, queueLength, hasTTFT = s.engine.StepRate(
-		s.simulationInterval(),
+		simulationStep,
 		perReplicaQPS,
 		perReplicaScore,
 		effectiveScore,
@@ -180,6 +191,9 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 		s.metrics.effectiveScore.Set(float64(effectiveScore))
 		s.metrics.poolScore.Set(float64(poolScore))
 		s.metrics.coldStartFactor.Set(factor)
+		s.metrics.timeScale.Set(float64(timeScale))
+		s.metrics.simulationStepSeconds.Set(simulationStep.Seconds())
+		s.metrics.simulationElapsedSeconds.Set(simulationElapsed.Seconds())
 		s.metrics.queueDepth.Set(float64(queueLength))
 		if hasTTFT {
 			s.metrics.ttftSeconds.Set(float64(avgTTFT) / 1000)
@@ -276,4 +290,22 @@ func (s *Simulator) simulationInterval() time.Duration {
 		return 5 * time.Second
 	}
 	return s.interval
+}
+
+func normalizedTimeScale(rate int) int {
+	if rate < platformv1.DefaultSimulationRate {
+		return platformv1.DefaultSimulationRate
+	}
+	if rate > platformv1.MaxSimulationRate {
+		return platformv1.MaxSimulationRate
+	}
+	return rate
+}
+
+// advanceSimulationTime 按固定 tick 推进模拟时间。
+// 使用固定步长而不是实际墙钟间隔，可避免进程暂停后产生补偿性流量尖峰。
+func (s *Simulator) advanceSimulationTime(rate int) time.Duration {
+	step := scaleDuration(s.simulationInterval(), float64(normalizedTimeScale(rate)))
+	s.simulationElapsed = addDurationSaturated(s.simulationElapsed, step)
+	return step
 }

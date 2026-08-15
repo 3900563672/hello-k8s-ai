@@ -49,6 +49,7 @@ HTTP mutation 成功只表示意图被 API Server 接受。页面应继续显示
 | 页面/组件 | 读 API | 写 API | 刷新策略 |
 | --- | --- | --- | --- |
 | App shell / ClusterStatus | `/bootstrap`、`/capabilities`、`/clock`、`/replay` | 无 | 首次 + SSE 失效 + 30s poll |
+| ExecutionControls | `/bootstrap`、`/clock` | `PATCH /clock/rate` | 提交后等待 resource.changed，REST 刷新 desired/applied/converged |
 | Config | `/configuration[?at]` | `/configuration:apply`、DELETE configuration | mutation 后 invalidate；历史不刷新为 latest |
 | Traffic baseline | `/traffic[?at&tenant]` | Backend 有 PATCH tenant traffic；UI 当前未接 Overlay | SSE + query invalidate；草稿不触发远端 |
 | Data Overview | `/overview[?at&filters]` | 无 | latest 约 15s；historical 固定 |

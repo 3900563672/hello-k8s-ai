@@ -1,17 +1,18 @@
 # Controller 架构
 
-## 1. Manager 中实际注册的六个 Reconciler
+## 1. Manager 中实际注册的七个 Reconciler
 
 | 文档简称 | Go 类型 | Primary resource |
 | --- | --- | --- |
 | Tenant Controller | `TenantModelPolicyReconciler` | TenantModelPolicy |
+| SimulationClock Controller | `SimulationClockReconciler` | SimulationClock |
 | SimulatorInstance Controller | `SimulatorInstanceReconciler` | SimulatorInstance |
 | Traffic Controller | `TrafficReconciler` | Tenant |
 | Performance Controller | `PerformanceCollectorReconciler` | Tenant |
 | WorkerNode Controller | `WorkerNodeUsageReconciler` | WorkerNode |
 | Orchestrator Controller | `OrchestratorReconciler` | Orchestrator |
 
-不存在单独以 Tenant 为主资源、名为 `TenantController` 的第七个 Controller。旧称只是业务简称。
+不存在单独以 Tenant 为主资源、名为 `TenantController` 的第八个 Controller。旧称只是业务简称。
 
 ## 2. 通用 Reconcile 约定
 
@@ -41,7 +42,7 @@
 ### 输出与字段
 
 - 确保 SimulatorInstance，名称为稳定的 `<tenant>-<model>`（过长时哈希截断）。
-- 创建时写：tenantRef、modelRef、`replicas=0`、`traffic.qps=0`、平台标签/注解、Tenant owner reference。
+- 创建时写：tenantRef、modelRef、`replicas=0`、`traffic.qps=0`、`timeScale=1`、平台标签/注解、Tenant owner reference。后续倍速由 SimulationClock Controller 独占。
 - 后续只维护自己拥有的 identity/refs/metadata，不覆盖 replicas/QPS/Status。
 - denied 时删除对应 SimulatorInstance。
 - 写 TenantModelPolicy Status Ready Condition。
@@ -51,7 +52,25 @@
 
 它只决定实例“是否存在”。副本由 Orchestrator，QPS 由 Traffic，Deployment 由 SimulatorInstance Controller，性能由 Simulator。这个边界防止 policy 变化意外重置运行状态。
 
-## 4. SimulatorInstance Controller
+## 4. SimulationClock Controller
+
+### 输入与 Watch
+
+- Primary：集群唯一的 `SimulationClock/default`；对象缺失时以 1x 自动创建。
+- Watch：SimulationClock generation，以及 SimulatorInstance 创建、删除或 `spec.timeScale` 变化。
+- 不监听 Instance 的副本、QPS 或高频 Status，避免每个 Tick 触发全量扇出。
+
+### 收敛
+
+1. 防御性检查 `spec.rate` 在 1..20；CRD 同时执行 schema 校验。
+2. 列出非删除中的全部 SimulatorInstance。
+3. 对每个实例使用冲突重试和字段级 Patch，只修改 `spec.timeScale`。
+4. 写回 observedGeneration、appliedRate、同步/总实例数和 Ready Condition。
+5. 任一实例同步失败时 Ready=False 并返回错误，由 controller-runtime 退避重试。
+
+倍速字段不进入 Deployment Pod template，因此更新不会滚动重启 Simulator。运行中的 Simulator 在下一个真实 Tick GET Instance 时读取新值。Status Ready 只证明 Kubernetes 字段收敛；运行时应用由 Simulator 指标/E2E 继续验证。
+
+## 5. SimulatorInstance Controller
 
 ### 输入与 Watch
 
@@ -93,7 +112,7 @@
 
 finalizer 先删除 Deployment、等待清理，再重算 TenantRuntime，最后移除 finalizer。这样 cluster-scoped CR 删除不会留下 namespaced 工作负载。
 
-## 5. Traffic Controller
+## 6. Traffic Controller
 
 ### 输入与 Watch
 
@@ -122,7 +141,7 @@ finalizer 先删除 Deployment、等待清理，再重算 TenantRuntime，最后
 
 Simulator 读取分配 QPS；性能变化更新 score 后再次触发 Traffic，因此形成反馈。Traffic 不直接看 Prometheus，CR Status 是控制输入。
 
-## 6. PerformanceCollector Controller
+## 7. PerformanceCollector Controller
 
 ### 输入与 Watch
 
@@ -156,7 +175,7 @@ TTFT 与 Queue 分别收集，不能因一个指标缺失伪造另一个。
 
 Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪声与扩缩容逻辑隔离。
 
-## 7. WorkerNodeUsage Controller
+## 8. WorkerNodeUsage Controller
 
 ### 输入与 Watch
 
@@ -181,7 +200,7 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 
 这是业务容量推算，不读取 NVIDIA device plugin 或真实 GPU 利用率。Pod 已调度但尚未 Ready 仍可能计入资源占用，符合调度 reservation 视角。
 
-## 8. Orchestrator Controller
+## 9. Orchestrator Controller
 
 ### 输入与 Watch
 
@@ -232,18 +251,19 @@ Controller 先将 pending plan JSON 与 replica 更新持久化，再完成 effe
 
 Orchestrator 只决定副本，不创建 Deployment；SimulatorInstance Controller 把 replicas 收敛为 Deployment。新 Pod 冷启动由 Simulator 反映到 score，Traffic 再调整流量，形成闭环。
 
-## 9. 关系矩阵
+## 10. 关系矩阵
 
 | Controller | 输入 CR | 输出资源 | 写的核心字段 | 下游 |
 | --- | --- | --- | --- | --- |
 | TenantModelPolicy | Policy/Tenant/Model | SimulatorInstance | refs/initial Spec、Policy Condition | Instance Controller/Orchestrator |
+| SimulationClock | Clock/Instance 生命周期 | SimulatorInstance、Clock Status | spec.timeScale、同步 Condition | Simulator/Frontend |
 | SimulatorInstance | Instance/Policies/Nodes | Deployment、TenantRuntime | availableReplicas/phase/Ready | Simulator、Dashboard、Orchestrator |
 | Traffic | Tenant/Instance Score | Instance | spec.traffic.qps | Simulator |
 | Performance | Instance Performance | TenantPerformance | avg metrics/phase | Orchestrator |
 | WorkerUsage | Pod/Model | WorkerNode Status | used GPU/concurrency | Orchestrator |
 | Orchestrator | TenantPerformance/Policy/Capacity | Instance/Orchestrator Status | replicas/effectiveScore/scaling | Instance Controller/Simulator |
 
-## 10. 故障原则
+## 11. 故障原则
 
 - 缺依赖：Condition + requeue，不创建越权资源。
 - Status 冲突：重新读取/patch，不用全对象 Update 覆盖他人字段。

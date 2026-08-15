@@ -4,6 +4,7 @@ import {
     createInitialCluster,
     distributeConfiguration,
     fetchClusterSnapshot,
+    updateSimulationRate,
 } from '@/api/endpoints/controlPlaneApi'
 import type {
     AsyncPhase,
@@ -17,12 +18,14 @@ interface ControlPlaneState {
     cluster: ClusterSnapshot
     refreshPhase: AsyncPhase
     distributionPhase: AsyncPhase
+    simulationRatePhase: AsyncPhase
     distributionReceipt: DistributionReceipt | null
     executionMode: ExecutionMode
     executionPhase: ExecutionPhase
     lastError: string | null
     refreshCluster: () => Promise<void>
     distributeConfig: () => Promise<DistributionReceipt | null>
+    setSimulationRate: (rate: number) => Promise<boolean>
     clearDistributionFeedback: () => void
     setExecutionMode: (mode: ExecutionMode) => boolean
     forceApplyMode: () => void
@@ -45,6 +48,7 @@ export const useControlPlaneStore = create<ControlPlaneState>()(
             cluster: createInitialCluster(),
             refreshPhase: 'idle',
             distributionPhase: 'idle',
+            simulationRatePhase: 'idle',
             distributionReceipt: null,
             executionMode: 'apply',
             executionPhase: 'standby',
@@ -119,6 +123,55 @@ export const useControlPlaneStore = create<ControlPlaneState>()(
                         'control-plane/distribution-failed',
                     )
                     return null
+                }
+            },
+
+            setSimulationRate: async (rate) => {
+                const state = get()
+                if (
+                    state.simulationRatePhase === 'pending' ||
+                    !state.cluster.simulationRateSupported ||
+                    state.cluster.connectionStatus !== 'connected' ||
+                    (Boolean(state.cluster.clockResourceVersion) && !state.cluster.clockConverged) ||
+                    !Number.isInteger(rate) ||
+                    rate < 1 ||
+                    rate > 20
+                ) return false
+
+                set(
+                    { simulationRatePhase: 'pending', lastError: null },
+                    false,
+                    'control-plane/simulation-rate-started',
+                )
+                try {
+                    const receipt = await updateSimulationRate(
+                        rate,
+                        state.cluster.clockResourceVersion,
+                    )
+                    set(
+                        {
+                            cluster: {
+                                ...get().cluster,
+                                clockRate: receipt.rate,
+                                clockResourceVersion: receipt.resourceVersion,
+                                clockConverged: receipt.convergence === 'converged',
+                            },
+                            simulationRatePhase: 'success',
+                        },
+                        false,
+                        'control-plane/simulation-rate-succeeded',
+                    )
+                    return true
+                } catch (error) {
+                    set(
+                        {
+                            simulationRatePhase: 'error',
+                            lastError: errorMessage(error),
+                        },
+                        false,
+                        'control-plane/simulation-rate-failed',
+                    )
+                    return false
                 }
             },
 

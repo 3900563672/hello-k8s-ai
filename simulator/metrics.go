@@ -19,6 +19,9 @@ type simulatorMetrics struct {
 	effectiveScore          prometheus.Gauge       // Orchestrator 给的资源折扣后分数
 	poolScore               prometheus.Gauge       // 模拟器实时算出的运行时分数
 	coldStartFactor         prometheus.Gauge       // 当前冷启动衰减因子 [0,1]
+	timeScale                prometheus.Gauge       // 当前模拟时间倍速
+	simulationStepSeconds    prometheus.Gauge       // 本轮推进的模拟秒数
+	simulationElapsedSeconds prometheus.Gauge       // 当前 reporter 任期内累计推进的模拟秒数
 	queueDepth              prometheus.Gauge       // 模拟队列深度
 	ttftSeconds             prometheus.Gauge       // 最近一次平均 TTFT（秒）
 	engineReinitializations prometheus.Counter     // 模拟引擎因并发变化而重建的次数
@@ -88,6 +91,24 @@ func newSimulatorMetrics(registerer prometheus.Registerer) *simulatorMetrics {
 			Name:      "cold_start_factor",
 			Help:      "Current cold-start capacity factor in the range zero to one.",
 		}),
+		timeScale: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: simulatorMetricNamespace,
+			Subsystem: simulatorMetricSubsystem,
+			Name:      "time_scale",
+			Help:      "当前 Simulator 离散事件引擎使用的时间倍速。",
+		}),
+		simulationStepSeconds: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: simulatorMetricNamespace,
+			Subsystem: simulatorMetricSubsystem,
+			Name:      "simulation_step_seconds",
+			Help:      "最近一个真实 tick 推进的模拟秒数。",
+		}),
+		simulationElapsedSeconds: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: simulatorMetricNamespace,
+			Subsystem: simulatorMetricSubsystem,
+			Name:      "simulation_elapsed_seconds",
+			Help:      "当前 reporter 任期内累计推进的模拟秒数。",
+		}),
 		queueDepth: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: simulatorMetricNamespace,
 			Subsystem: simulatorMetricSubsystem,
@@ -118,6 +139,9 @@ func newSimulatorMetrics(registerer prometheus.Registerer) *simulatorMetrics {
 		metrics.effectiveScore,
 		metrics.poolScore,
 		metrics.coldStartFactor,
+		metrics.timeScale,
+		metrics.simulationStepSeconds,
+		metrics.simulationElapsedSeconds,
 		metrics.queueDepth,
 		metrics.ttftSeconds,
 		metrics.engineReinitializations,

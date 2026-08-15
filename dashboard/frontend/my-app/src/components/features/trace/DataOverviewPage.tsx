@@ -35,6 +35,7 @@ const metricCards = [
     { id: 'simulator.qps', label: 'QPS', aggregation: 'sum' },
     { id: 'simulator.errorRate', label: 'Error Rate', aggregation: 'average' },
     { id: 'simulator.tickLatency', label: 'Latency P95', aggregation: 'average' },
+    { id: 'simulator.timeScale', label: 'Time Scale', aggregation: 'average' },
 ] as const
 
 const dateTime = new Intl.DateTimeFormat('zh-CN', {
@@ -232,7 +233,7 @@ function OverviewContent({ overview, warnings }: { overview: OverviewData; warni
 
             <section>
                 <SectionTitle icon={Activity} title="性能数据" subtitle="Prometheus · 最近 15 分钟" />
-                <div className="mt-3 grid gap-2.5 md:grid-cols-2 xl:grid-cols-5">
+                <div className="mt-3 grid gap-2.5 md:grid-cols-2 xl:grid-cols-6">
                     {metricCards.map((card) => {
                         const metric = overview.metrics[card.id]
                         const display = metricDisplay(metric, card.aggregation)
@@ -272,8 +273,9 @@ function OverviewContent({ overview, warnings }: { overview: OverviewData; warni
                         />
                         <ResourceTable title="SimulatorInstance" resources={configuration.simulatorInstances} />
                         <ResourceTable
-                            title="Policy / Orchestrator / Performance / Runtime"
+                            title="Clock / Policy / Orchestrator / Performance / Runtime"
                             resources={[
+                                ...(configuration.simulationClocks ?? []),
                                 ...configuration.policies.tenantModel,
                                 ...configuration.policies.tenantNode,
                                 ...configuration.policies.modelNode,

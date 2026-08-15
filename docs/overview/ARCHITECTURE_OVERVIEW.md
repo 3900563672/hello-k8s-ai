@@ -13,8 +13,8 @@ flowchart TB
   end
   subgraph CP["Kubernetes 控制面"]
     K["API Server"]
-    R["10 个 CRD"]
-    C["6 个 Controller"]
+    R["11 个 CRD"]
+    C["7 个 Controller"]
   end
   subgraph DP["仿真数据面"]
     DEP["Deployment / Pod / Lease"]
@@ -65,6 +65,7 @@ flowchart TB
   TP --> ORC["Orchestrator"] --> SI
   POD["Scheduled Pod"] --> WU["WorkerNodeUsage"] --> WN["WorkerNode Status"]
   WN --> ORC
+  CLK["SimulationClock"] --> SC["SimulationClock Controller"] --> SI
 ```
 
 Controller 之间没有方法调用。图中的箭头表示“读一个资源，写另一个资源”，API Server 是隐含中介。
@@ -113,7 +114,7 @@ Docker Desktop 本地环境保留两个 Kustomize 边界：
 ## 7. 架构不变量
 
 - Controller 的输出状态只能由约定所有者写。
-- 实例是否允许存在由 TenantModelPolicy 决定；实例分配流量由 Traffic 决定；副本由 Orchestrator 决定；Deployment 由 SimulatorInstance Controller 决定；性能由 Simulator 决定。
+- 实例是否允许存在由 TenantModelPolicy 决定；Simulator 时间倍速由 SimulationClock Controller 同步；实例分配流量由 Traffic 决定；副本由 Orchestrator 决定；Deployment 由 SimulatorInstance Controller 决定；性能由 Simulator 决定。
 - Kubernetes Scheduler 负责最终 Node 选择；项目 Controller 只生成 required node affinity。
 - Prometheus 通过 Pod discovery 抓取 Simulator；当前没有为每个 SimulatorInstance 创建 Service。
 - 最新查询从 cache 读；旧时间点从 snapshot 读；两者不能静默混用。

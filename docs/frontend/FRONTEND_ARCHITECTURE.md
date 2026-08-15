@@ -59,7 +59,7 @@ flowchart TB
 | 状态 | 所有者 | 持久性 | 原因 |
 | --- | --- | --- | --- |
 | Configuration/Traffic/Overview/Trace | TanStack Query | 内存缓存，可 refetch | 远端服务状态，不能由 Zustand 复制。 |
-| Cluster/provider/clock 能力 | `controlPlaneSlice` + Backend sync | 内存 | 跨页面连接与能力提示。 |
+| Cluster/provider/clock 能力与倍速提交状态 | `controlPlaneSlice` + Backend sync | 内存 | 跨页面连接、收敛与能力提示。 |
 | latest/historical、selected snapshot、viewport | `timeSlice` | 内存 | 全局浏览上下文，不是服务事实。 |
 | Traffic templates/overlays | `trafficSlice` | 内存草稿 | 尚未提交控制面，刷新会丢失。 |
 | 表单临时值/对话框 | React local/form state | 组件生命周期 | 不需要全局共享。 |
@@ -97,9 +97,10 @@ SSE 是通知，不是数据源。事件本身不包含页面完整状态，也�
 - **Latest**：请求不带 `at`，读 Backend live cache，可使用支持的 mutation。
 - **Historical**：从 replay timeline 选择 snapshot，查询带 `at`，页面只读。
 - Backend 把距现在 2 秒内的 `at` 视为 live；更旧时间点查数据库最后一个 `captured_at <= at` 的 snapshot。
-- 逻辑时钟当前等于 UTC 真实时间，rate=1，不支持 pause/seek。
+- Backend 逻辑时钟仍等于 UTC 真实时间，不支持 pause/seek。
+- ExecutionControls 提供 1x、2x、5x、10x、20x Simulator 倍速；它调用 Backend 后等待 Clock/Instance 收敛，不在浏览器自行加速。
 
-Frontend 不能仅通过 UI 插值声称 Simulator 在倍速运行。
+Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、请求 pending 或上一代 Clock 未收敛时，倍速选择禁用。Frontend 不能仅通过 UI 插值声称 Simulator 已采用新值。
 
 ## 7. API 客户端约定
 

@@ -246,6 +246,12 @@ func run() error {
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("set up orchestrator controller: %w", err)
 	}
+	if err := (&controller.SimulationClockReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("set up simulationclock controller: %w", err)
+	}
 	if err := (&controller.SimulatorInstanceReconciler{
 		Client:                   mgr.GetClient(),
 		Scheme:                   mgr.GetScheme(),

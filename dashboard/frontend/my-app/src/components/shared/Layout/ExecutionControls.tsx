@@ -1,4 +1,4 @@
-import { FilePenLine, Play } from 'lucide-react'
+import { FilePenLine, Gauge, Play } from 'lucide-react'
 import {
     Tooltip,
     TooltipContent,
@@ -16,6 +16,8 @@ export function ExecutionControls() {
     const executionMode = useControlPlaneStore((state) => state.executionMode)
     const executionPhase = useControlPlaneStore((state) => state.executionPhase)
     const setExecutionMode = useControlPlaneStore((state) => state.setExecutionMode)
+    const simulationRatePhase = useControlPlaneStore((state) => state.simulationRatePhase)
+    const setSimulationRate = useControlPlaneStore((state) => state.setSimulationRate)
     const timeMode = useTimeStore((state) => state.mode)
 
     const isHistorical = timeMode === 'historical'
@@ -26,6 +28,25 @@ export function ExecutionControls() {
         : !cluster.simulationRunSupported
             ? '当前 Backend 未开放真实仿真运行控制'
             : '需要至少一个在线工作节点'
+
+    const rateDisabled =
+        isHistorical ||
+        cluster.connectionStatus !== 'connected' ||
+        !cluster.simulationRateSupported ||
+        (Boolean(cluster.clockResourceVersion) && !cluster.clockConverged) ||
+        simulationRatePhase === 'pending'
+    const rateOptions = [1, 2, 5, 10, 20].includes(cluster.clockRate)
+        ? [1, 2, 5, 10, 20]
+        : [...[1, 2, 5, 10, 20], cluster.clockRate].sort((left, right) => left - right)
+    const rateDisabledReason = isHistorical
+        ? '历史回放为只读，请先回到最新切面'
+        : !cluster.simulationRateSupported
+            ? '当前 Backend 未开放 Simulator 倍速写入'
+            : cluster.connectionStatus !== 'connected'
+                ? '等待 Kubernetes cache 就绪'
+                : !cluster.clockConverged
+                    ? 'Controller 正在同步上一条倍速配置'
+                    : '倍速更新正在提交'
 
     const status = getExecutionStatus({
         isHistorical,
@@ -100,6 +121,43 @@ export function ExecutionControls() {
                     </TooltipContent>
                 </Tooltip>
             </div>
+
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div
+                        className={cn(
+                            'flex h-7 w-[52px] items-center justify-center gap-1 rounded-lg border border-white/[0.055] bg-black/20 px-1 text-[#7C899C]',
+                            rateDisabled && 'cursor-not-allowed opacity-45',
+                        )}
+                    >
+                        <Gauge className="h-3 w-3 shrink-0" />
+                        <select
+                            aria-label="Simulator 时间倍速"
+                            value={cluster.clockRate}
+                            disabled={rateDisabled}
+                            onChange={(event) => void setSimulationRate(Number(event.target.value))}
+                            className="w-[28px] appearance-none bg-transparent text-center font-mono text-[9px] font-semibold text-[#AEB9C9] outline-none disabled:cursor-not-allowed"
+                        >
+                            {rateOptions.map((rate) => (
+                                <option key={rate} value={rate} className="bg-[#111722] text-[#DDE5F0]">
+                                    {rate}x
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent
+                    side="right"
+                    sideOffset={12}
+                    className="max-w-64 border border-white/[0.08] bg-[#111722] text-[#DDE5F0]"
+                >
+                    {rateDisabled
+                        ? rateDisabledReason
+                        : cluster.clockConverged
+                            ? `Simulator 已按 ${cluster.clockAppliedRate}x 运行（${cluster.clockSynchronizedInstances}/${cluster.clockTotalInstances} 个实例）`
+                            : `目标 ${cluster.clockRate}x，Controller 正在同步实例`}
+                </TooltipContent>
+            </Tooltip>
 
             <div className="flex max-w-[60px] items-center justify-center gap-1.5">
                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} />

@@ -195,6 +195,7 @@ func (r *TenantModelPolicyReconciler) ensureSimulatorInstance(ctx context.Contex
 				ModelRef:  platformv1.ObjectRef{Name: modelName},
 				Replicas:  0,
 				Traffic:   platformv1.TrafficSpec{QPS: 0},
+				TimeScale: platformv1.DefaultSimulationRate,
 			},
 		}
 		setInstanceIdentityMetadata(&instance, tenantName, modelName)

@@ -288,6 +288,7 @@ wait_for_crds() {
     tenantmodelpolicies.platform.study.com
     tenantnodepolicies.platform.study.com
     modelnodepolicies.platform.study.com
+    simulationclocks.platform.study.com
     simulatorinstances.platform.study.com
     tenantperformances.platform.study.com
     tenantruntimes.platform.study.com
@@ -481,11 +482,22 @@ verify_data_flow() {
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/health/ready
   wait_for_text "Backend Kubernetes 聚合" 'tenant-sample' 30 \
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/configuration
+  wait_for_text "Backend Simulator 倍速能力" '"simulatorAcceleration":true' 30 \
+    service_proxy hello-k8s-ai-dashboard-backend http /api/v1/clock
+  wait_for_text "SimulationClock 配置收敛" '1|1|True' 30 \
+    kube get simulationclock/default \
+    -o 'jsonpath={.spec.rate}{"|"}{.status.appliedRate}{"|"}{.status.conditions[?(@.type=="Ready")].status}'
+  kube wait --for=jsonpath='{.spec.timeScale}'=1 \
+    simulatorinstances --all --timeout=90s >/dev/null
+  log "SimulatorInstance 倍速同步：通过"
   wait_for_text "PostgreSQL snapshot" 'snapshot-' 30 \
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/replay
   wait_for_text "Prometheus Simulator 指标" 'hello_k8s_ai_simulator_leader' 40 \
     service_proxy hello-k8s-ai-prometheus http \
     '/api/v1/query?query=hello_k8s_ai_simulator_leader'
+  wait_for_text "Prometheus Simulator 倍速指标" 'hello_k8s_ai_simulator_time_scale' 40 \
+    service_proxy hello-k8s-ai-prometheus http \
+    '/api/v1/query?query=hello_k8s_ai_simulator_time_scale'
   wait_for_text "OpenTelemetry 到 Jaeger" 'hello-k8s-ai-' 40 \
     service_proxy hello-k8s-ai-jaeger query /api/services
   wait_for_text "Frontend 页面" '<!doctype html>' 20 \
@@ -579,7 +591,7 @@ show_status() {
   kube -n "$NAMESPACE" get deployment,statefulset,pod,service,pvc,lease -o wide
   printf '\n'
   kube get models,workernodes,tenants,tenantmodelpolicies,tenantnodepolicies,\
-modelnodepolicies,simulatorinstances,tenantperformances,tenantruntimes,orchestrators
+modelnodepolicies,simulationclocks,simulatorinstances,tenantperformances,tenantruntimes,orchestrators
 
   local ready
   ready="$(service_proxy hello-k8s-ai-dashboard-backend http /api/v1/health/ready 2>/dev/null || true)"

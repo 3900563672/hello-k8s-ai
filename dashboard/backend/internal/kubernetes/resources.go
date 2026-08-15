@@ -17,6 +17,7 @@ var PlatformResources = []ResourceDescriptor{
 	{Kind: "TenantNodePolicy", Plural: "tenantnodepolicies", GVR: platformGVR("tenantnodepolicies"), UserWritable: true},
 	{Kind: "ModelNodePolicy", Plural: "modelnodepolicies", GVR: platformGVR("modelnodepolicies"), UserWritable: true},
 	{Kind: "Orchestrator", Plural: "orchestrators", GVR: platformGVR("orchestrators"), UserWritable: true},
+	{Kind: "SimulationClock", Plural: "simulationclocks", GVR: platformGVR("simulationclocks")},
 	{Kind: "SimulatorInstance", Plural: "simulatorinstances", GVR: platformGVR("simulatorinstances")},
 	{Kind: "TenantPerformance", Plural: "tenantperformances", GVR: platformGVR("tenantperformances")},
 	{Kind: "TenantRuntime", Plural: "tenantruntimes", GVR: platformGVR("tenantruntimes")},

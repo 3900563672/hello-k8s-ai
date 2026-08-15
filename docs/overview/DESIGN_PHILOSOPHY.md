@@ -8,7 +8,7 @@
 
 ## 2. API Server 是 Controller 的消息总线和状态边界
 
-六个 Controller 通过 CR 的 Spec/Status 间接协作，不互相调用。这样每个 Controller 可以独立测试、重启和重放；同时也要求字段所有权非常严格。
+七个 Controller 通过 CR 的 Spec/Status 间接协作，不互相调用。这样每个 Controller 可以独立测试、重启和重放；同时也要求字段所有权非常严格。
 
 代价是最终一致：用户提交后只得到“意图已接受”，不是“所有 Pod 已 Ready”。前端必须展示 desired、observed、新鲜度和 Condition，而不是把 HTTP 200 当作运行完成。
 
@@ -18,6 +18,7 @@
 
 - Orchestrator 写 `replicas/effectiveScore`。
 - Traffic 写 `traffic.qps`。
+- SimulationClock Controller 写 `timeScale`。
 - SimulatorInstance Controller 写 Deployment 状态。
 - Simulator Leader 写性能和运行分数。
 
@@ -45,7 +46,7 @@ Orchestrator 的扩缩计划涉及 Replica Spec、effectiveScore 和自身 Statu
 
 Simulator 用固定 token 数、Poisson 到达、带噪声服务时间和并发服务器近似推理负载。它适合验证控制算法和可观测链路，不适合宣称预测真实模型成本或 SLO。
 
-可扩展方向是让模型参数、随机种子、工作负载分布和 SimulationRun 都显式版本化，从而让实验可复现；不能只在前端把时钟乘以倍率。
+当前 1x..20x 倍速由 Kubernetes `SimulationClock` 传到 Simulator 引擎，不是在前端做视觉插值。进一步实现可重复实验仍需让模型参数、随机种子、工作负载分布和 SimulationRun 显式版本化。
 
 ## 8. 遥测故障不能阻断控制面
 

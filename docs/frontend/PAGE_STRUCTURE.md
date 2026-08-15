@@ -133,9 +133,9 @@ Jaeger 是可选 provider，失败时页面应显示 warning 并继续展示 Kub
 
 - Clock：Server、Logical、Observed、Freshness。
 - Current counts：Tenant、Model、Node、Instance、Pod 等。
-- 5 个核心 Prometheus metric cards。
+- 6 个核心 Prometheus metric cards（含 Simulator timeScale）。
 - Traffic/Performance：QPS、TTFT、Queue、Score、样本新鲜度。
-- 10 个 CRD 的配置和状态概览。
+- 11 个 CRD 的配置和状态概览。
 - Workloads：Pod、Deployment、Node、Service、Lease。
 - Kubernetes Events。
 - Provider freshness/warnings。
@@ -159,6 +159,6 @@ Latest 默认约 15 秒 refetch；Historical 视图应保持不可变，除非�
 | Trace API 恒定失败/占位页 | Jaeger provider + DataOverviewPage | 已替换。 |
 | Mock traffic baseline | `/traffic` | 已替换。 |
 | Traffic templates/overlays | 仍是本地内存草稿 | 有意保留为编辑态，不是远端数据。 |
-| 浏览器逻辑时钟假状态 | `/clock` authoritative rate=1 | 已替换；倍速未实现。 |
+| 浏览器逻辑时钟假状态 | `/clock` 墙钟 + Kubernetes Simulator rate | 已替换；倍速通过 Backend/CRD/Controller 真正作用于 Simulator。 |
 
 迁移的核心不是“删除所有本地数据”，而是只允许本地数据承担 UI 草稿；任何声称是集群事实的内容必须来自 Backend。

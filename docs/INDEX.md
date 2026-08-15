@@ -70,8 +70,8 @@
 | backend | [API_DESIGN](backend/API_DESIGN.md) | 路由、契约、错误和权限是什么？ |
 | backend | [DATABASE_DESIGN](backend/DATABASE_DESIGN.md) | PostgreSQL 保存什么、不保存什么？ |
 | backend | [DATA_AGGREGATION](backend/DATA_AGGREGATION.md) | Kubernetes/Prometheus/Jaeger 如何组合？ |
-| kubernetes | [CRD_DESIGN](kubernetes/CRD_DESIGN.md) | 10 个 CRD 的字段与生命周期是什么？ |
-| kubernetes | [CONTROLLER_ARCHITECTURE](kubernetes/CONTROLLER_ARCHITECTURE.md) | 6 个 Reconciler 如何工作？ |
+| kubernetes | [CRD_DESIGN](kubernetes/CRD_DESIGN.md) | 11 个 CRD 的字段与生命周期是什么？ |
+| kubernetes | [CONTROLLER_ARCHITECTURE](kubernetes/CONTROLLER_ARCHITECTURE.md) | 7 个 Reconciler 如何工作？ |
 | kubernetes | [RESOURCE_LIFECYCLE](kubernetes/RESOURCE_LIFECYCLE.md) | 资源从配置到回收如何变化？ |
 | kubernetes | [FIELD_OWNERSHIP](kubernetes/FIELD_OWNERSHIP.md) | 谁能写哪些字段？ |
 | simulator | [SIMULATOR_ARCHITECTURE](simulator/SIMULATOR_ARCHITECTURE.md) | Leader、Tick、状态和遥测如何工作？ |
@@ -95,6 +95,6 @@
 
 ## 文档状态说明
 
-- 本体系基于 2026-08-12 源码审计，并在 2026-08-13 至 2026-08-14 同步了 Docker Desktop 部署、Orchestrator 放置契约和 Model 能力基准链路。
-- 2026-08-14 已复核根 Go module、Dashboard Backend、E2E 编译、Shell 语法和三套 Kustomize 渲染；完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。
+- 本体系基于 2026-08-12 源码审计，并在 2026-08-13 至 2026-08-14 同步了 Docker Desktop 部署、Orchestrator 放置契约、Model 能力基准和 Simulator 时间倍速链路。
+- 2026-08-14 早前变更已有根 Go module、Dashboard Backend、E2E 编译和 Kustomize 渲染记录；本次 Simulator 倍速变更只在当前环境完成语法、lint、YAML、Shell 与文档静态检查，Go/生成门禁/完整 Frontend/Kind E2E 仍须 CI 或目标机重跑。完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。
 - 当前交付环境没有 kubectl、Docker、Kind 和目标集群，真实运行结论仍以 `make cluster-up` 或 CI Kind E2E 的实际输出为准；见 [CLUSTER_INFORMATION.md](operations/CLUSTER_INFORMATION.md)。

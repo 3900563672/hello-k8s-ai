@@ -152,7 +152,6 @@ func main() {
 					client:     kubernetesClient,
 					name:       instanceName,
 					interval:   updateInterval,
-					startTime:  time.Now(),
 					reporterID: podName,
 					metrics:    simulatorMetrics,
 				}

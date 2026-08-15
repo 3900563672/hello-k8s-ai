@@ -258,6 +258,12 @@ func metricCatalog() map[string]metricDefinition {
 				return "histogram_quantile(0.95, sum by (le) (rate(" + selector("hello_k8s_ai_simulator_tick_duration_seconds_bucket", filters) + "[5m]))) * 1000"
 			},
 		},
+		"simulator.timeScale": {
+			unit: "x",
+			build: func(filters map[string]string) string {
+				return "max by (tenant, model, simulator_instance) (" + selector("hello_k8s_ai_simulator_time_scale", filters) + ")"
+			},
+		},
 		"controller.errorRate": {
 			unit: "ratio",
 			build: func(map[string]string) string {

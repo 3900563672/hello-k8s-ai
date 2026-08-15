@@ -6,8 +6,10 @@ import type {
     ClusterSnapshot,
     DistributionReceipt,
     ProviderHealth,
+    SimulationRateReceipt,
 } from '@/types/control-plane.types'
 import type { Snapshot } from '@/types/time.types'
+import { createClientId } from '@/lib/clientId'
 
 interface BackendNode {
     ref: { name: string; uid?: string }
@@ -35,7 +37,16 @@ interface BootstrapData {
         serverTime: string
         logicalTime: string
         rate: number
+        appliedRate: number
+        resourceVersion?: string
+        converged: boolean
+        synchronizedInstances: number
+        totalInstances: number
         state: string
+        capabilities: {
+            canSetRate: boolean
+            simulatorAcceleration: boolean
+        }
     }
     counts: Record<string, number>
     nodes: BackendNode[]
@@ -64,10 +75,16 @@ export const createInitialCluster = (): ClusterSnapshot => ({
     workers: [],
     checkedAt: new Date(0).toISOString(),
     simulationRunSupported: false,
+    simulationRateSupported: false,
     providers: {},
     serverTime: new Date(0).toISOString(),
     logicalTime: new Date(0).toISOString(),
     clockRate: 1,
+    clockAppliedRate: 1,
+    clockResourceVersion: '',
+    clockConverged: false,
+    clockSynchronizedInstances: 0,
+    clockTotalInstances: 0,
     clockState: 'running',
 })
 
@@ -108,11 +125,50 @@ export async function fetchClusterSnapshot(
         workers,
         checkedAt: bootstrap.clock.serverTime,
         simulationRunSupported: false,
+        simulationRateSupported:
+            bootstrap.clock.capabilities.canSetRate &&
+            bootstrap.clock.capabilities.simulatorAcceleration,
         providers: bootstrap.providers,
         serverTime: bootstrap.clock.serverTime,
         logicalTime: bootstrap.clock.logicalTime,
         clockRate: bootstrap.clock.rate,
+        clockAppliedRate: bootstrap.clock.appliedRate,
+        clockResourceVersion: bootstrap.clock.resourceVersion || '',
+        clockConverged: bootstrap.clock.converged,
+        clockSynchronizedInstances: bootstrap.clock.synchronizedInstances,
+        clockTotalInstances: bootstrap.clock.totalInstances,
         clockState: bootstrap.clock.state,
+    }
+}
+
+interface OperationReceipt {
+    results: Array<{
+        resourceVersion?: string
+        convergence: string
+    }>
+}
+
+export async function updateSimulationRate(
+    rate: number,
+    resourceVersion: string,
+): Promise<SimulationRateReceipt> {
+    const response = await apiRequest<ApiEnvelope<OperationReceipt>>('/clock/rate', {
+        method: 'PATCH',
+        headers: {
+            'Idempotency-Key': createClientId('simulation-rate'),
+        },
+        body: JSON.stringify({
+            rate,
+            ...(resourceVersion ? { resourceVersion } : {}),
+            dryRun: false,
+        }),
+    })
+    const result = response.data.results[0]
+    if (!result) throw new Error('Backend 未返回倍速更新结果')
+    return {
+        rate,
+        resourceVersion: result.resourceVersion || resourceVersion,
+        convergence: result.convergence,
     }
 }
 

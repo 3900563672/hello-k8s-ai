@@ -25,7 +25,7 @@ kubectl --context "$CTX" get nodes -o wide
 kubectl --context "$CTX" -n "$NS" get deploy,statefulset,pod,svc,lease,pvc -o wide
 kubectl --context "$CTX" get \
   tenants,models,workernodes,tenantmodelpolicies,tenantnodepolicies,modelnodepolicies,\
-simulatorinstances,tenantperformances,tenantruntimes,orchestrators -o wide
+simulationclocks,simulatorinstances,tenantperformances,tenantruntimes,orchestrators -o wide
 kubectl --context "$CTX" -n "$NS" get events --sort-by=.lastTimestamp
 ```
 
@@ -107,6 +107,19 @@ kubectl auth can-i --as=system:serviceaccount:hello-k8s-ai-system:hello-k8s-ai-s
 ```
 
 常见原因：无 leader、Lease renew 失败、Model 缺失/并发非法、Status RBAC、API conflict、instance 删除中。QPS=0 或 available=0 时 Performance nil 是正常，不等于 Status 完全不更新；observedAt/score仍应按 Tick 行为检查。
+
+### 倍速没有生效
+
+```bash
+kubectl get simulationclock/default -o yaml
+kubectl get simulatorinstances \
+  -o custom-columns='NAME:.metadata.name,RATE:.spec.timeScale'
+kubectl -n hello-k8s-ai-system get --raw \
+  '/api/v1/namespaces/hello-k8s-ai-system/pods/<simulator-pod>:9090/proxy/metrics' \
+  | grep 'simulator_time_scale\|simulation_step_seconds'
+```
+
+依次区分：Clock desired/applied 是否一致、observedGeneration 是否等于 generation、同步数是否等于总数、目标 Instance 字段是否正确、Simulator 是否已经经过下一真实 Tick。Clock Ready 只表示字段收敛；指标才证明运行进程已经读取。倍速变化不应改变 Pod UID，若发生 rollout，检查是否有人把 timeScale 注入了 Deployment template。
 
 ## 8. Score 为 0 / Traffic 不合理
 

@@ -1,6 +1,6 @@
 # hello-k8s-ai
 
-hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型和逻辑 WorkerNode；六个 Controller 将策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
+hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型、逻辑 WorkerNode 和 Simulator 时间倍速；七个 Controller 将配置与策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
 
 第一次接手项目时，请先读 [docs/AI_CONTEXT.md](docs/AI_CONTEXT.md)，再按 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。
 
@@ -65,7 +65,7 @@ flowchart TB
   F["React Frontend"] --> B["Dashboard Backend"]
   B --> K["Kubernetes API / CRD"]
   B --> D["PostgreSQL 历史与审计"]
-  K --> C["6 个 Controller"]
+  K --> C["7 个 Controller"]
   C --> S["Simulator Pod"]
   S --> K
   C --> O["Prometheus / OpenTelemetry"]
@@ -81,7 +81,8 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 
 | 能力 | 状态 |
 | --- | --- |
-| 10 个 CRD、6 个 Controller、Simulator | 已实现 |
+| 11 个 CRD、7 个 Controller、Simulator | 已实现 |
+| Simulator 运行时倍速（1x..20x） | 已实现；只加速离散事件引擎，不改变 Controller 冷却、数据新鲜度或历史时间 |
 | Backend Kubernetes cache、PostgreSQL、Prometheus、Jaeger 聚合 | 已实现 |
 | React Config、Traffic、Data Overview | 已接真实 Backend；Traffic Overlay 提交仍是部分实现 |
 | Docker Desktop 完整栈一键部署 | 已实现；需要在目标机器执行真实运行验收 |

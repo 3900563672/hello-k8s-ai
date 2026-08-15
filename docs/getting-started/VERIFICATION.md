@@ -37,7 +37,7 @@ make test-e2e
 
 E2E 使用固定名称 `hello-k8s-ai-test-e2e` 和固定 Kind 节点镜像，不复用 `docker-desktop` 或 `minikserve-demo`。无论测试成功还是失败，Makefile 都会尝试删除测试集群，并保留原始测试退出码。
 
-测试覆盖 Controller 启动、受保护 Metrics、Model 能力基准首次调度以及 Orchestrator 节点放置约束。失败时测试会输出 Controller 日志、Kubernetes Events 和 Pod 描述。
+测试覆盖 Controller 启动、受保护 Metrics、Model 能力基准首次调度、Orchestrator 节点放置约束，以及运行中把 Clock 从 1x 调到 10x后 Simulator 指标生效且 Pod UID 不变。失败时测试会输出 Controller 日志、Kubernetes Events 和 Pod 描述。
 
 ## 3. 完整栈部署验收
 
@@ -50,13 +50,14 @@ make cluster-up
 ```mermaid
 flowchart TD
   A["CRD Established"] --> B["Controller Ready"]
-  B --> C["SimulatorInstance / Pod Ready"]
-  C --> D["Status observedAt"]
-  D --> E["Prometheus 指标"]
-  E --> F["Jaeger Trace"]
-  F --> G["PostgreSQL Snapshot"]
-  G --> H["Backend API"]
-  H --> I["Frontend HTML"]
+  B --> C["Clock / Instance 收敛"]
+  C --> D["SimulatorInstance / Pod Ready"]
+  D --> E["Status observedAt"]
+  E --> F["Prometheus 指标"]
+  F --> G["Jaeger Trace"]
+  G --> H["PostgreSQL Snapshot"]
+  H --> I["Backend API"]
+  I --> J["Frontend HTML"]
 ```
 
 任一硬门失败都会退出非 0，并把 Node、工作负载、Event、Controller 日志和 Backend 日志写入 `.runtime/last-failure.log`。

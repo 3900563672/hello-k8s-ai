@@ -4,7 +4,7 @@
 
 ## 1. 项目是什么
 
-hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户通过 React Dashboard 配置租户、模型和逻辑 WorkerNode；Dashboard Backend 把允许的配置写成 `platform.study.com/v1` CR，并从 Kubernetes informer cache 读取当前态。六个 Controller 根据策略创建 SimulatorInstance、Deployment 和 Pod，分配 QPS、聚合性能、统计容量并扩缩容。Simulator Pod 用离散事件模型生成 TTFT、队列、分数、Prometheus 指标和 OpenTelemetry Trace。Backend 再聚合当前态、PostgreSQL 历史、Prometheus 和 Jaeger，回传给前端。
+hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户通过 React Dashboard 配置租户、模型、逻辑 WorkerNode 和 Simulator 时间倍速；Dashboard Backend 把允许的配置写成 `platform.study.com/v1` CR，并从 Kubernetes informer cache 读取当前态。七个 Controller 根据配置与策略创建 SimulatorInstance、Deployment 和 Pod，同步倍速、分配 QPS、聚合性能、统计容量并扩缩容。Simulator Pod 用离散事件模型生成 TTFT、队列、分数、Prometheus 指标和 OpenTelemetry Trace。Backend 再聚合当前态、PostgreSQL 历史、Prometheus 和 Jaeger，回传给前端。
 
 项目不是生产推理网关；当前 Simulator 模拟推理工作负载。它也不是一个由 PostgreSQL 驱动的控制平面：Kubernetes API Server 才是配置和最新收敛状态的主要事实来源。
 
@@ -12,9 +12,9 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 ### 已实现
 
-- 10 个 Cluster-scoped CRD：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、SimulatorInstance、TenantPerformance、TenantRuntime、Orchestrator。
-- 6 个 Reconciler：`TenantModelPolicyReconciler`、`SimulatorInstanceReconciler`、`TrafficReconciler`、`PerformanceCollectorReconciler`、`WorkerNodeUsageReconciler`、`OrchestratorReconciler`。
-- Simulator：Lease 选主、5 秒 Tick、离散事件仿真、冷启动、状态写回、Prometheus 指标、OTel Trace。
+- 11 个 Cluster-scoped CRD：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、SimulationClock、SimulatorInstance、TenantPerformance、TenantRuntime、Orchestrator。
+- 7 个 Reconciler：`TenantModelPolicyReconciler`、`SimulationClockReconciler`、`SimulatorInstanceReconciler`、`TrafficReconciler`、`PerformanceCollectorReconciler`、`WorkerNodeUsageReconciler`、`OrchestratorReconciler`。
+- Simulator：Lease 选主、5 秒真实 Tick、1x..20x 离散事件时间倍速、冷启动、状态写回、Prometheus 指标、OTel Trace。倍速运行中动态生效，不重建 Pod。
 - Dashboard Backend：shared informer/cache、读模型聚合、安全写命令、幂等、PostgreSQL 快照/事件/审计、Prometheus/Jaeger provider、REST、SSE、健康检查。
 - Frontend：`/config`、`/traffic`、`/trace`；真实 Backend 查询；最新/历史时间模式；Data Overview 展示运行态、指标、Trace。
 - 本地部署：复用现有 `docker-desktop` Kubernetes；单命令构建并向全部 Node 导入镜像，部署 Controller、Simulator、Prometheus、OTel Collector、Jaeger、Grafana、PostgreSQL、Backend 与 Frontend，并执行链路验收。
@@ -28,7 +28,7 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 ### 未实现或未生产化
 
-- Simulator/Controller 逻辑时间倍速、暂停、Seek、确定性重放。
+- 全局 pause、Seek、Controller 逻辑时间倍速和确定性重放。当前倍速只作用于 Simulator 离散事件引擎。
 - 生产身份认证、用户级授权、多租户隔离、TLS、NetworkPolicy 完整策略。
 - PostgreSQL HA/备份、Prometheus/Jaeger 持久化与 HA、Alertmanager。
 - 真实推理数据面；当前是模拟器。
@@ -54,6 +54,9 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 | `Model.spec.absoluteScore` | kubectl / Dashboard Backend Command Gateway | 必填正整数；模型能力配置的唯一权威来源。旧 `status.absoluteScore` 只读兼容。 |
 | `SimulatorInstance.spec.replicas` | Orchestrator | TenantModelPolicy 创建时初始为 0。 |
 | `SimulatorInstance.spec.traffic.qps` | Traffic Controller | Frontend 应改 Tenant.spec.qps，而不是直接改实例分配。 |
+| `SimulationClock/default.spec.rate` | kubectl / Dashboard Backend 专用 Clock API | 1..20；集群唯一配置，不通过通用配置白名单写入。 |
+| `SimulationClock.status` | SimulationClock Controller | 记录 generation、目标倍速向实例的同步计数和 Ready。 |
+| `SimulatorInstance.spec.timeScale` | SimulationClock Controller | 从全局 Clock 派生；Simulator 每个真实 Tick 读取。 |
 | `SimulatorInstance.status.phase/availableReplicas/Ready` | SimulatorInstance Controller | 从 Deployment 收敛状态获得。 |
 | `SimulatorInstance.status.effectiveScore` | Orchestrator | 扩容选择输出。 |
 | `SimulatorInstance.status.score/performance/observedAt/reporterID` | Simulator Leader | 非 Leader 不写。 |
@@ -65,13 +68,14 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 完整矩阵见 [kubernetes/FIELD_OWNERSHIP.md](kubernetes/FIELD_OWNERSHIP.md)。
 
-## 5. 六个 Controller 的真实名称
+## 5. 七个 Controller 的真实名称
 
 用户或旧材料中的简称与实现类型并不完全一致：
 
 | 常用称呼 | 源码类型 | 实际主资源 |
 | --- | --- | --- |
 | Tenant Controller | `TenantModelPolicyReconciler` | TenantModelPolicy；不是监听 Tenant 的独立 Controller。 |
+| SimulationClock Controller | `SimulationClockReconciler` | SimulationClock；同步全局倍速到全部 SimulatorInstance。 |
 | SimulatorInstance Controller | `SimulatorInstanceReconciler` | SimulatorInstance。 |
 | Traffic Controller | `TrafficReconciler` | Tenant。 |
 | Performance Controller | `PerformanceCollectorReconciler` | Tenant。 |
@@ -84,8 +88,8 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 | 路径 | 内容 | 修改前必读 |
 | --- | --- | --- |
-| `api/v1/` | 10 个 CRD Go 类型与校验标记 | CRD 设计、字段所有权、AGENTS.md |
-| `internal/controller/` | 六个控制器、算法、元数据、遥测 | Controller 架构、资源生命周期 |
+| `api/v1/` | 11 个 CRD Go 类型与校验标记 | CRD 设计、字段所有权、AGENTS.md |
+| `internal/controller/` | 七个控制器、算法、元数据、遥测 | Controller 架构、资源生命周期 |
 | `simulator/` | Leader、Tick、仿真引擎、指标、健康 | Simulator 两份文档 |
 | `cmd/main.go` | Manager 装配、参数、Controller 注册 | 架构总览、配置参考 |
 | `config/` | CRD/RBAC/Manager/Demo/Observability/Kustomize | 部署、安全、集群信息 |
@@ -137,19 +141,21 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 - `Model.spec.absoluteScore` 是用户/Backend 提供的必填能力基准；旧 `status.absoluteScore` 仅用于滚动升级兼容，不应再写入。
 - TenantNodePolicy、ModelNodePolicy 的 Status 当前没有 writer；空 Conditions 不等于失败。
 - Backend watch ReplicaSet 并记录事件，但 Workloads DTO 当前未直接展示 ReplicaSet。
-- 数据库有 `clock_state` 表，但运行时 Clock 仍是不可控制的真实 UTC、rate=1。
+- 数据库 `clock_state` 仍未驱动运行时。`SimulationClock/default` 只控制 Simulator 引擎倍速；Backend server/actual/logical time、Controller cooldown/freshness、Lease 和采集周期继续使用真实 UTC。
 - 配置批次会先 dry-run 全部对象，再顺序写入；跨对象写入并非数据库式原子事务。
 - SSE 是非持久通知流，慢客户端可能丢事件；30 秒轮询是安全网。
 
 ## 9. 验证基线
 
-2026-08-14 源码校正后的本地验证：
+2026-08-14 早前源码校正已有以下历史验证证据：
 
 - 恢复被误删的 `internal/controller/constants.go` 后，根 Go module 的测试、vet 和 golangci-lint v2.12.2 通过。
 - Dashboard Backend 的测试与 vet 通过；E2E 源码可独立编译。
 - `setup.sh`、`hack/local-cluster.sh`、`hack/cleanup-obsolete.sh` 通过 `bash -n`。
 - `config/dev`、`config/demo`、`dashboard/deploy` 均可成功进行 Kustomize 渲染。
-- Frontend 源码完成独立语法解析；当前交付环境无法访问 npm registry，因此完整 `npm ci && npm run check` 交由 CI 执行，不伪造结果。
+- Frontend 源码完成独立语法解析。
+
+本次 Simulator 倍速变更在当前交付环境完成了 Go/TypeScript/TSX 语法树解析、Frontend oxlint、YAML 解析、Shell 语法和 Markdown 链接检查。当前环境没有 Go、controller-gen、Kustomize、Docker、kubectl 或 Kind；附件内的 `node_modules` 也缺少部分直接依赖，因此本次 Go 测试、生成一致性、Frontend 完整构建和 Kind E2E 必须由 CI/目标机重新执行。详细结果见 `change-history/2026-08-14-simulator-time-scale/TEST_REPORT.md`，不得沿用早前结果冒充本次通过。
 
 当前交付环境没有 Docker、kubectl、Kind 和目标集群，不能代替用户机器执行镜像启动、Pod Ready、Prometheus target、Jaeger Trace、数据库或页面访问验收。`make cluster-up` 会在用户机器上逐门验证，失败时停止并写入 `.runtime/last-failure.log`。
 
@@ -161,6 +167,6 @@ GitHub Actions 现在分别验证 Controller、Backend、Frontend、生成文件
 2. 把 Traffic Overlay 明确转成可预览、可提交、可审计的 Tenant QPS 命令。
 3. 把现有 Controller/Simulator Kind E2E 扩展到 Dashboard 与可观测组件的完整栈验收。
 4. 补认证授权、Secret/TLS/NetworkPolicy、PostgreSQL 备份与可观测存储持久化。
-5. 评审 `SimulationRun/SimulationClock` API 后再实现逻辑时间，禁止只在前端伪造倍速。
+5. 若继续实现 pause、Seek 或确定性回放，先设计 `SimulationRun`、seed 和 checkpoint；不得把现有 Simulator 倍速扩大解释为全系统逻辑时间。
 
 路线图和优先级依据见 [overview/CURRENT_STATUS_AND_ROADMAP.md](overview/CURRENT_STATUS_AND_ROADMAP.md)。

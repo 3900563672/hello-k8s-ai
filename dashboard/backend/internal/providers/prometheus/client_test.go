@@ -54,6 +54,18 @@ func TestSimulatorQPSDeduplicatesReplicaTargets(t *testing.T) {
 	}
 }
 
+func TestSimulatorTimeScaleUsesCurrentReporterGauge(t *testing.T) {
+	definition := metricCatalog()["simulator.timeScale"]
+	result := definition.build(map[string]string{
+		"tenant":             "tenant-a",
+		"simulator_instance": "instance-a",
+	})
+	want := `max by (tenant, model, simulator_instance) (hello_k8s_ai_simulator_time_scale{simulator_instance="instance-a",tenant="tenant-a"})`
+	if result != want {
+		t.Fatalf("simulator.timeScale query = %q, want %q", result, want)
+	}
+}
+
 func TestWorkerMetricIgnoresUnsupportedEntityFilters(t *testing.T) {
 	definition := metricCatalog()["worker.gpuUsed"]
 	result := definition.build(map[string]string{

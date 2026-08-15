@@ -8,7 +8,7 @@
 
 | 领域 | 当前 | 生产门 | 状态 |
 | --- | --- | --- | --- |
-| 功能控制环 | 6 Controllers + Simulator | 完整 E2E、故障恢复、规模测试 | 部分 |
+| 功能控制环 | 7 Controllers + Simulator | 完整 E2E、故障恢复、规模测试 | 部分 |
 | API 兼容 | 内部 `/api/v1` | OpenAPI、版本策略、contract test | 未完成 |
 | AuthN/AuthZ | ServiceAccount | OIDC、用户/租户授权、审计 actor | 未完成 |
 | Secrets/TLS | 本地随机 Secret/集群内明文 | external secrets、rotation、TLS/mTLS | 未完成 |
@@ -108,4 +108,4 @@
 - Alertmanager/on-call/runbook。
 - NetworkPolicy/TLS/Secret 管理。
 - 修正 Traffic/UI 误导语义。
-- 为 `absoluteScore` 校准值建立版本与审计策略；逻辑时间仍不是现有能力。
+- 为 `absoluteScore` 校准值建立版本与审计策略；当前只有 Simulator 引擎倍速，完整逻辑时间、pause/Seek 和确定性运行仍未实现。

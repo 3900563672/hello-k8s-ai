@@ -48,7 +48,8 @@ Base path：`/api/v1`。当前 API 是面向 Dashboard 的内部稳定契约；�
 | GET | `/health/ready` | cache 和 required PostgreSQL 就绪。Prom/Jaeger 非硬门。 |
 | GET | `/capabilities` | commands、history、metrics、traces、simulation run 等能力。 |
 | GET | `/bootstrap` | 集群、服务、provider、clock 和页面初始元数据。 |
-| GET | `/clock` | authoritative server/actual/logical time；当前 rate=1、running。 |
+| GET | `/clock` | authoritative server/actual/logical time，以及 Simulator desired/applied rate、同步计数和 capabilities。 |
+| PATCH | `/clock/rate` | 设置 `SimulationClock/default.spec.rate`（1..20）；需要 Idempotency-Key、resourceVersion 和审计。 |
 
 ### Configuration
 
@@ -85,6 +86,7 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | `simulator.qps` | req/s | 分配 QPS。 |
 | `simulator.errorRate` | ratio | Simulator 错误率。 |
 | `simulator.tickLatency` | ms, p95 | Tick 延迟。 |
+| `simulator.timeScale` | x | 当前 Simulator reporter 实际采用的倍速。 |
 | `controller.errorRate` | ratio | Reconcile 错误比例。 |
 | `controller.reconcileLatency` | duration | Reconcile 延迟。 |
 | `worker.gpuUsed` | units | 业务 GPU 使用量。 |
@@ -147,6 +149,7 @@ Configuration apply 先对所有资源执行 API Server dry-run，捕获 CRD/CEL
 | 资源 | Read | Create/Update/Delete | Status |
 | --- | --- | --- | --- |
 | 7 个配置 CR | 是 | 是，Spec allowlist | 否 |
+| SimulationClock/default | 是 | 专用 Clock API 仅 create/update rate；不可 delete | 否 |
 | SimulatorInstance | 是 | 否 | 否 |
 | TenantPerformance | 是 | 否 | 否 |
 | TenantRuntime | 是 | 否 | 否 |

@@ -140,3 +140,103 @@ func TestSimulatorStatusPatchPreservesControllerOwnedFields(t *testing.T) {
 		t.Fatalf("reporter metadata was not written: %#v", got.Status)
 	}
 }
+
+func TestSimulatorAppliesDynamicTimeScaleWithoutChangingWallClock(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := platformv1.AddToScheme(scheme); err != nil {
+		t.Fatal(err)
+	}
+	effectiveScore := 100
+	instance := &platformv1.SimulatorInstance{
+		ObjectMeta: metav1.ObjectMeta{Name: "instance-rate"},
+		Spec: platformv1.SimulatorInstanceSpec{
+			ModelRef:  platformv1.ObjectRef{Name: "model-rate"},
+			Traffic:   platformv1.TrafficSpec{QPS: 0},
+			TimeScale: 2,
+		},
+		Status: platformv1.SimulatorInstanceStatus{
+			EffectiveScore:   &effectiveScore,
+			AvailableReplicas: 1,
+		},
+	}
+	model := &platformv1.Model{
+		ObjectMeta: metav1.ObjectMeta{Name: "model-rate"},
+		Spec: platformv1.ModelSpec{
+			MaxConcurrency: 1,
+			ColdStartMs:    10000,
+		},
+	}
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&platformv1.SimulatorInstance{}).
+		WithObjects(instance, model).
+		Build()
+	fixedWallTime := time.Date(2026, time.August, 14, 12, 0, 0, 0, time.UTC)
+	simulator := &Simulator{
+		client:     kubernetesClient,
+		name:       instance.Name,
+		interval:   time.Second,
+		now:        func() time.Time { return fixedWallTime },
+		reporterID: "pod-a",
+	}
+
+	if err := simulator.reconcile(context.Background()); err != nil {
+		t.Fatalf("first reconcile at 2x: %v", err)
+	}
+	if simulator.simulationElapsed != 2*time.Second {
+		t.Fatalf("elapsed = %s, want 2s", simulator.simulationElapsed)
+	}
+
+	var latest platformv1.SimulatorInstance
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: instance.Name}, &latest); err != nil {
+		t.Fatal(err)
+	}
+	if latest.Status.Score == nil || *latest.Status.Score != 0 {
+		t.Fatalf("score before cold start completes = %v, want 0", latest.Status.Score)
+	}
+	latest.Spec.TimeScale = 8
+	if err := kubernetesClient.Update(context.Background(), &latest); err != nil {
+		t.Fatalf("change timeScale at runtime: %v", err)
+	}
+
+	if err := simulator.reconcile(context.Background()); err != nil {
+		t.Fatalf("second reconcile at 8x: %v", err)
+	}
+	if simulator.simulationElapsed != 10*time.Second {
+		t.Fatalf("elapsed after dynamic change = %s, want 10s", simulator.simulationElapsed)
+	}
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: instance.Name}, &latest); err != nil {
+		t.Fatal(err)
+	}
+	if latest.Status.Score == nil || *latest.Status.Score != effectiveScore {
+		t.Fatalf("score after simulated cold start = %v, want %d", latest.Status.Score, effectiveScore)
+	}
+	if latest.Status.ObservedAt == nil || !latest.Status.ObservedAt.Time.Equal(fixedWallTime) {
+		t.Fatalf("observedAt = %v, want fixed wall time %s", latest.Status.ObservedAt, fixedWallTime)
+	}
+}
+
+func TestTimeScaleBoundsAndSaturatedProgress(t *testing.T) {
+	if got := normalizedTimeScale(0); got != platformv1.DefaultSimulationRate {
+		t.Fatalf("normalized zero rate = %d", got)
+	}
+	if got := normalizedTimeScale(platformv1.MaxSimulationRate + 1); got != platformv1.MaxSimulationRate {
+		t.Fatalf("normalized excessive rate = %d", got)
+	}
+	simulator := &Simulator{interval: 2 * time.Second}
+	if step := simulator.advanceSimulationTime(5); step != 10*time.Second {
+		t.Fatalf("step = %s, want 10s", step)
+	}
+	if simulator.simulationElapsed != 10*time.Second {
+		t.Fatalf("elapsed = %s, want 10s", simulator.simulationElapsed)
+	}
+	maximumDuration := time.Duration(1<<63 - 1)
+	simulator = &Simulator{interval: maximumDuration}
+	if step := simulator.advanceSimulationTime(platformv1.MaxSimulationRate); step != maximumDuration {
+		t.Fatalf("saturated step = %s, want maximum duration", step)
+	}
+	simulator.advanceSimulationTime(platformv1.MaxSimulationRate)
+	if simulator.simulationElapsed != maximumDuration {
+		t.Fatalf("saturated elapsed = %s, want maximum duration", simulator.simulationElapsed)
+	}
+}

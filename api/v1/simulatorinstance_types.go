@@ -47,6 +47,13 @@ type SimulatorInstanceSpec struct {
 	// 流量配置
 	// +required
 	Traffic TrafficSpec `json:"traffic"`
+
+	// Simulator 离散事件引擎的时间倍速，由 SimulationClock Controller 同步
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=20
+	// +required
+	TimeScale int `json:"timeScale"`
 }
 
 // InstancePerformanceMetric 性能指标，带单位
@@ -114,6 +121,7 @@ type SimulatorInstanceStatus struct {
 // +kubebuilder:printcolumn:name="Tenant",type=string,JSONPath=`.spec.tenantRef.name`
 // +kubebuilder:printcolumn:name="Model",type=string,JSONPath=`.spec.modelRef.name`
 // +kubebuilder:printcolumn:name="Replicas",type=integer,JSONPath=`.spec.replicas`
+// +kubebuilder:printcolumn:name="Rate",type=integer,JSONPath=`.spec.timeScale`
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 

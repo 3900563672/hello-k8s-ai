@@ -39,6 +39,16 @@ OTel 通用：`OTEL_EXPORTER_OTLP_ENDPOINT`、`OTEL_EXPORTER_OTLP_TRACES_ENDPOIN
 | RetryPeriod | 2s | 代码固定。 |
 | sample freshness | 约 30s | Controller 逻辑常量。 |
 
+### Simulator 时间倍速
+
+| 配置 | 默认/范围 | 说明 |
+| --- | --- | --- |
+| `SimulationClock/default.spec.rate` | 1；1..20 | 全局期望倍速，由用户或 Backend Clock API 写。 |
+| `SimulatorInstance.spec.timeScale` | 1；1..20 | Clock Controller 派生，Simulator 每个真实 Tick 读取。 |
+| Frontend 选项 | 1x、2x、5x、10x、20x | API 接受范围内任意整数，UI 提供常用档位。 |
+
+倍速只影响 SimEngine 步长和冷启动累计模拟时间。`--interval`、Controller fallback、新鲜度、冷却、Lease 和采集周期仍是真实时间。
+
 ## 3. Backend HTTP
 
 | Env | 默认 | 说明 |

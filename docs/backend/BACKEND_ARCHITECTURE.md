@@ -4,7 +4,7 @@
 
 Dashboard Backend 是 Backend-for-Frontend、Read Model Aggregator 和受控 Command Gateway。它把 Kubernetes 的领域对象、Prometheus 时间序列、Jaeger Trace 与 PostgreSQL 历史转换为页面可稳定消费的契约。
 
-它不是：Controller、Scheduler、Prometheus/Jaeger 替代品、Kubernetes 状态镜像数据库，也不拥有逻辑仿真时间。
+它不是：Controller、Scheduler、Prometheus/Jaeger 替代品或 Kubernetes 状态镜像数据库。Simulator 倍速的事实仍在 Kubernetes `SimulationClock`；Backend 只提供受控入口和读模型，不拥有进程内时间。
 
 ## 2. 分层
 
@@ -32,7 +32,7 @@ flowchart TD
 | Kubernetes | `internal/kubernetes` | client、informer cache、unstructured mapper、写命令 gateway。 |
 | Provider | `internal/providers/prometheus`、`jaeger` | 安全查询模板、外部 API、归一化、超时/缓存。 |
 | Storage | `internal/store` | 迁移、snapshot、events、audit、idempotency、trace index、retention。 |
-| Clock | `internal/clock` | authoritative UTC 当前时间；rate=1。 |
+| Clock | `internal/clock` | authoritative UTC 当前时间，并投影 Kubernetes 中的 Simulator desired/applied rate 与收敛状态。 |
 | DTO | `internal/model` | 对页面稳定的领域响应类型。 |
 
 ## 3. 启动顺序
@@ -46,7 +46,7 @@ sequenceDiagram
   participant H as HTTP
   M->>DB: connect + migrate
   M->>K: build clients + discovery
-  M->>I: register 10 CRD + native informers
+  M->>I: register 11 CRD + native informers
   M->>I: start and wait cache sync
   M->>H: start API/SSE
   I-->>DB: async resource changes
@@ -59,7 +59,7 @@ sequenceDiagram
 
 Backend 同时使用：
 
-- Dynamic client：读取/写入 10 个 CRD，避免复制根 module 的 Go API 包耦合。
+- Dynamic client：读取 11 个 CRD并写受控配置，避免复制根 module 的 Go API 包耦合。
 - Typed client：Pod、Node、Service、Event、Deployment、ReplicaSet、Lease。
 - Discovery：启动时读取 API Server 版本并放入 bootstrap/source metadata。
 
@@ -71,7 +71,7 @@ Backend 同时使用：
 
 | 类别 | 资源 |
 | --- | --- |
-| platform.study.com/v1 | 全部 10 个 CRD |
+| platform.study.com/v1 | 全部 11 个 CRD |
 | core/v1 | Pod、Node、Service、Event |
 | apps/v1 | Deployment、ReplicaSet |
 | coordination.k8s.io/v1 | Lease |
@@ -102,7 +102,7 @@ CRD 字段变化必须同步更新 Mapper tests；否则 API 仍能编译但页�
 
 Aggregator 生成：
 
-- Configuration：Model、WorkerNode、Tenant 及可写配置 metadata/status。
+- Configuration：Model、WorkerNode、Tenant、Policy、Orchestrator、SimulationClock 及相关派生资源 metadata/status。
 - Traffic：Tenant 请求、实例分配、性能与运行态。
 - Workloads：CRD、Pod、Deployment、Node、Service、Lease、Event。
 - CurrentSnapshot/Overview：上述数据 + metrics + traces + clock + source freshness。
@@ -131,7 +131,9 @@ Overview 对多个 Prometheus 查询和 Jaeger 查询并发 fan-out。可选 pro
 
 ## 9. Command Gateway
 
-可写 Kind：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、Orchestrator。
+通用配置可写 Kind：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、Orchestrator。
+
+`SimulationClock/default.spec.rate` 通过 `PATCH /clock/rate` 单独处理：只允许 1..20，支持缺失时创建、resourceVersion、dry-run、幂等与审计；不允许第二个 Clock、delete 或 Status 写入。
 
 禁止：SimulatorInstance、TenantPerformance、TenantRuntime、所有 Status、Deployment、Pod、Lease。这些是 Controller/Simulator 派生状态。
 

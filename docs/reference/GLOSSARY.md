@@ -21,7 +21,7 @@
 | Idempotency-Key | 防 mutation 重复副作用的请求键 | Authentication token |
 | Instance | 通常指 SimulatorInstance 实例池 CR | 必然等于单个 Pod |
 | Leader | 持有 per-instance reporter Lease 的 Simulator Pod | Controller Manager leader（另一个 Lease） |
-| Logical Time | 当前 Clock DTO 中等于 Actual 的字段 | 已实现 pause/rate/seek |
+| Logical Time | 当前 Clock DTO 中等于 Actual 的字段 | Simulator 引擎倍速或已实现的 pause/seek |
 | ObservedAt | Simulator/资源最近观测/发布时间 | Backend servedAt |
 | Orchestrator | 每 Tenant 的扩缩容 Controller/CR | Kubernetes Scheduler |
 | Partial | 某些可选来源失败但响应主体可用 | 全部成功 |
@@ -33,6 +33,8 @@
 | Replay | 当前产品中 snapshot timeline/frame | 完整逻辑时间重演 |
 | Resource Event | Backend 观察到的对象变化记录 | 无损审计/事件溯源 |
 | Score | Simulator 计算的冷启动/可用副本池能力 | `Model.spec.absoluteScore` 配置基线 / Instance effectiveScore |
+| SimulationClock | 集群唯一的 Simulator 倍速 CR，名称固定 `default` | 全系统可暂停/Seek 的逻辑时钟 |
+| Simulator Time Scale | 每个真实 Tick 推进的模拟时间倍数，当前 1..20 | Controller cooldown、Lease、采集或页面时间倍速 |
 | SSE | Backend 到浏览器的失效通知流 | 持久事件总线 |
 | Status | Controller/Simulator 的观测与派生输出 | 用户配置入口 |
 | TenantRuntime.instanceCount | 当前实现的可用副本合计 | SimulatorInstance CR 数 |

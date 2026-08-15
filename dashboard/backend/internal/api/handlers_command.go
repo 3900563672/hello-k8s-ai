@@ -25,6 +25,12 @@ type tenantTrafficRequest struct {
 	DryRun          bool   `json:"dryRun"`
 }
 
+type simulationRateRequest struct {
+	Rate            int    `json:"rate"`
+	ResourceVersion string `json:"resourceVersion,omitempty"`
+	DryRun          bool   `json:"dryRun"`
+}
+
 func (server *Server) handleApplyConfiguration(writer http.ResponseWriter, request *http.Request) {
 	if !server.requireCache(writer, request) {
 		return
@@ -131,6 +137,48 @@ func (server *Server) handleTenantTraffic(writer http.ResponseWriter, request *h
 		Results: []model.OperationResourceResult{{
 			Ref:             ref,
 			Action:          "update",
+			ResourceVersion: object.GetResourceVersion(),
+			Convergence:     map[bool]string{true: "dry-run", false: "pending"}[body.DryRun],
+		}},
+	}
+	writeData(writer, request, http.StatusAccepted, receipt, false, nil, sourceVersions(server.cache.SyncedAt()))
+}
+
+func (server *Server) handleSimulationRate(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireCache(writer, request) {
+		return
+	}
+	var body simulationRateRequest
+	if err := decodeJSON(writer, request, server.config.HTTP.MaxBodyBytes, &body); err != nil {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_REQUEST", err.Error(), false, nil)
+		return
+	}
+	operationID := randomIdentifier("op")
+	object, action, err := server.gateway.SetSimulationRate(
+		request.Context(),
+		body.Rate,
+		body.ResourceVersion,
+		body.DryRun,
+	)
+	ref := model.ResourceRef{
+		APIVersion: "platform.study.com/v1",
+		Kind:       "SimulationClock",
+		Name:       "default",
+	}
+	if err != nil {
+		server.recordAudit(request, operationID, "set-simulation-rate", ref, "error", err)
+		server.writeCommandError(writer, request, err)
+		return
+	}
+	ref.UID = string(object.GetUID())
+	server.recordAudit(request, operationID, "set-simulation-rate", ref, "accepted", nil)
+	receipt := model.OperationReceipt{
+		OperationID: operationID,
+		AcceptedAt:  time.Now().UTC(),
+		State:       map[bool]string{true: "validated", false: "accepted"}[body.DryRun],
+		Results: []model.OperationResourceResult{{
+			Ref:             ref,
+			Action:          action,
 			ResourceVersion: object.GetResourceVersion(),
 			Convergence:     map[bool]string{true: "dry-run", false: "pending"}[body.DryRun],
 		}},

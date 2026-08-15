@@ -13,7 +13,7 @@
 ```text
 api/v1/                       CRD Go 类型与 Kubebuilder 标记
 cmd/main.go                   Controller Manager 入口
-internal/controller/          6 个 Controller
+internal/controller/          7 个 Controller
 internal/observability/       Controller Trace 接入
 simulator/                    Simulator、Lease 选主、Metrics 与 Trace
 dashboard/backend/            Backend API、Kubernetes cache、数据库与 Provider
@@ -30,9 +30,10 @@ docs/                         当前工程文档
 - Frontend 只调用 Dashboard Backend，不直接访问 Kubernetes、Prometheus、Jaeger 或 PostgreSQL。
 - Backend 写接口只修改白名单 CR 的 Spec，不写 Controller 所有的 Status。
 - Traffic Controller 写 `SimulatorInstance.spec.traffic.qps`。
+- SimulationClock Controller 写 `SimulatorInstance.spec.timeScale`；Simulator 每个 Tick 动态读取，不因倍速变化重建 Pod。
 - Orchestrator 写副本数、有效分数和扩缩计划；Simulator 写性能、可用副本与运行状态。
 - 遥测失败不能阻止控制面或 Simulator 启动。
-- 当前逻辑时钟仍是墙钟时间，不能只在 Frontend 伪造倍速或确定性回放。
+- Backend/Controller 的逻辑时间仍是墙钟；`SimulationClock.spec.rate` 只加速 Simulator 离散事件引擎，不能扩展成 Frontend 伪造的 pause/seek 或确定性回放。
 
 ## 生成文件
 

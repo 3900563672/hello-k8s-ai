@@ -52,7 +52,7 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 
 ### `clock_state`
 
-为未来权威逻辑时钟预留。当前运行时 Clock 没有以该表驱动 pause/rate/seek；不要因表存在就宣称逻辑时间已实现。
+为未来权威逻辑时钟预留。当前运行时没有以该表驱动 pause/rate/seek；Simulator 倍速来自 Kubernetes `SimulationClock`，不从数据库读取。不要因表存在就宣称全系统逻辑时间已实现。
 
 ### `command_idempotency`
 

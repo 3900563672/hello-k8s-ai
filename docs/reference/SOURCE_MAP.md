@@ -9,6 +9,7 @@
 | `api/v1/*_types.go` | CRD Spec/Status、validation/default/print columns | CRD 设计、字段所有权 |
 | `cmd/main.go` | Manager flags、tracing、Controller 注册、leader election | Controller/配置参考 |
 | `internal/controller/tenant_controller.go` | TenantModelPolicyReconciler | Controller 架构 |
+| `internal/controller/simulationclock_controller.go` | 全局倍速向 SimulatorInstance 收敛 | Controller/时间数据流 |
 | `internal/controller/simulatorinstance_controller.go` | Deployment/TenantRuntime | Controller/生命周期 |
 | `internal/controller/traffic_controller.go` | Score-based QPS allocation | Controller/数据流 |
 | `internal/controller/performancecollector_controller.go` | TenantPerformance | Controller/聚合 |
@@ -29,14 +30,14 @@
 
 | 路径 | 内容 |
 | --- | --- |
-| `config/crd/bases/` | 自动生成 10 CRD，禁止手改 |
+| `config/crd/bases/` | 自动生成 11 个 CRD，禁止手改 |
 | `config/rbac/role.yaml` | 自动生成 Manager RBAC，禁止手改 |
 | `config/rbac/simulator_*` | Simulator SA/ClusterRole/Binding |
 | `config/manager/manager.yaml` | Controller Deployment 基线 |
 | `config/default/` | CRD/RBAC/Manager 默认组合 |
 | `config/dev/` | 默认 + observability + dev patch |
 | `config/demo/` | 不写死 Node 的静态演示 Model/Tenant/Policy/Orchestrator |
-| `config/samples/` | 用户配置示例（只应用 Kustomization 中列出的 7 个） |
+| `config/samples/` | 用户配置示例（Kustomization 当前列出 8 个，含 SimulationClock） |
 | `config/observability/` | OTel/Jaeger/Prom/Grafana |
 | `config/network-policy/` | metrics 基础策略，非完整 production policy |
 | `hack/local-cluster.sh` | Docker Desktop 一键构建、镜像导入、部署、验收、状态与停止 |
@@ -51,7 +52,7 @@
 | `internal/config/config.go` | env/default/validation |
 | `internal/api/server.go` | routes |
 | `internal/api/handlers_read.go` | health/config/traffic/metric/trace/overview |
-| `internal/api/handlers_command.go` | apply/delete/qps/audit |
+| `internal/api/handlers_command.go` | apply/delete/qps/simulation rate/audit |
 | `internal/api/idempotency.go` | mutation replay |
 | `internal/api/middleware.go` | request/CORS/timeout/recovery/security |
 | `internal/api/sse.go`, `events.go` | stream hub/notifications |
@@ -66,7 +67,7 @@
 | `internal/store/migrations/001_initial.sql` | DB schema |
 | `internal/store/postgres.go` | connection/migrate/query/write |
 | `internal/store/recorder.go` | async informer event recorder |
-| `internal/clock/clock.go` | rate=1 authoritative clock |
+| `internal/clock/clock.go` | authoritative UTC + Simulator desired/applied rate 投影 |
 | `internal/model/types.go` | API read model DTO |
 
 ## 4. Frontend

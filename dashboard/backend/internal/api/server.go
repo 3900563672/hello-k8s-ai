@@ -7,6 +7,7 @@ import (
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/clock"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/kubernetes"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 	jaegerprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/jaeger"
 	prometheusprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/prometheus"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/readmodel"
@@ -54,6 +55,13 @@ func NewServer(dependencies Dependencies) *Server {
 	}
 }
 
+func (server *Server) currentClockState() model.ClockState {
+	state := server.clock.State()
+	// 所有写命令都依赖审计与幂等存储；存储不可用时前端必须禁用写入口。
+	state.Capabilities.CanSetRate = state.Capabilities.CanSetRate && server.store.Available()
+	return state
+}
+
 func (server *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/health/live", server.handleLive)
@@ -74,6 +82,7 @@ func (server *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/replay/frame", server.handleOverview)
 	mux.HandleFunc("GET /api/v1/overview", server.handleOverview)
 	mux.HandleFunc("GET /api/v1/clock", server.handleClock)
+	mux.HandleFunc("PATCH /api/v1/clock/rate", server.handleSimulationRate)
 	mux.HandleFunc("GET /api/v1/stream", server.handleStream)
 
 	var handler http.Handler = mux

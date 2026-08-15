@@ -72,7 +72,7 @@ flowchart LR
 
 ## 5. Simulator 指标
 
-完整表见 [../simulator/SIMULATOR_ARCHITECTURE.md](../simulator/SIMULATOR_ARCHITECTURE.md)。核心查询应关注：leader、Tick 成功率/延迟、Status 写失败、assigned QPS、available replicas、effective/pool score、cold factor、queue、TTFT。
+完整表见 [../simulator/SIMULATOR_ARCHITECTURE.md](../simulator/SIMULATOR_ARCHITECTURE.md)。核心查询应关注：leader、Tick 成功率/延迟、Status 写失败、assigned QPS、available replicas、effective/pool score、cold factor、time scale、simulation step/elapsed、queue、TTFT。
 
 TTFT 指标单位是秒，而 CR Status 单位是毫秒；Backend provider 负责转换。不要在前端凭字段名猜单位。
 
@@ -85,6 +85,7 @@ Frontend 只提交 metricId，Backend 生成安全 PromQL。当前支持：
 - `simulator.qps`
 - `simulator.errorRate`
 - `simulator.tickLatency`
+- `simulator.timeScale`
 - `controller.errorRate`
 - `controller.reconcileLatency`
 - `worker.gpuUsed`

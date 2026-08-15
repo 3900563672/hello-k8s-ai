@@ -6,9 +6,9 @@
 
 ### Kubernetes 控制面
 
-- 保持 10 个 CRD 的 Go API 和生成清单一致，建立 Tenant、Model、WorkerNode、三类 Policy、SimulatorInstance、TenantPerformance、TenantRuntime、Orchestrator 的领域模型。
-- 将控制职责拆成六个可重入 Reconciler，而不是做一个超大 Controller。
-- 建立字段所有权：流量、副本、部署状态、分数、性能、节点用量分别由不同组件写。
+- 保持 11 个 CRD 的 Go API 和生成清单一致，建立 Tenant、Model、WorkerNode、三类 Policy、SimulationClock、SimulatorInstance、TenantPerformance、TenantRuntime、Orchestrator 的领域模型。
+- 将控制职责拆成七个可重入 Reconciler，而不是做一个超大 Controller。
+- 建立字段所有权：倍速、流量、副本、部署状态、分数、性能、节点用量分别由不同组件写。
 - 使用 Watch + 周期 Requeue 保证事件驱动与失联兜底。
 - 为资源创建、Status Patch、删除、finalizer、OwnerReference、确定性命名与策略交集补充实现和测试。
 - Orchestrator 使用 pending plan 注解处理跨对象更新的崩溃恢复。
@@ -16,7 +16,7 @@
 ### Simulator
 
 - 以 Deployment 副本运行，通过 per-instance Lease 选出唯一 reporter。
-- 每个 Tick 读取最新 CR、计算冷启动因子和实例池分数、推进离散事件引擎、写回性能。
+- 每个真实 Tick 读取最新 CR，按 1x..20x 推进模拟时间、计算冷启动因子和实例池分数、推进离散事件引擎并写回性能；倍速变化不重启 Pod。
 - 暴露健康、就绪、业务指标、领导权指标和 Trace；遥测配置缺失时不阻断仿真。
 
 ### Dashboard Backend

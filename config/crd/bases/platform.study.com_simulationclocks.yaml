@@ -4,31 +4,28 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.21.0
-  name: simulatorinstances.platform.study.com
+  name: simulationclocks.platform.study.com
 spec:
   group: platform.study.com
   names:
-    kind: SimulatorInstance
-    listKind: SimulatorInstanceList
-    plural: simulatorinstances
-    singular: simulatorinstance
+    kind: SimulationClock
+    listKind: SimulationClockList
+    plural: simulationclocks
+    singular: simulationclock
   scope: Cluster
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.tenantRef.name
-      name: Tenant
-      type: string
-    - jsonPath: .spec.modelRef.name
-      name: Model
-      type: string
-    - jsonPath: .spec.replicas
-      name: Replicas
-      type: integer
-    - jsonPath: .spec.timeScale
+    - jsonPath: .spec.rate
       name: Rate
       type: integer
-    - jsonPath: .status.phase
-      name: Phase
+    - jsonPath: .status.appliedRate
+      name: Applied
+      type: integer
+    - jsonPath: .status.synchronizedInstances
+      name: Synced
+      type: integer
+    - jsonPath: .status.conditions[?(@.type=="Ready")].status
+      name: Ready
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -36,7 +33,7 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: SimulatorInstance 集群级，一个租户下一个模型只对应一个实例
+        description: SimulationClock 是集群唯一的 Simulator 倍速控制资源
         properties:
           apiVersion:
             description: |-
@@ -56,64 +53,25 @@ spec:
           metadata:
             type: object
           spec:
-            description: SimulatorInstanceSpec 实例期望状态
+            description: SimulationClockSpec 定义 Simulator 离散事件引擎的期望时间倍速
             properties:
-              modelRef:
-                description: 目标模型
-                properties:
-                  name:
-                    description: 被引用对象的名称
-                    minLength: 1
-                    type: string
-                required:
-                - name
-                type: object
-              replicas:
-                description: 副本数
-                minimum: 0
-                type: integer
-              tenantRef:
-                description: 所属租户
-                properties:
-                  name:
-                    description: 被引用对象的名称
-                    minLength: 1
-                    type: string
-                required:
-                - name
-                type: object
-              timeScale:
+              rate:
                 default: 1
-                description: Simulator 离散事件引擎的时间倍速，由 SimulationClock Controller 同步
+                description: 每个真实 tick 需要推进的模拟时间倍数
                 maximum: 20
                 minimum: 1
                 type: integer
-              traffic:
-                description: 流量配置
-                properties:
-                  qps:
-                    description: 每秒请求数
-                    minimum: 0
-                    type: integer
-                required:
-                - qps
-                type: object
             required:
-            - modelRef
-            - replicas
-            - tenantRef
-            - timeScale
-            - traffic
+            - rate
             type: object
           status:
-            description: SimulatorInstanceStatus 实例运行时状态，控制器维护
+            description: SimulationClockStatus 记录倍速配置向 SimulatorInstance 的收敛情况
             properties:
-              availableReplicas:
-                description: 当前 Deployment 中可用的副本数，由 SimulatorInstance 控制器维护
-                minimum: 0
+              appliedRate:
+                description: 所有现存 SimulatorInstance 已同步的倍速
                 type: integer
               conditions:
-                description: 标准的 K8s conditions
+                description: 倍速配置是否已完成收敛
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -121,7 +79,7 @@ spec:
                     lastTransitionTime:
                       description: |-
                         lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the condition changed is acceptable.
                       format: date-time
                       type: string
                     message:
@@ -172,55 +130,25 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
-              effectiveScore:
-                description: Orchestrator 计算的单副本静态能力分数
+              observedGeneration:
+                description: Controller 已处理的配置版本
+                format: int64
                 type: integer
-              observedAt:
-                description: 模拟器最近一次成功发布性能快照的时间
-                format: date-time
-                type: string
-              performance:
-                description: 当前性能数据
-                properties:
-                  queue:
-                    description: 队列长度或排队时间
-                    properties:
-                      unit:
-                        description: 单位，比如 "ms"、"s"
-                        type: string
-                      value:
-                        description: 数值
-                        type: integer
-                    type: object
-                  ttft:
-                    description: 首 token 时间
-                    properties:
-                      unit:
-                        description: 单位，比如 "ms"、"s"
-                        type: string
-                      value:
-                        description: 数值
-                        type: integer
-                    type: object
-                type: object
-              phase:
-                description: 运行阶段：Running, Pending, Failed 等
-                enum:
-                - Running
-                - Pending
-                - Failed
-                - Unknown
-                type: string
-              reporterID:
-                description: 当前性能快照的报告者身份，用于诊断 Lease 选主
-                type: string
-              score:
-                description: 模拟器计算的可用副本池实时能力分数，Traffic 控制器根据它分配 QPS
+              synchronizedInstances:
+                description: 已同步到期望倍速的实例数
+                minimum: 0
+                type: integer
+              totalInstances:
+                description: 本轮收敛观察到的实例总数
+                minimum: 0
                 type: integer
             type: object
         required:
         - spec
         type: object
+        x-kubernetes-validations:
+        - message: SimulationClock 名称必须为 default
+          rule: self.metadata.name == 'default'
     served: true
     storage: true
     subresources:

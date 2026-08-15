@@ -54,6 +54,7 @@ type Configuration struct {
 	Tenants            []PlatformResource `json:"tenants"`
 	Policies           PolicySet          `json:"policies"`
 	Orchestrators      []PlatformResource `json:"orchestrators"`
+	SimulationClocks   []PlatformResource `json:"simulationClocks"`
 	SimulatorInstances []PlatformResource `json:"simulatorInstances"`
 	TenantPerformance  []PlatformResource `json:"tenantPerformance"`
 	TenantRuntimes     []PlatformResource `json:"tenantRuntimes"`
@@ -203,21 +204,26 @@ type ClockCapabilities struct {
 }
 
 type ClockState struct {
-	ClockID          string            `json:"clockId"`
-	Mode             string            `json:"mode"`
-	State            string            `json:"state"`
-	ServerTime       time.Time         `json:"serverTime"`
-	ActualTime       time.Time         `json:"actualTime"`
-	LogicalTime      time.Time         `json:"logicalTime"`
-	SimulationTime   *time.Time        `json:"simulationTime"`
-	ActualAnchor     time.Time         `json:"actualAnchor"`
-	LogicalAnchor    time.Time         `json:"logicalAnchor"`
-	OffsetMs         int64             `json:"offsetMs"`
-	Rate             float64           `json:"rate"`
-	Version          string            `json:"version"`
-	Authoritative    bool              `json:"authoritative"`
-	MaxClientDriftMs int64             `json:"maxClientDriftMs"`
-	Capabilities     ClockCapabilities `json:"capabilities"`
+	ClockID               string            `json:"clockId"`
+	Mode                  string            `json:"mode"`
+	State                 string            `json:"state"`
+	ServerTime            time.Time         `json:"serverTime"`
+	ActualTime            time.Time         `json:"actualTime"`
+	LogicalTime           time.Time         `json:"logicalTime"`
+	SimulationTime        *time.Time        `json:"simulationTime"`
+	ActualAnchor          time.Time         `json:"actualAnchor"`
+	LogicalAnchor         time.Time         `json:"logicalAnchor"`
+	OffsetMs              int64             `json:"offsetMs"`
+	Rate                  float64           `json:"rate"`
+	AppliedRate           float64           `json:"appliedRate"`
+	ResourceVersion       string            `json:"resourceVersion,omitempty"`
+	Converged             bool              `json:"converged"`
+	SynchronizedInstances int               `json:"synchronizedInstances"`
+	TotalInstances        int               `json:"totalInstances"`
+	Version               string            `json:"version"`
+	Authoritative         bool              `json:"authoritative"`
+	MaxClientDriftMs      int64             `json:"maxClientDriftMs"`
+	Capabilities          ClockCapabilities `json:"capabilities"`
 }
 
 type ProviderState struct {

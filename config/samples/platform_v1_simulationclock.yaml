@@ -1,0 +1,6 @@
+apiVersion: platform.study.com/v1
+kind: SimulationClock
+metadata:
+  name: default
+spec:
+  rate: 1

@@ -39,6 +39,7 @@ hello-k8s-ai 用 Kubernetes 自定义资源描述多租户 AI 推理调度问题
 - 模拟推理工作负载，而不是执行真实模型推理。
 - 多租户、多模型、节点策略与资源约束。
 - 自动扩缩容、QPS 分配、性能聚合。
+- 通过 Kubernetes 配置动态调整 Simulator 离散事件时间倍速。
 - 当前态、离散历史快照、指标、Trace 和事件可视化。
 - 复用 Docker Desktop 已有 Kubernetes 的本地完整栈。
 
@@ -54,11 +55,11 @@ hello-k8s-ai 用 Kubernetes 自定义资源描述多租户 AI 推理调度问题
 
 一个完整闭环应能被新人验证：
 
-1. 用户创建 Tenant、Model、WorkerNode、Policy 和 Orchestrator。
+1. 用户创建 Tenant、Model、WorkerNode、Policy、Orchestrator，并按需设置 SimulationClock 倍速。
 2. TenantModelPolicy Controller 创建对应 SimulatorInstance。
 3. Orchestrator 根据 TenantPerformance、阈值、分数和容量修改副本。
 4. SimulatorInstance Controller 创建 Deployment，Kubernetes 创建并调度 Pod。
-5. Simulator Leader 周期写入性能和分数。
+5. SimulationClock Controller 同步 timeScale；Simulator Leader 按该倍速周期写入性能和分数。
 6. Traffic Controller 把 Tenant QPS 守恒地分配到可用实例。
 7. PerformanceCollector 回收实例样本形成 TenantPerformance。
 8. Prometheus/Jaeger 收集指标与 Trace。

@@ -26,10 +26,16 @@ export interface ClusterSnapshot {
     workers: ClusterNode[]
     checkedAt: string
     simulationRunSupported: boolean
+    simulationRateSupported: boolean
     providers: Record<string, ProviderHealth>
     serverTime: string
     logicalTime: string
     clockRate: number
+    clockAppliedRate: number
+    clockResourceVersion: string
+    clockConverged: boolean
+    clockSynchronizedInstances: number
+    clockTotalInstances: number
     clockState: string
 }
 
@@ -53,4 +59,10 @@ export interface DistributionReceipt {
         revision: string
     }
     createdAt: string
+}
+
+export interface SimulationRateReceipt {
+    rate: number
+    resourceVersion: string
+    convergence: string
 }

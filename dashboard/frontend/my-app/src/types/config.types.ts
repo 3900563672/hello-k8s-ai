@@ -100,6 +100,7 @@ export interface ConfigurationReadModel {
         modelNode: BackendResource[]
     }
     orchestrators: BackendResource[]
+    simulationClocks: BackendResource[]
     simulatorInstances: BackendResource[]
     tenantPerformance: BackendResource[]
     tenantRuntimes: BackendResource[]

@@ -48,7 +48,7 @@ desktop-worker9
 
 ## 3. CRD 与 CR 快照
 
-用户快照中已存在当前 10 个 CRD，尚无当前 CR 实例。另有历史 CRD：
+用户当时的集群快照中存在 10 个旧版项目 CRD，尚无当前 CR 实例。本次源码已增加第 11 个 `simulationclocks.platform.study.com`；覆盖源码不代表目标集群已升级，仍需执行部署。另有历史 CRD：
 
 ```text
 orchestratorconfigs.platform.study.com

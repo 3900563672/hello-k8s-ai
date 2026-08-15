@@ -65,7 +65,7 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 		database.Close()
 		return nil, err
 	}
-	clockState := clock.New()
+	clockState := clock.New(cacheState)
 	aggregator := readmodel.NewAggregator(cacheState)
 	gateway := kubernetes.NewGateway(cacheState)
 	apiServer := api.NewServer(api.Dependencies{

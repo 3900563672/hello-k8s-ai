@@ -13,3 +13,4 @@ spec:
   replicas: 0
   traffic:
     qps: 0
+  timeScale: 1

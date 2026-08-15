@@ -14,6 +14,7 @@ rules:
   - tenantnodepolicies
   - modelnodepolicies
   - orchestrators
+  - simulationclocks
   - simulatorinstances
   - tenantperformances
   - tenantruntimes
@@ -28,6 +29,9 @@ rules:
   - modelnodepolicies
   - orchestrators
   verbs: [create, update, patch, delete]
+- apiGroups: [platform.study.com]
+  resources: [simulationclocks]
+  verbs: [create, update, patch]
 - apiGroups: [""]
   resources: [pods, nodes, services, events]
   verbs: [get, list, watch]

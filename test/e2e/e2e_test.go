@@ -567,6 +567,177 @@ spec:
 			}, 3*time.Minute, time.Second).Should(Succeed())
 		})
 
+		It("应在不重启 Simulator Pod 的情况下动态应用时间倍速", func() {
+			const (
+				instanceName = "time-scale-e2e-instance"
+				modelName    = "time-scale-e2e-model"
+			)
+			By("读取可运行 Simulator 的目标节点")
+			cmd := exec.Command(
+				"kubectl", "get", "pod", controllerPodName,
+				"-n", namespace,
+				"-o", "jsonpath={.spec.nodeName}",
+			)
+			nodeName, err := utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+			nodeName = strings.TrimSpace(nodeName)
+			Expect(nodeName).NotTo(BeEmpty())
+
+			manifest := fmt.Sprintf(`
+apiVersion: platform.study.com/v1
+kind: SimulationClock
+metadata:
+  name: default
+spec:
+  rate: 1
+---
+apiVersion: platform.study.com/v1
+kind: Model
+metadata:
+  name: %s
+spec:
+  displayName: 倍速 E2E 模型
+  gpuUnits: 1
+  maxConcurrency: 1
+  absoluteScore: 100
+  coldStartMs: 10000
+---
+apiVersion: platform.study.com/v1
+kind: TenantNodePolicy
+metadata:
+  name: time-scale-e2e-tenant-node
+spec:
+  tenantRef:
+    name: time-scale-e2e-tenant
+  nodeRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: ModelNodePolicy
+metadata:
+  name: time-scale-e2e-model-node
+spec:
+  modelRef:
+    name: %s
+  nodeRef:
+    name: %s
+  effect: Allow
+---
+apiVersion: platform.study.com/v1
+kind: SimulatorInstance
+metadata:
+  name: %s
+  annotations:
+    platform.study.com/node-placements: '{"version":1,"primaryNode":"%s","placements":[{"nodeName":"%s","replicas":1}]}'
+spec:
+  tenantRef:
+    name: time-scale-e2e-tenant
+  modelRef:
+    name: %s
+  replicas: 1
+  traffic:
+    qps: 0
+`, modelName, nodeName, modelName, nodeName, instanceName, nodeName, nodeName, modelName)
+			cmd = exec.Command("kubectl", "apply", "-f", "-")
+			cmd.Stdin = strings.NewReader(manifest)
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+			DeferCleanup(func() {
+				reset := exec.Command(
+					"kubectl", "patch", "simulationclock/default", "--type=merge",
+					"-p", `{"spec":{"rate":1}}`,
+				)
+				_, _ = utils.Run(reset)
+				cleanup := exec.Command(
+					"kubectl", "delete",
+					"simulatorinstance/"+instanceName,
+					"tenantnodepolicy/time-scale-e2e-tenant-node",
+					"modelnodepolicy/time-scale-e2e-model-node",
+					"model/"+modelName,
+					"--ignore-not-found",
+				)
+				_, _ = utils.Run(cleanup)
+			})
+
+			By("等待 Simulator Pod 就绪并记录 UID")
+			var simulatorPodName string
+			var simulatorPodUID string
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "pods",
+					"-n", namespace,
+					"-l", "platform.study.com/instance="+instanceName,
+					"-o", `jsonpath={.items[0].metadata.name}{"|"}{.items[0].metadata.uid}{"|"}{.items[0].status.conditions[?(@.type=="Ready")].status}`,
+				)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				parts := strings.Split(strings.TrimSpace(output), "|")
+				g.Expect(parts).To(HaveLen(3))
+				g.Expect(parts[2]).To(Equal("True"))
+				simulatorPodName = parts[0]
+				simulatorPodUID = parts[1]
+			}, 3*time.Minute, time.Second).Should(Succeed())
+
+			By("把 SimulationClock 从 1x 动态调整为 10x")
+			cmd = exec.Command(
+				"kubectl", "patch", "simulationclock/default", "--type=merge",
+				"-p", `{"spec":{"rate":10}}`,
+			)
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("等待 Controller 同步实例并报告收敛")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "simulationclock/default",
+					"-o", `jsonpath={.spec.rate}{"|"}{.status.appliedRate}{"|"}{.status.synchronizedInstances}{"|"}{.status.totalInstances}{"|"}{.status.conditions[?(@.type=="Ready")].status}`,
+				)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				parts := strings.Split(strings.TrimSpace(output), "|")
+				g.Expect(parts).To(HaveLen(5))
+				g.Expect(parts[0]).To(Equal("10"))
+				g.Expect(parts[1]).To(Equal("10"))
+				g.Expect(parts[2]).To(Equal(parts[3]))
+				g.Expect(parts[3]).NotTo(Equal("0"))
+				g.Expect(parts[4]).To(Equal("True"))
+
+				cmd = exec.Command(
+					"kubectl", "get", "simulatorinstance/"+instanceName,
+					"-o", "jsonpath={.spec.timeScale}",
+				)
+				output, err = utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(strings.TrimSpace(output)).To(Equal("10"))
+			}).Should(Succeed())
+
+			By("确认运行中 Simulator 已读取 10x，且 Pod 没有重建")
+			Eventually(func(g Gomega) {
+				cmd := exec.Command(
+					"kubectl", "get", "--raw",
+					fmt.Sprintf(
+						"/api/v1/namespaces/%s/pods/%s:9090/proxy/metrics",
+						namespace,
+						simulatorPodName,
+					),
+				)
+				metricsOutput, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(metricsOutput).To(ContainSubstring("hello_k8s_ai_simulator_time_scale 10"))
+				g.Expect(metricsOutput).To(ContainSubstring("hello_k8s_ai_simulator_simulation_step_seconds 50"))
+
+				cmd = exec.Command(
+					"kubectl", "get", "pod", simulatorPodName,
+					"-n", namespace,
+					"-o", "jsonpath={.metadata.uid}",
+				)
+				uid, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(strings.TrimSpace(uid)).To(Equal(simulatorPodUID))
+			}, 2*time.Minute, time.Second).Should(Succeed())
+		})
+
 		// +kubebuilder:scaffold:e2e-webhooks-checks
 	})
 })

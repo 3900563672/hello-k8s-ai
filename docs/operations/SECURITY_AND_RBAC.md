@@ -20,8 +20,9 @@ ServiceAccount：`hello-k8s-ai-dashboard-backend`。
 
 | 权限 | 资源 |
 | --- | --- |
-| get/list/watch | 全部 10 个 platform CRD |
+| get/list/watch | 全部 11 个 platform CRD |
 | create/update/patch/delete | Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、Orchestrator |
+| create/update/patch | `SimulationClock/default`；应用层只开放 rate，RBAC 不授予 delete/status |
 | get/list/watch | Pods、Nodes、Services、Events |
 | get/list/watch | Deployments、ReplicaSets |
 | get/list/watch | Leases |

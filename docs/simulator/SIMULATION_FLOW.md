@@ -7,6 +7,7 @@
 | `traffic.qps` | Traffic Controller | Simulator | 告诉实例池本轮请求负载。 |
 | `availableReplicas` | Instance Controller | Simulator | 只使用实际可用容量。 |
 | `effectiveScore` | Orchestrator | Simulator | 把模型能力/资源折扣带入运行分。 |
+| `timeScale` | SimulationClock Controller | Simulator | 决定每个真实 Tick 推进多少模拟时间。 |
 | Model performance | 用户/Backend | Simulator engine | 定义 prefill/decode 服务时间。 |
 | `coldStartMs` | 用户/Backend | cold factor | 模拟新实例暂不可用/渐进可用。 |
 | Queue/TTFT | SimEngine | Status、Prom、PerformanceCollector | 反馈性能压力。 |
@@ -14,7 +15,7 @@
 
 ## 2. 冷启动曲线
 
-设总冷启动时间为 `C`，从 leader 开始时间到当前为 `e`：
+设总冷启动时间为 `C`，当前 reporter 任期累计的模拟时间为 `e`：
 
 ```text
 C <= 0           -> factor = 1
@@ -36,7 +37,7 @@ xychart-beta
 
 ## 3. 请求到达
 
-每 Tick duration `d`、per-replica QPS `q`：
+每个真实 Tick 间隔为 `r`、倍速为 `s`，引擎步长 `d=r×s`；per-replica QPS 为 `q`：
 
 ```text
 lambda = q × d.seconds
@@ -124,6 +125,18 @@ sequenceDiagram
 
 ## 10. 时间尺度
 
+`SimulationClock/default.spec.rate` 允许 1..20。SimulationClock Controller 把它同步为每个实例的 `spec.timeScale`；Simulator 每 5 秒真实 Tick 重新 GET Instance，所以运行中改变倍速无需重启 Pod，通常在下一个 Tick 生效。
+
+| 内容 | 是否随倍速变化 |
+| --- | --- |
+| SimEngine 步长、Poisson 请求量、冷启动累计进度 | 是，乘以 `timeScale` |
+| Queue/TTFT 的模拟演进 | 是；TTFT 仍以模拟毫秒报告 |
+| Simulator Tick/Status/Trace 发布频率 | 否，仍是每 5 秒真实时间 |
+| Traffic/Performance/Orchestrator 周期与样本 freshness | 否，仍是真实时间 |
+| 冷却、Lease、Prometheus scrape、DB snapshot、Backend 时钟 | 否，仍是真实时间 |
+
+高倍速会让一次控制面观察间隔内经过更多模拟时间，因此 Queue/TTFT 可能比 1x 变化更快。20x 上限用于限制单 Tick 工作量；这项能力是 Simulator 引擎加速，不是全系统逻辑时间。
+
 | 环节 | 当前默认 |
 | --- | ---: |
 | Simulator Tick | 5s |
@@ -136,13 +149,13 @@ sequenceDiagram
 | Prometheus scrape | 10s |
 | DB snapshot | 30s |
 
-这些都是真实墙钟。Frontend 的历史游标不会改变它们。
+表中周期都是真实墙钟。只有 SimEngine 每次 Tick 内的模拟步长乘以倍速；Frontend 历史游标不会改变任何运行周期。
 
 ## 11. 改进方向
 
-- 将 prompt/output tokens、arrival distribution、noise、seed、Tick 与 engine version纳入 SimulationRun。
+- 将 prompt/output tokens、arrival distribution、noise、seed、倍速变更记录、Tick 与 engine version 纳入 SimulationRun。
 - 分别模拟每个 Pod 或明确池级 aggregate 模型，避免 leader 代表副本的近似歧义。
-- 用 Pod creation/ready 时间为逐副本冷启动，而非 leader startTime。
+- 用 Pod creation/ready 时间为逐副本冷启动，而非 reporter 任期累计时间。
 - checkpoint queue/RNG/clock，支持 leader 切换与确定性 replay。
 - 用真实模型数据校准服务时间分布，而非仅固定均值 + 均匀噪声。
 - 为“无 TTFT 样本”设计显式 Prometheus 指标，而不是 gauge=0。

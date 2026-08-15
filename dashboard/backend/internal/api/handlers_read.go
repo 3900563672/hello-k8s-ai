@@ -58,8 +58,9 @@ func (server *Server) handleCapabilities(writer http.ResponseWriter, request *ht
 			"tenantQPS":           commandsAvailable,
 			"idempotency":         commandsAvailable,
 			"simulationRun":       false,
+			"simulationRate":      commandsAvailable,
 		},
-		"clock": server.clock.State().Capabilities,
+		"clock": server.currentClockState().Capabilities,
 		"replay": map[string]any{
 			"kubernetesSnapshots":   server.store.Available(),
 			"simulatorAcceleration": false,
@@ -72,7 +73,7 @@ func (server *Server) handleBootstrap(writer http.ResponseWriter, request *http.
 	if !server.requireCache(writer, request) {
 		return
 	}
-	now := server.clock.State().ServerTime
+	now := server.currentClockState().ServerTime
 	configuration := server.aggregator.Configuration(now)
 	traffic := server.aggregator.Traffic(now)
 	workloads := server.aggregator.Workloads(now)
@@ -99,7 +100,7 @@ func (server *Server) handleBootstrap(writer http.ResponseWriter, request *http.
 			NodeCount:     len(workloads.Nodes),
 			ReadyNodes:    readyNodes,
 		},
-		Clock:     server.clock.State(),
+		Clock:     server.currentClockState(),
 		Counts:    server.aggregator.Counts(configuration, traffic, workloads),
 		Nodes:     workloads.Nodes,
 		Providers: providers,
@@ -119,7 +120,7 @@ func (server *Server) handleConfiguration(writer http.ResponseWriter, request *h
 			AsOf: requestTimeOrNow(request), Availability: availability,
 			Models: []model.PlatformResource{}, WorkerNodes: []model.PlatformResource{}, Tenants: []model.PlatformResource{},
 			Policies:      model.PolicySet{TenantModel: []model.PlatformResource{}, TenantNode: []model.PlatformResource{}, ModelNode: []model.PlatformResource{}},
-			Orchestrators: []model.PlatformResource{}, SimulatorInstances: []model.PlatformResource{}, TenantPerformance: []model.PlatformResource{}, TenantRuntimes: []model.PlatformResource{},
+			Orchestrators: []model.PlatformResource{}, SimulationClocks: []model.PlatformResource{}, SimulatorInstances: []model.PlatformResource{}, TenantPerformance: []model.PlatformResource{}, TenantRuntimes: []model.PlatformResource{},
 		}
 		writeData(writer, request, http.StatusOK, configuration, true, []string{"No persisted Kubernetes snapshot exists at the requested time."}, sourceVersions(server.cache.SyncedAt()))
 		return
@@ -280,11 +281,11 @@ func (server *Server) handleReplay(writer http.ResponseWriter, request *http.Req
 		writeProblem(writer, request, http.StatusServiceUnavailable, "TIMELINE_UNAVAILABLE", err.Error(), true, nil)
 		return
 	}
-	writeData(writer, request, http.StatusOK, map[string]any{"clock": server.clock.State(), "timeline": timeline}, false, nil, sourceVersions(server.cache.SyncedAt()))
+	writeData(writer, request, http.StatusOK, map[string]any{"clock": server.currentClockState(), "timeline": timeline}, false, nil, sourceVersions(server.cache.SyncedAt()))
 }
 
 func (server *Server) handleClock(writer http.ResponseWriter, request *http.Request) {
-	writeData(writer, request, http.StatusOK, server.clock.State(), false, nil, nil)
+	writeData(writer, request, http.StatusOK, server.currentClockState(), false, nil, sourceVersions(server.cache.SyncedAt()))
 }
 
 func (server *Server) handleOverview(writer http.ResponseWriter, request *http.Request) {
@@ -304,7 +305,7 @@ func (server *Server) handleOverview(writer http.ResponseWriter, request *http.R
 		Availability:  availability,
 		AsOf:          asOf,
 		SnapshotID:    snapshotID,
-		Clock:         server.clock.State(),
+		Clock:         server.currentClockState(),
 		Configuration: snapshot.Configuration,
 		Traffic:       snapshot.Traffic,
 		Workloads:     snapshot.Workloads,
@@ -378,7 +379,7 @@ func emptySnapshot(at time.Time, availability string) model.CurrentSnapshot {
 			Policies: model.PolicySet{
 				TenantModel: []model.PlatformResource{}, TenantNode: []model.PlatformResource{}, ModelNode: []model.PlatformResource{},
 			},
-			Orchestrators: []model.PlatformResource{}, SimulatorInstances: []model.PlatformResource{},
+			Orchestrators: []model.PlatformResource{}, SimulationClocks: []model.PlatformResource{}, SimulatorInstances: []model.PlatformResource{},
 			TenantPerformance: []model.PlatformResource{}, TenantRuntimes: []model.PlatformResource{},
 		},
 		Traffic: model.Traffic{AsOf: at, Tenants: []model.TenantTraffic{}},
@@ -391,7 +392,7 @@ func emptySnapshot(at time.Time, availability string) model.CurrentSnapshot {
 
 func (server *Server) snapshotFor(request *http.Request) (model.CurrentSnapshot, string, string, error) {
 	requestedAtRaw := strings.TrimSpace(request.URL.Query().Get("at"))
-	now := server.clock.State().ServerTime
+	now := server.currentClockState().ServerTime
 	if requestedAtRaw == "" {
 		if err := server.requireCacheError(); err != nil {
 			return model.CurrentSnapshot{}, "unavailable", "", err

@@ -36,6 +36,14 @@ resources:
     namespaced: false
   domain: study.com
   group: platform
+  kind: SimulationClock
+  path: github.com/3900563672/hello-k8s-ai/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: false
+  domain: study.com
+  group: platform
   kind: SimulatorInstance
   path: github.com/3900563672/hello-k8s-ai/api/v1
   version: v1

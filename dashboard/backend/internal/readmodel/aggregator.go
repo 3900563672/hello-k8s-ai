@@ -44,6 +44,7 @@ func (aggregator *Aggregator) Configuration(now time.Time) model.Configuration {
 			ModelNode:   resources["ModelNodePolicy"],
 		},
 		Orchestrators:      resources["Orchestrator"],
+		SimulationClocks:   resources["SimulationClock"],
 		SimulatorInstances: resources["SimulatorInstance"],
 		TenantPerformance:  resources["TenantPerformance"],
 		TenantRuntimes:     resources["TenantRuntime"],

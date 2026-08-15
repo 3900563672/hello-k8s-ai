@@ -9,7 +9,7 @@ flowchart TB
   B --> DB1["PostgreSQL 幂等/审计"]
   B --> K["Kubernetes API"]
   K --> CR["CRD Spec"]
-  CR --> C["6 个 Controller"]
+  CR --> C["7 个 Controller"]
   C --> DEP["Simulator Deployment"]
   DEP --> POD["Simulator Pod + Lease"]
   POD --> OBS["Prometheus / OTel / Jaeger"]
@@ -33,7 +33,7 @@ flowchart TB
 | 4 | Database（命令侧） | idempotency pending/result、audit log | Backend | Backend 重试/审计者 | 防止重复副作用并保留操作证据。 |
 | 5 | Kubernetes API | 用户可写 CR 的 Spec/metadata、resourceVersion | Backend Gateway/kubectl | API Server/etcd/Controller watches | 声明式持久化意图、校验和并发控制。 |
 | 6 | CRD | Tenant/Model/Node/Policy/Orchestrator 等领域状态 | 用户/Controller/Simulator 按所有权 | 各 Controller、Backend | 作为组件间稳定业务语言和事实边界。 |
-| 7 | Controller | SimulatorInstance、Deployment、流量、聚合、容量、扩缩状态 | 六个 Reconciler | API Server、下游 Controller/Simulator | 把高层意图持续收敛为运行资源。 |
+| 7 | Controller | SimulatorInstance、倍速、Deployment、流量、聚合、容量、扩缩状态 | 七个 Reconciler | API Server、下游 Controller/Simulator | 把高层意图持续收敛为运行资源。 |
 | 8 | Simulator 工作负载 | Deployment Spec、Pod template、affinity、env、ServiceAccount | Instance Controller/K8s controllers | Scheduler/kubelet/Simulator | 将实例池副本映射为实际可运行进程。 |
 | 9 | Pod/Lease | Pod 状态、nodeName、leader holder | K8s/Scheduler/Simulator leader election | Instance/WorkerUsage/Backend/Simulator Pods | 证明实际调度与唯一 reporter。 |
 | 10 | Simulator Tick | QPS、score、queue、TTFT、observedAt、reporterID | Leader SimEngine | CR Status、Prometheus、OTel | 产生控制环反馈和诊断证据。 |

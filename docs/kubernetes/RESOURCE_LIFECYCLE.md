@@ -4,7 +4,7 @@
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Configured: Tenant/Model/Node/Policies/Orchestrator
+  [*] --> Configured: Clock/Tenant/Model/Node/Policies/Orchestrator
   Configured --> InstanceCreated: Tenant-Model effective Allow
   InstanceCreated --> Scaled: Orchestrator replicas > 0
   Scaled --> DeploymentCreated: Instance reconcile
@@ -20,12 +20,13 @@ stateDiagram-v2
 
 建议顺序：
 
-1. WorkerNode（metadata.name 与实际 Node 对齐）。
-2. Model（包括资源/性能参数和必填的 `spec.absoluteScore`）。
-3. Tenant（QPS 与迟滞阈值）。
-4. TenantNodePolicy / ModelNodePolicy。
-5. TenantModelPolicy Allow。
-6. Orchestrator。
+1. `SimulationClock/default`（可省略，Controller 会创建 1x）。
+2. WorkerNode（metadata.name 与实际 Node 对齐）。
+3. Model（包括资源/性能参数和必填的 `spec.absoluteScore`）。
+4. Tenant（QPS 与迟滞阈值）。
+5. TenantNodePolicy / ModelNodePolicy。
+6. TenantModelPolicy Allow。
+7. Orchestrator。
 
 顺序不是 API 强制事务；Controller 会等待缺失依赖。CRD 会拒绝没有正数 `spec.absoluteScore` 的新 Model；先创建 Allow 但 Model 不存在时不应生成可运行工作负载。
 
@@ -42,7 +43,7 @@ sequenceDiagram
   participant S as Simulator
   P->>A: Allow Tenant-Model
   A-->>T: watch event
-  T->>A: create SimulatorInstance replicas=0,qps=0
+  T->>A: create SimulatorInstance replicas=0,qps=0,timeScale=1
   O->>A: set replicas/effectiveScore
   I->>A: create/patch Deployment
   K->>A: create Pods
@@ -76,8 +77,8 @@ stateDiagram-v2
 
 ## 5. 性能反馈生命周期
 
-1. Leader 每约 5 秒读取 Instance/Model。
-2. 用可用副本、effectiveScore、冷启动和 QPS 推进仿真。
+1. Leader 每约 5 秒真实时间读取 Instance/Model。
+2. 用 timeScale、可用副本、effectiveScore、冷启动和 QPS 推进仿真。
 3. 写 score/performance/observedAt/reporterID。
 4. Traffic 读取新鲜 score，重分配下一轮 QPS。
 5. PerformanceCollector 聚合新鲜 performance，写 TenantPerformance。
@@ -91,6 +92,10 @@ flowchart LR
 ```
 
 这是两个反馈环：分数-流量环通常更快，性能-扩缩容环受 10 秒 Reconcile 与 cooldown 限制。
+
+### 倍速变更
+
+Frontend/Backend 更新 `SimulationClock/default.spec.rate` 后，Clock Controller 逐个同步 Instance 并写 Ready；Simulator 在下一真实 Tick 读取新值。Deployment template 不包含 timeScale，因此 Pod UID 保持不变。高倍速加快引擎演进，但反馈发布、样本新鲜度和扩缩冷却仍按真实时间。
 
 ## 6. 扩容生命周期
 
@@ -138,6 +143,7 @@ Orchestrator 优先从副本较多、effectiveScore 较低的实例减少一个�
 | WorkerNode | 候选容量消失；实际 Kubernetes Node 不会随 CR 自动删除。 |
 | SimulatorInstance | finalizer 删除 namespaced Deployment并重算 Runtime。 |
 | Orchestrator | 停止后续自动扩缩，现有 replicas/Deployment 不必自动归零。 |
+| SimulationClock | Controller 会重新创建 1x 默认对象；Backend API 不提供删除。 |
 
 跨 scope OwnerReference 合法性和 garbage collection 需要实际集群测试；实现已使用 finalizer 避免单靠 GC。
 

@@ -245,6 +245,49 @@ func (state *Cache) GetPlatform(kind, name string) (*unstructured.Unstructured, 
 	return item.DeepCopy(), true, nil
 }
 
+// SimulationRate 返回 Dashboard 时钟视图需要的倍速配置与收敛状态。
+func (state *Cache) SimulationRate() (
+	desiredRate int,
+	appliedRate int,
+	synchronizedInstances int,
+	totalInstances int,
+	resourceVersion string,
+	ready bool,
+	found bool,
+) {
+	object, found, err := state.GetPlatform("SimulationClock", "default")
+	if err != nil || !found {
+		return 1, 1, 0, 0, "", false, false
+	}
+	desiredRate = nestedIntOrDefault(object.Object, 1, "spec", "rate")
+	appliedRate = nestedIntOrDefault(object.Object, 1, "status", "appliedRate")
+	synchronizedInstances = nestedIntOrDefault(object.Object, 0, "status", "synchronizedInstances")
+	totalInstances = nestedIntOrDefault(object.Object, 0, "status", "totalInstances")
+	observedGeneration := int64(nestedIntOrDefault(object.Object, 0, "status", "observedGeneration"))
+	resourceVersion = object.GetResourceVersion()
+	conditions, _, _ := unstructured.NestedSlice(object.Object, "status", "conditions")
+	for _, item := range conditions {
+		condition, ok := item.(map[string]any)
+		if ok && condition["type"] == "Ready" && condition["status"] == "True" {
+			ready = true
+			break
+		}
+	}
+	ready = ready &&
+		observedGeneration == object.GetGeneration() &&
+		appliedRate == desiredRate &&
+		synchronizedInstances == totalInstances
+	return desiredRate, appliedRate, synchronizedInstances, totalInstances, resourceVersion, ready, true
+}
+
+func nestedIntOrDefault(object map[string]any, fallback int, fields ...string) int {
+	value, found, err := unstructured.NestedInt64(object, fields...)
+	if err != nil || !found {
+		return fallback
+	}
+	return int(value)
+}
+
 func (state *Cache) ListPods() []*corev1.Pod {
 	return typedList[*corev1.Pod](state.native[nativePods])
 }

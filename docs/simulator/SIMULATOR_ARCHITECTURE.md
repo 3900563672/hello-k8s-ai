@@ -80,8 +80,8 @@ Leader 切换会创建新的进程内 SimEngine，队列状态和随机序列不
 
 1. GET SimulatorInstance；删除中则退出。
 2. GET 引用 Model；校验 maxConcurrency。
-3. 读取 effectiveScore、availableReplicas、assigned QPS。
-4. 计算冷启动 factor、per-replica score、pool score。
+3. 读取 effectiveScore、availableReplicas、assigned QPS 和 `spec.timeScale`。
+4. 按 `真实 Tick × timeScale` 推进累计模拟时间，计算冷启动 factor、per-replica score、pool score。
 5. 创建或复用与 maxConcurrency 对应的 SimEngine。
 6. 把总 QPS 除以 availableReplicas，推进一个代表性副本的引擎。
 7. 生成 performance；QPS=0 或无可用副本时为 nil。
@@ -93,14 +93,15 @@ Leader 切换会创建新的进程内 SimEngine，队列状态和随机序列不
 
 ```text
 effectiveScore = Orchestrator 写入的单副本静态能力
-factor         = coldStartFactor(now, leaderStartTime, model.coldStartMs)
+simulationStep = tickInterval × timeScale
+factor         = coldStartFactor(simulationElapsed, model.coldStartMs)
 perReplicaScore = effectiveScore × factor（整数、饱和保护）
 poolScore       = perReplicaScore × availableReplicas（饱和保护）
 ```
 
 `poolScore` 写入 `status.score`，Traffic Controller 用它作为分配权重。availableReplicas 来自 Deployment Status，不使用 spec.replicas，以免把 Pending Pod 当可服务容量。
 
-冷启动计时从当前 leader 获得领导权时开始，而不是每个真实 Pod 的 creationTimestamp；这是池级近似。Leader 切换会重新开始冷启动曲线，是当前已知模型偏差。
+`simulationElapsed` 从当前 leader 开始运行时为 0，只在成功读取 Instance/Model 后按固定步长累加。倍速变化只影响后续步长，不重置已经推进的冷启动进度；进程暂停后也不会按墙钟差值补算，避免恢复时制造流量尖峰。Leader 切换仍会把进程内累计时间和队列重置，是当前已知模型偏差。
 
 ## 7. Performance
 
@@ -139,6 +140,9 @@ Simulator 只写：
 | `..._effective_score` | gauge | Orchestrator 分数。 |
 | `..._pool_score` | gauge | 冷启动/副本后的运行分。 |
 | `..._cold_start_factor` | gauge | 0..1。 |
+| `..._time_scale` | gauge | 当前 Tick 实际采用的倍速。 |
+| `..._simulation_step_seconds` | gauge | 最近一个真实 Tick 推进的模拟秒数。 |
+| `..._simulation_elapsed_seconds` | gauge | 当前 reporter 任期内累计模拟秒数。 |
 | `..._queue_depth` | gauge | 模拟队列。 |
 | `..._ttft_seconds` | gauge | 最近 Tick 平均 TTFT，Prom 指标用秒。 |
 | `..._engine_reinitializations_total` | counter | maxConcurrency 变化导致重建。 |
@@ -151,7 +155,7 @@ OTel service name `hello-k8s-ai-simulator`，资源属性可包含 Pod、Namespa
 
 主要 Span：
 
-- `simulator.tick`：输入/输出属性包含 assignedQPS、availableReplicas、effective/pool score、cold factor、queue、TTFT、outcome。
+- `simulator.tick`：输入/输出属性包含 assignedQPS、availableReplicas、effective/pool score、timeScale、simulation step/elapsed、cold factor、queue、TTFT、outcome。
 - `simulator.leadership.acquired/lost`：领导权生命周期。
 - Kubernetes API 普通请求由 otelhttp instrument；watch 长连接被过滤，避免长 Span 污染。
 
@@ -172,17 +176,19 @@ Follower 也应 Ready；“是否 reporter”由 Lease和 leader metric 判断�
 | Orchestrator | replicas 间接形成 Pod、status.effectiveScore | score/performance | 静态能力转为运行反馈 |
 | Instance Controller | status.availableReplicas | 不写其字段 | 使用真实可用容量 |
 | Traffic | spec.traffic.qps | status.score | QPS 与能力反馈环 |
+| SimulationClock | 经 Instance.spec.timeScale 读取 | metrics/Trace 反映实际倍速 | 运行中调整离散事件推进速度 |
 | PerformanceCollector | - | performance/observedAt | 提供租户聚合样本 |
 | WorkerUsage | Pod labels/model | 无 | Controller 统计容量占用 |
 | Backend | 无直接命令 | Backend 只读 Status/metrics/trace | 可视化/历史/诊断 |
 
 ## 13. 当前模型限制
 
-- 使用真实墙钟，rate=1；没有 pause/seek/accelerated time。
+- 离散事件引擎支持 1x..20x 动态倍速；没有 pause/seek，也不加速 Controller 冷却、新鲜度、Lease、采集或 Backend 历史时间。
 - 随机 seed 来自 `time.Now().UnixNano()`，leader 切换不可重复。
 - 固定 prompt=500 tokens、output=200 tokens，非 CR 配置。
 - 每个 leader 引擎模拟一个代表性副本，假设总 QPS 均匀分配；不模拟副本间负载不均。
 - 不模拟网络、batching、cache、GPU kernel、OOM、请求取消和真实错误。
-- leaderStartTime 近似整个池冷启动，而不是逐 Pod warmup。
+- reporter 任期累计模拟时间近似整个池冷启动，而不是逐 Pod warmup；leader 切换会重置。
+- 高倍速会在每个真实 Tick 中处理更多模拟请求，受 20x 上限和虚拟队列保护，但仍需观察 Tick duration 与队列；控制环采样频率保持真实时间，不能按全系统倍速实验解释。
 
 使用指标做真实容量承诺前，必须用实际推理系统校准。

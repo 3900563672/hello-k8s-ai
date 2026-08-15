@@ -1,14 +1,14 @@
 # hello-k8s-ai 完整技术总览
 
 副标题：Kubernetes 原生 AI 推理调度与仿真平台技术白皮书  
-文档基线：2026-08-13  
+文档基线：2026-08-14
 适用读者：第一次接触项目的开发者、架构师、SRE 与 AI 编程代理
 
 > 本文是 `hello-k8s-ai-complete-overview.pdf` 的唯一正文源。实现事实来自当前源码与清单；“声明部署”不等于当前集群 Ready；“未来设计”不等于现有能力。
 
 ## 阅读摘要
 
-hello-k8s-ai 把多租户 AI 推理调度问题表示为 Kubernetes CRD。用户在 React Dashboard 中提交租户、模型、节点和策略；Dashboard Backend 把允许的意图写入 Kubernetes；六个 Controller 通过 API Server 协作，创建 SimulatorInstance 和 Deployment、分配流量、聚合性能、统计容量并扩缩容；Simulator Leader 用离散事件模型产生 Queue、TTFT、Score、Metrics 与 Trace；Backend 再从 Kubernetes cache、Prometheus、Jaeger 和 PostgreSQL 聚合成页面读模型。
+hello-k8s-ai 把多租户 AI 推理调度问题表示为 Kubernetes CRD。用户在 React Dashboard 中提交租户、模型、节点、策略和 Simulator 倍速；Dashboard Backend 把允许的意图写入 Kubernetes；七个 Controller 通过 API Server 协作，创建 SimulatorInstance 和 Deployment、同步倍速、分配流量、聚合性能、统计容量并扩缩容；Simulator Leader 用离散事件模型产生 Queue、TTFT、Score、Metrics 与 Trace；Backend 再从 Kubernetes cache、Prometheus、Jaeger 和 PostgreSQL 聚合成页面读模型。
 
 系统最重要的设计不是某个页面或算法，而是三条边界：
 
@@ -32,7 +32,7 @@ AI 推理平台必须同时处理请求量、模型性能、节点容量、冷�
 
 ## 1.3 当前边界
 
-本项目当前是调度与仿真平台，不是真实 LLM inference gateway。它不处理 OpenAI-compatible 请求、Tokenizer、Batching、KV Cache 或真实 GPU kernel；WorkerNode GPU 是业务容量，不是真实设备利用率。Simulator 使用真实墙钟和随机到达，尚无逻辑时间倍速或确定性回放。
+本项目当前是调度与仿真平台，不是真实 LLM inference gateway。它不处理 OpenAI-compatible 请求、Tokenizer、Batching、KV Cache 或真实 GPU kernel；WorkerNode GPU 是业务容量，不是真实设备利用率。Simulator 使用真实 Tick 和随机到达，离散事件引擎支持 1x..20x 动态倍速；全系统逻辑时间、pause/Seek 与确定性回放仍未实现。
 
 ## 1.4 技术栈
 
@@ -47,7 +47,7 @@ AI 推理平台必须同时处理请求量、模型性能、节点容量、冷�
 
 ## 1.5 当前成熟度
 
-CRD、六个 Controller、Simulator、Backend、真实数据 Frontend、开发清单与 Docker Desktop 一键完整部署流程均已实现；Traffic 场景提交、逻辑时间、生产 IAM/持久化/HA 和 CI 全栈 E2E 仍未完成。本白皮书在每章区分完成与缺口。
+CRD、七个 Controller、Simulator、Backend、真实数据 Frontend、开发清单与 Docker Desktop 一键完整部署流程均已实现；Traffic 场景提交、完整逻辑时间、生产 IAM/持久化/HA 和 CI 全栈 E2E 仍未完成。本白皮书在每章区分完成与缺口。
 
 # 第二章：整体架构
 
@@ -59,8 +59,8 @@ flowchart TB
   F --> B["Dashboard Backend"]
   B --> K["Kubernetes API / Informer Cache"]
   B --> D["PostgreSQL History / Audit"]
-  K --> R["10 CRDs"]
-  R --> C["6 Controllers"]
+  K --> R["11 CRDs"]
+  R --> C["7 Controllers"]
   C --> W["Deployment / Pod / Lease"]
   W --> S["Simulator Leader"]
   S --> K
@@ -174,7 +174,7 @@ Backend 还能写三类 Policy 与 Orchestrator，但 UI 未覆盖。批量删�
 
 ## 3.5 Data Overview / Trace
 
-综合页包括：Clock、对象计数、5 个核心 Prometheus 图、Traffic/Performance、10 个 CRD、Pod/Deployment/Node/Service/Lease、Kubernetes Event、Provider freshness、Trace summaries 和 Span tree。
+综合页包括：Clock、对象计数、6 个核心 Prometheus 图、Traffic/Performance、11 个 CRD、Pod/Deployment/Node/Service/Lease、Kubernetes Event、Provider freshness、Trace summaries 和 Span tree。
 
 Jaeger/Prometheus 是可选来源。它们失败时页面显示 section warning，继续展示 Kubernetes 内容；历史 snapshot 存在但 Trace retention 已过时，也应显示 unavailable 而非 0。
 
@@ -212,7 +212,7 @@ Handler 处理协议；Aggregator 构造页面 DTO；Provider 查询外部系统
 
 ## 4.2 Kubernetes Client、Informer 与 Cache
 
-Backend 使用 dynamic client 处理 10 个 CRD，typed client 处理 Pod、Node、Service、Event、Deployment、ReplicaSet、Lease。未指定 kubeconfig 时优先 in-cluster；本地使用 KUBECONFIG/KUBE_CONTEXT；client QPS 50、Burst 100。
+Backend 使用 dynamic client 处理 11 个 CRD，typed client 处理 Pod、Node、Service、Event、Deployment、ReplicaSet、Lease。未指定 kubeconfig 时优先 in-cluster；本地使用 KUBECONFIG/KUBE_CONTEXT；client QPS 50、Burst 100。
 
 所有资源进入 shared informer cache，resync 10 分钟、初次同步超时 2 分钟。页面读请求只读 cache；resourceVersion 变化触发 SSE 和异步 Recorder。Recorder buffer 4096，满时 drop/log 而不阻塞 informer，所以 resource_events 不是无损日志。
 
@@ -222,7 +222,7 @@ Backend 使用 dynamic client 处理 10 个 CRD，typed client 处理 Pod、Node
 
 | 领域 | Routes |
 | --- | --- |
-| Health/Bootstrap | GET health/live、health/ready、capabilities、bootstrap、clock |
+| Health/Bootstrap | GET health/live、health/ready、capabilities、bootstrap、clock；PATCH clock/rate |
 | Configuration | GET configuration；POST configuration:apply；DELETE configuration/{kind}/{name} |
 | Traffic | GET traffic；PATCH tenants/{name}/traffic |
 | Metrics | GET metrics/query（也兼容 metrics） |
@@ -234,7 +234,7 @@ Backend 使用 dynamic client 处理 10 个 CRD，typed client 处理 Pod、Node
 
 ## 4.4 命令与权限
 
-可写：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、Orchestrator。禁止写 SimulatorInstance、TenantPerformance、TenantRuntime、任何 Status、Deployment、Pod、Lease。
+通用配置可写：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、Orchestrator。Clock 专用 API 只 create/update `SimulationClock/default.spec.rate`。禁止写 SimulatorInstance、TenantPerformance、TenantRuntime、任何 Status、Deployment、Pod、Lease，也禁止删除 Clock。
 
 命令流程：预留幂等键 -> 全批 API Server dry-run -> 顺序持久写 -> audit -> 缓存响应。跨对象不是 ACID 原子事务；resourceVersion conflict 返回 409，不自动覆盖。DB 不可用时命令关闭，因为无法保证幂等/审计。
 
@@ -242,7 +242,7 @@ Backend 使用 dynamic client 处理 10 个 CRD，typed client 处理 Pod、Node
 
 表：schema_migrations、resource_events、resource_snapshots、audit_log、trace_index、clock_state、command_idempotency。默认 30 秒 snapshot、30 天 retention、每日 prune；pool max 20/min 2；migrations 使用事务与 advisory lock。
 
-`clock_state` 是 scaffold，当前 Clock 仍是 UTC rate=1；`trace_index` 只存元数据，不存 Span；resource_events 可丢；snapshot 是离散 JSON 切面。这些限制决定“历史回看”不能写成“确定性重放”。
+`clock_state` 是 scaffold，当前不驱动运行时；Backend server/actual/logical 仍是 UTC，Simulator desired/applied rate 来自 Kubernetes `SimulationClock`。`trace_index` 只存元数据，不存 Span；resource_events 可丢；snapshot 是离散 JSON 切面。这些限制决定“历史回看”不能写成“确定性重放”。
 
 ## 4.6 Aggregation 与 Provider
 
@@ -256,7 +256,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 
 # 第五章：Kubernetes Controller 与 CRD
 
-## 5.1 十个 CRD
+## 5.1 十一个 CRD
 
 全部属于 `platform.study.com/v1`、Cluster scope：
 
@@ -268,7 +268,8 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 | TenantModelPolicy | tenantRef、modelRef、effect | Ready Condition | 显式 Allow，Deny 优先；决定 Instance 存在 | Backend可写，UI暂未编辑 |
 | TenantNodePolicy | tenantRef、nodeRef、effect | 预留 conditions | Tenant 基础节点 allowlist | Backend可写，UI暂未编辑 |
 | ModelNodePolicy | modelRef、nodeRef、effect | 预留 conditions | Model 额外 allow/deny | Backend可写，UI暂未编辑 |
-| SimulatorInstance | refs、replicas、traffic.qps | performance、effectiveScore、score、available、observedAt、reporterID、phase | Tenant-Model 实例池协作中心 | Backend只读；Traffic/Data View |
+| SimulationClock | rate（1..20） | appliedRate、同步计数、Ready | 集群唯一 Simulator 引擎倍速 | Clock 专用 API / ExecutionControls |
+| SimulatorInstance | refs、replicas、traffic.qps、timeScale | performance、effectiveScore、score、available、observedAt、reporterID、phase | Tenant-Model 实例池协作中心 | Backend只读；Traffic/Data View |
 | TenantPerformance | tenantRef | avgTTFT/Queue、observedAt、sampleCount、phase | PerformanceCollector 每Tenant派生 | Backend只读 |
 | TenantRuntime | tenantRef | instanceCount、phase | Instance Controller派生；instanceCount实为可用副本合计 | Backend DTO称 readyReplicaCount |
 | Orchestrator | tenantRef、cooldown、allowZero、min/max | lastScaling、up/down time、conditions | 每Tenant扩缩策略 | Backend可写，UI暂未编辑 |
@@ -283,6 +284,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 | Instance identity/refs/初始 replicas=0,qps=0 | TenantModelPolicy Controller |
 | Instance.spec.replicas + status.effectiveScore | Orchestrator |
 | Instance.spec.traffic.qps | Traffic Controller |
+| SimulationClock.status / Instance.spec.timeScale | SimulationClock Controller |
 | Instance.status.availableReplicas/phase/Ready | SimulatorInstance Controller |
 | Instance.status.score/performance/observedAt/reporterID | Simulator Leader |
 | TenantPerformance.status | PerformanceCollector |
@@ -296,25 +298,29 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 
 主资源 TenantModelPolicy；watch Instance 生命周期与 Tenant/Model generation。聚合同 Tenant-Model 的全部 Policy：任意 Deny 拒绝；否则至少一个 Allow 才允许。允许且依赖存在时确保稳定命名的 SimulatorInstance，带 Tenant owner、refs、初始 0 副本/0 QPS；拒绝或依赖删除时删除实例；写 Policy Ready Condition。Finalizer `platform.study.com/tenant-model-policy` 保护清理。它不写后续 replicas/QPS/Status。
 
-## 5.4 SimulatorInstance Controller
+## 5.4 SimulationClock Controller
+
+主资源为集群唯一的 `SimulationClock/default`。缺失时创建 1x；Clock generation 或 Instance 生命周期变化时，使用冲突重试只 Patch `Instance.spec.timeScale`，再写 observedGeneration、appliedRate、同步计数与 Ready。timeScale 不进入 Pod template，因此运行中修改不重启 Simulator；进程在下一真实 Tick 读取。
+
+## 5.5 SimulatorInstance Controller
 
 主资源 Instance，owns Deployment，watch Node Policies。TenantNode Allow 是基础集合、Deny 删除；Model Deny 删除，若有任何 Model Allow 再相交。无候选节点时写不可能匹配的 required affinity，宁可 Pod Pending 也不越权调度。
 
 输出 `simulator-<instance>` Deployment：replicas、affinity、Simulator image/SA/env、9090 probes/metrics、non-root、安全上下文、owner。只写 Instance availableReplicas/phase/Ready；确保 TenantRuntime，`instanceCount` 汇总 Deployment available replicas。删除 finalizer 先清 Deployment，再更新 Runtime。
 
-## 5.5 Traffic Controller
+## 5.6 Traffic Controller
 
 主资源 Tenant，watch Instance score/observedAt/phase/replicas，约 10 秒 requeue。只使用 Running、replicas>0、约 30 秒新鲜、score>0 的权重。所有分数为 0 时等权 fallback；有正分数时零分分配 0；Largest Remainder 产生整数，保证总分配等于 Tenant.qps。只写 Instance.spec.traffic.qps。
 
-## 5.6 PerformanceCollector
+## 5.7 PerformanceCollector
 
 主资源 Tenant，watch Instance status/spec，约 10 秒。样本要求 Running、available>0、observedAt 新鲜、对应 performance 存在；TTFT/Queue 分别处理。按 available replicas 加权，使用基于加权中位数偏差的稳健均值，不是简单平均。确保同名 TenantPerformance，写 avg metrics、sampleCount、latest observedAt、Running/Stale 和 Condition。
 
-## 5.7 WorkerNodeUsage
+## 5.8 WorkerNodeUsage
 
 主资源 WorkerNode，watch Pod 与 Model generation。筛选调度到同名 Node、非终态、具有 Simulator identity 的 Pod；每 Pod 累加 Model.gpuUnits 与 maxConcurrency，写 usedGPU/usedConcurrency/Condition 和 gauges。这是业务 reservation，不是真实 GPU telemetry。
 
-## 5.8 Orchestrator
+## 5.9 Orchestrator
 
 主资源 Orchestrator，MaxConcurrentReconciles=1；watch TenantPerformance、Instance、WorkerNode 和 Tenant/Policy/Model generation，约 10 秒兜底。要求一个 Tenant 一个 Orchestrator/Performance，Performance Running。
 
@@ -433,7 +439,7 @@ flowchart LR
 
 ## 8.4 时间
 
-Backend Clock 当前 server/actual/logical 都是 UTC now、rate=1、running、authoritative；canSetRate/canPause/canSeek/simulatorAcceleration 均 false。Frontend 时间条只浏览 snapshot，不改变 Simulator Tick、冷启动、sample freshness、Controller cooldown 或 Lease。
+Backend Clock 的 server/actual/logical 仍是 UTC now、running、authoritative；rate/appliedRate 单独表示 Simulator 引擎倍速，canSetRate/simulatorAcceleration 为 true，canPause/canSeek 为 false。Frontend 历史时间条只浏览 snapshot；ExecutionControls 的倍速经过 Backend、CRD 和 Controller，在下一真实 Tick 改变引擎步长和冷启动模拟进度，但不改变 sample freshness、Controller cooldown、Lease 或采集周期。
 
 真正逻辑时间需版本化 SimulationRun/Clock、anchor、rate、seed、input versions、checkpoint，并统一 Controller/Simulator 时间域；不能只把页面时钟乘以倍率。
 
@@ -471,7 +477,7 @@ PostgreSQL 17 StatefulSet 1副本、10Gi RWO；Backend 1副本/Service 8080；Fr
 
 ## 9.4 RBAC
 
-Backend get/list/watch 全10 CRD；create/update/patch/delete仅7配置CR；只读 Pods/Nodes/Services/Events、Deployments/ReplicaSets、Leases；无 Status/native write。Controller/Simulator/Prometheus 使用独立 ServiceAccount/Role。
+Backend get/list/watch 全 11 个 CRD；create/update/patch/delete 仅 7 个通用配置 CR，另对 SimulationClock 授予 create/update/patch 而无 delete/status；只读 Pods/Nodes/Services/Events、Deployments/ReplicaSets、Leases。Controller/Simulator/Prometheus 使用独立 ServiceAccount/Role。
 
 ## 9.5 当前集群事实
 
@@ -487,8 +493,8 @@ Backend get/list/watch 全10 CRD；create/update/patch/delete仅7配置CR；只�
 
 | 领域 | 做成了什么 | 还不够好 | 优先变化 |
 | --- | --- | --- | --- |
-| 控制面 | 10 CRD、6 Controller、字段所有权、恢复计划、Model 分数输入闭环 | 部分Policy无Status | API 版本升级与兼容 |
-| Simulator | Leader/Tick/离散事件/指标/Trace | 非确定、池级近似、leader切换重置 | SimulationRun/seed/clock/checkpoint |
+| 控制面 | 11 CRD、7 Controller、字段所有权、恢复计划、Model 分数与倍速闭环 | 部分Policy无Status | API 版本升级与兼容 |
+| Simulator | Leader/Tick/动态倍速/离散事件/指标/Trace | 非确定、池级近似、leader切换重置 | SimulationRun/seed/checkpoint |
 | Backend | cache/read model/API/DB/providers/SSE | batch非原子、actor未认证、resource events可丢 | IAM、contract、recovery/metrics |
 | Frontend | 真实Config/Traffic基线/Data Overview | Overlay未提交、UI覆盖不全 | 产品命令闭环与E2E |
 | Deployment | Docker Desktop 一键完整栈与链路验收 | 当前环境未代跑、无生产数据/安全 | 目标机证据、CI/E2E、HA/backup/TLS |
@@ -510,7 +516,7 @@ Traffic Preview/Confirm/PATCH/Observe；Policy/Orchestrator UI；独立 Dashboar
 
 ### 阶段四：可重复仿真
 
-设计 `SimulationRun/SimulationClock` CRD；固定配置 resourceVersion、engine version、seed、输入流量；可注入逻辑 Clock；queue/RNG checkpoint；pause/resume/branch/replay；实际/仿真时间同时进入 metrics/Trace。
+在现有 `SimulationClock` 引擎倍速之上设计 `SimulationRun`；固定配置 resourceVersion、Clock 变更、engine version、seed、输入流量；queue/RNG checkpoint；pause/resume/branch/replay；实际/仿真时间同时进入 metrics/Trace。
 
 ### 阶段五：规模化与真实推理
 

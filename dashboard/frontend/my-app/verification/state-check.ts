@@ -59,10 +59,63 @@ assert.equal(onlineWorkerCount(control.cluster), 0)
 assert.equal(canRunTest(control.cluster), false)
 assert.equal(control.setExecutionMode('test'), false)
 assert.equal(useControlPlaneStore.getState().executionMode, 'apply')
+assert.equal(await control.setSimulationRate(2), false)
+assert.equal(useControlPlaneStore.getState().simulationRatePhase, 'idle')
+
+const originalFetch = globalThis.fetch
+let rateRequest: { url: string; init?: RequestInit } | null = null
+useControlPlaneStore.setState((current) => ({
+    cluster: {
+        ...current.cluster,
+        connectionStatus: 'connected',
+        simulationRateSupported: true,
+        clockResourceVersion: '17',
+        clockConverged: true,
+    },
+}))
+globalThis.fetch = async (input, init) => {
+    rateRequest = { url: String(input), init }
+    return new Response(JSON.stringify({
+        data: {
+            results: [{ resourceVersion: '18', convergence: 'pending' }],
+        },
+        meta: {
+            requestId: 'request-rate',
+            servedAt: '2026-08-14T12:02:00.000Z',
+            partial: false,
+            warnings: [],
+            sourceVersions: { kubernetes: '18' },
+        },
+    }), {
+        status: 202,
+        headers: { 'Content-Type': 'application/json' },
+    })
+}
+try {
+    assert.equal(await useControlPlaneStore.getState().setSimulationRate(5), true)
+} finally {
+    globalThis.fetch = originalFetch
+}
+const rateState = useControlPlaneStore.getState()
+assert.equal(rateState.cluster.clockRate, 5)
+assert.equal(rateState.cluster.clockResourceVersion, '18')
+assert.equal(rateState.cluster.clockConverged, false)
+assert.equal(rateState.simulationRatePhase, 'success')
+assert.ok(rateRequest)
+assert.equal(rateRequest.url, '/api/v1/clock/rate')
+assert.equal(rateRequest.init?.method, 'PATCH')
+assert.deepEqual(JSON.parse(String(rateRequest.init?.body)), {
+    rate: 5,
+    resourceVersion: '17',
+    dryRun: false,
+})
+assert.ok(new Headers(rateRequest.init?.headers).get('Idempotency-Key')?.startsWith('simulation-rate-'))
 
 console.log(JSON.stringify({
     timelineItems: state.snapshots.length,
     selectedSnapshot: state.selectedSnapshotId,
     initialOnlineWorkers: onlineWorkerCount(control.cluster),
     simulationRunSupported: control.cluster.simulationRunSupported,
+    simulationRateSupported: rateState.cluster.simulationRateSupported,
+    simulationRate: rateState.cluster.clockRate,
 }))

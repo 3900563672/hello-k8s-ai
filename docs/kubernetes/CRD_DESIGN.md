@@ -3,7 +3,7 @@
 ## 1. 通用约定
 
 - API Group/Version：`platform.study.com/v1`。
-- Scope：10 个 CRD 全部是 Cluster-scoped。
+- Scope：11 个 CRD 全部是 Cluster-scoped。
 - Spec 表达期望；Status 表达观测/派生结果。
 - 引用使用对象 `metadata.name`，不使用 displayName。
 - Status 启用 subresource；标准 Conditions 为 map list（key=`type`）。
@@ -11,14 +11,14 @@
 
 ```mermaid
 flowchart TB
-  CFG["配置 CR: Tenant / Model / WorkerNode / Policies / Orchestrator"]
+  CFG["配置 CR: Tenant / Model / WorkerNode / Policies / Orchestrator / SimulationClock"]
   DER["派生 CR: SimulatorInstance / TenantPerformance / TenantRuntime"]
   CFG --> DER
   DER --> WORK["Deployment / Pod / Lease"]
   WORK --> DER
 ```
 
-Backend 通过 dynamic informer 读取全部 CRD；Command Gateway 只允许写 7 个配置 CR：Model、WorkerNode、Tenant、三类 Policy、Orchestrator。
+Backend 通过 dynamic informer 读取全部 CRD；通用 Command Gateway 允许写 7 个配置 CR：Model、WorkerNode、Tenant、三类 Policy、Orchestrator。集群唯一的 `SimulationClock/default` 通过专用 Clock API 写入，避免通用接口创建第二个 Clock 或删除全局配置。
 
 ## 2. Model
 
@@ -145,7 +145,23 @@ Dashboard：当前 UI 不可编辑；Data View 可展示；Backend 可读写 Spe
 
 SimulatorInstance Controller 和 Orchestrator 都读取；Dashboard/Backend 行为同 TenantNodePolicy。
 
-## 8. SimulatorInstance
+## 8. SimulationClock
+
+### 用途
+
+保存集群唯一的 Simulator 离散事件时间倍速。对象名称固定为 `default`；Controller 缺失时自动创建 1x 默认对象。它不改变 Backend/Controller 墙钟、Kubernetes Lease、Prometheus 抓取或数据库采集周期。
+
+| 区域 | 字段 | 语义/约束 | 写入者 |
+| --- | --- | --- | --- |
+| spec | `rate` | 1..20；每个真实 Tick 推进的模拟时间倍数 | kubectl / Backend `PATCH /clock/rate` |
+| status | `observedGeneration` | Controller 已处理的 Spec generation | SimulationClock Controller |
+| status | `appliedRate` | 当前已同步到全部实例的倍速 | SimulationClock Controller |
+| status | `synchronizedInstances` / `totalInstances` | 本轮同步计数 | SimulationClock Controller |
+| status | `conditions` | Ready；同步失败或输入非法时为 False | SimulationClock Controller |
+
+Controller 将 `spec.rate` 扇出到全部 `SimulatorInstance.spec.timeScale`。Status Ready 代表 CR 字段已经收敛，不代表每个 Simulator 已完成下一个 Tick；运行进程是否读取新值由 `hello_k8s_ai_simulator_time_scale` 指标验证。
+
+## 9. SimulatorInstance
 
 ### 用途
 
@@ -159,6 +175,7 @@ SimulatorInstance Controller 和 Orchestrator 都读取；Dashboard/Backend 行�
 | `modelRef.name` | Model | 同上 |
 | `replicas` | 期望副本，>=0 | Orchestrator；创建初始 0 |
 | `traffic.qps` | 分配到该实例池的整数 QPS，>=0 | Traffic Controller；创建初始 0 |
+| `timeScale` | 1..20；当前 Simulator 引擎倍速 | SimulationClock Controller；创建初始 1 |
 
 ### Status
 
@@ -180,7 +197,7 @@ TenantModelPolicy Controller 创建 -> Orchestrator 修改 replicas -> Simulator
 
 Dashboard：Traffic 与 Data View 核心对象；Backend只读，并关联 Deployment/Pod/Lease/Prom/Trace。
 
-## 9. TenantPerformance
+## 10. TenantPerformance
 
 ### 用途
 
@@ -199,7 +216,7 @@ Dashboard：Traffic 与 Data View 核心对象；Backend只读，并关联 Deplo
 
 Dashboard：Traffic/Data View；Backend只读。用户不可创建/修改是期望边界，即使旧 sample YAML 有该 Kind。
 
-## 10. TenantRuntime
+## 11. TenantRuntime
 
 ### 用途
 
@@ -216,7 +233,7 @@ Dashboard：Traffic/Data View；Backend只读。用户不可创建/修改是期�
 
 Dashboard：Traffic/Data View；Backend只读。
 
-## 11. Orchestrator
+## 12. Orchestrator
 
 ### 用途
 
@@ -246,7 +263,7 @@ Dashboard：Traffic/Data View；Backend只读。
 
 Dashboard：当前 UI 未编辑，Traffic/Data View 展示；Backend 可读写 Spec。
 
-## 12. 关系总表
+## 13. 关系总表
 
 | CRD | 主要输入给谁 | 主要由谁创建 | 用户可写 Spec | Dashboard 位置 |
 | --- | --- | --- | --- | --- |
@@ -256,7 +273,8 @@ Dashboard：当前 UI 未编辑，Traffic/Data View 展示；Backend 可读写 S
 | TenantModelPolicy | TenantModelPolicy Controller | 用户 | 是 | Data View（未来 Config） |
 | TenantNodePolicy | Instance/Orchestrator | 用户 | 是 | Data View（未来 Config） |
 | ModelNodePolicy | Instance/Orchestrator | 用户 | 是 | Data View（未来 Config） |
-| SimulatorInstance | 4 Controllers + Simulator | TenantModelPolicy Controller | 否 | Traffic/Data View |
+| SimulationClock | SimulationClock Controller、Simulator | Controller 自动创建或用户/Backend | 是，仅 `default.spec.rate` | 全局执行控制/Data View |
+| SimulatorInstance | 5 个 Controller + Simulator | TenantModelPolicy Controller | 否 | Traffic/Data View |
 | TenantPerformance | Orchestrator | PerformanceCollector | 否 | Traffic/Data View |
 | TenantRuntime | Dashboard/read model | SimulatorInstance Controller | 否 | Traffic/Data View |
 | Orchestrator | Orchestrator Controller | 用户 | 是 | Traffic/Data View（未来 Config） |

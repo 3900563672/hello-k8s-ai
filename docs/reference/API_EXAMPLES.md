@@ -157,7 +157,24 @@ curl -sS -X PATCH "$API/tenants/tenant-demo/traffic" \
 
 该命令修改 Tenant.spec.qps；实例分配要等待 Traffic Controller。receipt `convergence=pending` 是正常。
 
-## 7. 删除配置
+## 7. 修改 Simulator 时间倍速
+
+先读取 Clock，保存响应中的 `resourceVersion`：
+
+```bash
+curl -sS "$API/clock"
+
+curl -sS -X PATCH "$API/clock/rate" \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: simulator-rate-10-001' \
+  --data-binary '{"rate":10,"resourceVersion":"12345","dryRun":false}'
+```
+
+rate 必须是 1..20。Clock 尚不存在时省略 resourceVersion，Backend 会创建 `SimulationClock/default`；已有对象必须提交当前版本，冲突时先 refetch。命令 accepted 后继续读取 `/clock`，直到 `converged=true`、desired/applied rate 相同且同步计数一致。
+
+该命令只加速 Simulator 离散事件引擎，不改变 Backend 时间、Controller 冷却、Lease、Prometheus 抓取或历史游标。
+
+## 8. 删除配置
 
 ```bash
 curl -sS -X DELETE \
@@ -168,7 +185,7 @@ curl -sS -X DELETE \
 
 确认 dry-run 后使用新 key 和 `dryRun=false`。删除使用 background propagation；派生资源还需 Controller/finalizer 收敛。
 
-## 8. Traffic 与 Overview
+## 9. Traffic 与 Overview
 
 ```bash
 curl -sS "$API/traffic"
@@ -177,7 +194,7 @@ curl -sS "$API/overview"
 curl -sS "$API/overview?at=2026-08-12T14:00:00Z&tenant=tenant-demo"
 ```
 
-## 9. Metrics
+## 10. Metrics
 
 ```bash
 curl -sS --get "$API/metrics/query" \
@@ -190,7 +207,7 @@ curl -sS --get "$API/metrics/query" \
 
 不能提交 PromQL；使用 catalog 中 metricId。
 
-## 10. Traces
+## 11. Traces
 
 ```bash
 curl -sS --get "$API/traces" \
@@ -204,7 +221,7 @@ curl -sS --get "$API/traces" \
 curl -sS "$API/traces/<trace-id>"
 ```
 
-## 11. SSE
+## 12. SSE
 
 ```bash
 curl -N -H 'Accept: text/event-stream' "$API/stream"
@@ -212,7 +229,7 @@ curl -N -H 'Accept: text/event-stream' "$API/stream"
 
 收到事件后调用 REST refetch。不要把 SSE 当历史日志，也不要依赖 Last-Event-ID 精确重放。
 
-## 12. 错误处理脚本规则
+## 13. 错误处理脚本规则
 
 - 同时检查 HTTP status 和 envelope 的 `error.code`/`meta.partial`。
 - 503 provider/DB/cache 错误按 retryable/backoff；validation 不盲目重试。

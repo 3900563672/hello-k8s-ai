@@ -63,7 +63,7 @@ Watch 请求从 Kubernetes HTTP instrumentation 过滤，因为长连接会产�
 
 ## 7. Simulator spans
 
-- `simulator.tick`：instance、reporter、assigned QPS、available replicas、effective/pool score、cold factor、queue、TTFT/outcome。
+- `simulator.tick`：instance、reporter、assigned QPS、available replicas、effective/pool score、time scale、simulation step/elapsed、cold factor、queue、TTFT/outcome。
 - `simulator.leadership.acquired` / `lost`：leader 生命周期。
 - Kubernetes client 普通请求。
 

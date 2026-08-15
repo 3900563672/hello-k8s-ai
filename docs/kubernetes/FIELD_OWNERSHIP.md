@@ -26,9 +26,12 @@
 | TenantNodePolicy | Conditions | 当前无 writer | Backend | 不伪造 Ready |
 | ModelNodePolicy | `spec.*` | 用户/Backend | Instance/Orchestrator | - |
 | ModelNodePolicy | Conditions | 当前无 writer | Backend | 不伪造 Ready |
+| SimulationClock | `default.spec.rate` | 用户/Backend 专用 Clock API | Clock Controller/Simulator/Backend | 1..20；禁止第二个对象、通用批次和删除 |
+| SimulationClock | `status.*` | SimulationClock Controller | Backend/Frontend | Ready 表示实例字段已同步 |
 | SimulatorInstance | refs/identity metadata | TenantModelPolicy Controller | 所有控制环 | Backend/用户禁写 |
 | SimulatorInstance | `spec.replicas` | Orchestrator | Instance Controller/Simulator | Policy Controller 仅创建初值 0 |
 | SimulatorInstance | `spec.traffic.qps` | Traffic | Simulator/Backend | 用户改 Tenant.qps，不直写 |
+| SimulatorInstance | `spec.timeScale` | SimulationClock Controller | Simulator/Backend | Policy Controller 仅创建初值 1；倍速更新不触发 Pod 重建 |
 | SimulatorInstance | `status.availableReplicas/phase/Ready` | Instance Controller | Traffic/Performance/Orchestrator/Backend | Simulator 不写 Phase |
 | SimulatorInstance | `status.effectiveScore` | Orchestrator | Simulator/Backend | Instance Controller 不碰 |
 | SimulatorInstance | `status.score/performance/observedAt/reporterID` | Simulator Leader | Traffic/Performance/Backend | follower/Backend 不写 |
@@ -54,6 +57,9 @@
 ```text
 允许：Model, WorkerNode, Tenant,
       TenantModelPolicy, TenantNodePolicy, ModelNodePolicy, Orchestrator
+
+专用：SimulationClock/default.spec.rate
+      仅 PATCH /clock/rate，可 create/update，不可 delete/status
 
 拒绝：SimulatorInstance, TenantPerformance, TenantRuntime,
       所有 status、Deployment、Pod、Lease

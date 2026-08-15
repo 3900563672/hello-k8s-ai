@@ -2,7 +2,7 @@
 
 ## 1. 聚合目标
 
-前端不应理解 10 个 CRD、OwnerReference、Pod label、PromQL 和 Jaeger raw span。Aggregator 将这些来源转换为页面读模型，同时保留来源、新鲜度和不完整性。
+前端不应理解 11 个 CRD、OwnerReference、Pod label、PromQL 和 Jaeger raw span。Aggregator 将这些来源转换为页面读模型，同时保留来源、新鲜度和不完整性。
 
 ## 2. 当前态聚合
 
@@ -37,7 +37,7 @@ flowchart TB
 | desired/available gap | spec.replicas - status.availableReplicas | Pending 不一定是错误，需看 Deployment/Pod/Event。 |
 | allocated QPS sum | Σ instance.spec.traffic.qps | 应等于 Tenant.spec.qps，特殊过渡期可短暂不一致。 |
 | Tenant SLO state | TenantPerformance 与 up/down 阈值比较 | 扩容使用 OR（任一高）；缩容正常使用 BOTH 低。 |
-| cooldown remaining | lastScaleUp/Down + cooldown - now | 使用真实墙钟；无逻辑倍速。 |
+| cooldown remaining | lastScaleUp/Down + cooldown - now | 使用真实墙钟；不受 Simulator timeScale 影响。 |
 | node scheduling fact | Pod.spec.nodeName | Policy 只能解释候选，不等于 Scheduler 最终理由。 |
 
 派生值只在 DTO 中，不能写回 Controller-owned Status。

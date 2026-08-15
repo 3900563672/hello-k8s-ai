@@ -33,10 +33,10 @@ flowchart TB
 
 静态入口仍保持两个清晰边界：
 
-- `config/dev`：10 个 CRD、Controller/Simulator RBAC、Controller、OTel Collector、Jaeger、Prometheus、Grafana。
+- `config/dev`：11 个 CRD、Controller/Simulator RBAC、Controller、OTel Collector、Jaeger、Prometheus、Grafana。
 - `dashboard/deploy`：PostgreSQL、Backend、Frontend 与 Backend RBAC。
 
-`config/demo` 只包含静态 Model、Tenant、TenantModelPolicy 和 Orchestrator；WorkerNode 与 Node Policy 由脚本按目标集群节点生成。
+`config/demo` 包含静态 Model、Tenant、TenantModelPolicy、Orchestrator 和 `SimulationClock/default`（1x）；WorkerNode 与 Node Policy 由脚本按目标集群节点生成。
 
 ## 3. 镜像交付
 
@@ -81,9 +81,10 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 
 | 门 | 自动检查 |
 | --- | --- |
-| Kubernetes | 10 个 CRD Established，Controller rollout |
+| Kubernetes | 11 个 CRD Established，Controller rollout |
 | CR/Controller | 演示 SimulatorInstance 出现且副本至少为 1 |
 | Simulator | Deployment Ready，`status.observedAt` 非空 |
+| 时间倍速 | Clock desired/applied=1、Ready，Instance timeScale=1，Simulator 指标存在 |
 | Metrics | Prometheus 查询到 `hello_k8s_ai_simulator_leader` |
 | Trace | Jaeger `/api/services` 出现 `hello-k8s-ai-*` |
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
