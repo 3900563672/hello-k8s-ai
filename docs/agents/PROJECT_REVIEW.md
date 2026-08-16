@@ -1,6 +1,6 @@
 # Project Review 看板与任务闭环
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-project-review-board/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-project-review-repo-level/
 > 定义 GitHub Issue、GitHub Project v2 看板（Project Review）与仓库 `project-review/` 审查记录三者之间的关联模型和批量闭环规则。单条任务的开发流程仍以 [WORKFLOW.md](WORKFLOW.md) 为准，本文件只负责"从审查记录到看板、再到交付归档"这一段。
 
 ## 1. 为什么需要三者关联
@@ -16,7 +16,7 @@
 ```mermaid
 flowchart LR
   PR["project-review/ 审查记录<br/>issue-NN-*.md"] -->|"提取为执行单元"| ISSUE["GitHub Issue<br/>design: / bug: / feat:"]
-  ISSUE -->|"gh project item-add"| BOARD["GitHub Project v2<br/>Project Review（number 1）"]
+  ISSUE -->|"gh project item-add"| BOARD["GitHub Project v2（仓库级）<br/>Project Review"]
   BOARD -->|"Status 流转"| ISSUE
   ISSUE -->|"Fixes #N 合并"| CLOSED["issue 自动关闭"]
   CLOSED -->|"归档并回写状态"| PR
@@ -55,28 +55,40 @@ flowchart LR
 4. 交付：issue 自动关闭，卡片置 `Done`，追加 change-history 条目并按 SYNC.md 同步。
 5. 归档：一批完成后 `item-archive` 归档卡片，汇报本批结果与下一批候选。
 
-## 6. 命令速查（gh）
+
+## 6. 命令速查（GraphQL）
+
+项目是**仓库级** Project（显示在仓库 Projects 页面：`https://github.com/3900563672/hello-k8s-ai/projects`），gh CLI 的 `project` 命令只支持用户/组织级项目，因此操作统一走 GraphQL。关键 ID 稳定，但项目重建后会变化，以实际查询为准：
+
+| 名称 | ID |
+| --- | --- |
+| Project | `PVT_kwHODN0KGM4BgfyL` |
+| Status 字段 | `PVTSSF_lAHODN0KGM4BgfyLzhffKao` |
+| To do | `9df36a4c` |
+| In review | `94f66ce7` |
+| Approved | `8e2917d8` |
+| In progress | `86db6bc3` |
+| Done | `98bd3af9` |
 
 ```bash
 # 建 issue（正文用 --body-file 避免终端编码问题）
 gh issue create --repo 3900563672/hello-k8s-ai --title "design: ..." --body-file /tmp/issue-body.md
 
-# 链接到看板
-gh project item-add 1 --owner 3900563672 --url <issue-url>
+# 取 issue 的 GraphQL node id
+gh api repos/3900563672/hello-k8s-ai/issues/<number> --jq .node_id
 
-# 查看卡片与状态
-gh project item-list 1 --owner 3900563672
+# 添加 issue 到看板
+gh api graphql -f query='mutation($projectId: ID!, $contentId: ID!) { addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) { item { id } } }' -F projectId=PVT_kwHODN0KGM4BgfyL -F contentId=<issue-node-id>
 
-# 移动状态（Approved / In progress / Done ...）
-gh project item-edit 1 --owner 3900563672 --id <item-id> --field-name Status --field-value Approved
+# 设置状态（如 Approved / In progress / Done），optionId 用上表
+gh api graphql -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) { updateProjectV2ItemFieldValue(input: {projectId: $projectId, itemId: $itemId, fieldId: $fieldId, value: {singleSelectOptionId: $optionId}}) { projectV2Item { id } } }' -F projectId=PVT_kwHODN0KGM4BgfyL -F itemId=<item-id> -F fieldId=PVTSSF_lAHODN0KGM4BgfyLzhffKao -F optionId=<option-id>
 
-# 归档
-gh project item-archive 1 --owner 3900563672 --id <item-id>
-
-# 项目概览与字段
-gh project view 1 --owner 3900563672
-gh project field-list 1 --owner 3900563672
+# 查看看板卡片与状态（items/fieldValues 查询）
+gh api graphql -f query='query { node(id: "PVT_kwHODN0KGM4BgfyL") { ... on ProjectV2 { items(first: 20) { nodes { ... on ProjectV2Item { content { ... on Issue { number title } } fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } } } }'
 ```
+
+归档：issue 关闭（`gh issue close <number>`）+ 状态置 `Done`；不需要删除卡片。
+
 
 ## 7. 与 WORKFLOW.md 的衔接
 
