@@ -33,6 +33,21 @@ func (server *Server) handleReady(writer http.ResponseWriter, request *http.Requ
 	defer cancel()
 	providers, _ := server.providerStates(checkContext)
 	checks["providers"] = providers
+	databaseDetails := map[string]any{"available": server.store.Available()}
+	if server.store.Available() {
+		statusContext, statusCancel := context.WithTimeout(request.Context(), 1500*time.Millisecond)
+		status, statusErr := server.store.Status(statusContext)
+		statusCancel()
+		if statusErr != nil {
+			databaseDetails["error"] = statusErr.Error()
+		} else {
+			databaseDetails["migrationsApplied"] = status.MigrationsApplied
+			databaseDetails["resourceEvents"] = status.ResourceEvents
+			databaseDetails["resourceSnapshots"] = status.ResourceSnapshots
+			databaseDetails["resourceStates"] = status.ResourceStates
+		}
+	}
+	checks["database"] = databaseDetails
 	if server.config.Database.Required && providers["postgresql"].State != "ready" {
 		ready = false
 	}

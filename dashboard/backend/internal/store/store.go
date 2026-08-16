@@ -29,9 +29,30 @@ type IdempotencyRecord struct {
 	ExpiresAt   time.Time
 }
 
+// StoreStatus 描述持久化存储的健康与数据量，用于启动日志与健康接口。
+type StoreStatus struct {
+	MigrationsApplied int
+	ResourceEvents    int
+	ResourceSnapshots int
+	ResourceStates    int
+}
+
+// ResourceStateRecord 是"某个资源的最新聚合状态"，由快照循环周期性 upsert。
+type ResourceStateRecord struct {
+	Kind            string
+	Namespace       string
+	Name            string
+	UID             string
+	ResourceVersion string
+	Generation      int64
+	CapturedAt      time.Time
+	Payload         json.RawMessage
+}
+
 type Store interface {
 	Migrate(context.Context) error
 	Health(context.Context) error
+	Status(context.Context) (StoreStatus, error)
 	RecordResourceChange(context.Context, model.ResourceChange) error
 	SaveSnapshot(context.Context, SnapshotRecord) error
 	SnapshotAt(context.Context, time.Time) (*model.StoredSnapshot, error)
@@ -41,6 +62,8 @@ type Store interface {
 	CompleteIdempotency(context.Context, string, string, int, json.RawMessage) error
 	ReleaseIdempotency(context.Context, string, string) error
 	IndexTraces(context.Context, []model.TraceSummary) error
+	UpsertResourceStates(context.Context, []ResourceStateRecord) error
+	ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error)
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -50,6 +73,9 @@ type Disabled struct{}
 
 func (Disabled) Migrate(context.Context) error { return nil }
 func (Disabled) Health(context.Context) error  { return ErrUnavailable }
+func (Disabled) Status(context.Context) (StoreStatus, error) {
+	return StoreStatus{}, ErrUnavailable
+}
 func (Disabled) RecordResourceChange(context.Context, model.ResourceChange) error {
 	return ErrUnavailable
 }
@@ -69,6 +95,12 @@ func (Disabled) CompleteIdempotency(context.Context, string, string, int, json.R
 }
 func (Disabled) ReleaseIdempotency(context.Context, string, string) error { return ErrUnavailable }
 func (Disabled) IndexTraces(context.Context, []model.TraceSummary) error  { return ErrUnavailable }
+func (Disabled) UpsertResourceStates(context.Context, []ResourceStateRecord) error {
+	return ErrUnavailable
+}
+func (Disabled) ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error) {
+	return nil, ErrUnavailable
+}
 func (Disabled) Prune(context.Context, time.Time) error                   { return ErrUnavailable }
 func (Disabled) Close()                                                   {}
 func (Disabled) Available() bool                                          { return false }

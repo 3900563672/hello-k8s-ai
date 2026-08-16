@@ -153,6 +153,99 @@ func (database *Postgres) SaveSnapshot(ctx context.Context, snapshot SnapshotRec
 	return nil
 }
 
+
+func (database *Postgres) Status(ctx context.Context) (StoreStatus, error) {
+	var status StoreStatus
+	if err := database.pool.QueryRow(ctx, `
+		SELECT
+			(SELECT count(*) FROM schema_migrations),
+			(SELECT count(*) FROM resource_events),
+			(SELECT count(*) FROM resource_snapshots),
+			(SELECT count(*) FROM resource_states)`).Scan(
+		&status.MigrationsApplied,
+		&status.ResourceEvents,
+		&status.ResourceSnapshots,
+		&status.ResourceStates,
+	); err != nil {
+		return StoreStatus{}, fmt.Errorf("read store status: %w", err)
+	}
+	return status, nil
+}
+
+func (database *Postgres) UpsertResourceStates(ctx context.Context, records []ResourceStateRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+	batch := &pgx.Batch{}
+	for _, record := range records {
+		payload := record.Payload
+		if len(payload) == 0 {
+			payload = json.RawMessage(`{}`)
+		}
+		batch.Queue(`
+			INSERT INTO resource_states (
+				state_id, kind, namespace, name, uid, resource_version,
+				generation, captured_at, payload
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+			ON CONFLICT (kind, namespace, name) DO UPDATE SET
+				uid=EXCLUDED.uid,
+				resource_version=EXCLUDED.resource_version,
+				generation=EXCLUDED.generation,
+				captured_at=EXCLUDED.captured_at,
+				payload=EXCLUDED.payload,
+				updated_at=clock_timestamp()`,
+			resourceStateID(record), record.Kind, record.Namespace, record.Name,
+			record.UID, record.ResourceVersion, record.Generation, record.CapturedAt, payload,
+		)
+	}
+	results := database.pool.SendBatch(ctx, batch)
+	for range records {
+		if _, err := results.Exec(); err != nil {
+			_ = results.Close()
+			return fmt.Errorf("upsert resource state: %w", err)
+		}
+	}
+	return results.Close()
+}
+
+func (database *Postgres) ListResourceStates(ctx context.Context, kind, namespace string, limit int) ([]ResourceStateRecord, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	rows, err := database.pool.Query(ctx, `
+		SELECT kind, namespace, name, uid, resource_version, generation, captured_at, payload
+		FROM resource_states
+		WHERE ($1 = '' OR kind = $1) AND ($2 = '' OR namespace = $2)
+		ORDER BY kind, namespace, name
+		LIMIT $3`, kind, namespace, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list resource states: %w", err)
+	}
+	defer rows.Close()
+	records := make([]ResourceStateRecord, 0, limit)
+	for rows.Next() {
+		var record ResourceStateRecord
+		if err := rows.Scan(
+			&record.Kind, &record.Namespace, &record.Name, &record.UID,
+			&record.ResourceVersion, &record.Generation, &record.CapturedAt, &record.Payload,
+		); err != nil {
+			return nil, fmt.Errorf("scan resource state: %w", err)
+		}
+		records = append(records, record)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate resource states: %w", err)
+	}
+	return records, nil
+}
+
+func resourceStateID(record ResourceStateRecord) string {
+	return record.Kind + "/" + record.Namespace + "/" + record.Name
+}
+
 func (database *Postgres) SnapshotAt(ctx context.Context, at time.Time) (*model.StoredSnapshot, error) {
 	row := database.pool.QueryRow(ctx, `
 		SELECT snapshot_id, captured_at, logical_time, payload

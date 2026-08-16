@@ -46,6 +46,8 @@ type DatabaseConfig struct {
 	URL              string
 	Required         bool
 	ConnectTimeout   time.Duration
+	StartupRetries   int
+	StartupBackoff   time.Duration
 	MaxConnections   int32
 	MinConnections   int32
 	MaxConnectionAge time.Duration
@@ -94,6 +96,8 @@ func Load() (Config, error) {
 			URL:              env("DATABASE_URL", "postgres://dashboard:dashboard@localhost:5432/dashboard?sslmode=disable"),
 			Required:         boolean("DATABASE_REQUIRED", true),
 			ConnectTimeout:   duration("DATABASE_CONNECT_TIMEOUT", 15*time.Second),
+			StartupRetries:   integer("DATABASE_STARTUP_RETRIES", 6),
+			StartupBackoff:   duration("DATABASE_STARTUP_BACKOFF", 5*time.Second),
 			MaxConnections:   int32(integer("DATABASE_MAX_CONNECTIONS", 20)),
 			MinConnections:   int32(integer("DATABASE_MIN_CONNECTIONS", 2)),
 			MaxConnectionAge: duration("DATABASE_MAX_CONNECTION_AGE", 30*time.Minute),

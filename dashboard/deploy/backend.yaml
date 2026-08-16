@@ -25,6 +25,20 @@ spec:
         runAsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+      - name: wait-for-postgresql
+        image: postgres:17-alpine
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c"]
+        args: ["until pg_isready -h hello-k8s-ai-dashboard-postgresql -U dashboard -d dashboard; do echo 'waiting for PostgreSQL'; sleep 2; done"]
+        securityContext:
+          runAsNonRoot: true
+          # postgres:alpine 中 postgres 账户的 uid/gid 为 70。
+          runAsUser: 70
+          runAsGroup: 70
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
       containers:
       - name: backend
         image: hello-k8s-ai-dashboard-backend:dev
