@@ -113,6 +113,13 @@
 - 解决：中间件对 `/grafana/` 前缀跳过 X-Frame-Options；API 路径保持 DENY。
 - 验证：`security_headers_test.go` 覆盖两条路径；8080 全链路无 X-Frame-Options。
 
+### 2026-08-16 Grafana 384MiB 内存上限运行中打满
+- 现象：集群运行一段时间后 Grafana 探针间歇失败（`context deadline exceeded` / HTTP 503），日志大量 `http: Handler timeout` 与 8-10s 请求超时；RESTARTS 可能仍为 0。
+- 排查：`kubectl exec <grafana-pod> -- cat /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.max`，实测 383MiB/384MiB（99.7%）。
+- 解决：`config/observability/grafana.yaml` 限额提到 memory 1024Mi / requests 256Mi / cpu 1000m；其余组件按实测水位判断，不超限不动。
+- 验证：滚动后 0 重启、无探针告警，水位稳定约 547MiB/1GiB。
+- 教训：不要只看 RESTARTS 与就绪状态判断“意外停止”；先看 cgroup 水位与最近事件。
+
 ### 2026-08-16 Docker Desktop kubelet 缓存 :dev 标签 digest
 - 现象：重建镜像并 `rollout restart` 后，Pod 仍在跑旧镜像（`imageID` 与本地 `docker image inspect` 不一致）。
 - 原因：Docker Desktop 内嵌 kubelet 的 containerd 按标签缓存 digest，`imagePullPolicy: IfNotPresent` 不重新解析。
