@@ -51,7 +51,9 @@ jobs:
         run: kind version
 
       - name: 初始化 BuildKit 缓存
-        run: docker buildx create --use --name ci-builder >/dev/null 2>&1 || true
+        run: |
+          # 失败不阻断（回退无缓存构建），但保留输出便于诊断
+          docker buildx create --use --name ci-builder || true
 
       - name: 检查依赖并执行 E2E
         run: |

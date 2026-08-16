@@ -40,8 +40,16 @@ jobs:
         id: cache-gcl
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: bin
+          path: |
+            bin
+            ~/.cache/golangci-lint
           key: golangci-lint-${{ runner.os }}-${{ hashFiles('.custom-gcl.yml') }}-v2.12.2
+
+      - name: 刷新 bin 缓存 mtime（命中时让 make 跳过重编译）
+        if: steps.cache-gcl.outputs.cache-hit == 'true'
+        run: |
+          touch bin/golangci-lint bin/golangci-lint-v2.12.2
+          test -x bin/golangci-lint || { echo "缓存缺少可执行文件，将重新编译"; exit 0; }
 
       - name: 安装固定版本 golangci-lint（预编译 + 编译自定义插件）
         if: steps.cache-gcl.outputs.cache-hit != 'true'

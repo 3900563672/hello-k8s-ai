@@ -128,5 +128,6 @@ jobs:
         env:
           DOCKER_BUILD_CACHE: --cache-from=type=gha --cache-to=type=gha,mode=max
         run: |
-          docker buildx create --use --name ci-builder >/dev/null 2>&1 || true
+          # 失败不阻断（回退无缓存构建），但保留输出便于诊断
+          docker buildx create --use --name ci-builder || true
           make docker-build-local

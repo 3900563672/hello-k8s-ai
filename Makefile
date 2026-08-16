@@ -18,6 +18,13 @@ endif
 CONTAINER_TOOL ?= docker
 # CI 可注入 BuildKit 缓存参数（如 --cache-from=type=gha --cache-to=type=gha,mode=max）。
 DOCKER_BUILD_CACHE ?=
+# 注入缓存参数时走 docker buildx（需要 --load 把镜像放进本地 Docker 供后续校验）；
+# 本地默认空，保持 docker build 行为不变。
+ifeq ($(strip $(DOCKER_BUILD_CACHE)),)
+BUILD_CMD := $(CONTAINER_TOOL) build
+else
+BUILD_CMD := $(CONTAINER_TOOL) buildx build --load
+endif
 
 # 本地完整栈固定复用 Docker Desktop 已有 Kubernetes 集群。
 KUBE_CONTEXT ?= docker-desktop
@@ -159,7 +166,7 @@ docker-build: docker-build-manager ## 兼容旧命令；始终构建 manager 镜
 
 .PHONY: docker-build-manager
 docker-build-manager: ## 构建 manager 镜像并校验入口和 /manager 二进制
-	$(CONTAINER_TOOL) build $(DOCKER_BUILD_CACHE) --target manager -f $(ROOT_DOCKERFILE) -t $(MANAGER_IMG) .
+	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) --target manager -f $(ROOT_DOCKERFILE) -t $(MANAGER_IMG) .
 	@entrypoint="$$( $(CONTAINER_TOOL) image inspect --format '{{json .Config.Entrypoint}}' $(MANAGER_IMG) )"; \
 		test "$$entrypoint" = '["/manager"]' || { echo "manager 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
 		cid="$$( $(CONTAINER_TOOL) create $(MANAGER_IMG) )"; \
@@ -169,7 +176,7 @@ docker-build-manager: ## 构建 manager 镜像并校验入口和 /manager 二进
 
 .PHONY: docker-build-simulator
 docker-build-simulator: ## 构建 simulator 镜像并校验入口和 /simulator 二进制
-	$(CONTAINER_TOOL) build $(DOCKER_BUILD_CACHE) --target simulator -f $(ROOT_DOCKERFILE) -t $(SIMULATOR_IMG) .
+	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) --target simulator -f $(ROOT_DOCKERFILE) -t $(SIMULATOR_IMG) .
 	@entrypoint="$$( $(CONTAINER_TOOL) image inspect --format '{{json .Config.Entrypoint}}' $(SIMULATOR_IMG) )"; \
 		test "$$entrypoint" = '["/simulator"]' || { echo "simulator 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
 		cid="$$( $(CONTAINER_TOOL) create $(SIMULATOR_IMG) )"; \
@@ -192,8 +199,8 @@ docker-push-simulator: ## 推送 simulator 镜像
 .PHONY: docker-build-local
 docker-build-local: ## 并行构建并校验本地完整栈四个项目镜像
 	@$(MAKE) -j2 docker-build-manager docker-build-simulator & \
-	$(CONTAINER_TOOL) build $(DOCKER_BUILD_CACHE) -t $(BACKEND_IMG) dashboard/backend & \
-	$(CONTAINER_TOOL) build $(DOCKER_BUILD_CACHE) -t $(FRONTEND_IMG) dashboard/frontend/my-app & \
+	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) -t $(BACKEND_IMG) dashboard/backend & \
+	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) -t $(FRONTEND_IMG) dashboard/frontend/my-app & \
 	wait
 
 # 跨平台构建。显式 target，避免再次把 simulator 误打成 controller。
