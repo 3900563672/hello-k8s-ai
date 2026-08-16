@@ -1,6 +1,6 @@
 # Agent 工作流
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/WORKFLOW.md](../remote-ai/WORKFLOW.md)。
 
@@ -60,6 +60,7 @@ flowchart TD
 - Frontend：`cd dashboard/frontend/my-app && npm ci && npm run check`。
 - 清单渲染：`kubectl kustomize config/dev`、`config/demo`、`dashboard/deploy`。
 - 文档：`make docs-check`；生成包：`make context-pack`。
+- UI / 视觉验证：需要“看”页面或监控面板时，用 [UI_VERIFICATION.md](UI_VERIFICATION.md)，一条命令截图 + 读面板文本。
 - CI：推送后等 workflow 全绿（代码检查 / 源码与部署验证 / E2E 测试；docs-only 改动只跑"文档检查"），轮询节奏见 4.1。
 - 没有环境的项如实写"未验证"，禁止用旧结果或清单推断冒充。
 

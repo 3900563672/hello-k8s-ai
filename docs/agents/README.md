@@ -1,6 +1,6 @@
 # Agent 操作手册（docs/agents/）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
 > 本目录给**能操作当前机器与仓库**的 Agent（如 Codex、Claude Code）：可以读写本仓库、执行命令、访问 GitHub。
 > 只在自己工作区工作、收打包内容的远程 AI 见 [docs/remote-ai/](../remote-ai/README.md)；人类入口是根目录 [README.md](../../README.md) 与 [docs/INDEX.md](../INDEX.md)。
 
@@ -25,6 +25,7 @@
 | Project / 批量任务 | PROJECT_REVIEW.md、WORKFLOW.md | project-review/（问题背景） |
 | 提示词 / 任务转交 | PROMPTING.md、SYNC.md | docs/getting-started/AI_COLLABORATION.md（人类侧） |
 | 打包给远程 AI | `make context-pack`，见 docs/remote-ai/README.md | 无 |
+| UI / 视觉验证 | [UI_VERIFICATION.md](UI_VERIFICATION.md)、KNOWN_PITFALLS.md | docs/observability/（按需背景） |
 
 ## 维护边界
 

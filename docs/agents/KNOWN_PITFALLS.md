@@ -1,11 +1,17 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-clean-startup-templates-guide/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
 
 ## 命令与终端（WSL / Windows 宿主）
+
+### 2026-08-16 apply_patch 无法写 UNC 路径
+- 现象：在 `\\wsl.localhost\Ubuntu\...` 工作目录用 `apply_patch` 写文件，报 "UNC paths are not supported. Defaulting to Windows directory." 后 "Access is denied"。
+- 原因：apply_patch 底层走 cmd.exe，不支持 UNC 当前目录。
+- 解决：写新文件用 PowerShell here-string + `[System.IO.File]::WriteAllText`（UTF-8 无 BOM）；复杂脚本内容多时 base64 传 WSL。
+- 验证：本次 UI 验证链路文档与脚本全程使用该方式。
 
 ### 2026-08-16 PowerShell 直传 wsl.exe 引号被拆
 - 现象：`wsl.exe -d Ubuntu -- bash -lc "..."` 内含引号或括号时 bash 报 `syntax error`。
@@ -130,6 +136,28 @@
 - 验证：31942621277 重跑 success；369c158 等历史运行 undeploy 正常。
 
 ## 可观测性与 Grafana 嵌入
+
+### 2026-08-16 Grafana 13 面板无 data-panelid，屏外懒渲染读不全
+- 现象：`querySelectorAll('[data-panelid]')` 返回 0；未滚动 iframe 时 `innerText` 缺下半屏面板（如 Leader 面板）。
+- 原因：Grafana 13 面板容器是 `[class*="panel-container"]` 而非 data-panelid；屏外面板懒渲染不产出文本。
+- 解决：先 `iframe.contentWindow.scrollTo(0, iframe.contentDocument.body.scrollHeight)` 再读；选择器用 `[class*="panel-container"]`。已内置到 `hack/ui-check/grafana-panels.mjs`。
+- 验证：滚动后 12 个面板文本全部可读，Leader 面板 10 行 0/1 完整。
+
+### 2026-08-16 本环境 view_image 不可用，视觉验证以 DOM 读取为主
+- 现象：`view_image` 连最小 PNG 都返回 Unsupported Image。
+- 解决：截图 + DOM 读取双通道；Agent 判定以 DOM 渲染文本为准，截图复制给用户核实。
+- 验证：Leader 面板问题通过 DOM 文本确认（10 行 0/1，hjf2g=1）。
+
+### 2026-08-16 Chrome --screenshot 多 target 报错，统一走 CDP 脚本
+- 现象：`chrome --headless=new --screenshot` 报 "Multiple targets are not supported in headless mode"；in-app browser 的 node_repl 报 "failed to write kernel assets: 系统找不到指定的路径 (os error 3)"。
+- 解决：统一用 `hack/ui-check/grafana-panels.mjs`（WSL Node + Windows Chrome CDP）：`Page.captureScreenshot` 截图 + `Runtime.evaluate` 读 DOM。
+- 验证：脚本输出 12 面板文本 + 1578×902 截图。
+
+### 2026-08-16 Grafana Live WebSocket 经反代握手 400
+- 现象：控制台反复 `WebSocket connection to 'ws://localhost:8080/grafana/api/live/ws' failed: ... 400`。
+- 原因：Backend 反代未对 `/grafana/api/live` 做 WS 升级，Grafana 自动退回轮询刷新。
+- 解决：无需处理（面板 10s 刷新正常）；若要修，反代对该路径放行 Upgrade 头。
+- 验证：仅控制台噪音，面板数据正常。
 
 ### 2026-08-16 Grafana sub-path 反代必须保留 /grafana 前缀
 - 现象：iframe 白屏或显示控制台首页；`/grafana/d/...` 返回 301 到 `http://localhost:8080/grafana/...`，静态资源 404。

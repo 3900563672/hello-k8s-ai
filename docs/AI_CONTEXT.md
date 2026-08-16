@@ -12,6 +12,7 @@
 
 - 架构约束、字段所有权速查、Controller 名称、修改规范 → [docs/agents/PRINCIPLES.md](agents/PRINCIPLES.md)
 - 已知易误判点 → [docs/agents/KNOWN_PITFALLS.md](agents/KNOWN_PITFALLS.md)
+- 视觉验证与监控面板链路 → [docs/agents/UI_VERIFICATION.md](agents/UI_VERIFICATION.md)（Agent 专用：一键截图/读面板、面板现状与已知问题清单）
 - 当前状态快照与上下文包 → `make context-pack` 生成（模板 `hack/context-pack-template.md`），输出 `.runtime/context-pack/`
 - 历史验证基线 → `change-history/` 对应条目
 - 完整字段所有权 → [docs/kubernetes/FIELD_OWNERSHIP.md](kubernetes/FIELD_OWNERSHIP.md)
