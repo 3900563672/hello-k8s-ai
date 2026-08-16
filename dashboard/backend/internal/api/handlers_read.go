@@ -65,7 +65,7 @@ func (server *Server) handleCapabilities(writer http.ResponseWriter, request *ht
 			"kubernetes": map[string]any{"enabled": true, "currentState": true, "history": server.store.Available()},
 			"prometheus": map[string]any{"enabled": server.prometheus.Enabled(), "metrics": server.prometheus.Catalog()},
 			"jaeger":     map[string]any{"enabled": server.jaeger.Enabled()},
-			"postgresql": map[string]any{"enabled": server.store.Available(), "role": "history-and-query-index"},
+			"postgresql": map[string]any{"enabled": server.store.Available(), "role": "persistent-current-and-history"},
 		},
 		"commands": map[string]bool{
 			"configurationApply":  commandsAvailable,
@@ -409,6 +409,9 @@ func (server *Server) snapshotFor(request *http.Request) (model.CurrentSnapshot,
 	requestedAtRaw := strings.TrimSpace(request.URL.Query().Get("at"))
 	now := server.currentClockState().ServerTime
 	if requestedAtRaw == "" {
+		if snapshot, ok, _ := server.currentSnapshotFromStore(request.Context(), now); ok {
+			return snapshot, "available", "", nil
+		}
 		if err := server.requireCacheError(); err != nil {
 			return model.CurrentSnapshot{}, "unavailable", "", err
 		}
@@ -440,6 +443,143 @@ func (server *Server) snapshotFor(request *http.Request) (model.CurrentSnapshot,
 		return model.CurrentSnapshot{}, "unavailable", "", fmt.Errorf("decode persisted snapshot %s: %w", stored.ID, err)
 	}
 	return snapshot, "available", stored.ID, nil
+}
+
+// handleResourceStates 暴露数据库中的当前态记录（resource_states），供前端与调试查询。
+func (server *Server) handleResourceStates(writer http.ResponseWriter, request *http.Request) {
+	kind := strings.TrimSpace(request.URL.Query().Get("kind"))
+	namespace := strings.TrimSpace(request.URL.Query().Get("namespace"))
+	limit := queryInteger(request, "limit", 100)
+	if limit < 1 || limit > 1000 {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_LIMIT", "limit must be between 1 and 1000.", false, nil)
+		return
+	}
+	if !server.store.Available() {
+		writeProblem(writer, request, http.StatusServiceUnavailable, "PERSISTENT_STORE_UNAVAILABLE", store.ErrUnavailable.Error(), true, nil)
+		return
+	}
+	records, err := server.store.ListResourceStates(request.Context(), kind, namespace, limit)
+	if err != nil {
+		writeProblem(writer, request, http.StatusServiceUnavailable, "RESOURCE_STATES_UNAVAILABLE", err.Error(), true, nil)
+		return
+	}
+	writeData(writer, request, http.StatusOK, map[string]any{"states": records, "count": len(records)}, false, nil, sourceVersions(server.cache.SyncedAt()))
+}
+
+// currentSnapshotFromStore 优先从数据库当前态（resource_states）重建快照；
+// 存储不可用、记录为空或查询失败时返回 ok=false，由调用方回退实时聚合。
+func (server *Server) currentSnapshotFromStore(ctx context.Context, now time.Time) (model.CurrentSnapshot, bool, error) {
+	if !server.store.Available() {
+		return model.CurrentSnapshot{}, false, nil
+	}
+	records, err := server.store.ListResourceStates(ctx, "", "", 1000)
+	if err != nil {
+		server.logger.Error("Could not read current resource states from database", "error", err)
+		return model.CurrentSnapshot{}, false, err
+	}
+	if len(records) == 0 {
+		return model.CurrentSnapshot{}, false, nil
+	}
+	snapshot, ok := currentSnapshotFromRecords(records, now)
+	return snapshot, ok, nil
+}
+
+// currentSnapshotFromRecords 把数据库当前态记录重组为聚合快照，供读接口返回；
+// 无法反序列化的单条记录跳过，其余记录不受影响。
+func currentSnapshotFromRecords(records []store.ResourceStateRecord, now time.Time) (model.CurrentSnapshot, bool) {
+	if len(records) == 0 {
+		return model.CurrentSnapshot{}, false
+	}
+	snapshot := emptySnapshot(now, "available")
+	asOf := now
+	seenCapturedAt := false
+	for _, record := range records {
+		if !record.CapturedAt.IsZero() && (!seenCapturedAt || record.CapturedAt.After(asOf)) {
+			asOf = record.CapturedAt
+			seenCapturedAt = true
+		}
+		switch record.Kind {
+		case "Model":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.Models = append(snapshot.Configuration.Models, resource)
+			}
+		case "WorkerNode":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.WorkerNodes = append(snapshot.Configuration.WorkerNodes, resource)
+			}
+		case "Tenant":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.Tenants = append(snapshot.Configuration.Tenants, resource)
+			}
+		case "TenantModelPolicy":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.Policies.TenantModel = append(snapshot.Configuration.Policies.TenantModel, resource)
+			}
+		case "TenantNodePolicy":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.Policies.TenantNode = append(snapshot.Configuration.Policies.TenantNode, resource)
+			}
+		case "ModelNodePolicy":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.Policies.ModelNode = append(snapshot.Configuration.Policies.ModelNode, resource)
+			}
+		case "Orchestrator":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.Orchestrators = append(snapshot.Configuration.Orchestrators, resource)
+			}
+		case "SimulationClock":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.SimulationClocks = append(snapshot.Configuration.SimulationClocks, resource)
+			}
+		case "SimulatorInstance":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.SimulatorInstances = append(snapshot.Configuration.SimulatorInstances, resource)
+			}
+		case "TenantPerformance":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.TenantPerformance = append(snapshot.Configuration.TenantPerformance, resource)
+			}
+		case "TenantRuntime":
+			var resource model.PlatformResource
+			if json.Unmarshal(record.Payload, &resource) == nil {
+				snapshot.Configuration.TenantRuntimes = append(snapshot.Configuration.TenantRuntimes, resource)
+			}
+		case "TenantTraffic":
+			var traffic model.TenantTraffic
+			if json.Unmarshal(record.Payload, &traffic) == nil {
+				snapshot.Traffic.Tenants = append(snapshot.Traffic.Tenants, traffic)
+			}
+		case "Node":
+			var node model.ClusterNode
+			if json.Unmarshal(record.Payload, &node) == nil {
+				snapshot.Workloads.Nodes = append(snapshot.Workloads.Nodes, node)
+			}
+		case "Deployment":
+			var deployment model.Deployment
+			if json.Unmarshal(record.Payload, &deployment) == nil {
+				snapshot.Workloads.Deployments = append(snapshot.Workloads.Deployments, deployment)
+			}
+		case "Pod":
+			var pod model.Pod
+			if json.Unmarshal(record.Payload, &pod) == nil {
+				snapshot.Workloads.Pods = append(snapshot.Workloads.Pods, pod)
+			}
+		}
+	}
+	snapshot.CapturedAt = asOf
+	snapshot.Configuration.AsOf = asOf
+	snapshot.Traffic.AsOf = asOf
+	return snapshot, true
 }
 
 func (server *Server) providerStates(ctx context.Context) (map[string]model.ProviderState, []string) {

@@ -78,6 +78,7 @@ func (server *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/traces", server.handleTraces)
 	mux.HandleFunc("GET /api/v1/traces/{traceID}", server.handleTraceDetail)
 	mux.HandleFunc("GET /api/v1/events", server.handleEvents)
+	mux.HandleFunc("GET /api/v1/resources", server.handleResourceStates)
 	mux.HandleFunc("GET /api/v1/replay", server.handleReplay)
 	mux.HandleFunc("GET /api/v1/replay/frame", server.handleOverview)
 	mux.HandleFunc("GET /api/v1/overview", server.handleOverview)

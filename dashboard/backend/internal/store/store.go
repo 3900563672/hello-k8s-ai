@@ -39,14 +39,14 @@ type StoreStatus struct {
 
 // ResourceStateRecord 是"某个资源的最新聚合状态"，由快照循环周期性 upsert。
 type ResourceStateRecord struct {
-	Kind            string
-	Namespace       string
-	Name            string
-	UID             string
-	ResourceVersion string
-	Generation      int64
-	CapturedAt      time.Time
-	Payload         json.RawMessage
+	Kind            string          `json:"kind"`
+	Namespace       string          `json:"namespace"`
+	Name            string          `json:"name"`
+	UID             string          `json:"uid,omitempty"`
+	ResourceVersion string          `json:"resourceVersion,omitempty"`
+	Generation      int64           `json:"generation,omitempty"`
+	CapturedAt      time.Time       `json:"capturedAt"`
+	Payload         json.RawMessage `json:"payload"`
 }
 
 type Store interface {
