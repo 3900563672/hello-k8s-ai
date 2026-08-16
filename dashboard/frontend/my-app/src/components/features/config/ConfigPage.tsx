@@ -142,8 +142,10 @@ const normalizeIdentifier = (value: string): string =>
         .trim()
         .normalize('NFKC')
         .toLocaleLowerCase()
-        .replace(/[^\p{L}\p{N}]+/gu, '-')
+        .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
+        .slice(0, 63)
+        .replace(/-+$/g, '')
 
 const uniqueIdentifier = (value: string, type: ConfigResourceType, existingIds: string[]): string => {
     const prefix = type === 'model' ? 'model' : type === 'node' ? 'node' : type === 'tenant' ? 'tenant' : 'orch'
@@ -452,15 +454,19 @@ export function ConfigPage() {
                 await createTenant.mutateAsync(tenant)
                 tenantSelection.setSelectedName(tenant.name)
             } else {
-                const tenantName = normalizeIdentifier(newName)
-                if (!tenants.some((item) => item.name === tenantName)) {
-                    setCreateError(`未找到租户“${newName.trim()}”，请先创建该租户`)
+                const tenantInput = newName.trim()
+                const matchedTenant = tenants.find(
+                    (item) => item.name === tenantInput || item.displayName === tenantInput,
+                )
+                if (!matchedTenant) {
+                    setCreateError(`未找到租户“${tenantInput}”，请先创建该租户`)
                     return
                 }
+                const tenantName = matchedTenant.name
                 const orchestrator: Orchestrator = template?.type === 'orchestrator'
                     ? {
                         name,
-                        displayName: tenantName,
+                        displayName: matchedTenant.displayName,
                         tenantRef: { name: tenantName },
                         scaleUpCooldownSeconds: template.data.scaleUpCooldownSeconds,
                         scaleDownCooldownSeconds: template.data.scaleDownCooldownSeconds,
@@ -470,7 +476,7 @@ export function ConfigPage() {
                     }
                     : {
                         name,
-                        displayName: tenantName,
+                        displayName: matchedTenant.displayName,
                         ...DEFAULT_ORCHESTRATOR,
                         tenantRef: { name: tenantName },
                     }
