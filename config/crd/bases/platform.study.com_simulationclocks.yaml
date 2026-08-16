@@ -33,7 +33,7 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: SimulationClock 是集群唯一的 Simulator 倍速控制资源
+        description: SimulationClock 是集群唯一的 Simulator 倍速控制资源。
         properties:
           apiVersion:
             description: |-
@@ -53,11 +53,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: SimulationClockSpec 定义 Simulator 离散事件引擎的期望时间倍速
+            description: SimulationClockSpec 定义 Simulator 离散事件引擎的期望时间倍速。
             properties:
               rate:
                 default: 1
-                description: 每个真实 tick 需要推进的模拟时间倍数
+                description: Rate 表示每个真实 tick 需要推进的模拟时间倍数。
                 maximum: 20
                 minimum: 1
                 type: integer
@@ -65,13 +65,13 @@ spec:
             - rate
             type: object
           status:
-            description: SimulationClockStatus 记录倍速配置向 SimulatorInstance 的收敛情况
+            description: SimulationClockStatus 记录倍速配置向 SimulatorInstance 的收敛情况。
             properties:
               appliedRate:
-                description: 所有现存 SimulatorInstance 已同步的倍速
+                description: AppliedRate 是所有现存 SimulatorInstance 已同步的倍速。
                 type: integer
               conditions:
-                description: 倍速配置是否已完成收敛
+                description: Conditions 描述倍速配置是否已完成收敛。
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -79,7 +79,7 @@ spec:
                     lastTransitionTime:
                       description: |-
                         lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the condition changed is acceptable.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
@@ -131,15 +131,15 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               observedGeneration:
-                description: Controller 已处理的配置版本
+                description: ObservedGeneration 是 Controller 已处理的配置版本。
                 format: int64
                 type: integer
               synchronizedInstances:
-                description: 已同步到期望倍速的实例数
+                description: SynchronizedInstances 是已同步到期望倍速的实例数。
                 minimum: 0
                 type: integer
               totalInstances:
-                description: 本轮收敛观察到的实例总数
+                description: TotalInstances 是本轮收敛观察到的实例总数。
                 minimum: 0
                 type: integer
             type: object
