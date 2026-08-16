@@ -76,6 +76,11 @@
 - 迁移必须幂等（`IF NOT EXISTS` / `ON CONFLICT`），Backend 启动自动应用。
 - 验证：`TestPostgresLifecycle` 覆盖"迁移幂等 + 重启后历史仍在"。
 
+### 2026-08-16 一键启动脚本的两个坑
+- `hack/local-cluster.sh` 可能丢失执行位（Windows 侧操作后 100644）：`setup.sh` 报 `Permission denied` 时先 `chmod +x hack/*.sh` 并提交 mode 变化。
+- 端口转发存活检查只看 ps 会误判：进程死亡但 PID 文件残留时 `cluster-open` 不会重建转发（8080 无监听但日志说"已在运行"）。修复后检查包含 `/dev/tcp` 端口探测；遇到 8080 无响应先看 `.runtime/port-forward-*.pid` 与 `ps aux | grep port-forward`。
+- 并行构建四个镜像后，构建日志会交错输出；判断失败以退出码与最终镜像存在为准，不要按日志顺序读。
+
 ## 领域已知易误判点（原 AI_CONTEXT 第 8 节）
 
 - Traffic Overlay 是本地草稿；页面有真实数据不等于场景已写回控制平面。

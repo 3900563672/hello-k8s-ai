@@ -11,3 +11,4 @@
 | 2026-08-16 | 文档体系分层重构 | P1 | [查看记录](2026-08-16-docs-hierarchy/README.md) |
 | 2026-08-16 | 分层文档维护边界与同步协议 | P1 | [查看记录](2026-08-16-docs-layered-ownership/README.md) |
 | 2026-08-16 | 数据库生命周期自动化与当前态持久化读路径（Phase 1-3） | P1 | [查看记录](2026-08-16-database-lifecycle/README.md) |
+| 2026-08-16 | 本地完整栈本机验证与启动速度优化 | P2 | [查看记录](2026-08-16-local-startup-optimization/README.md) |
