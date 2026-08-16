@@ -2,37 +2,14 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
 
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
-
-func TestRetryOnConflict(t *testing.T) {
-	calls := 0
-	conflict := k8serrors.NewConflict(
-		schema.GroupResource{Group: "platform.study.com", Resource: "simulatorinstances"},
-		"instance-a",
-		errors.New("conflict"),
-	)
-	// 第一次返回冲突，第二次成功，期望最终调用两次且无错
-	err := retryOnConflict(func() error {
-		calls++
-		if calls == 1 {
-			return conflict
-		}
-		return nil
-	})
-	if err != nil || calls != 2 {
-		t.Fatalf("retryOnConflict() error = %v, calls = %d; want nil, 2", err, calls)
-	}
-}
 
 func TestFinalizerHelpersAreIdempotent(t *testing.T) {
 	const finalizer = "test.platform.study.com/finalizer"

@@ -1,22 +1,19 @@
-import { memo, useEffect, useState } from 'react'
+import { memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Gauge, Timer } from 'lucide-react'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { orchestratorSchema, getOrchestratorPreview, type OrchestratorFormValues } from '@/lib/validations/orchestrator.schema'
 import { useTenants } from '@/api/queries/configQueries'
 import { useTemplateStore } from '@/stores/templateSlice'
-import type { ConfigTemplate } from '@/types/config.types'
 import {
     ConfigFormSection,
+    ConfigNumberField,
+    ConfigRefSelect,
     FormSaveBar,
     TemplateActions,
-    configInputClass,
-    configLabelClass,
-    numberFromInput,
+    useConfigForm,
 } from './ConfigFormParts'
 
 interface OrchestratorFormProps {
@@ -25,9 +22,6 @@ interface OrchestratorFormProps {
     submitLabel?: string
     onDirtyChange?: (dirty: boolean) => void
 }
-
-const getErrorMessage = (error: unknown): string =>
-    error instanceof Error ? error.message : '保存失败，请稍后重试'
 
 export const OrchestratorForm = memo(function OrchestratorForm({
     defaultValues,
@@ -40,40 +34,15 @@ export const OrchestratorForm = memo(function OrchestratorForm({
         defaultValues,
         mode: 'onBlur',
     })
-    const [submitError, setSubmitError] = useState('')
     const { orchestratorTemplates, addOrchestratorTemplate, removeOrchestratorTemplate } = useTemplateStore()
     const { data: tenants = [] } = useTenants()
-    const { isDirty, isSubmitting } = form.formState
-
-    useEffect(() => {
-        form.reset(defaultValues)
-        setSubmitError('')
-    }, [defaultValues, form])
-
-    useEffect(() => {
-        onDirtyChange?.(isDirty)
-    }, [isDirty, onDirtyChange])
-
-    const submitForm = async (values: OrchestratorFormValues) => {
-        setSubmitError('')
-        try {
-            await onSubmit(values)
-            form.reset(values)
-        } catch (error) {
-            setSubmitError(getErrorMessage(error))
-        }
-    }
-
-    const saveTemplate = async (name: string) => {
-        const valid = await form.trigger()
-        if (!valid) return false
-        addOrchestratorTemplate(name, form.getValues())
-        return true
-    }
-
-    const loadTemplate = (template: ConfigTemplate<OrchestratorFormValues>) => {
-        form.reset(template.data, { keepDefaultValues: true })
-    }
+    const { submitError, submitForm, saveTemplate, loadTemplate, isDirty, isSubmitting } = useConfigForm({
+        form,
+        defaultValues,
+        onSubmit,
+        onDirtyChange,
+        addTemplate: addOrchestratorTemplate,
+    })
 
     return (
         <Form {...form}>
@@ -93,95 +62,18 @@ export const OrchestratorForm = memo(function OrchestratorForm({
                     action={<Timer className="h-4 w-4 text-[#5E9EFF]" />}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
+                        <ConfigRefSelect
                             control={form.control}
                             name="tenantName"
-                            render={({ field }) => (
-                                <FormItem className="sm:col-span-2">
-                                    <FormLabel className={configLabelClass}>关联租户</FormLabel>
-                                    <Select value={field.value} onValueChange={field.onChange}>
-                                        <FormControl>
-                                            <SelectTrigger className={`${configInputClass} w-full`}>
-                                                <SelectValue placeholder="选择租户" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent className="border-[#263244] bg-[#101722] text-[#EDEDED]">
-                                            {tenants.map((tenant) => (
-                                                <SelectItem
-                                                    key={tenant.name}
-                                                    value={tenant.name}
-                                                    className="focus:bg-[#202B3A] focus:text-white"
-                                                >
-                                                    <span className="flex items-center gap-2">
-                                                        <span>{tenant.displayName}</span>
-                                                        <span className="font-mono text-[#596579]">{tenant.name}</span>
-                                                    </span>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
+                            label="关联租户"
+                            options={tenants}
+                            placeholder="选择租户"
+                            formItemClass="sm:col-span-2"
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="scaleUpCooldownSeconds"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>扩容冷却</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="1"
-                                                {...field}
-                                                value={Number.isNaN(field.value) ? '' : field.value}
-                                                onChange={(event) =>
-                                                    field.onChange(
-                                                        numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                    )
-                                                }
-                                                className={`${configInputClass} pr-8 tabular-nums`}
-                                            />
-                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">s</span>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="scaleUpCooldownSeconds" label="扩容冷却" min="0" unit="s" inputClass="pr-8"/>
 
-                        <FormField
-                            control={form.control}
-                            name="scaleDownCooldownSeconds"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>缩容冷却</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="1"
-                                                {...field}
-                                                value={Number.isNaN(field.value) ? '' : field.value}
-                                                onChange={(event) =>
-                                                    field.onChange(
-                                                        numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                    )
-                                                }
-                                                className={`${configInputClass} pr-8 tabular-nums`}
-                                            />
-                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">s</span>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="scaleDownCooldownSeconds" label="缩容冷却" min="0" unit="s" inputClass="pr-8"/>
                     </div>
                 </ConfigFormSection>
 
@@ -191,57 +83,9 @@ export const OrchestratorForm = memo(function OrchestratorForm({
                     action={<Gauge className="h-4 w-4 text-[#5E9EFF]" />}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="minReplicas"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>最小副本数</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            {...field}
-                                            value={Number.isNaN(field.value) ? '' : field.value}
-                                            onChange={(event) =>
-                                                field.onChange(
-                                                    numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                )
-                                            }
-                                            className={`${configInputClass} tabular-nums`}
-                                        />
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="minReplicas" label="最小副本数" />
 
-                        <FormField
-                            control={form.control}
-                            name="maxReplicas"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>最大副本数</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            {...field}
-                                            value={Number.isNaN(field.value) ? '' : field.value}
-                                            onChange={(event) =>
-                                                field.onChange(
-                                                    numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                )
-                                            }
-                                            className={`${configInputClass} tabular-nums`}
-                                        />
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="maxReplicas" label="最大副本数" />
 
                         <FormField
                             control={form.control}

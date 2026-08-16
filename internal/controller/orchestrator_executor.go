@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -113,7 +114,7 @@ func (r *OrchestratorReconciler) persistScalePlan(ctx context.Context, plan scal
 		return fmt.Errorf("marshal scaling plan: %w", err)
 	}
 
-	return retryOnConflict(func() error {
+	return k8sutil.RetryOnConflict(func() error {
 		var instance platformv1.SimulatorInstance
 		if err := r.Get(ctx, client.ObjectKey{Name: plan.InstanceName}, &instance); err != nil {
 			return err
@@ -275,7 +276,7 @@ func (r *OrchestratorReconciler) resumePendingScaling(ctx context.Context, input
 // clearPendingScalePlan 清除实例上的待处理计划注解。
 // 只有当注解里记录的 triggerID 与当前一致时才清除，防止误删已被新计划覆盖的注解。
 func (r *OrchestratorReconciler) clearPendingScalePlan(ctx context.Context, instanceName, triggerID string) error {
-	return retryOnConflict(func() error {
+	return k8sutil.RetryOnConflict(func() error {
 		var instance platformv1.SimulatorInstance
 		if err := r.Get(ctx, client.ObjectKey{Name: instanceName}, &instance); err != nil {
 			if apierrors.IsNotFound(err) {
@@ -298,7 +299,7 @@ func (r *OrchestratorReconciler) clearPendingScalePlan(ctx context.Context, inst
 // updateInstanceEffectiveScore 更新实例的有效分数，负数归零。
 func (r *OrchestratorReconciler) updateInstanceEffectiveScore(ctx context.Context, instanceName string, score int) error {
 	score = nonNegative(score)
-	return retryOnConflict(func() error {
+	return k8sutil.RetryOnConflict(func() error {
 		var instance platformv1.SimulatorInstance
 		if err := r.Get(ctx, client.ObjectKey{Name: instanceName}, &instance); err != nil {
 			return err
@@ -318,25 +319,22 @@ func (r *OrchestratorReconciler) updateOrchestratorStatusByName(
 	name string,
 	record *platformv1.ScalingRecord,
 ) error {
-	return retryOnConflict(func() error {
-		var config platformv1.Orchestrator
-		if err := r.Get(ctx, client.ObjectKey{Name: name}, &config); err != nil {
-			return err
-		}
-		// 如果记录和时间戳都已经是最新的，不用再写
-		if scalingRecordsEqual(config.Status.LastScaling, record) && scaleTimestampRecorded(&config, record) {
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, name, false,
+		func() *platformv1.Orchestrator { return &platformv1.Orchestrator{} },
+		func(config *platformv1.Orchestrator) error {
+			// 记录和时间戳都已经是最新的就不用改了，由 helper 判定无变化
+			if scalingRecordsEqual(config.Status.LastScaling, record) && scaleTimestampRecorded(config, record) {
+				return nil
+			}
+			config.Status.LastScaling = record.DeepCopy()
+			switch record.Action {
+			case scalingActionUp:
+				config.Status.LastScaleUpTime = record.Time.DeepCopy()
+			case scalingActionDown:
+				config.Status.LastScaleDownTime = record.Time.DeepCopy()
+			}
 			return nil
-		}
-		before := config.DeepCopy()
-		config.Status.LastScaling = record.DeepCopy()
-		switch record.Action {
-		case scalingActionUp:
-			config.Status.LastScaleUpTime = record.Time.DeepCopy()
-		case scalingActionDown:
-			config.Status.LastScaleDownTime = record.Time.DeepCopy()
-		}
-		return r.Status().Patch(ctx, &config, client.MergeFrom(before))
-	})
+		})
 }
 
 // scaleTimestampRecorded 检查指定方向的时间戳是否已经是 record 的时间。

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -291,21 +292,18 @@ func allocateTraffic(totalQPS int, instances []instanceData) (map[string]int, in
 // updateInstanceQPS 更新单个实例的 QPS，冲突自动重试。
 func (r *TrafficReconciler) updateInstanceQPS(ctx context.Context, instanceName string, qps int) error {
 	qps = nonNegative(qps)
-	return retryOnConflict(func() error {
-		var instance platformv1.SimulatorInstance
-		if err := r.Get(ctx, client.ObjectKey{Name: instanceName}, &instance); err != nil {
-			if apierrors.IsNotFound(err) {
-				return nil
+	return k8sutil.PatchWithRetry(ctx, r.Client, instanceName, true,
+		func() *platformv1.SimulatorInstance { return &platformv1.SimulatorInstance{} },
+		func(instance *platformv1.SimulatorInstance) error {
+			// 删除中或值没变就不用写了，由 helper 判定无变化
+			if instance.DeletionTimestamp.IsZero() && instance.Spec.Traffic.QPS != qps {
+				instance.Spec.Traffic.QPS = qps
 			}
-			return err
-		}
-		if !instance.DeletionTimestamp.IsZero() || instance.Spec.Traffic.QPS == qps {
 			return nil
-		}
-		before := instance.DeepCopy()
-		instance.Spec.Traffic.QPS = qps
-		return r.Patch(ctx, &instance, client.MergeFrom(before))
-	})
+		},
+		func(c client.Client, instance *platformv1.SimulatorInstance, before client.Object) error {
+			return c.Patch(ctx, instance, client.MergeFrom(before))
+		})
 }
 
 // 清理该租户下实例遗留的 traffic finalizer

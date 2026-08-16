@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
-import { ConfigTable, TruncatedCell } from '../components/ConfigTable'
+import { ConfigTable, NameCell, formatNumber } from '../components/ConfigTable'
 import type { Tenant, TenantPriority } from '@/types/config.types'
 
 interface TenantTableProps {
@@ -22,17 +22,12 @@ const priorityColor: Record<TenantPriority, string> = {
     P5: 'border-zinc-500/25 bg-zinc-500/10 text-[#A1A1AA]',
 }
 
-const formatNumber = new Intl.NumberFormat('zh-CN')
-
 const columns: ColumnDef<Tenant>[] = [
     {
         accessorKey: 'displayName',
         header: '租户',
         cell: ({ row }) => (
-            <div className="min-w-0">
-                <TruncatedCell className="font-medium text-[#F0F0F0]">{row.original.displayName}</TruncatedCell>
-                <TruncatedCell className="mt-0.5 font-mono text-[11px] text-[#596579]">{row.original.name}</TruncatedCell>
-            </div>
+            <NameCell displayName={row.original.displayName} name={row.original.name} />
         ),
     },
     {

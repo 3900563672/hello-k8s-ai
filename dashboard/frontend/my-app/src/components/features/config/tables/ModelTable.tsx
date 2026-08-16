@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ConfigTable, TruncatedCell } from '../components/ConfigTable'
+import { ConfigTable, NameCell, formatNumber } from '../components/ConfigTable'
 import type { Model } from '@/types/config.types'
 
 interface ModelTableProps {
@@ -13,17 +13,12 @@ interface ModelTableProps {
     readOnly?: boolean
 }
 
-const formatNumber = new Intl.NumberFormat('zh-CN')
-
 const columns: ColumnDef<Model>[] = [
     {
         accessorKey: 'displayName',
         header: '模型',
         cell: ({ row }) => (
-            <div className="min-w-0">
-                <TruncatedCell className="font-medium text-[#F0F0F0]">{row.original.displayName}</TruncatedCell>
-                <TruncatedCell className="mt-0.5 font-mono text-[11px] text-[#596579]">{row.original.name}</TruncatedCell>
-            </div>
+            <NameCell displayName={row.original.displayName} name={row.original.name} />
         ),
     },
     {

@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react'
+import { memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ShieldCheck } from 'lucide-react'
@@ -7,7 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { policySchema, type PolicyFormValues } from '@/lib/validations/policy.schema'
 import { useModels, useNodes, useTenants } from '@/api/queries/configQueries'
 import type { PolicyKind } from '@/types/config.types'
-import { ConfigFormSection, FormSaveBar, configInputClass, configLabelClass } from './ConfigFormParts'
+import {
+    ConfigFormSection,
+    ConfigRefSelect,
+    FormSaveBar,
+    configInputClass,
+    configLabelClass,
+    useConfigForm,
+} from './ConfigFormParts'
 
 interface PolicyFormProps {
     defaultValues: PolicyFormValues
@@ -22,49 +29,6 @@ const kindMeta: Record<PolicyKind, { label: string; description: string }> = {
     modelNode: { label: '模型-节点', description: '决定模型可运行的节点，未配置时沿用租户节点范围。' },
 }
 
-const getErrorMessage = (error: unknown): string =>
-    error instanceof Error ? error.message : '保存失败，请稍后重试'
-
-const RefSelect = ({
-    label,
-    value,
-    onChange,
-    options,
-    placeholder,
-}: {
-    label: string
-    value: string
-    onChange: (value: string) => void
-    options: Array<{ name: string; displayName: string }>
-    placeholder: string
-}) => (
-    <FormItem>
-        <FormLabel className={configLabelClass}>{label}</FormLabel>
-        <Select value={value || undefined} onValueChange={onChange}>
-            <FormControl>
-                <SelectTrigger className={`${configInputClass} w-full`}>
-                    <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-            </FormControl>
-            <SelectContent className="border-[#263244] bg-[#101722] text-[#EDEDED]">
-                {options.map((option) => (
-                    <SelectItem
-                        key={option.name}
-                        value={option.name}
-                        className="focus:bg-[#202B3A] focus:text-white"
-                    >
-                        <span className="flex items-center gap-2">
-                            <span>{option.displayName}</span>
-                            <span className="font-mono text-[#596579]">{option.name}</span>
-                        </span>
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
-        <FormMessage className="text-xs text-[#FF7373]" />
-    </FormItem>
-)
-
 export const PolicyForm = memo(function PolicyForm({
     defaultValues,
     onSubmit,
@@ -76,31 +40,16 @@ export const PolicyForm = memo(function PolicyForm({
         defaultValues,
         mode: 'onBlur',
     })
-    const [submitError, setSubmitError] = useState('')
     const { data: tenants = [] } = useTenants()
     const { data: models = [] } = useModels()
     const { data: nodes = [] } = useNodes()
-    const { isDirty, isSubmitting } = form.formState
     const kind = form.watch('kind')
-
-    useEffect(() => {
-        form.reset(defaultValues)
-        setSubmitError('')
-    }, [defaultValues, form])
-
-    useEffect(() => {
-        onDirtyChange?.(isDirty)
-    }, [isDirty, onDirtyChange])
-
-    const submitForm = async (values: PolicyFormValues) => {
-        setSubmitError('')
-        try {
-            await onSubmit(values)
-            form.reset(values)
-        } catch (error) {
-            setSubmitError(getErrorMessage(error))
-        }
-    }
+    const { submitError, submitForm, isDirty, isSubmitting } = useConfigForm({
+        form,
+        defaultValues,
+        onSubmit,
+        onDirtyChange,
+    })
 
     const meta = kindMeta[kind]
 
@@ -115,92 +64,20 @@ export const PolicyForm = memo(function PolicyForm({
                     <div className="grid gap-4 sm:grid-cols-2">
                         {kind === 'tenantModel' && (
                             <>
-                                <FormField
-                                    control={form.control}
-                                    name="tenantName"
-                                    render={({ field }) => (
-                                        <RefSelect
-                                            label="关联租户"
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={tenants}
-                                            placeholder="选择租户"
-                                        />
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="modelName"
-                                    render={({ field }) => (
-                                        <RefSelect
-                                            label="关联模型"
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={models}
-                                            placeholder="选择模型"
-                                        />
-                                    )}
-                                />
+                                <ConfigRefSelect control={form.control} name="tenantName" label="关联租户" options={tenants} placeholder="选择租户" />
+                                <ConfigRefSelect control={form.control} name="modelName" label="关联模型" options={models} placeholder="选择模型" />
                             </>
                         )}
                         {kind === 'tenantNode' && (
                             <>
-                                <FormField
-                                    control={form.control}
-                                    name="tenantName"
-                                    render={({ field }) => (
-                                        <RefSelect
-                                            label="关联租户"
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={tenants}
-                                            placeholder="选择租户"
-                                        />
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="nodeName"
-                                    render={({ field }) => (
-                                        <RefSelect
-                                            label="关联节点"
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={nodes}
-                                            placeholder="选择节点"
-                                        />
-                                    )}
-                                />
+                                <ConfigRefSelect control={form.control} name="tenantName" label="关联租户" options={tenants} placeholder="选择租户" />
+                                <ConfigRefSelect control={form.control} name="nodeName" label="关联节点" options={nodes} placeholder="选择节点" />
                             </>
                         )}
                         {kind === 'modelNode' && (
                             <>
-                                <FormField
-                                    control={form.control}
-                                    name="modelName"
-                                    render={({ field }) => (
-                                        <RefSelect
-                                            label="关联模型"
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={models}
-                                            placeholder="选择模型"
-                                        />
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="nodeName"
-                                    render={({ field }) => (
-                                        <RefSelect
-                                            label="关联节点"
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={nodes}
-                                            placeholder="选择节点"
-                                        />
-                                    )}
-                                />
+                                <ConfigRefSelect control={form.control} name="modelName" label="关联模型" options={models} placeholder="选择模型" />
+                                <ConfigRefSelect control={form.control} name="nodeName" label="关联节点" options={nodes} placeholder="选择节点" />
                             </>
                         )}
                         <FormField

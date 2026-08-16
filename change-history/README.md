@@ -20,5 +20,6 @@
 | 2026-08-16 | 统一 Backend 命令幂等、批量应用与审计的一致性边界 | P1 | [查看记录](2026-08-16-command-consistency-boundary/README.md) |
 | 2026-08-16 | Simulator 冷启动进度与 reporter 生命周期解耦 | P1 | [查看记录](2026-08-16-simulator-coldstart-persistence/README.md) |
 | 2026-08-16 | 历史回放覆盖告警：明确 Provider 保留边界 | P1 | [查看记录](2026-08-16-history-replay-coverage-warnings/README.md) |
+| 2026-08-16 | 全库重复代码抽取重构（不改变业务行为） | P2 | [查看记录](2026-08-16-code-dedup-refactor/README.md) |
 
 > 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`。

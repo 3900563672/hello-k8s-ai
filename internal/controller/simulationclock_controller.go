@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -138,7 +138,7 @@ func (r *SimulationClockReconciler) synchronizeInstanceRate(
 	rate int,
 ) (bool, error) {
 	synchronized := false
-	err := retryOnConflict(func() error {
+	err := k8sutil.RetryOnConflict(func() error {
 		var instance platformv1.SimulatorInstance
 		if err := r.Get(ctx, client.ObjectKey{Name: name}, &instance); err != nil {
 			if apierrors.IsNotFound(err) {
@@ -178,28 +178,22 @@ func (r *SimulationClockReconciler) updateSimulationClockStatus(
 	reason string,
 	message string,
 ) error {
-	return retryOnConflict(func() error {
-		var latest platformv1.SimulationClock
-		if err := r.Get(ctx, client.ObjectKey{Name: name}, &latest); err != nil {
-			return err
-		}
-		before := latest.DeepCopy()
-		latest.Status.ObservedGeneration = observedGeneration
-		latest.Status.AppliedRate = appliedRate
-		latest.Status.SynchronizedInstances = synchronizedInstances
-		latest.Status.TotalInstances = totalInstances
-		meta.SetStatusCondition(&latest.Status.Conditions, metav1.Condition{
-			Type:               conditionTypeReady,
-			Status:             conditionStatus,
-			Reason:             reason,
-			Message:            message,
-			ObservedGeneration: observedGeneration,
-		})
-		if equality.Semantic.DeepEqual(before.Status, latest.Status) {
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, name, false,
+		func() *platformv1.SimulationClock { return &platformv1.SimulationClock{} },
+		func(latest *platformv1.SimulationClock) error {
+			latest.Status.ObservedGeneration = observedGeneration
+			latest.Status.AppliedRate = appliedRate
+			latest.Status.SynchronizedInstances = synchronizedInstances
+			latest.Status.TotalInstances = totalInstances
+			meta.SetStatusCondition(&latest.Status.Conditions, metav1.Condition{
+				Type:               conditionTypeReady,
+				Status:             conditionStatus,
+				Reason:             reason,
+				Message:            message,
+				ObservedGeneration: observedGeneration,
+			})
 			return nil
-		}
-		return r.Status().Patch(ctx, &latest, client.MergeFrom(before))
-	})
+		})
 }
 
 func (r *SimulationClockReconciler) SetupWithManager(mgr ctrl.Manager) error {

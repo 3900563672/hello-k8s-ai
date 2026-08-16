@@ -1,7 +1,17 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { AlertCircle, Check, FolderOpen, Loader2, Save, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { Control, FieldValues, Path, UseFormReturn } from 'react-hook-form'
 import {
     Dialog,
     DialogContent,
@@ -230,3 +240,203 @@ export const configLabelClass = 'text-xs font-medium text-[#9AA7B9]'
 
 export const numberFromInput = (value: string, valueAsNumber: number): number =>
     value === '' ? Number.NaN : valueAsNumber
+const getErrorMessage = (error: unknown): string =>
+    error instanceof Error ? error.message : '保存失败，请稍后重试'
+
+interface UseConfigFormOptions<TFieldValues extends FieldValues> {
+    form: UseFormReturn<TFieldValues>
+    defaultValues: TFieldValues
+    onSubmit: (data: TFieldValues) => Promise<void>
+    onDirtyChange?: (dirty: boolean) => void
+    addTemplate?: (name: string, data: TFieldValues) => void
+    afterLoadTemplate?: (template: ConfigTemplate<TFieldValues>) => void
+}
+
+// useConfigForm 收敛各配置表单共用的提交、模板与脏状态逻辑。
+export function useConfigForm<TFieldValues extends FieldValues>({
+    form,
+    defaultValues,
+    onSubmit,
+    onDirtyChange,
+    addTemplate,
+    afterLoadTemplate,
+}: UseConfigFormOptions<TFieldValues>) {
+    const [submitError, setSubmitError] = useState('')
+    const { isDirty, isSubmitting } = form.formState
+
+    useEffect(() => {
+        form.reset(defaultValues)
+        setSubmitError('')
+    }, [defaultValues, form])
+
+    useEffect(() => {
+        onDirtyChange?.(isDirty)
+    }, [isDirty, onDirtyChange])
+
+    const submitForm = async (values: TFieldValues) => {
+        setSubmitError('')
+        try {
+            await onSubmit(values)
+            form.reset(values)
+        } catch (error) {
+            setSubmitError(getErrorMessage(error))
+        }
+    }
+
+    const saveTemplate = async (name: string) => {
+        if (!addTemplate) return false
+        const valid = await form.trigger()
+        if (!valid) return false
+        addTemplate(name, form.getValues())
+        return true
+    }
+
+    const loadTemplate = (template: ConfigTemplate<TFieldValues>) => {
+        form.reset(template.data, { keepDefaultValues: true })
+        afterLoadTemplate?.(template)
+    }
+
+    return { submitError, submitForm, saveTemplate, loadTemplate, isDirty, isSubmitting }
+}
+
+interface ConfigFieldBaseProps<TFieldValues extends FieldValues> {
+    control: Control<TFieldValues>
+    name: Path<TFieldValues>
+    label: string
+    formItemClass?: string
+}
+
+// ConfigTextField 渲染单行文本输入字段（显示名称等）。
+export function ConfigTextField<TFieldValues extends FieldValues>({
+    control,
+    name,
+    label,
+    formItemClass,
+}: ConfigFieldBaseProps<TFieldValues>) {
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={({ field }) => (
+                <FormItem className={formItemClass}>
+                    <FormLabel className={configLabelClass}>{label}</FormLabel>
+                    <FormControl>
+                        <Input {...field} autoComplete="off" className={configInputClass} />
+                    </FormControl>
+                    <FormMessage className="text-xs text-[#FF7373]" />
+                </FormItem>
+            )}
+        />
+    )
+}
+
+interface ConfigNumberFieldProps<TFieldValues extends FieldValues> extends ConfigFieldBaseProps<TFieldValues> {
+    min?: string
+    step?: string
+    unit?: string
+    inputClass?: string
+    unitClass?: string
+    description?: string
+}
+
+// ConfigNumberField 渲染带单位后缀的数字输入字段，空值以 NaN 进入表单校验。
+export function ConfigNumberField<TFieldValues extends FieldValues>({
+    control,
+    name,
+    label,
+    min = '1',
+    step = '1',
+    unit,
+    inputClass,
+    unitClass = 'text-xs',
+    formItemClass,
+    description,
+}: ConfigNumberFieldProps<TFieldValues>) {
+    const inputClassName = [configInputClass, inputClass, 'tabular-nums'].filter(Boolean).join(' ')
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={({ field }) => (
+                <FormItem className={formItemClass}>
+                    <FormLabel className={configLabelClass}>{label}</FormLabel>
+                    <FormControl>
+                        <div className="relative">
+                            <Input
+                                type="number"
+                                min={min}
+                                step={step}
+                                {...field}
+                                value={Number.isNaN(field.value) ? '' : field.value}
+                                onChange={(event) =>
+                                    field.onChange(
+                                        numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
+                                    )
+                                }
+                                className={inputClassName}
+                            />
+                            {unit && (
+                                <span className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${unitClass} text-[#596579]`}>
+                                    {unit}
+                                </span>
+                            )}
+                        </div>
+                    </FormControl>
+                    {description && (
+                        <FormDescription className="text-xs leading-5 text-[#596579]">{description}</FormDescription>
+                    )}
+                    <FormMessage className="text-xs text-[#FF7373]" />
+                </FormItem>
+            )}
+        />
+    )
+}
+
+interface ConfigRefSelectProps<TFieldValues extends FieldValues> extends ConfigFieldBaseProps<TFieldValues> {
+    options: Array<{ name: string; displayName: string }>
+    placeholder: string
+}
+
+// ConfigRefSelect 渲染引用型下拉选择（租户/模型/节点）。
+export function ConfigRefSelect<TFieldValues extends FieldValues>({
+    control,
+    name,
+    label,
+    options,
+    placeholder,
+    formItemClass,
+}: ConfigRefSelectProps<TFieldValues>) {
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={({ field }) => (
+                <FormItem className={formItemClass}>
+                    <FormLabel className={configLabelClass}>{label}</FormLabel>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <FormControl>
+                            <SelectTrigger className={`${configInputClass} w-full`}>
+                                <SelectValue placeholder={placeholder} />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="border-[#263244] bg-[#101722] text-[#EDEDED]">
+                            {options.map((option) => (
+                                <SelectItem
+                                    key={option.name}
+                                    value={option.name}
+                                    className="focus:bg-[#202B3A] focus:text-white"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <span>{option.displayName}</span>
+                                        <span className="font-mono text-[#596579]">{option.name}</span>
+                                    </span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs text-[#FF7373]" />
+                </FormItem>
+            )}
+        />
+    )
+}

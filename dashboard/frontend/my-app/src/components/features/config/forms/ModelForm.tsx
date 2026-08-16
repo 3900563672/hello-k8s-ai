@@ -1,21 +1,19 @@
-import { memo, useEffect, useState } from 'react'
+import { memo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronDown, Gauge, Timer } from 'lucide-react'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { Form } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { modelSchema, getModelPreview, type ModelFormValues } from '@/lib/validations/model.schema'
 import { useTemplateStore } from '@/stores/templateSlice'
-import type { ConfigTemplate } from '@/types/config.types'
 import {
     ConfigFormSection,
+    ConfigNumberField,
+    ConfigTextField,
     FormSaveBar,
     TemplateActions,
-    configInputClass,
-    configLabelClass,
-    numberFromInput,
+    useConfigForm,
 } from './ConfigFormParts'
 
 interface ModelFormProps {
@@ -24,9 +22,6 @@ interface ModelFormProps {
     submitLabel?: string
     onDirtyChange?: (dirty: boolean) => void
 }
-
-const getErrorMessage = (error: unknown): string =>
-    error instanceof Error ? error.message : '保存失败，请稍后重试'
 
 export const ModelForm = memo(function ModelForm({
     defaultValues,
@@ -40,40 +35,15 @@ export const ModelForm = memo(function ModelForm({
         mode: 'onBlur',
     })
     const [advancedOpen, setAdvancedOpen] = useState(false)
-    const [submitError, setSubmitError] = useState('')
     const { modelTemplates, addModelTemplate, removeModelTemplate } = useTemplateStore()
-    const { isDirty, isSubmitting } = form.formState
-
-    useEffect(() => {
-        form.reset(defaultValues)
-        setSubmitError('')
-    }, [defaultValues, form])
-
-    useEffect(() => {
-        onDirtyChange?.(isDirty)
-    }, [isDirty, onDirtyChange])
-
-    const submitForm = async (values: ModelFormValues) => {
-        setSubmitError('')
-        try {
-            await onSubmit(values)
-            form.reset(values)
-        } catch (error) {
-            setSubmitError(getErrorMessage(error))
-        }
-    }
-
-    const saveTemplate = async (name: string) => {
-        const valid = await form.trigger()
-        if (!valid) return false
-        addModelTemplate(name, form.getValues())
-        return true
-    }
-
-    const loadTemplate = (template: ConfigTemplate<ModelFormValues>) => {
-        form.reset(template.data, { keepDefaultValues: true })
-        setAdvancedOpen(true)
-    }
+    const { submitError, submitForm, saveTemplate, loadTemplate, isDirty, isSubmitting } = useConfigForm({
+        form,
+        defaultValues,
+        onSubmit,
+        onDirtyChange,
+        addTemplate: addModelTemplate,
+        afterLoadTemplate: () => setAdvancedOpen(true),
+    })
 
     return (
         <Form {...form}>
@@ -93,132 +63,15 @@ export const ModelForm = memo(function ModelForm({
                     action={<Gauge className="h-4 w-4 text-[#5E9EFF]" />}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="displayName"
-                            render={({ field }) => (
-                                <FormItem className="sm:col-span-2">
-                                    <FormLabel className={configLabelClass}>显示名称</FormLabel>
-                                    <FormControl>
-                                        <Input {...field} autoComplete="off" className={configInputClass} />
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigTextField control={form.control} name="displayName" label="显示名称" formItemClass="sm:col-span-2" />
 
-                        <FormField
-                            control={form.control}
-                            name="gpuUnits"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>显存需求</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                min="1"
-                                                step="1"
-                                                {...field}
-                                                value={Number.isNaN(field.value) ? '' : field.value}
-                                                onChange={(event) =>
-                                                    field.onChange(
-                                                        numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                    )
-                                                }
-                                                className={`${configInputClass} pr-10 tabular-nums`}
-                                            />
-                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">G</span>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="gpuUnits" label="显存需求" unit="G" inputClass="pr-10"/>
 
-                        <FormField
-                            control={form.control}
-                            name="maxConcurrency"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>最大并发</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            {...field}
-                                            value={Number.isNaN(field.value) ? '' : field.value}
-                                            onChange={(event) =>
-                                                field.onChange(
-                                                    numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                )
-                                            }
-                                            className={`${configInputClass} tabular-nums`}
-                                        />
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="maxConcurrency" label="最大并发" />
 
-                        <FormField
-                            control={form.control}
-                            name="absoluteScore"
-                            render={({ field }) => (
-                                <FormItem className="sm:col-span-2">
-                                    <FormLabel className={configLabelClass}>能力基准分</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            {...field}
-                                            value={Number.isNaN(field.value) ? '' : field.value}
-                                            onChange={(event) =>
-                                                field.onChange(
-                                                    numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                )
-                                            }
-                                            className={`${configInputClass} tabular-nums`}
-                                        />
-                                    </FormControl>
-                                    <FormDescription className="text-xs leading-5 text-[#596579]">
-                                        单个预热副本的理想能力分，Orchestrator 使用该值比较扩容候选。
-                                    </FormDescription>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="absoluteScore" label="能力基准分" formItemClass="sm:col-span-2" description="单个预热副本的理想能力分，Orchestrator 使用该值比较扩容候选。"/>
 
-                        <FormField
-                            control={form.control}
-                            name="coldStartMs"
-                            render={({ field }) => (
-                                <FormItem className="sm:col-span-2">
-                                    <FormLabel className={configLabelClass}>冷启动时间</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="any"
-                                                {...field}
-                                                value={Number.isNaN(field.value) ? '' : field.value}
-                                                onChange={(event) =>
-                                                    field.onChange(
-                                                        numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                    )
-                                                }
-                                                className={`${configInputClass} pr-12 tabular-nums`}
-                                            />
-                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">ms</span>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="coldStartMs" label="冷启动时间" min="0" step="any" unit="ms" inputClass="pr-12" formItemClass="sm:col-span-2"/>
                     </div>
                 </ConfigFormSection>
 
@@ -246,99 +99,9 @@ export const ModelForm = memo(function ModelForm({
                                 延时参数只参与本地调度模拟，可按实测数据持续校准。
                             </div>
                             <div className="grid gap-4 sm:grid-cols-3">
-                                <FormField
-                                    control={form.control}
-                                    name="performance.prefillBaseMs"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>Prefill 基础延时</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        {...field}
-                                                        value={Number.isNaN(field.value) ? '' : field.value}
-                                                        onChange={(event) =>
-                                                            field.onChange(
-                                                                numberFromInput(
-                                                                    event.currentTarget.value,
-                                                                    event.currentTarget.valueAsNumber,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className={`${configInputClass} pr-11 tabular-nums`}
-                                                    />
-                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#596579]">ms</span>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="performance.prefillPerTokenUs"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>Prefill / Token</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        {...field}
-                                                        value={Number.isNaN(field.value) ? '' : field.value}
-                                                        onChange={(event) =>
-                                                            field.onChange(
-                                                                numberFromInput(
-                                                                    event.currentTarget.value,
-                                                                    event.currentTarget.valueAsNumber,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className={`${configInputClass} pr-9 tabular-nums`}
-                                                    />
-                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#596579]">µs</span>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="performance.decodePerTokenMs"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>Decode / Token</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        {...field}
-                                                        value={Number.isNaN(field.value) ? '' : field.value}
-                                                        onChange={(event) =>
-                                                            field.onChange(
-                                                                numberFromInput(
-                                                                    event.currentTarget.value,
-                                                                    event.currentTarget.valueAsNumber,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className={`${configInputClass} pr-11 tabular-nums`}
-                                                    />
-                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#596579]">ms</span>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
+                                <ConfigNumberField control={form.control} name="performance.prefillBaseMs" label="Prefill 基础延时" unit="ms" inputClass="pr-11" unitClass="text-[11px]"/>
+                                <ConfigNumberField control={form.control} name="performance.prefillPerTokenUs" label="Prefill / Token" unit="µs" inputClass="pr-9" unitClass="text-[11px]"/>
+                                <ConfigNumberField control={form.control} name="performance.decodePerTokenMs" label="Decode / Token" unit="ms" inputClass="pr-11" unitClass="text-[11px]"/>
                             </div>
                         </CollapsibleContent>
                     </ConfigFormSection>

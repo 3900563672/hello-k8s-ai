@@ -7,9 +7,9 @@ import (
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -21,12 +21,6 @@ import (
 )
 
 const immediateRequeueAfter = time.Millisecond
-
-// retryOnConflict 使用 client-go 默认退避策略重试冲突。
-// 单独封装便于 Controller 测试替换实现。
-func retryOnConflict(fn func() error) error {
-	return retry.RetryOnConflict(retry.DefaultRetry, fn)
-}
 
 type fieldIndex struct {
 	object    client.Object
@@ -168,7 +162,7 @@ func valueOrDefault[T comparable](value, fallback T) T {
 // 每次重试都重新 Get 一遍，保证拿到的 ResourceVersion 是最新的。
 func addFinalizer(ctx context.Context, c client.Client, obj client.Object, finalizer string) error {
 	key := client.ObjectKeyFromObject(obj)
-	return retryOnConflict(func() error {
+	return k8sutil.RetryOnConflict(func() error {
 		// 每次重试都读取最新版本。
 		if err := c.Get(ctx, key, obj); err != nil {
 			return fmt.Errorf("get %T %s before adding finalizer: %w", obj, key, err)
@@ -190,7 +184,7 @@ func addFinalizer(ctx context.Context, c client.Client, obj client.Object, final
 // 对象已经不存在也视为成功，因为最终状态达到了。
 func removeFinalizer(ctx context.Context, c client.Client, obj client.Object, finalizer string) error {
 	key := client.ObjectKeyFromObject(obj)
-	return retryOnConflict(func() error {
+	return k8sutil.RetryOnConflict(func() error {
 		if err := c.Get(ctx, key, obj); err != nil {
 			// 对象不存在时视为 finalizer 已移除。
 			if apierrors.IsNotFound(err) {

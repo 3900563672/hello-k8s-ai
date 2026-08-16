@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/httputil"
 )
 
 var (
@@ -44,25 +44,13 @@ type Client struct {
 }
 
 func New(cfg config.ProviderConfig) (*Client, error) {
-	baseURL, err := url.Parse(cfg.URL)
+	baseURL, err := httputil.ParseBaseURL(cfg.URL, "Jaeger")
 	if err != nil {
-		return nil, fmt.Errorf("parse Jaeger URL: %w", err)
-	}
-	if baseURL.Scheme != "http" && baseURL.Scheme != "https" {
-		return nil, fmt.Errorf("Jaeger URL must use http or https")
+		return nil, err
 	}
 	return &Client{
-		baseURL: baseURL,
-		http: &http.Client{
-			Timeout: cfg.Timeout,
-			Transport: &http.Transport{
-				Proxy:                 http.ProxyFromEnvironment,
-				MaxIdleConns:          20,
-				MaxIdleConnsPerHost:   10,
-				IdleConnTimeout:       90 * time.Second,
-				ResponseHeaderTimeout: cfg.Timeout,
-			},
-		},
+		baseURL:   baseURL,
+		http:      httputil.NewClient(cfg.Timeout),
 		enabled:   cfg.Enabled,
 		maxWindow: cfg.MaxWindow,
 	}, nil
@@ -124,9 +112,9 @@ func (client *Client) Trace(ctx context.Context, traceID string) (model.TraceDet
 	if traceID == "" || len(traceID) > 64 || strings.ContainsAny(traceID, "/?&#") {
 		return model.TraceDetail{}, fmt.Errorf("%w: invalid traceId", ErrInvalidQuery)
 	}
-	endpoint := client.resolve("/api/traces/" + url.PathEscape(traceID))
+	endpoint := httputil.Resolve(client.baseURL, "/api/traces/"+url.PathEscape(traceID))
 	var response traceResponse
-	if err := client.getJSON(ctx, endpoint, &response); err != nil {
+	if err := httputil.GetJSON(ctx, client.http, endpoint, &response, "Jaeger", 32<<20); err != nil {
 		return model.TraceDetail{}, err
 	}
 	if len(response.Data) == 0 {
@@ -148,7 +136,7 @@ func (client *Client) Enabled() bool {
 }
 
 func (client *Client) searchService(ctx context.Context, request SearchRequest, service string) ([]legacyTrace, error) {
-	endpoint := client.resolve("/api/traces")
+	endpoint := httputil.Resolve(client.baseURL, "/api/traces")
 	query := endpoint.Query()
 	query.Set("service", service)
 	query.Set("start", strconv.FormatInt(request.Start.UnixMicro(), 10))
@@ -179,19 +167,19 @@ func (client *Client) searchService(ctx context.Context, request SearchRequest, 
 	}
 	endpoint.RawQuery = query.Encode()
 	var response traceResponse
-	if err := client.getJSON(ctx, endpoint, &response); err != nil {
+	if err := httputil.GetJSON(ctx, client.http, endpoint, &response, "Jaeger", 32<<20); err != nil {
 		return nil, err
 	}
 	return response.Data, nil
 }
 
 func (client *Client) services(ctx context.Context) ([]string, error) {
-	endpoint := client.resolve("/api/services")
+	endpoint := httputil.Resolve(client.baseURL, "/api/services")
 	var response struct {
 		Data   []string `json:"data"`
 		Errors []any    `json:"errors"`
 	}
-	if err := client.getJSON(ctx, endpoint, &response); err != nil {
+	if err := httputil.GetJSON(ctx, client.http, endpoint, &response, "Jaeger", 32<<20); err != nil {
 		return nil, err
 	}
 	sort.Strings(response.Data)
@@ -405,34 +393,6 @@ func stringAttribute(attributes map[string]any, key string) string {
 		return text
 	}
 	return fmt.Sprint(value)
-}
-
-func (client *Client) getJSON(ctx context.Context, endpoint *url.URL, target any) error {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
-	if err != nil {
-		return fmt.Errorf("create Jaeger request: %w", err)
-	}
-	request.Header.Set("Accept", "application/json")
-	response, err := client.http.Do(request)
-	if err != nil {
-		return fmt.Errorf("query Jaeger: %w", err)
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(response.Body, 4096))
-		return fmt.Errorf("Jaeger returned HTTP %d: %s", response.StatusCode, strings.TrimSpace(string(body)))
-	}
-	if err := json.NewDecoder(io.LimitReader(response.Body, 32<<20)).Decode(target); err != nil {
-		return fmt.Errorf("decode Jaeger response: %w", err)
-	}
-	return nil
-}
-
-func (client *Client) resolve(path string) *url.URL {
-	result := *client.baseURL
-	result.Path = strings.TrimRight(result.Path, "/") + path
-	result.RawQuery = ""
-	return &result
 }
 
 func formatDuration(value time.Duration) string {

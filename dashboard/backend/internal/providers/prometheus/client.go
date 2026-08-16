@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/httputil"
 )
 
 var (
@@ -56,25 +56,13 @@ type Client struct {
 }
 
 func New(cfg config.ProviderConfig) (*Client, error) {
-	baseURL, err := url.Parse(cfg.URL)
+	baseURL, err := httputil.ParseBaseURL(cfg.URL, "Prometheus")
 	if err != nil {
-		return nil, fmt.Errorf("parse Prometheus URL: %w", err)
-	}
-	if baseURL.Scheme != "http" && baseURL.Scheme != "https" {
-		return nil, fmt.Errorf("Prometheus URL must use http or https")
+		return nil, err
 	}
 	return &Client{
-		baseURL: baseURL,
-		http: &http.Client{
-			Timeout: cfg.Timeout,
-			Transport: &http.Transport{
-				Proxy:                 http.ProxyFromEnvironment,
-				MaxIdleConns:          20,
-				MaxIdleConnsPerHost:   10,
-				IdleConnTimeout:       90 * time.Second,
-				ResponseHeaderTimeout: cfg.Timeout,
-			},
-		},
+		baseURL:   baseURL,
+		http:      httputil.NewClient(cfg.Timeout),
 		enabled:   cfg.Enabled,
 		maxWindow: cfg.MaxWindow,
 		cacheTTL:  cfg.CacheTTL,
@@ -113,7 +101,7 @@ func (client *Client) QueryRange(ctx context.Context, query Query) (model.Metric
 		return value, nil
 	}
 
-	endpoint := client.resolve("/api/v1/query_range")
+	endpoint := httputil.Resolve(client.baseURL, "/api/v1/query_range")
 	parameters := endpoint.Query()
 	parameters.Set("query", promQL)
 	parameters.Set("start", formatPromTime(query.Start))
@@ -123,7 +111,7 @@ func (client *Client) QueryRange(ctx context.Context, query Query) (model.Metric
 
 	var response apiResponse
 	queriedAt := time.Now().UTC()
-	if err := client.getJSON(ctx, endpoint, &response); err != nil {
+	if err := httputil.GetJSON(ctx, client.http, endpoint, &response, "Prometheus", 16<<20); err != nil {
 		return model.MetricResult{}, err
 	}
 	if response.Status != "success" {
@@ -152,12 +140,12 @@ func (client *Client) Health(ctx context.Context) error {
 	if !client.enabled {
 		return ErrDisabled
 	}
-	endpoint := client.resolve("/api/v1/query")
+	endpoint := httputil.Resolve(client.baseURL, "/api/v1/query")
 	parameters := endpoint.Query()
 	parameters.Set("query", "1")
 	endpoint.RawQuery = parameters.Encode()
 	var response apiResponse
-	if err := client.getJSON(ctx, endpoint, &response); err != nil {
+	if err := httputil.GetJSON(ctx, client.http, endpoint, &response, "Prometheus", 16<<20); err != nil {
 		return err
 	}
 	if response.Status != "success" {
@@ -369,35 +357,6 @@ func parseSeries(resultType string, raw json.RawMessage) ([]model.MetricSeries, 
 		series = append(series, model.MetricSeries{Labels: labels, Points: points})
 	}
 	return series, nil
-}
-
-func (client *Client) getJSON(ctx context.Context, endpoint *url.URL, target any) error {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
-	if err != nil {
-		return fmt.Errorf("create Prometheus request: %w", err)
-	}
-	request.Header.Set("Accept", "application/json")
-	response, err := client.http.Do(request)
-	if err != nil {
-		return fmt.Errorf("query Prometheus: %w", err)
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(response.Body, 4096))
-		return fmt.Errorf("Prometheus returned HTTP %d: %s", response.StatusCode, strings.TrimSpace(string(body)))
-	}
-	decoder := json.NewDecoder(io.LimitReader(response.Body, 16<<20))
-	if err := decoder.Decode(target); err != nil {
-		return fmt.Errorf("decode Prometheus response: %w", err)
-	}
-	return nil
-}
-
-func (client *Client) resolve(path string) *url.URL {
-	result := *client.baseURL
-	result.Path = strings.TrimRight(result.Path, "/") + path
-	result.RawQuery = ""
-	return &result
 }
 
 func formatPromTime(value time.Time) string {

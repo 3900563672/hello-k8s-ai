@@ -9,6 +9,7 @@ import (
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -292,44 +293,18 @@ func (r *TenantModelPolicyReconciler) setPolicyReadyCondition(
 	reason string,
 	message string,
 ) error {
-	return retryOnConflict(func() error {
-		var policy platformv1.TenantModelPolicy
-		if err := r.Get(ctx, client.ObjectKey{Name: name}, &policy); err != nil {
-			if apierrors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
-		before := policy.DeepCopy()
-		meta.SetStatusCondition(&policy.Status.Conditions, metav1.Condition{
-			Type:               conditionTypeReady,
-			Status:             status,
-			ObservedGeneration: policy.Generation,
-			Reason:             reason,
-			Message:            message,
-		})
-		// 状态没变就不发 API 了
-		if conditionsEqual(before.Status.Conditions, policy.Status.Conditions) {
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, name, true,
+		func() *platformv1.TenantModelPolicy { return &platformv1.TenantModelPolicy{} },
+		func(policy *platformv1.TenantModelPolicy) error {
+			meta.SetStatusCondition(&policy.Status.Conditions, metav1.Condition{
+				Type:               conditionTypeReady,
+				Status:             status,
+				ObservedGeneration: policy.Generation,
+				Reason:             reason,
+				Message:            message,
+			})
 			return nil
-		}
-		return r.Status().Patch(ctx, &policy, client.MergeFrom(before))
-	})
-}
-
-func conditionsEqual(left, right []metav1.Condition) bool {
-	if len(left) != len(right) {
-		return false
-	}
-	for i := range left {
-		if left[i].Type != right[i].Type ||
-			left[i].Status != right[i].Status ||
-			left[i].ObservedGeneration != right[i].ObservedGeneration ||
-			left[i].Reason != right[i].Reason ||
-			left[i].Message != right[i].Message {
-			return false
-		}
-	}
-	return true
+		})
 }
 
 func (r *TenantModelPolicyReconciler) mapInstanceToPolicies(ctx context.Context, obj client.Object) []reconcile.Request {

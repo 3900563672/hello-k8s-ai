@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -237,51 +237,39 @@ func (r *PerformanceCollectorReconciler) updateTenantPerformanceStatus(
 	observedAt *metav1.Time,
 	sampleCount int,
 ) error {
-	return retryOnConflict(func() error {
-		var performance platformv1.TenantPerformance
-		if err := r.Get(ctx, client.ObjectKey{Name: tenantName}, &performance); err != nil {
-			return err
-		}
-		before := performance.DeepCopy()
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, tenantName, false,
+		func() *platformv1.TenantPerformance { return &platformv1.TenantPerformance{} },
+		func(performance *platformv1.TenantPerformance) error {
+			// 先清空旧指标，再根据实际可用性填写
+			performance.Status.Performance = platformv1.PerformanceStatus{}
+			performance.Status.ObservedAt = observedAt.DeepCopy()
+			performance.Status.SampleCount = nonNegative(sampleCount)
+			if hasTTFT {
+				performance.Status.Performance.AvgTTFT = &platformv1.PerformanceMetric{Value: avgTTFT, Unit: "ms"}
+			}
+			if hasQueue {
+				performance.Status.Performance.AvgQueue = &platformv1.PerformanceMetric{Value: avgQueue, Unit: "requests"}
+			}
 
-		// 先清空旧指标，再根据实际可用性填写
-		performance.Status.Performance = platformv1.PerformanceStatus{}
-		performance.Status.ObservedAt = observedAt.DeepCopy()
-		performance.Status.SampleCount = nonNegative(sampleCount)
-		if hasTTFT {
-			performance.Status.Performance.AvgTTFT = &platformv1.PerformanceMetric{Value: avgTTFT, Unit: "ms"}
-		}
-		if hasQueue {
-			performance.Status.Performance.AvgQueue = &platformv1.PerformanceMetric{Value: avgQueue, Unit: "requests"}
-		}
-
-		// 只要有一个指标可用，Phase 就是 Running，否则 Stale
-		condition := metav1.Condition{
-			Type:               "MetricsReady",
-			ObservedGeneration: performance.Generation,
-		}
-		if hasTTFT || hasQueue {
-			performance.Status.Phase = phaseRunning
-			condition.Status = metav1.ConditionTrue
-			condition.Reason = "MetricsAvailable"
-			condition.Message = "at least one fresh, running simulator metric is available"
-		} else {
-			performance.Status.Phase = "Stale"
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "NoMetrics"
-			condition.Message = "no running simulator instance has a fresh performance metric"
-		}
-		meta.SetStatusCondition(&performance.Status.Conditions, condition)
-
-		// 状态没变就不发了
-		if reflect.DeepEqual(before.Status, performance.Status) {
+			// 只要有一个指标可用，Phase 就是 Running，否则 Stale
+			condition := metav1.Condition{
+				Type:               "MetricsReady",
+				ObservedGeneration: performance.Generation,
+			}
+			if hasTTFT || hasQueue {
+				performance.Status.Phase = phaseRunning
+				condition.Status = metav1.ConditionTrue
+				condition.Reason = "MetricsAvailable"
+				condition.Message = "at least one fresh, running simulator metric is available"
+			} else {
+				performance.Status.Phase = "Stale"
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "NoMetrics"
+				condition.Message = "no running simulator instance has a fresh performance metric"
+			}
+			meta.SetStatusCondition(&performance.Status.Conditions, condition)
 			return nil
-		}
-		if err := r.Status().Patch(ctx, &performance, client.MergeFrom(before)); err != nil {
-			return fmt.Errorf("patch tenant performance %q status: %w", tenantName, err)
-		}
-		return nil
-	})
+		})
 }
 
 func (r *PerformanceCollectorReconciler) currentTime() time.Time {

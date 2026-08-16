@@ -6,6 +6,7 @@ import (
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -13,7 +14,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -227,20 +227,17 @@ func (s *Simulator) updateOwnedStatus(
 	performance *platformv1.InstancePerformance,
 	observedAt metav1.Time,
 ) error {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		var latest platformv1.SimulatorInstance
-		if err := s.client.Get(ctx, types.NamespacedName{Name: s.name}, &latest); err != nil {
-			return err
-		}
-		before := latest.DeepCopy()
-		latest.Status.Score = new(score)
-		latest.Status.Performance = performance
-		latest.Status.ObservedAt = observedAt.DeepCopy()
-		elapsedMs := s.simulationElapsed.Milliseconds()
-		latest.Status.SimulationElapsedMs = &elapsedMs
-		latest.Status.ReporterID = s.reporterID
-		return s.client.Status().Patch(ctx, &latest, client.MergeFrom(before))
-	})
+	return k8sutil.PatchStatusWithRetry(ctx, s.client, s.name, false,
+		func() *platformv1.SimulatorInstance { return &platformv1.SimulatorInstance{} },
+		func(latest *platformv1.SimulatorInstance) error {
+			latest.Status.Score = new(score)
+			latest.Status.Performance = performance
+			latest.Status.ObservedAt = observedAt.DeepCopy()
+			elapsedMs := s.simulationElapsed.Milliseconds()
+			latest.Status.SimulationElapsedMs = &elapsedMs
+			latest.Status.ReporterID = s.reporterID
+			return nil
+		})
 }
 
 // scaledScore 计算衰减后的单副本分数，避免溢出。

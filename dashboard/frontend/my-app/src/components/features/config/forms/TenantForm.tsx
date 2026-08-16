@@ -1,20 +1,21 @@
-import { memo, useEffect, useState } from 'react'
+import { memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Activity, ArrowDownToLine, ArrowUpFromLine, Shield } from 'lucide-react'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { tenantSchema, getTenantPreview, type TenantFormValues } from '@/lib/validations/tenant.schema'
 import { useTemplateStore } from '@/stores/templateSlice'
-import type { ConfigTemplate, TenantPriority } from '@/types/config.types'
+import type { TenantPriority } from '@/types/config.types'
 import {
     ConfigFormSection,
+    ConfigNumberField,
+    ConfigTextField,
     FormSaveBar,
     TemplateActions,
     configInputClass,
     configLabelClass,
-    numberFromInput,
+    useConfigForm,
 } from './ConfigFormParts'
 
 interface TenantFormProps {
@@ -37,9 +38,6 @@ const priorityOptions: Array<{
     { value: 'P5', label: 'P5 · 后台', description: '最低调度优先级', color: 'bg-zinc-400' },
 ]
 
-const getErrorMessage = (error: unknown): string =>
-    error instanceof Error ? error.message : '保存失败，请稍后重试'
-
 export const TenantForm = memo(function TenantForm({
     defaultValues,
     onSubmit,
@@ -51,39 +49,14 @@ export const TenantForm = memo(function TenantForm({
         defaultValues,
         mode: 'onBlur',
     })
-    const [submitError, setSubmitError] = useState('')
     const { tenantTemplates, addTenantTemplate, removeTenantTemplate } = useTemplateStore()
-    const { isDirty, isSubmitting } = form.formState
-
-    useEffect(() => {
-        form.reset(defaultValues)
-        setSubmitError('')
-    }, [defaultValues, form])
-
-    useEffect(() => {
-        onDirtyChange?.(isDirty)
-    }, [isDirty, onDirtyChange])
-
-    const submitForm = async (values: TenantFormValues) => {
-        setSubmitError('')
-        try {
-            await onSubmit(values)
-            form.reset(values)
-        } catch (error) {
-            setSubmitError(getErrorMessage(error))
-        }
-    }
-
-    const saveTemplate = async (name: string) => {
-        const valid = await form.trigger()
-        if (!valid) return false
-        addTenantTemplate(name, form.getValues())
-        return true
-    }
-
-    const loadTemplate = (template: ConfigTemplate<TenantFormValues>) => {
-        form.reset(template.data, { keepDefaultValues: true })
-    }
+    const { submitError, submitForm, saveTemplate, loadTemplate, isDirty, isSubmitting } = useConfigForm({
+        form,
+        defaultValues,
+        onSubmit,
+        onDirtyChange,
+        addTemplate: addTenantTemplate,
+    })
 
     return (
         <Form {...form}>
@@ -103,19 +76,7 @@ export const TenantForm = memo(function TenantForm({
                     action={<Shield className="h-4 w-4 text-[#5E9EFF]" />}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="displayName"
-                            render={({ field }) => (
-                                <FormItem className="sm:col-span-2">
-                                    <FormLabel className={configLabelClass}>显示名称</FormLabel>
-                                    <FormControl>
-                                        <Input {...field} autoComplete="off" className={configInputClass} />
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigTextField control={form.control} name="displayName" label="显示名称" formItemClass="sm:col-span-2" />
 
                         <FormField
                             control={form.control}
@@ -150,34 +111,7 @@ export const TenantForm = memo(function TenantForm({
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="qps"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className={configLabelClass}>基准 QPS</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="any"
-                                                {...field}
-                                                value={Number.isNaN(field.value) ? '' : field.value}
-                                                onChange={(event) =>
-                                                    field.onChange(
-                                                        numberFromInput(event.currentTarget.value, event.currentTarget.valueAsNumber),
-                                                    )
-                                                }
-                                                className={`${configInputClass} pr-12 tabular-nums`}
-                                            />
-                                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">QPS</span>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage className="text-xs text-[#FF7373]" />
-                                </FormItem>
-                            )}
-                        />
+                        <ConfigNumberField control={form.control} name="qps" label="基准 QPS" min="0" step="any" unit="QPS" inputClass="pr-12"/>
                     </div>
                 </ConfigFormSection>
 
@@ -198,65 +132,8 @@ export const TenantForm = memo(function TenantForm({
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="ttftThresholdMs"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>TTFT 阈值</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        {...field}
-                                                        value={Number.isNaN(field.value) ? '' : field.value}
-                                                        onChange={(event) =>
-                                                            field.onChange(
-                                                                numberFromInput(
-                                                                    event.currentTarget.value,
-                                                                    event.currentTarget.valueAsNumber,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className={`${configInputClass} pr-11 tabular-nums`}
-                                                    />
-                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">ms</span>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="queueThreshold"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>队列阈值</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    step="1"
-                                                    {...field}
-                                                    value={Number.isNaN(field.value) ? '' : field.value}
-                                                    onChange={(event) =>
-                                                        field.onChange(
-                                                            numberFromInput(
-                                                                event.currentTarget.value,
-                                                                event.currentTarget.valueAsNumber,
-                                                            ),
-                                                        )
-                                                    }
-                                                    className={`${configInputClass} tabular-nums`}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
+                                <ConfigNumberField control={form.control} name="ttftThresholdMs" label="TTFT 阈值" unit="ms" inputClass="pr-11"/>
+                                <ConfigNumberField control={form.control} name="queueThreshold" label="队列阈值" />
                             </div>
                         </div>
 
@@ -271,65 +148,8 @@ export const TenantForm = memo(function TenantForm({
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="ttftScaleDownThresholdMs"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>TTFT 阈值</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        {...field}
-                                                        value={Number.isNaN(field.value) ? '' : field.value}
-                                                        onChange={(event) =>
-                                                            field.onChange(
-                                                                numberFromInput(
-                                                                    event.currentTarget.value,
-                                                                    event.currentTarget.valueAsNumber,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className={`${configInputClass} pr-11 tabular-nums`}
-                                                    />
-                                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#596579]">ms</span>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="queueScaleDownThreshold"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className={configLabelClass}>队列阈值</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    step="1"
-                                                    {...field}
-                                                    value={Number.isNaN(field.value) ? '' : field.value}
-                                                    onChange={(event) =>
-                                                        field.onChange(
-                                                            numberFromInput(
-                                                                event.currentTarget.value,
-                                                                event.currentTarget.valueAsNumber,
-                                                            ),
-                                                        )
-                                                    }
-                                                    className={`${configInputClass} tabular-nums`}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-[#FF7373]" />
-                                        </FormItem>
-                                    )}
-                                />
+                                <ConfigNumberField control={form.control} name="ttftScaleDownThresholdMs" label="TTFT 阈值" unit="ms" inputClass="pr-11"/>
+                                <ConfigNumberField control={form.control} name="queueScaleDownThreshold" label="队列阈值" />
                             </div>
                         </div>
                     </div>

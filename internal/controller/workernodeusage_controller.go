@@ -3,10 +3,10 @@ package controller
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"slices"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -139,30 +139,20 @@ func (r *WorkerNodeUsageReconciler) updateWorkerNodeStatus(
 ) error {
 	usedGPU = nonNegative(usedGPU)
 	usedConcurrency = nonNegative(usedConcurrency)
-	return retryOnConflict(func() error {
-		var node platformv1.WorkerNode
-		if err := r.Get(ctx, client.ObjectKey{Name: nodeName}, &node); err != nil {
-			if apierrors.IsNotFound(err) {
-				return nil
-			}
-			return err
-		}
-		before := node.DeepCopy()
-		node.Status.UsedGPU = usedGPU
-		node.Status.UsedConcurrency = usedConcurrency
-		condition := metav1.Condition{
-			Type:               "UsageReady",
-			Status:             metav1.ConditionTrue,
-			ObservedGeneration: node.Generation,
-			Reason:             "PodsAccounted",
-			Message:            "scheduled simulator pods have been accounted",
-		}
-		meta.SetStatusCondition(&node.Status.Conditions, condition)
-		if reflect.DeepEqual(before.Status, node.Status) {
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, nodeName, true,
+		func() *platformv1.WorkerNode { return &platformv1.WorkerNode{} },
+		func(node *platformv1.WorkerNode) error {
+			node.Status.UsedGPU = usedGPU
+			node.Status.UsedConcurrency = usedConcurrency
+			meta.SetStatusCondition(&node.Status.Conditions, metav1.Condition{
+				Type:               "UsageReady",
+				Status:             metav1.ConditionTrue,
+				ObservedGeneration: node.Generation,
+				Reason:             "PodsAccounted",
+				Message:            "scheduled simulator pods have been accounted",
+			})
 			return nil
-		}
-		return r.Status().Patch(ctx, &node, client.MergeFrom(before))
-	})
+		})
 }
 
 // allWorkerNodeRequests 把 Pod 或 Model 变化映射为 WorkerNode Reconcile 请求。

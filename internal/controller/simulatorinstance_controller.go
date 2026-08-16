@@ -6,12 +6,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"maps"
-	"reflect"
 	"slices"
 	"strings"
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -451,58 +451,50 @@ func (r *SimulatorInstanceReconciler) updateInstanceDeploymentStatus(
 	eligibleNodeCount int,
 	reconcileErr error,
 ) error {
-	return retryOnConflict(func() error {
-		var instance platformv1.SimulatorInstance
-		if err := r.Get(ctx, client.ObjectKey{Name: instanceName}, &instance); err != nil {
-			return err
-		}
-		before := instance.DeepCopy()
-		condition := metav1.Condition{Type: conditionTypeReady, ObservedGeneration: instance.Generation}
-		instance.Status.AvailableReplicas = 0
-		if deploymentState != nil {
-			instance.Status.AvailableReplicas = deploymentState.AvailableReplicas
-		}
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, instanceName, false,
+		func() *platformv1.SimulatorInstance { return &platformv1.SimulatorInstance{} },
+		func(instance *platformv1.SimulatorInstance) error {
+			condition := metav1.Condition{Type: conditionTypeReady, ObservedGeneration: instance.Generation}
+			instance.Status.AvailableReplicas = 0
+			if deploymentState != nil {
+				instance.Status.AvailableReplicas = deploymentState.AvailableReplicas
+			}
 
-		switch {
-		case reconcileErr != nil:
-			instance.Status.Phase = phaseFailed
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "DeploymentReconcileFailed"
-			condition.Message = reconcileErr.Error()
-		case instance.Spec.Replicas == 0:
-			instance.Status.Phase = phaseRunning
-			condition.Status = metav1.ConditionTrue
-			condition.Reason = "ScaledToZero"
-			condition.Message = "the simulator instance is intentionally scaled to zero"
-		case eligibleNodeCount == 0:
-			instance.Status.Phase = phasePending
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "NoEligibleNodes"
-			condition.Message = "no node is allowed by the current tenant/model node policies"
-		case deploymentState != nil && deploymentState.Failed:
-			instance.Status.Phase = phaseFailed
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "DeploymentFailed"
-			condition.Message = "the simulator Deployment reports ReplicaFailure"
-		case deploymentState != nil && deploymentState.AvailableReplicas >= instance.Spec.Replicas:
-			instance.Status.Phase = phaseRunning
-			condition.Status = metav1.ConditionTrue
-			condition.Reason = "DeploymentAvailable"
-			condition.Message = "all desired simulator replicas are available"
-		default:
-			instance.Status.Phase = phasePending
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "DeploymentProgressing"
-			condition.Message = "waiting for simulator replicas to become available"
-		}
-		meta.SetStatusCondition(&instance.Status.Conditions, condition)
-		if instance.Status.Phase == before.Status.Phase &&
-			instance.Status.AvailableReplicas == before.Status.AvailableReplicas &&
-			conditionsEqual(before.Status.Conditions, instance.Status.Conditions) {
+			switch {
+			case reconcileErr != nil:
+				instance.Status.Phase = phaseFailed
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "DeploymentReconcileFailed"
+				condition.Message = reconcileErr.Error()
+			case instance.Spec.Replicas == 0:
+				instance.Status.Phase = phaseRunning
+				condition.Status = metav1.ConditionTrue
+				condition.Reason = "ScaledToZero"
+				condition.Message = "the simulator instance is intentionally scaled to zero"
+			case eligibleNodeCount == 0:
+				instance.Status.Phase = phasePending
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "NoEligibleNodes"
+				condition.Message = "no node is allowed by the current tenant/model node policies"
+			case deploymentState != nil && deploymentState.Failed:
+				instance.Status.Phase = phaseFailed
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "DeploymentFailed"
+				condition.Message = "the simulator Deployment reports ReplicaFailure"
+			case deploymentState != nil && deploymentState.AvailableReplicas >= instance.Spec.Replicas:
+				instance.Status.Phase = phaseRunning
+				condition.Status = metav1.ConditionTrue
+				condition.Reason = "DeploymentAvailable"
+				condition.Message = "all desired simulator replicas are available"
+			default:
+				instance.Status.Phase = phasePending
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "DeploymentProgressing"
+				condition.Message = "waiting for simulator replicas to become available"
+			}
+			meta.SetStatusCondition(&instance.Status.Conditions, condition)
 			return nil
-		}
-		return r.Status().Patch(ctx, &instance, client.MergeFrom(before))
-	})
+		})
 }
 
 func deploymentFailed(deployment *appsv1.Deployment) bool {
@@ -583,42 +575,36 @@ func (r *SimulatorInstanceReconciler) updateTenantRuntimeStatus(
 	desired int,
 	failed bool,
 ) error {
-	return retryOnConflict(func() error {
-		var runtimeObject platformv1.TenantRuntime
-		if err := r.Get(ctx, client.ObjectKey{Name: tenantName}, &runtimeObject); err != nil {
-			return err
-		}
-		before := runtimeObject.DeepCopy()
-		runtimeObject.Status.InstanceCount = nonNegative(ready)
-		condition := metav1.Condition{Type: conditionTypeReady, ObservedGeneration: runtimeObject.Generation}
-		switch {
-		case failed:
-			runtimeObject.Status.Phase = phaseFailed
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "DeploymentFailed"
-			condition.Message = "at least one simulator Deployment reports a failure"
-		case desired == 0:
-			runtimeObject.Status.Phase = phaseRunning
-			condition.Status = metav1.ConditionTrue
-			condition.Reason = "ScaledToZero"
-			condition.Message = "the tenant is ready with zero desired simulator replicas"
-		case ready >= desired:
-			runtimeObject.Status.Phase = phaseRunning
-			condition.Status = metav1.ConditionTrue
-			condition.Reason = "AllReplicasAvailable"
-			condition.Message = "all desired simulator replicas are available"
-		default:
-			runtimeObject.Status.Phase = phasePending
-			condition.Status = metav1.ConditionFalse
-			condition.Reason = "ReplicasProgressing"
-			condition.Message = fmt.Sprintf("%d of %d desired simulator replicas are available", ready, desired)
-		}
-		meta.SetStatusCondition(&runtimeObject.Status.Conditions, condition)
-		if reflect.DeepEqual(before.Status, runtimeObject.Status) {
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, tenantName, false,
+		func() *platformv1.TenantRuntime { return &platformv1.TenantRuntime{} },
+		func(runtimeObject *platformv1.TenantRuntime) error {
+			runtimeObject.Status.InstanceCount = nonNegative(ready)
+			condition := metav1.Condition{Type: conditionTypeReady, ObservedGeneration: runtimeObject.Generation}
+			switch {
+			case failed:
+				runtimeObject.Status.Phase = phaseFailed
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "DeploymentFailed"
+				condition.Message = "at least one simulator Deployment reports a failure"
+			case desired == 0:
+				runtimeObject.Status.Phase = phaseRunning
+				condition.Status = metav1.ConditionTrue
+				condition.Reason = "ScaledToZero"
+				condition.Message = "the tenant is ready with zero desired simulator replicas"
+			case ready >= desired:
+				runtimeObject.Status.Phase = phaseRunning
+				condition.Status = metav1.ConditionTrue
+				condition.Reason = "AllReplicasAvailable"
+				condition.Message = "all desired simulator replicas are available"
+			default:
+				runtimeObject.Status.Phase = phasePending
+				condition.Status = metav1.ConditionFalse
+				condition.Reason = "ReplicasProgressing"
+				condition.Message = fmt.Sprintf("%d of %d desired simulator replicas are available", ready, desired)
+			}
+			meta.SetStatusCondition(&runtimeObject.Status.Conditions, condition)
 			return nil
-		}
-		return r.Status().Patch(ctx, &runtimeObject, client.MergeFrom(before))
-	})
+		})
 }
 
 func deploymentName(instanceName string) string {

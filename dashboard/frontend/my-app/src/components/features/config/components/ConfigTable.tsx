@@ -49,6 +49,18 @@ export function TruncatedCell({ children, className = '' }: TruncatedCellProps) 
     )
 }
 
+export const formatNumber = new Intl.NumberFormat('zh-CN')
+
+// NameCell 渲染「显示名称 + 资源名」的两行单元格，各配置表共用。
+export function NameCell({ displayName, name }: { displayName: string; name: string }) {
+    return (
+        <div className="min-w-0">
+            <TruncatedCell className="font-medium text-[#F0F0F0]">{displayName}</TruncatedCell>
+            <TruncatedCell className="mt-0.5 font-mono text-[11px] text-[#596579]">{name}</TruncatedCell>
+        </div>
+    )
+}
+
 interface ConfigTableProps<T extends { name: string; displayName: string }> {
     data: T[]
     columns: ColumnDef<T>[]

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
+	"github.com/3900563672/hello-k8s-ai/internal/k8sutil"
 	"github.com/3900563672/hello-k8s-ai/internal/observability"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -343,25 +344,18 @@ func (r *OrchestratorReconciler) setOrchestratorReadyCondition(
 	reason string,
 	message string,
 ) error {
-	return retryOnConflict(func() error {
-		var config platformv1.Orchestrator
-		if err := r.Get(ctx, client.ObjectKey{Name: name}, &config); err != nil {
-			return err
-		}
-		before := config.DeepCopy()
-		meta.SetStatusCondition(&config.Status.Conditions, metav1.Condition{
-			Type:               conditionTypeReady,
-			Status:             status,
-			ObservedGeneration: config.Generation,
-			Reason:             reason,
-			Message:            message,
-		})
-		// 如果 condition 没变化，不用发起 API 请求
-		if conditionsEqual(before.Status.Conditions, config.Status.Conditions) {
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, name, false,
+		func() *platformv1.Orchestrator { return &platformv1.Orchestrator{} },
+		func(config *platformv1.Orchestrator) error {
+			meta.SetStatusCondition(&config.Status.Conditions, metav1.Condition{
+				Type:               conditionTypeReady,
+				Status:             status,
+				ObservedGeneration: config.Generation,
+				Reason:             reason,
+				Message:            message,
+			})
 			return nil
-		}
-		return r.Status().Patch(ctx, &config, client.MergeFrom(before))
-	})
+		})
 }
 
 // orchestratorRequestsForTenant 根据租户名找到对应的 Orchestrator 资源，生成 reconcile 请求。
