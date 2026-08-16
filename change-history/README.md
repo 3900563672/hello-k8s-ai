@@ -18,5 +18,6 @@
 | 2026-08-16 | 前端策略管理打通配置到真实工作负载的完整闭环 | P1 | [查看记录](2026-08-16-frontend-policy-closed-loop/README.md) |
 | 2026-08-16 | Dashboard Backend 写接口可信认证与授权边界 | P0 | [查看记录](2026-08-16-backend-write-auth/README.md) |
 | 2026-08-16 | 统一 Backend 命令幂等、批量应用与审计的一致性边界 | P1 | [查看记录](2026-08-16-command-consistency-boundary/README.md) |
+| 2026-08-16 | Simulator 冷启动进度与 reporter 生命周期解耦 | P1 | [查看记录](2026-08-16-simulator-coldstart-persistence/README.md) |
 
 > 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`。

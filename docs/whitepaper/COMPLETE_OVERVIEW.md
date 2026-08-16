@@ -269,7 +269,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 | TenantNodePolicy | tenantRef、nodeRef、effect | 预留 conditions | Tenant 基础节点 allowlist | Backend可写，UI暂未编辑 |
 | ModelNodePolicy | modelRef、nodeRef、effect | 预留 conditions | Model 额外 allow/deny | Backend可写，UI暂未编辑 |
 | SimulationClock | rate（1..20） | appliedRate、同步计数、Ready | 集群唯一 Simulator 引擎倍速 | Clock 专用 API / ExecutionControls |
-| SimulatorInstance | refs、replicas、traffic.qps、timeScale | performance、effectiveScore、score、available、observedAt、reporterID、phase | Tenant-Model 实例池协作中心 | Backend只读；Traffic/Data View |
+| SimulatorInstance | refs、replicas、traffic.qps、timeScale | performance、effectiveScore、score、available、observedAt、reporterID、simulationElapsedMs、phase | Tenant-Model 实例池协作中心 | Backend只读；Traffic/Data View |
 | TenantPerformance | tenantRef | avgTTFT/Queue、observedAt、sampleCount、phase | PerformanceCollector 每Tenant派生 | Backend只读 |
 | TenantRuntime | tenantRef | instanceCount、phase | Instance Controller派生；instanceCount实为可用副本合计 | Backend DTO称 readyReplicaCount |
 | Orchestrator | tenantRef、cooldown、allowZero、min/max | lastScaling、up/down time、conditions | 每Tenant扩缩策略 | Backend可写，UI暂未编辑 |
@@ -286,7 +286,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 | Instance.spec.traffic.qps | Traffic Controller |
 | SimulationClock.status / Instance.spec.timeScale | SimulationClock Controller |
 | Instance.status.availableReplicas/phase/Ready | SimulatorInstance Controller |
-| Instance.status.score/performance/observedAt/reporterID | Simulator Leader |
+| Instance.status.score/performance/observedAt/reporterID/simulationElapsedMs | Simulator Leader |
 | TenantPerformance.status | PerformanceCollector |
 | TenantRuntime.status | SimulatorInstance Controller |
 | WorkerNode.status.used* | WorkerNodeUsage |
@@ -361,7 +361,7 @@ sequenceDiagram
   B->>B: start new engine
 ```
 
-Leader 切换会重建内存队列与随机序列，并从新 leader startTime 重启冷启动曲线；这保证单 writer，但不是无缝/确定性仿真。
+Leader 切换会重建内存队列与随机序列，但冷启动进度从 `status.simulationElapsedMs` 恢复，不随 reporter 重启归零；这保证单 writer，但不是无缝/确定性仿真。
 
 ## 6.2 Tick 和分数
 
@@ -375,7 +375,7 @@ TTFT = 排队等待 + 被 factor 放大的 prefill/首 token 服务时间。只�
 
 ## 6.4 写入与遥测
 
-Simulator RetryOnConflict，只 Patch score、performance、observedAt、reporterID；不碰 phase/available/effectiveScore。Metrics 包括 leader/leadership、Ticks、Tick latency、Status updates、QPS、available、scores、cold factor、queue、TTFT、engine resets。Spans 包括 `simulator.tick` 与 leadership acquired/lost；OTel 故障不阻断 Tick。
+Simulator RetryOnConflict，只 Patch score、performance、observedAt、reporterID、simulationElapsedMs；不碰 phase/available/effectiveScore。Metrics 包括 leader/leadership、Ticks、Tick latency、Status updates、QPS、available、scores、cold factor、queue、TTFT、engine resets。Spans 包括 `simulator.tick` 与 leadership acquired/lost；OTel 故障不阻断 Tick。
 
 ## 6.5 近似边界
 

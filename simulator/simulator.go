@@ -35,6 +35,8 @@ type Simulator struct {
 	now               func() time.Time // 可注入的时间源，测试用
 	reporterID        string
 	metrics           *simulatorMetrics
+	// elapsedRestored 标记是否已从 Status 恢复累计模拟时间，首个成功读取的 tick 执行一次
+	elapsedRestored bool
 }
 
 // Run 主循环，定期执行 reconcile 直到 context 结束或实例被删除。
@@ -120,6 +122,14 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 	// 实例正在删除，不需要再上报
 	if !instance.DeletionTimestamp.IsZero() {
 		return apierrors.NewNotFound(platformv1.GroupVersion.WithResource("simulatorinstances").GroupResource(), s.name)
+	}
+
+	// 首次读取成功后恢复累计模拟时间：冷启动进度属于实例，Leader 切换不随 reporter 重启归零
+	if !s.elapsedRestored {
+		s.elapsedRestored = true
+		if instance.Status.SimulationElapsedMs != nil {
+			s.simulationElapsed = time.Duration(*instance.Status.SimulationElapsedMs) * time.Millisecond
+		}
 	}
 
 	var model platformv1.Model
@@ -226,6 +236,8 @@ func (s *Simulator) updateOwnedStatus(
 		latest.Status.Score = new(score)
 		latest.Status.Performance = performance
 		latest.Status.ObservedAt = observedAt.DeepCopy()
+		elapsedMs := s.simulationElapsed.Milliseconds()
+		latest.Status.SimulationElapsedMs = &elapsedMs
 		latest.Status.ReporterID = s.reporterID
 		return s.client.Status().Patch(ctx, &latest, client.MergeFrom(before))
 	})

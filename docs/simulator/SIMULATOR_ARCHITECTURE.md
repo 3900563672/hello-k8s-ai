@@ -72,7 +72,7 @@ Deployment 副本代表实例池容量；如果每个 Pod 都写同一 CR Status
 
 ### 限制
 
-Leader 切换会创建新的进程内 SimEngine，队列状态和随机序列不会恢复；Status 继续更新，但仿真不是确定性/无缝 checkpoint。未来 SimulationRun 需要持久化 seed/engine checkpoint。
+Leader 切换会创建新的进程内 SimEngine，队列状态和随机序列不会恢复；冷启动累计模拟时间从 `status.simulationElapsedMs` 恢复，不会随 reporter 重启归零。Status 继续更新，但仿真不是确定性/无缝 checkpoint。未来 SimulationRun 需要持久化 seed/engine checkpoint。
 
 ## 5. Tick
 
@@ -101,7 +101,7 @@ poolScore       = perReplicaScore × availableReplicas（饱和保护）
 
 `poolScore` 写入 `status.score`，Traffic Controller 用它作为分配权重。availableReplicas 来自 Deployment Status，不使用 spec.replicas，以免把 Pending Pod 当可服务容量。
 
-`simulationElapsed` 从当前 leader 开始运行时为 0，只在成功读取 Instance/Model 后按固定步长累加。倍速变化只影响后续步长，不重置已经推进的冷启动进度；进程暂停后也不会按墙钟差值补算，避免恢复时制造流量尖峰。Leader 切换仍会把进程内累计时间和队列重置，是当前已知模型偏差。
+`simulationElapsed` 只在成功读取 Instance/Model 后按固定步长累加，并随 Status 持久化为 `simulationElapsedMs`；Leader 首次接管时从 Status 恢复，没有历史值才从 0 开始。倍速变化只影响后续步长，不重置已经推进的冷启动进度；进程暂停后也不会按墙钟差值补算，避免恢复时制造流量尖峰。Leader 切换只重置内存队列，不再重置冷启动进度。
 
 ## 7. Performance
 

@@ -2,6 +2,8 @@
 
 Simulator 状态生命周期与 reporter Pod 生命周期错误耦合
 
+> 处理状态（2026-08-16）：已修复（冷启动部分）。累计模拟时间持久化为 `SimulatorInstance.status.simulationElapsedMs`，Leader 切换后沿用，不再随 reporter 重启重置冷启动曲线；队列/随机序列随 Leader 重建仍为已知限制。原审查内容保留用于说明问题背景；实施记录见 `change-history/2026-08-16-simulator-coldstart-persistence/`。
+
 ## 2. 当前状态描述
 
 每个 SimulatorInstance 对应一个 Deployment，可以有多个 Pod。`simulator/main.go` 使用 Kubernetes Lease 做 Leader election，确保同一实例只有一个 reporter 写 `SimulatorInstance.status`。这一机制避免了多个 Pod 同时覆盖状态，是当前设计中合理的并发保护。

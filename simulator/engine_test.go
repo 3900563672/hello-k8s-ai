@@ -233,3 +233,59 @@ func TestTimeScaleBoundsAndSaturatedProgress(t *testing.T) {
 		t.Fatalf("saturated elapsed = %s, want maximum duration", simulator.simulationElapsed)
 	}
 }
+
+func TestSimulatorRestoresElapsedFromStatusOnLeaderStart(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := platformv1.AddToScheme(scheme); err != nil {
+		t.Fatal(err)
+	}
+	elapsedMs := int64(12345)
+	instance := &platformv1.SimulatorInstance{
+		ObjectMeta: metav1.ObjectMeta{Name: "instance-restore"},
+		Spec: platformv1.SimulatorInstanceSpec{
+			TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+			ModelRef:  platformv1.ObjectRef{Name: "model-restore"},
+			Traffic:   platformv1.TrafficSpec{QPS: 0},
+		},
+		Status: platformv1.SimulatorInstanceStatus{
+			SimulationElapsedMs: &elapsedMs,
+		},
+	}
+	model := &platformv1.Model{
+		ObjectMeta: metav1.ObjectMeta{Name: "model-restore"},
+		Spec: platformv1.ModelSpec{
+			MaxConcurrency: 1,
+			ColdStartMs:    10000,
+		},
+	}
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&platformv1.SimulatorInstance{}).
+		WithObjects(instance, model).
+		Build()
+	fixedWallTime := time.Date(2026, time.August, 16, 12, 0, 0, 0, time.UTC)
+	simulator := &Simulator{
+		client:     kubernetesClient,
+		name:       instance.Name,
+		interval:   time.Second,
+		now:        func() time.Time { return fixedWallTime },
+		reporterID: "pod-a",
+	}
+
+	if err := simulator.reconcile(context.Background()); err != nil {
+		t.Fatalf("reconcile: %v", err)
+	}
+	// 新 leader 必须从 Status 中的累计模拟时间继续，而不是从 0 重新冷启动
+	wantElapsed := time.Duration(elapsedMs)*time.Millisecond + time.Second
+	if simulator.simulationElapsed != wantElapsed {
+		t.Fatalf("elapsed = %v, want %v（从 Status 恢复后推进一个 tick）", simulator.simulationElapsed, wantElapsed)
+	}
+
+	var got platformv1.SimulatorInstance
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: instance.Name}, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Status.SimulationElapsedMs == nil || *got.Status.SimulationElapsedMs != wantElapsed.Milliseconds() {
+		t.Fatalf("status.simulationElapsedMs = %v, want %d（已持久化）", got.Status.SimulationElapsedMs, wantElapsed.Milliseconds())
+	}
+}

@@ -656,6 +656,11 @@ func (in *SimulatorInstanceStatus) DeepCopyInto(out *SimulatorInstanceStatus) {
 		in, out := &in.ObservedAt, &out.ObservedAt
 		*out = (*in).DeepCopy()
 	}
+	if in.SimulationElapsedMs != nil {
+		in, out := &in.SimulationElapsedMs, &out.SimulationElapsedMs
+		*out = new(int64)
+		**out = **in
+	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make([]metav1.Condition, len(*in))

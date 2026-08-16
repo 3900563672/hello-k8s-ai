@@ -36,7 +36,7 @@ flowchart TB
 | 7 | Controller | SimulatorInstance、倍速、Deployment、流量、聚合、容量、扩缩状态 | 七个 Reconciler | API Server、下游 Controller/Simulator | 把高层意图持续收敛为运行资源。 |
 | 8 | Simulator 工作负载 | Deployment Spec、Pod template、affinity、env、ServiceAccount | Instance Controller/K8s controllers | Scheduler/kubelet/Simulator | 将实例池副本映射为实际可运行进程。 |
 | 9 | Pod/Lease | Pod 状态、nodeName、leader holder | K8s/Scheduler/Simulator leader election | Instance/WorkerUsage/Backend/Simulator Pods | 证明实际调度与唯一 reporter。 |
-| 10 | Simulator Tick | QPS、score、queue、TTFT、observedAt、reporterID | Leader SimEngine | CR Status、Prometheus、OTel | 产生控制环反馈和诊断证据。 |
+| 10 | Simulator Tick | QPS、score、queue、TTFT、observedAt、reporterID、simulationElapsedMs | Leader SimEngine | CR Status、Prometheus、OTel | 产生控制环反馈和诊断证据。 |
 | 11 | Prometheus/OTel/Jaeger | 时间序列、Span、管道健康 | Controller/Simulator/Collector | Backend/Grafana/运维者 | 回答趋势、延迟和具体调用路径。 |
 | 12 | Backend Informer | CR/Pod/Deployment/Lease/Event 最新 cache | API Server watches | Mapper/Aggregator/SSE/Recorder | 降低 API Server 压力并提供低延迟当前态。 |
 | 13 | Backend Aggregation | Configuration/Traffic/Overview、source freshness、partial warnings | Aggregator + providers | Frontend、Snapshotter | 将多源技术对象转换为页面读模型。 |

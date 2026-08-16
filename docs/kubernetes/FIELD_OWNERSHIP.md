@@ -34,7 +34,7 @@
 | SimulatorInstance | `spec.timeScale` | SimulationClock Controller | Simulator/Backend | Policy Controller 仅创建初值 1；倍速更新不触发 Pod 重建 |
 | SimulatorInstance | `status.availableReplicas/phase/Ready` | Instance Controller | Traffic/Performance/Orchestrator/Backend | Simulator 不写 Phase |
 | SimulatorInstance | `status.effectiveScore` | Orchestrator | Simulator/Backend | Instance Controller 不碰 |
-| SimulatorInstance | `status.score/performance/observedAt/reporterID` | Simulator Leader | Traffic/Performance/Backend | follower/Backend 不写 |
+| SimulatorInstance | `status.score/performance/observedAt/reporterID/simulationElapsedMs` | Simulator Leader | Traffic/Performance/Backend | follower/Backend 不写 |
 | SimulatorInstance | pending plan annotation | Orchestrator | Orchestrator | Backend只读诊断 |
 | TenantPerformance | `spec.tenantRef` | PerformanceCollector | Orchestrator/Backend | 用户/Backend禁写 |
 | TenantPerformance | `status.*` | PerformanceCollector | Orchestrator/Backend | - |

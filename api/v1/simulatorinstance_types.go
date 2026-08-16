@@ -103,6 +103,11 @@ type SimulatorInstanceStatus struct {
 	// +optional
 	ReporterID string `json:"reporterID,omitempty"`
 
+	// 模拟器累计推进的模拟时间（毫秒），由 Simulator Leader 持久化；
+	// Leader 切换后继续沿用，冷启动进度不随 reporter 进程重启归零
+	// +optional
+	SimulationElapsedMs *int64 `json:"simulationElapsedMs,omitempty"`
+
 	// 运行阶段：Running, Pending, Failed 等
 	// +kubebuilder:validation:Enum=Running;Pending;Failed;Unknown
 	// +optional
