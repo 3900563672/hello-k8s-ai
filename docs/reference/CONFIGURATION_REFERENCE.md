@@ -97,6 +97,7 @@ OTel 通用：`OTEL_EXPORTER_OTLP_ENDPOINT`、`OTEL_EXPORTER_OTLP_TRACES_ENDPOIN
 | TIMEOUT | 6s | 8s |
 | CACHE_TTL | 5s | 10s |
 | MAX_WINDOW | 7d | 24h |
+| RETENTION | 24h | 0（内存模式，无固定保留窗口） |
 
 变量分别为 `PROMETHEUS_*` 和 `JAEGER_*`。
 

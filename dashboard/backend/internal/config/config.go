@@ -61,6 +61,8 @@ type ProviderConfig struct {
 	Timeout   time.Duration
 	CacheTTL  time.Duration
 	MaxWindow time.Duration
+	// Retention 历史数据保留窗口；0 表示未知（Jaeger 默认内存模式）
+	Retention time.Duration
 	Enabled   bool
 }
 
@@ -112,6 +114,7 @@ func Load() (Config, error) {
 			Timeout:   duration("PROMETHEUS_TIMEOUT", 6*time.Second),
 			CacheTTL:  duration("PROMETHEUS_CACHE_TTL", 5*time.Second),
 			MaxWindow: duration("PROMETHEUS_MAX_WINDOW", 7*24*time.Hour),
+			Retention: duration("PROMETHEUS_RETENTION", 24*time.Hour),
 			Enabled:   boolean("PROMETHEUS_ENABLED", true),
 		},
 		Jaeger: ProviderConfig{
@@ -119,6 +122,7 @@ func Load() (Config, error) {
 			Timeout:   duration("JAEGER_TIMEOUT", 8*time.Second),
 			CacheTTL:  duration("JAEGER_CACHE_TTL", 10*time.Second),
 			MaxWindow: duration("JAEGER_MAX_WINDOW", 24*time.Hour),
+			Retention: duration("JAEGER_RETENTION", 0),
 			Enabled:   boolean("JAEGER_ENABLED", true),
 		},
 		Grafana: ProviderConfig{

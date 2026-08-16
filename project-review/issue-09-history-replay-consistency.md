@@ -2,6 +2,8 @@
 
 历史回放与可观测性数据无法形成一致时间切面
 
+> 处理状态（2026-08-16）：已修复（覆盖告警部分）。`/overview?at=...` 在目标时间超出 Prometheus 保留窗口或 Jaeger 内存覆盖范围时返回 `meta.warnings`，前端已在 Overview 顶部渲染，避免把缺失数据解释成真实性能变化。事件丢弃重试、trace_index 读取路径、端到端关联 ID 与持久化存储拆分仍为后续方向；实施记录见 `change-history/2026-08-16-history-replay-coverage-warnings/`。
+
 ## 2. 当前状态描述
 
 Backend 以 Kubernetes informer 聚合当前状态，并按周期把 `CurrentSnapshot` 保存到 PostgreSQL。`dashboard/backend/internal/api/handlers_read.go` 在带 `at` 参数时读取请求时刻之前最近的 Snapshot，这部分能够提供持久化的 Kubernetes 配置、流量和工作负载切面。

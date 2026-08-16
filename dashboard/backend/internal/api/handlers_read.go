@@ -303,6 +303,9 @@ func (server *Server) handleClock(writer http.ResponseWriter, request *http.Requ
 	writeData(writer, request, http.StatusOK, server.currentClockState(), false, nil, sourceVersions(server.cache.SyncedAt()))
 }
 
+// historyQueryWindow 历史 overview 对 Prometheus/Jaeger 的查询回看窗口。
+const historyQueryWindow = 15 * time.Minute
+
 func (server *Server) handleOverview(writer http.ResponseWriter, request *http.Request) {
 	snapshot, availability, snapshotID, err := server.snapshotFor(request)
 	if err != nil {
@@ -333,7 +336,7 @@ func (server *Server) handleOverview(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	warnings := make([]string, 0)
+	warnings := server.historyCoverageWarnings(asOf, server.currentClockState().ServerTime)
 	var mutex sync.Mutex
 	var group sync.WaitGroup
 	metricIDs := []string{"simulator.ttft", "simulator.queue", "simulator.qps", "simulator.errorRate", "simulator.tickLatency"}
@@ -344,7 +347,7 @@ func (server *Server) handleOverview(writer http.ResponseWriter, request *http.R
 			defer group.Done()
 			result, queryErr := server.prometheus.QueryRange(request.Context(), prometheusprovider.Query{
 				MetricID: metricID,
-				Start:    asOf.Add(-15 * time.Minute),
+				Start:    asOf.Add(-historyQueryWindow),
 				End:      asOf,
 				Tenant:   request.URL.Query().Get("tenant"),
 				Model:    request.URL.Query().Get("model"),
@@ -364,7 +367,7 @@ func (server *Server) handleOverview(writer http.ResponseWriter, request *http.R
 	go func() {
 		defer group.Done()
 		traces, queryErr := server.jaeger.Search(request.Context(), jaegerprovider.SearchRequest{
-			Start: asOf.Add(-15 * time.Minute), End: asOf, Limit: 20,
+			Start: asOf.Add(-historyQueryWindow), End: asOf, Limit: 20,
 			Tenant: request.URL.Query().Get("tenant"), Model: request.URL.Query().Get("model"), Instance: request.URL.Query().Get("instance"),
 		})
 		mutex.Lock()
@@ -582,6 +585,38 @@ func currentSnapshotFromRecords(records []store.ResourceStateRecord, now time.Ti
 	return snapshot, true
 }
 
+// historyCoverageWarnings 检查目标时间是否超出各 Provider 的历史覆盖能力，
+// 返回的告警由前端渲染在 overview 顶部，避免把缺失数据解释成真实性能变化。
+func (server *Server) historyCoverageWarnings(asOf, now time.Time) []string {
+	var warnings []string
+	prometheusRetention := server.config.Prometheus.Retention
+	if prometheusRetention > 0 && asOf.Before(now.Add(-prometheusRetention)) {
+		warnings = append(warnings, fmt.Sprintf(
+			"Prometheus 保留窗口为 %s，目标时间早于保留窗口，指标数据可能已不完整。",
+			prometheusRetention,
+		))
+	}
+	if server.config.Jaeger.Retention > 0 {
+		if asOf.Before(now.Add(-server.config.Jaeger.Retention)) {
+			warnings = append(warnings, fmt.Sprintf(
+				"Jaeger 保留窗口为 %s，目标时间早于保留窗口，Trace 可能已不完整。",
+				server.config.Jaeger.Retention,
+			))
+		}
+	} else if asOf.Before(now.Add(-historyQueryWindow)) {
+		warnings = append(warnings, "Jaeger 为内存存储（无持久化），历史 Trace 仅随进程存活保留，目标时间的数据可能已丢失。")
+	}
+	return warnings
+}
+
+// jaegerRetentionLabel 返回 Jaeger 保留窗口说明；0 表示内存模式（进程生命周期）。
+func jaegerRetentionLabel(retention time.Duration) string {
+	if retention > 0 {
+		return retention.String()
+	}
+	return "in-memory（进程生命周期）"
+}
+
 func (server *Server) providerStates(ctx context.Context) (map[string]model.ProviderState, []string) {
 	states := map[string]model.ProviderState{
 		"kubernetes": {State: map[bool]string{true: "ready", false: "not-ready"}[server.cache.Synced()], ObservedAt: time.Now().UTC()},
@@ -595,8 +630,8 @@ func (server *Server) providerStates(ctx context.Context) (map[string]model.Prov
 		retention string
 		storage   string
 	}{
-		{"prometheus", server.prometheus.Health, "provider-configured", "prometheus-tsdb"},
-		{"jaeger", server.jaeger.Health, "runtime-configured", "jaeger"},
+		{"prometheus", server.prometheus.Health, server.config.Prometheus.Retention.String(), "prometheus-tsdb"},
+		{"jaeger", server.jaeger.Health, jaegerRetentionLabel(server.config.Jaeger.Retention), "jaeger"},
 		{"postgresql", server.store.Health, server.config.Persistence.SnapshotRetention.String(), "persistent"},
 	}
 	for _, check := range checks {
