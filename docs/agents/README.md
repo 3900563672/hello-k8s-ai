@@ -19,6 +19,7 @@
 | 新需求 / 大改 | WORKFLOW.md、PRINCIPLES.md、对应源码 | docs/INDEX.md |
 | 修 bug | WORKFLOW.md、KNOWN_PITFALLS.md、对应源码 | 对应专题 |
 | CRD / API / 数据链路变更 | PRINCIPLES.md、`api/v1/*_types.go`、生成清单、FIELD_OWNERSHIP | 对应专题、白皮书 |
+| 数据库 / Schema 变更 | PRINCIPLES.md、对应迁移文件、postgres_integration_test.go | DATABASE_DESIGN（人类文档，按需） |
 | 文档维护 | WORKFLOW.md、SYNC.md | docs/README.md |
 | 打包给远程 AI | `make context-pack`，见 docs/remote-ai/README.md | 无 |
 

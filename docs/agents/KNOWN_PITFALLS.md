@@ -54,6 +54,23 @@
 - 解决：description 整行加双引号包裹。
 - 验证：3 个 issue 模板 YAML 校验通过。
 
+## 数据库与容器验证
+
+### 2026-08-16 WSL 无 Go：用 golang 容器编译与测试
+- 现象：WSL 里没有 go 命令，无法本地编译/跑测试。
+- 解决：`docker run --rm -v $PWD:/app -w /app golang:1.26 go test ./...`；版本与 Dockerfile 保持一致（当前 golang:1.26）。
+- 验证：Backend 全量测试在容器内通过。
+
+### 2026-08-16 PostgreSQL 集成测试
+- 方法：`docker run -d --name hk8s-pg-test -e POSTGRES_USER=dashboard -e POSTGRES_PASSWORD=dashboard -e POSTGRES_DB=dashboard -p 55432:5432 postgres:17-alpine`，然后 `TEST_DATABASE_URL=postgres://dashboard:dashboard@localhost:55432/dashboard?sslmode=disable go test ./internal/store/ -run TestPostgresLifecycle -v`。
+- 注意：测试容器访问宿主端口用 `--network host`（WSL 原生 docker 没有 host.docker.internal）。
+- 测试用专用数据库，不要指向真实集群的库。
+
+### 迁移规则（本次确立）
+- 新表/结构变更只追加 `migrations/NNN_*.sql`，不修改已应用的迁移（`schema_migrations` 已记录）。
+- 迁移必须幂等（`IF NOT EXISTS` / `ON CONFLICT`），Backend 启动自动应用。
+- 验证：`TestPostgresLifecycle` 覆盖"迁移幂等 + 重启后历史仍在"。
+
 ## 领域已知易误判点（原 AI_CONTEXT 第 8 节）
 
 - Traffic Overlay 是本地草稿；页面有真实数据不等于场景已写回控制平面。

@@ -101,3 +101,10 @@
 - SSE 只是失效通知，重连或丢事件后必须 REST resync。
 - 不重新引入 Mock/localStorage 作为生产数据源。
 - Traffic Overlay 如果要执行，必须显式确认并调用 Backend，不应静默写集群。
+
+### 数据库 / Schema 修改
+
+- 新表或结构变更只追加 `internal/store/migrations/NNN_*.sql`，不修改已应用的迁移。
+- 迁移必须幂等（`IF NOT EXISTS` / `ON CONFLICT`），由 Backend 启动自动应用，不需要人工建表。
+- 数据库写路径失败不得阻断控制面或 Simulator（记录日志继续运行）。
+- 涉及持久化行为时用 `TestPostgresLifecycle`（`TEST_DATABASE_URL`）验证迁移幂等与重启恢复。
