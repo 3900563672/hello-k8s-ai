@@ -1,6 +1,6 @@
 # 同步协议（SYNC）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
 > 目的：代码或行为变更后，让三层文档与 change-history 时间线保持一致，避免漂移。
 
 ## 1. 谁维护什么
@@ -44,9 +44,16 @@
 - 发现包内文档与源码不一致时，作为交付物列出差异，不静默按文档写代码。
 - 对 `docs/agents/`、`docs/remote-ai/`、`change-history/` 的建议可以直接给；对 `docs/` 人类文档的建议单独标注"人类文档"，由用户转交。
 
-## 6. 可复用提示词（发给任何 AI）
+## 6. 提示词工作流（发给任何 AI）
 
-> 你是 <本地 Agent | 远程 AI>。本次任务：<任务>。请先读 <你的层入口>（本地 Agent：`AGENTS.md` + `docs/agents/README.md`；远程 AI：包内 `CONTEXT_PACK.md` + `docs/remote-ai/README.md`），按对应 WORKFLOW 执行；交付后按 SYNC 协议同步，并给出时间戳与 change-history 条目。涉及人类文档的改动先列出清单，不要直接改。
+提示词协议已独立成文，按对象取用：
+
+- 人类下达任务：抄 [docs/getting-started/AI_COLLABORATION.md](../getting-started/AI_COLLABORATION.md) 的模板 A-E。
+- 本地 Agent 执行：按 [docs/agents/PROMPTING.md](PROMPTING.md) 解析五要素，开工陈述复述理解，交付走第 7 节检查清单。
+- 转交其他本地 Agent：用 PROMPTING.md 第 5 节转交模板。
+- 转交远程 AI：打包后附 PROMPTING.md 第 6 节模板；远程 AI 按 [docs/remote-ai/PROMPTING.md](../remote-ai/PROMPTING.md) 执行。
+
+一行版：> 你是 <本地 Agent | 远程 AI>。本次任务：<任务>。请先读 <你的层入口>（本地 Agent：`AGENTS.md` + `docs/agents/README.md` + `docs/agents/PROMPTING.md`；远程 AI：包内 `CONTEXT_PACK.md` + `docs/remote-ai/PROMPTING.md`），按对应 WORKFLOW 执行；交付后按 SYNC 协议同步，并给出时间戳与 change-history 条目。涉及人类文档的改动先列出清单，不要直接改。
 
 ## 7. CI 轮询节奏
 

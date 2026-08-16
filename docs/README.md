@@ -1,6 +1,6 @@
 # hello-k8s-ai 文档体系
 
-> 维护层：human ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：human ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
 > 本目录是**人类文档**。本地 Agent 默认不读本目录（见根目录 `AGENTS.md` 与 `docs/agents/`）；远程 AI 默认不接收本目录（见 `docs/remote-ai/` 与 `make context-pack`）。
 
 本目录是项目工程知识库。内容以当前源码、生成的 CRD、Kustomize 清单和可执行测试为依据；已删除与当前实现冲突的旧文档副本。
@@ -24,6 +24,7 @@
 ## 从哪里开始
 
 - 人类第一次接手：读根目录 [README.md](../README.md) 或 [PROJECT_OVERVIEW_NEW.md](../PROJECT_OVERVIEW_NEW.md)。
+- 想用 AI 协作开发：读 [getting-started/AI_COLLABORATION.md](getting-started/AI_COLLABORATION.md)（任务提示词模板与交付审核）。
 - Agent：读根目录 `AGENTS.md` 与 [agents/README.md](agents/README.md)。
 - 远程 AI：读 [remote-ai/README.md](remote-ai/README.md)，包内先读 `CONTEXT_PACK.md`。
 - 想快速了解系统：读 [overview/PROJECT_OVERVIEW.md](overview/PROJECT_OVERVIEW.md) 和 [overview/ARCHITECTURE_OVERVIEW.md](overview/ARCHITECTURE_OVERVIEW.md)。

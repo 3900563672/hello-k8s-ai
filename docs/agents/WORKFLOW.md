@@ -1,6 +1,6 @@
 # Agent 工作流
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/WORKFLOW.md](../remote-ai/WORKFLOW.md)。
 
@@ -29,6 +29,7 @@ flowchart TD
 ## 1. 开工
 
 - 读 `AGENTS.md` 与 [docs/agents/README.md](README.md)。
+- 读 [PROMPTING.md](PROMPTING.md)，按任务五要素解析目标，缺项用默认假设补齐并在开工陈述中复述。
 - 扫 [KNOWN_PITFALLS.md](KNOWN_PITFALLS.md)，确认没有已知坑影响本次任务。
 - 记录任务目标与成功标准，避免做一半跑偏。
 
@@ -89,5 +90,5 @@ flowchart TD
 
 ## 7. 汇报
 
-- 固定格式：改了什么 / 验证了什么（命令与结果）/ 没验证什么 / 真实风险。
+- 固定格式：改了什么 / 验证了什么（命令与结果）/ 没验证什么 / 真实风险（模板见 [PROMPTING.md](PROMPTING.md)）。
 - 涉及部署或集群的结论必须附验证证据；没有证据就写"未验证"。

@@ -1,6 +1,6 @@
 # 远程 AI 工作手册（docs/remote-ai/）
 
-> 维护层：remote-ai ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：remote-ai ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
 > 本目录给**只在自己工作区工作**的 AI（如网页版 ChatGPT / Claude，用 5.6 SOL 等模型）：它只能读取用户发来的打包内容，不能访问用户电脑、仓库或 GitHub。
 > 能操作本机仓库的 Agent 见 [docs/agents/](../agents/README.md)；人类入口是根目录 [README.md](../../README.md)。
 
@@ -13,7 +13,7 @@
 ## 开工顺序（每次任务都走）
 
 1. 先读打包根目录的 `CONTEXT_PACK.md`（包的地图与当前状态，含生成日期）。
-2. 再读本手册与 [WORKFLOW.md](WORKFLOW.md)。
+2. 再读本手册、[PROMPTING.md](PROMPTING.md) 与 [WORKFLOW.md](WORKFLOW.md)。
 3. 默认事实源是包内**源码、生成清单与 `change-history/`**；包默认不含人类文档（`docs/` 专题），需要时请用户提供 FULL 包（`make context-pack FULL=1`）。
 4. 产出按 WORKFLOW.md 的交付格式，明确标注"推断 / 未验证"。
 
@@ -22,7 +22,7 @@
 | 任务 | 必读 |
 | --- | --- |
 | 理解项目 / 架构 | CONTEXT_PACK.md、PROJECT_OVERVIEW_NEW.md（背景一页） |
-| 写代码 / 审查代码 | CONTEXT_PACK.md、docs/agents/PRINCIPLES.md、相关源码 |
+| 写代码 / 审查代码 | CONTEXT_PACK.md、docs/agents/PRINCIPLES.md、PROMPTING.md、相关源码 |
 | 写文档 / 设计方案 | CONTEXT_PACK.md、docs/agents/WORKFLOW.md、docs/agents/SYNC.md |
 | 排查行为问题 | CONTEXT_PACK.md、相关源码、change-history/ |
 

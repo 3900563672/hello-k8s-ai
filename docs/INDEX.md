@@ -14,6 +14,8 @@
 6. [端到端数据流](data-flow/END_TO_END_DATA_FLOW.md) - 从用户操作回到页面。
 7. [本地运行](getting-started/LOCAL_RUN.md) - 动手验证。
 
+想用 AI 协作开发，先读 [AI 协作与提示词手册](getting-started/AI_COLLABORATION.md)。
+
 ### 修改前端
 
 - [Frontend 架构](frontend/FRONTEND_ARCHITECTURE.md)
@@ -65,6 +67,7 @@
 | getting-started | [LOCAL_RUN](getting-started/LOCAL_RUN.md) | 如何本地运行各层？ |
 | getting-started | [DEPLOYMENT](getting-started/DEPLOYMENT.md) | 如何部署完整系统？ |
 | getting-started | [VERIFICATION](getting-started/VERIFICATION.md) | 如何验证改动与交付？ |
+| getting-started | [AI_COLLABORATION](getting-started/AI_COLLABORATION.md) | 如何指挥本地 Agent 与远程 AI？ |
 | frontend | [FRONTEND_ARCHITECTURE](frontend/FRONTEND_ARCHITECTURE.md) | 前端结构和状态边界是什么？ |
 | frontend | [PAGE_STRUCTURE](frontend/PAGE_STRUCTURE.md) | Dashboard、Config、Traffic、Trace/Data View 各做什么？ |
 | frontend | [DATA_FLOW](frontend/DATA_FLOW.md) | 页面如何获取、刷新、提交数据？ |

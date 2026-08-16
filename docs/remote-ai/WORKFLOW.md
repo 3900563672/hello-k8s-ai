@@ -1,13 +1,13 @@
 # 远程 AI 工作流
 
-> 维护层：remote-ai ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：remote-ai ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
 > 本文件给只在自己工作区工作的远程 AI。每次任务从"开工"走到"交接"，不跳步。
 > 能操作本机仓库的 Agent 走 [docs/agents/WORKFLOW.md](../agents/WORKFLOW.md)。
 
 ## 1. 开工
 
 1. 读打包根目录的 `CONTEXT_PACK.md`：确认包生成日期、最近提交、open issues 与仓库地图。
-2. 读 [docs/remote-ai/README.md](README.md) 与本文，明确能力边界。
+2. 读 [docs/remote-ai/README.md](README.md)、[PROMPTING.md](PROMPTING.md) 与本文，明确能力边界与任务解析规则。
 3. 记录任务目标与交付物类型，不要急着写内容。
 
 ## 2. 任务分类与产出格式
@@ -35,7 +35,7 @@
 
 ## 5. 交接
 
-交付物固定结构：
+交付物固定结构（协议与红线见 [PROMPTING.md](PROMPTING.md)）：
 
 ```text
 标题：<任务名>（<日期>）

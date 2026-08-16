@@ -1,13 +1,13 @@
 # Agent 操作手册（docs/agents/）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-project-review-board/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
 > 本目录给**能操作当前机器与仓库**的 Agent（如 Codex、Claude Code）：可以读写本仓库、执行命令、访问 GitHub。
 > 只在自己工作区工作、收打包内容的远程 AI 见 [docs/remote-ai/](../remote-ai/README.md)；人类入口是根目录 [README.md](../../README.md) 与 [docs/INDEX.md](../INDEX.md)。
 
 ## 开工顺序（每次任务都走）
 
 1. 阅读根目录 `AGENTS.md` 与本文件。
-2. 有对应任务的流程先读 [WORKFLOW.md](WORKFLOW.md)，按流程判断是否需要建 issue。
+2. 读 [PROMPTING.md](PROMPTING.md) 解析任务五要素；有对应任务的流程先读 [WORKFLOW.md](WORKFLOW.md)，按流程判断是否需要建 issue。
 3. 动手前扫一遍 [KNOWN_PITFALLS.md](KNOWN_PITFALLS.md)，避免重复踩坑。
 4. 涉及 CRD、Controller 或 API 时，先核对 [PRINCIPLES.md](PRINCIPLES.md) 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
 5. 按任务选读 `docs/` 对应专题；事实以源码、生成清单和可执行测试为准，不依据说明文档猜实现。
@@ -23,6 +23,7 @@
 | 文档维护 | WORKFLOW.md、SYNC.md | docs/README.md |
 | CI / 工作流 / 变更归档 | WORKFLOW.md（4.1 轮询节奏）、SYNC.md、KNOWN_PITFALLS.md | 无 |
 | Project / 批量任务 | PROJECT_REVIEW.md、WORKFLOW.md | project-review/（问题背景） |
+| 提示词 / 任务转交 | PROMPTING.md、SYNC.md | docs/getting-started/AI_COLLABORATION.md（人类侧） |
 | 打包给远程 AI | `make context-pack`，见 docs/remote-ai/README.md | 无 |
 
 ## 维护边界

@@ -2,7 +2,7 @@
 
 hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型、逻辑 WorkerNode 和 Simulator 时间倍速；七个 Controller 将配置与策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
 
-第一次接手项目时，请先读 [docs/AI_CONTEXT.md](docs/AI_CONTEXT.md)，再按 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。
+第一次接手项目时，请先读 [docs/AI_CONTEXT.md](docs/AI_CONTEXT.md)，再按 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。想用 AI 协作开发，先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。
 
 ## 最省事的部署方式
 
