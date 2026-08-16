@@ -9,22 +9,22 @@ const (
 
 // simulatorMetrics 汇总了模拟器自身暴露的所有 Prometheus 指标
 type simulatorMetrics struct {
-	leader                  prometheus.Gauge       // 当前 Pod 是否持有 reporter 租约
-	leadershipChanges       *prometheus.CounterVec // leader 变更事件计数 (acquired/lost/observed)
-	ticks                   *prometheus.CounterVec // 每轮模拟 tick 的结果计数 (success/error)
-	tickDuration            prometheus.Histogram   // 一轮模拟的耗时分布
-	statusUpdates           *prometheus.CounterVec // 写入 SimulatorInstance 状态的次数，按结果分
-	assignedQPS             prometheus.Gauge       // 本实例当前被分配到的 QPS
-	availableReplicas       prometheus.Gauge       // 本实例的可用副本数
-	effectiveScore          prometheus.Gauge       // Orchestrator 给的资源折扣后分数
-	poolScore               prometheus.Gauge       // 模拟器实时算出的运行时分数
-	coldStartFactor         prometheus.Gauge       // 当前冷启动衰减因子 [0,1]
+	leader                   prometheus.Gauge       // 当前 Pod 是否持有 reporter 租约
+	leadershipChanges        *prometheus.CounterVec // leader 变更事件计数 (acquired/lost/observed)
+	ticks                    *prometheus.CounterVec // 每轮模拟 tick 的结果计数 (success/error)
+	tickDuration             prometheus.Histogram   // 一轮模拟的耗时分布
+	statusUpdates            *prometheus.CounterVec // 写入 SimulatorInstance 状态的次数，按结果分
+	assignedQPS              prometheus.Gauge       // 本实例当前被分配到的 QPS
+	availableReplicas        prometheus.Gauge       // 本实例的可用副本数
+	effectiveScore           prometheus.Gauge       // Orchestrator 给的资源折扣后分数
+	poolScore                prometheus.Gauge       // 模拟器实时算出的运行时分数
+	coldStartFactor          prometheus.Gauge       // 当前冷启动衰减因子 [0,1]
 	timeScale                prometheus.Gauge       // 当前模拟时间倍速
 	simulationStepSeconds    prometheus.Gauge       // 本轮推进的模拟秒数
 	simulationElapsedSeconds prometheus.Gauge       // 当前 reporter 任期内累计推进的模拟秒数
-	queueDepth              prometheus.Gauge       // 模拟队列深度
-	ttftSeconds             prometheus.Gauge       // 最近一次平均 TTFT（秒）
-	engineReinitializations prometheus.Counter     // 模拟引擎因并发变化而重建的次数
+	queueDepth               prometheus.Gauge       // 模拟队列深度
+	ttftSeconds              prometheus.Gauge       // 最近一次平均 TTFT（秒）
+	engineReinitializations  prometheus.Counter     // 模拟引擎因并发变化而重建的次数
 }
 
 // newSimulatorMetrics 创建并注册所有模拟器指标到给定的注册器

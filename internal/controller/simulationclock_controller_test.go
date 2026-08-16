@@ -60,7 +60,7 @@ func TestSimulationClockReconcilerSynchronizesOnlyOwnedInstanceField(t *testing.
 			TimeScale: 1,
 		},
 		Status: platformv1.SimulatorInstanceStatus{
-			EffectiveScore:   &effectiveScore,
+			EffectiveScore:    &effectiveScore,
 			AvailableReplicas: 2,
 			Phase:             "Running",
 		},

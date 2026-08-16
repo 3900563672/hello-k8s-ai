@@ -155,7 +155,7 @@ func TestSimulatorAppliesDynamicTimeScaleWithoutChangingWallClock(t *testing.T) 
 			TimeScale: 2,
 		},
 		Status: platformv1.SimulatorInstanceStatus{
-			EffectiveScore:   &effectiveScore,
+			EffectiveScore:    &effectiveScore,
 			AvailableReplicas: 1,
 		},
 	}
