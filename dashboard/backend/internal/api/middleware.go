@@ -134,8 +134,11 @@ func loggingMiddleware(logger *slog.Logger, next http.Handler) http.Handler {
 func securityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("X-Content-Type-Options", "nosniff")
-		writer.Header().Set("X-Frame-Options", "DENY")
 		writer.Header().Set("Referrer-Policy", "no-referrer")
+		// Grafana 面板以同源 iframe 嵌入 Dashboard（/grafana/*），必须允许被框架嵌入。
+		if !strings.HasPrefix(request.URL.Path, "/grafana/") {
+			writer.Header().Set("X-Frame-Options", "DENY")
+		}
 		next.ServeHTTP(writer, request)
 	})
 }

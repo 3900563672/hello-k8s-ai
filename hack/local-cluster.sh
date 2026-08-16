@@ -575,10 +575,9 @@ open_ports() {
   require_command nohup
   require_command ps
 
+  # 可观测性收敛到 Dashboard 单入口：Grafana 经 /grafana 反代，
+  # Prometheus / Jaeger 由 Backend 代理（/api/v1/metrics、/api/v1/traces）。
   start_port_forward dashboard hello-k8s-ai-dashboard-frontend 8080 80
-  start_port_forward grafana hello-k8s-ai-grafana 3000 3000
-  start_port_forward prometheus hello-k8s-ai-prometheus 9090 9090
-  start_port_forward jaeger hello-k8s-ai-jaeger 16686 16686
   print_urls
 }
 
@@ -599,9 +598,7 @@ stop_port_forwards() {
 print_urls() {
   printf '\n访问地址：\n'
   printf '  Dashboard   http://localhost:8080\n'
-  printf '  Grafana     http://localhost:3000\n'
-  printf '  Prometheus  http://localhost:9090\n'
-  printf '  Jaeger      http://localhost:16686\n'
+  printf '  Grafana     http://localhost:8080/grafana\n'
 }
 
 show_status() {
@@ -693,7 +690,7 @@ usage() {
 
   up      构建、导入镜像、部署、写入演示数据并验收
   status  查看 Kubernetes 资源与 Backend 健康状态
-  open    启动四个本地端口转发
+  open    启动 Dashboard 本地端口转发（可观测性经单入口访问）
   urls    打印访问地址
   down    停止工作负载，保留集群、CRD、CR 和数据库 PVC
 EOF

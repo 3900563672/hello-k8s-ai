@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => {
                     target: environment.VITE_API_PROXY_TARGET || 'http://localhost:8080',
                     changeOrigin: true,
                 },
+                '/grafana': {
+                    target: environment.VITE_API_PROXY_TARGET || 'http://localhost:8080',
+                    changeOrigin: true,
+                },
             },
         },
         build: {

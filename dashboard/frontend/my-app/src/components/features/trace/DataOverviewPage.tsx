@@ -14,6 +14,7 @@ import {
     Server,
     TimerReset,
 } from 'lucide-react'
+import ReactECharts from 'echarts-for-react'
 import { Button } from '@/components/ui/button'
 import { useOverview, useTraceDetail } from '@/api/queries/traceQueries'
 import { useReplayTimeContext, useTimeStore } from '@/stores/timeSlice'
@@ -21,6 +22,7 @@ import type {
     BackendDeployment,
     BackendEvent,
     BackendPod,
+    MetricPoint,
     MetricResult,
     OverviewData,
     ProviderState,
@@ -85,7 +87,7 @@ function latestMetricValues(metric?: MetricResult) {
 function aggregateMetricPoints(
     metric: MetricResult,
     aggregation: 'sum' | 'average',
-) {
+): MetricPoint[] {
     const buckets = new Map<number, { total: number; count: number }>()
     metric.series.forEach((series) => {
         series.points.forEach((point) => {
@@ -99,9 +101,12 @@ function aggregateMetricPoints(
     })
     return [...buckets.entries()]
         .sort(([left], [right]) => left - right)
-        .map(([, bucket]) => aggregation === 'average'
-            ? bucket.total / bucket.count
-            : bucket.total)
+        .map(([timestamp, bucket]) => ({
+            time: new Date(timestamp).toISOString(),
+            value: aggregation === 'average'
+                ? bucket.total / bucket.count
+                : bucket.total,
+        }))
 }
 
 function metricDisplay(
@@ -247,10 +252,20 @@ function OverviewContent({ overview, warnings }: { overview: OverviewData; warni
                                     <span className="font-mono text-xl text-[#EAF2FC]">{display.value}</span>
                                     <span className="text-[9px] text-[#5E6D81]">{display.unit}</span>
                                 </div>
-                                <Sparkline values={display.points} />
+                                <Sparkline points={display.points} />
                             </div>
                         )
                     })}
+                </div>
+                <div className="mt-2.5 grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+                    {metricCards.map((card) => (
+                        <MetricTrendChart
+                            key={card.id}
+                            label={card.label}
+                            metric={overview.metrics[card.id]}
+                            aggregation={card.aggregation}
+                        />
+                    ))}
                 </div>
             </section>
 
@@ -385,6 +400,13 @@ function TraceDetailPanel({
     const ordered = [...spans].sort(
         (left, right) => new Date(left.startTime).getTime() - new Date(right.startTime).getTime(),
     )
+    const traceStart = ordered.length > 0
+        ? Math.min(...ordered.map((span) => new Date(span.startTime).getTime()))
+        : 0
+    const traceEnd = ordered.length > 0
+        ? Math.max(...ordered.map((span) => new Date(span.startTime).getTime() + span.durationMs))
+        : traceStart + 1
+    const totalDuration = Math.max(traceEnd - traceStart, 1)
     return (
         <div className="mt-3 overflow-hidden rounded-xl border border-[#5B8CFF]/15 bg-[#090E17]">
             <div className="flex items-start justify-between gap-3 border-b border-white/[0.06] p-3.5">
@@ -410,6 +432,16 @@ function TraceDetailPanel({
                                         <div className="mt-1 truncate font-mono text-[7px] text-[#4E5E75]">{span.spanId}</div>
                                     </div>
                                     <StatusPill label={`${number.format(span.durationMs)} ms`} ready={span.status !== 'error'} />
+                                </div>
+                                <div className="relative mt-1.5 h-[7px] overflow-hidden rounded-full bg-white/[0.045]">
+                                    <div
+                                        className={`absolute top-0 h-full rounded-full ${span.status === 'error' ? 'bg-amber-400/60' : 'bg-[#5B8CFF]/[0.55]'}`}
+                                        style={{
+                                            left: `${((new Date(span.startTime).getTime() - traceStart) / totalDuration) * 100}%`,
+                                            width: `${Math.max((span.durationMs / totalDuration) * 100, 1)}%`,
+                                        }}
+                                        title={`+${number.format(new Date(span.startTime).getTime() - traceStart)} ms · ${number.format(span.durationMs)} ms`}
+                                    />
                                 </div>
                                 {span.events.length > 0 && (
                                     <div className="mt-1.5 text-[8px] text-[#65748A]">{span.events.length} span events</div>
@@ -707,15 +739,15 @@ function ProviderTable({ providers, serverTime }: { providers: Record<string, Pr
     )
 }
 
-function Sparkline({ values }: { values: number[] }) {
-    const finite = values.filter(Number.isFinite)
+function Sparkline({ points }: { points: MetricPoint[] }) {
+    const finite = points.map((point) => point.value).filter(Number.isFinite)
     if (finite.length < 2) {
         return <div className="mt-3 h-8 border-t border-dashed border-white/[0.06] pt-2 text-[8px] text-[#455267]">No samples</div>
     }
     const min = Math.min(...finite)
     const max = Math.max(...finite)
     const range = Math.max(max - min, 1e-9)
-    const points = finite.map((value, index) => {
+    const coordinates = finite.map((value, index) => {
         const x = (index / (finite.length - 1)) * 100
         const y = 29 - ((value - min) / range) * 24
         return `${x},${y}`
@@ -723,8 +755,79 @@ function Sparkline({ values }: { values: number[] }) {
     return (
         <svg viewBox="0 0 100 34" preserveAspectRatio="none" className="mt-2 h-9 w-full overflow-visible" aria-hidden="true">
             <path d="M0 31 H100" className="stroke-white/[0.06]" strokeWidth="0.7" />
-            <polyline points={points} fill="none" className="stroke-[#689EF7]" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+            <polyline points={coordinates} fill="none" className="stroke-[#689EF7]" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
         </svg>
+    )
+}
+
+function MetricTrendChart({
+    label,
+    metric,
+    aggregation,
+}: {
+    label: string
+    metric?: MetricResult
+    aggregation: 'sum' | 'average'
+}) {
+    const points = metric ? aggregateMetricPoints(metric, aggregation) : []
+    const option = {
+        animation: false,
+        grid: { left: 4, right: 8, top: 10, bottom: 2 },
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: '#111722',
+            borderColor: 'rgba(255,255,255,0.08)',
+            padding: 8,
+            textStyle: { color: '#DDE5F0', fontSize: 9 },
+            axisPointer: { lineStyle: { color: 'rgba(91,140,255,0.35)' } },
+        },
+        xAxis: {
+            type: 'time',
+            axisLine: { lineStyle: { color: 'rgba(255,255,255,0.07)' } },
+            axisTick: { show: false },
+            axisLabel: { color: '#5E6D81', fontSize: 8, hideOverlap: true },
+            splitLine: { show: false },
+        },
+        yAxis: {
+            type: 'value',
+            scale: true,
+            axisLabel: { color: '#5E6D81', fontSize: 8 },
+            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.045)' } },
+        },
+        series: [
+            {
+                type: 'line',
+                data: points.map((point) => [new Date(point.time).getTime(), point.value]),
+                showSymbol: false,
+                lineStyle: { color: '#689EF7', width: 1.4 },
+                itemStyle: { color: '#689EF7' },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            { offset: 0, color: 'rgba(91,140,255,0.16)' },
+                            { offset: 1, color: 'rgba(91,140,255,0)' },
+                        ],
+                    },
+                },
+                emphasis: { disabled: true },
+            },
+        ],
+    }
+    return (
+        <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0A0E15]/90 p-3.5">
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium text-[#9AA8BC]">{label}</span>
+                <span className="text-[8px] text-[#536177]">{metric?.unit ?? '—'}</span>
+            </div>
+            <div className="mt-2 h-[110px]">
+                <ReactECharts option={option} notMerge style={{ height: '100%', width: '100%' }} />
+            </div>
+        </div>
     )
 }
 

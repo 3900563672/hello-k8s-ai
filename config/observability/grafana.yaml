@@ -266,6 +266,12 @@ spec:
           value: Viewer
         - name: GF_AUTH_DISABLE_LOGIN_FORM
           value: "true"
+        - name: GF_SERVER_ROOT_URL
+          value: http://localhost:8080/grafana/
+        - name: GF_SERVER_SERVE_FROM_SUB_PATH
+          value: "true"
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "true"
         - name: GF_ANALYTICS_REPORTING_ENABLED
           value: "false"
         - name: GF_ANALYTICS_CHECK_FOR_UPDATES

@@ -23,6 +23,7 @@ type Dependencies struct {
 	Store      store.Store
 	Prometheus *prometheusprovider.Client
 	Jaeger     *jaegerprovider.Client
+	Grafana    config.ProviderConfig
 	Clock      *clock.Clock
 	Events     *EventBus
 }
@@ -36,6 +37,7 @@ type Server struct {
 	store      store.Store
 	prometheus *prometheusprovider.Client
 	jaeger     *jaegerprovider.Client
+	grafana    config.ProviderConfig
 	clock      *clock.Clock
 	events     *EventBus
 }
@@ -50,6 +52,7 @@ func NewServer(dependencies Dependencies) *Server {
 		store:      dependencies.Store,
 		prometheus: dependencies.Prometheus,
 		jaeger:     dependencies.Jaeger,
+		grafana:    dependencies.Grafana,
 		clock:      dependencies.Clock,
 		events:     dependencies.Events,
 	}
@@ -85,6 +88,10 @@ func (server *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/clock", server.handleClock)
 	mux.HandleFunc("PATCH /api/v1/clock/rate", server.handleSimulationRate)
 	mux.HandleFunc("GET /api/v1/stream", server.handleStream)
+	if server.grafana.Enabled {
+		// Grafana 面板以 sub-path 部署，经 Backend 反代后前端只需相对路径 /grafana/。
+		mux.Handle("/grafana/", newGrafanaProxy(server.logger, server.grafana))
+	}
 
 	var handler http.Handler = mux
 	handler = idempotencyMiddleware(server.store, server.config.HTTP.MaxBodyBytes, server.logger, handler)

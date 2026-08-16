@@ -16,6 +16,7 @@ type Config struct {
 	Database    DatabaseConfig
 	Prometheus  ProviderConfig
 	Jaeger      ProviderConfig
+	Grafana     ProviderConfig
 	Persistence PersistenceConfig
 	LogLevel    slog.Level
 	ClusterName string
@@ -115,6 +116,11 @@ func Load() (Config, error) {
 			CacheTTL:  duration("JAEGER_CACHE_TTL", 10*time.Second),
 			MaxWindow: duration("JAEGER_MAX_WINDOW", 24*time.Hour),
 			Enabled:   boolean("JAEGER_ENABLED", true),
+		},
+		Grafana: ProviderConfig{
+			URL:     env("GRAFANA_URL", "http://hello-k8s-ai-grafana:3000"),
+			Timeout: duration("GRAFANA_TIMEOUT", 30*time.Second),
+			Enabled: boolean("GRAFANA_ENABLED", true),
 		},
 		Persistence: PersistenceConfig{
 			EventBuffer:       integer("PERSISTENCE_EVENT_BUFFER", 4096),

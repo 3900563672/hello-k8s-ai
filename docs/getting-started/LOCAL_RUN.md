@@ -34,9 +34,9 @@ make cluster-urls
 | 组件 | 地址 |
 | --- | --- |
 | Dashboard | `http://localhost:8080` |
-| Grafana | `http://localhost:3000` |
-| Prometheus | `http://localhost:9090` |
-| Jaeger | `http://localhost:16686` |
+| Grafana | `http://localhost:8080/grafana` |
+| Prometheus | Dashboard「数据回显」页（Backend 代理 `/api/v1/metrics/query`） |
+| Jaeger | Dashboard「数据回显」页（Backend 代理 `/api/v1/traces`） |
 
 如果关闭终端或 Docker Desktop 后端口转发中断：
 

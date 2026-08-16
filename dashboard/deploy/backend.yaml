@@ -42,7 +42,8 @@ spec:
       containers:
       - name: backend
         image: hello-k8s-ai-dashboard-backend:dev
-        imagePullPolicy: IfNotPresent
+        # :dev 标签可变，Always 让每次部署都重新解析镜像 digest，避免 kubelet 缓存旧镜像。
+        imagePullPolicy: Always
         env:
         - name: HTTP_ADDRESS
           value: :8080
@@ -57,6 +58,8 @@ spec:
           value: http://hello-k8s-ai-prometheus:9090
         - name: JAEGER_URL
           value: http://hello-k8s-ai-jaeger:16686
+        - name: GRAFANA_URL
+          value: http://hello-k8s-ai-grafana:3000
         - name: K8S_CLUSTER_NAME
           value: docker-desktop
         - name: DEPLOYMENT_ENVIRONMENT

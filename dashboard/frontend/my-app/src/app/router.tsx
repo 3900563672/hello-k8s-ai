@@ -22,6 +22,11 @@ const DataOverviewPage = lazy(() =>
         default: module.DataOverviewPage,
     })),
 )
+const MonitorPage = lazy(() =>
+    import('@/components/features/monitor/MonitorPage').then((module) => ({
+        default: module.MonitorPage,
+    })),
+)
 
 const deferred = (page: ReactNode) => (
     <Suspense fallback={<PageLoader />}>{page}</Suspense>
@@ -37,6 +42,7 @@ export const router = createBrowserRouter([
             { path: 'config', element: deferred(<ConfigPage />) },
             { path: 'traffic', element: deferred(<TrafficPage />) },
             { path: 'trace', element: deferred(<DataOverviewPage />) },
+            { path: 'monitor', element: deferred(<MonitorPage />) },
             { path: '*', element: <NotFoundPage /> },
         ],
     },

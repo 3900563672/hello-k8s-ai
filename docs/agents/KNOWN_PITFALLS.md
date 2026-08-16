@@ -1,6 +1,6 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-observability-single-entry/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
@@ -93,6 +93,37 @@
 - 解决：不要为省时间调小轮询间隔（有偶发失败风险）；如确需优化，应改为"按事件等待"（需要较大重构）。
 - 验证：多次运行该 spec 稳定约 24 秒。
 
+## 可观测性与 Grafana 嵌入
+
+### 2026-08-16 Grafana sub-path 反代必须保留 /grafana 前缀
+- 现象：iframe 白屏或显示控制台首页；`/grafana/d/...` 返回 301 到 `http://localhost:8080/grafana/...`，静态资源 404。
+- 原因：Grafana 以 `GF_SERVER_SERVE_FROM_SUB_PATH=true` 部署时，页面与静态资源只认 `/grafana/...` 路径；反代剥前缀后 Grafana 把面板页 301 回外部入口，经 nginx SPA fallback 变成控制台首页。
+- 解决：Backend 反代保留 `/grafana` 前缀原样转发；`GF_SERVER_ROOT_URL=http://localhost:8080/grafana/` 与前端 iframe 路径必须一致。
+- 验证：`curl localhost:8080/grafana/d/hello-k8s-ai-overview` 200 且 HTML 含 `<base href="/grafana/" />`。
+
+### 2026-08-16 Grafana 嵌入开关变量名
+- 现象：设置了 `GF_SERVER_ALLOW_EMBEDDING=true`，面板响应仍带 `X-Frame-Options: deny`。
+- 原因：`allow_embedding` 属于 `[security]` 段，环境变量是 `GF_SECURITY_ALLOW_EMBEDDING`；`GF_SERVER_*` 前缀对应 `[server]` 段，不生效。
+- 解决：改用 `GF_SECURITY_ALLOW_EMBEDDING=true`。
+- 验证：改后直接请求 Grafana 无 X-Frame-Options 头。
+
+### 2026-08-16 Backend 安全中间件会覆盖 Grafana 放行
+- 现象：Grafana 已放行嵌入，但经 Dashboard 8080 访问面板仍带 `X-Frame-Options: DENY`。
+- 原因：Backend `securityHeadersMiddleware` 对所有响应强制加 DENY，包括 `/grafana/*` 反代响应。
+- 解决：中间件对 `/grafana/` 前缀跳过 X-Frame-Options；API 路径保持 DENY。
+- 验证：`security_headers_test.go` 覆盖两条路径；8080 全链路无 X-Frame-Options。
+
+### 2026-08-16 Docker Desktop kubelet 缓存 :dev 标签 digest
+- 现象：重建镜像并 `rollout restart` 后，Pod 仍在跑旧镜像（`imageID` 与本地 `docker image inspect` 不一致）。
+- 原因：Docker Desktop 内嵌 kubelet 的 containerd 按标签缓存 digest，`imagePullPolicy: IfNotPresent` 不重新解析。
+- 解决：dev 部署清单（backend/frontend）改 `imagePullPolicy: Always`；排查时对比 Pod `imageID` 与本地镜像 ID。
+- 验证：改后重启 Pod 的 imageID 与本地一致。
+
+### 2026-08-16 滚动更新会杀死端口转发
+- 现象：`kubectl rollout restart` 后 `localhost:8080` 连接拒绝，转发日志报 "network namespace ... is closed"。
+- 原因：`port-forward svc/` 在首次连接时 pin 到具体 Pod，Pod 被滚动更新删除后转发即断。
+- 解决：部署/重启后重新执行 `make cluster-open`（脚本的存活检查只覆盖"检查时刻"，检查后 Pod 再被删仍会断）。
+- 验证：重启后重开转发，8080 恢复。
 ## YAML 与模板
 
 ### 2026-08-16 issue form description 中 `bug: ` 冒号被 YAML 解析

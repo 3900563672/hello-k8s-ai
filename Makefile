@@ -266,7 +266,7 @@ cluster-status: ## 查看完整栈、CR、PVC 与 API 健康状态
 	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh status
 
 .PHONY: cluster-open
-cluster-open: ## 启动 Dashboard、Grafana、Prometheus、Jaeger 本地端口
+cluster-open: ## 启动 Dashboard 本地端口（Grafana/Prometheus/Jaeger 经 Dashboard 单入口访问）
 	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh open
 
 .PHONY: cluster-urls

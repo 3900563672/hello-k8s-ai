@@ -27,7 +27,8 @@ spec:
       containers:
       - name: frontend
         image: hello-k8s-ai-dashboard-frontend:dev
-        imagePullPolicy: IfNotPresent
+        # :dev 标签可变，Always 让每次部署都重新解析镜像 digest，避免 kubelet 缓存旧镜像。
+        imagePullPolicy: Always
         ports:
         - name: http
           containerPort: 8080

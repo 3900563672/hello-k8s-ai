@@ -13,5 +13,6 @@
 | 2026-08-16 | 数据库生命周期自动化与当前态持久化读路径（Phase 1-3） | P1 | [查看记录](2026-08-16-database-lifecycle/README.md) |
 | 2026-08-16 | 本地完整栈本机验证与启动速度优化 | P2 | [查看记录](2026-08-16-local-startup-optimization/README.md) |
 | 2026-08-16 | CI 加速与工作流细化（轮询节奏 / 归档详略） | P1 | [查看记录](2026-08-16-ci-acceleration-and-workflow/README.md) |
+| 2026-08-16 | 可观测性收敛到 Dashboard 单入口（Prometheus / Jaeger / Grafana） | P1 | [查看记录](2026-08-16-observability-single-entry/README.md) |
 
 > 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`。

@@ -71,7 +71,7 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 	apiServer := api.NewServer(api.Dependencies{
 		Config: cfg, Logger: logger, Cache: cacheState, Aggregator: aggregator,
 		Gateway: gateway, Store: database, Prometheus: prometheusClient,
-		Jaeger: jaegerClient, Clock: clockState, Events: eventBus,
+		Jaeger: jaegerClient, Grafana: cfg.Grafana, Clock: clockState, Events: eventBus,
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTP.Address,
