@@ -56,8 +56,7 @@ spec:
                 description: 允许缩到 0 吗？只在没流量时有用
                 type: boolean
               maxReplicas:
-                default: 100
-                description: 租户所有实例的最大副本数
+                description: 租户所有实例的最大副本数，必填
                 minimum: 1
                 type: integer
               minReplicas:
@@ -86,6 +85,7 @@ spec:
                 - name
                 type: object
             required:
+            - maxReplicas
             - tenantRef
             type: object
             x-kubernetes-validations:

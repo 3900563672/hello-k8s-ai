@@ -5,7 +5,7 @@ import type { Model } from '@/types/config.types'
 interface ModelTableProps {
     data: Model[]
     onSelect: (model: Model) => void
-    onRename: (model: Model) => void
+    onRename?: (model: Model) => void
     onDelete: (name: string) => Promise<void>
     selectedName?: string
     selectedIds: string[]

@@ -24,13 +24,6 @@ const (
 	orchConfigTenantIndex = "orchestrator.config.tenant"
 	orchPerformanceIndex  = "orchestrator.performance.tenant"
 
-	// 阈值和副本数的默认值，租户没配就用这些
-	defaultTTFTUp      = 500
-	defaultQueueUp     = 100
-	defaultTTFTDown    = 200
-	defaultQueueDown   = 30
-	defaultMaxReplicas = 100
-
 	// 实例注解的 key
 	lastScaleTriggerKey = "platform.study.com/last-scale-trigger"
 	pendingScalePlanKey = "platform.study.com/pending-scale-plan"
@@ -149,10 +142,18 @@ func (r *OrchestratorReconciler) gatherDecisionInput(
 	if err := r.Get(ctx, client.ObjectKey{Name: tenantName}, &tenant); err != nil {
 		return input, fmt.Errorf("get tenant %q: %w", tenantName, err)
 	}
-	input.TTFTThresholdUp = positiveOrDefault(tenant.Spec.TTFTThresholdMs, defaultTTFTUp)
-	input.TTFTThresholdDown = positiveOrDefault(tenant.Spec.TTFTScaleDownThresholdMs, defaultTTFTDown)
-	input.QueueThresholdUp = positiveOrDefault(tenant.Spec.QueueThreshold, defaultQueueUp)
-	input.QueueThresholdDown = positiveOrDefault(tenant.Spec.QueueScaleDownThreshold, defaultQueueDown)
+	// 阈值必填，不允许 Controller 补默认值；缺失或非法直接失败，避免基于错误输入做决策
+	if tenant.Spec.TTFTThresholdMs <= 0 || tenant.Spec.QueueThreshold <= 0 ||
+		tenant.Spec.TTFTScaleDownThresholdMs <= 0 || tenant.Spec.QueueScaleDownThreshold <= 0 {
+		return input, fmt.Errorf(
+			"tenant %q has missing scaling thresholds; all four thresholds are required and must be positive",
+			tenantName,
+		)
+	}
+	input.TTFTThresholdUp = tenant.Spec.TTFTThresholdMs
+	input.TTFTThresholdDown = tenant.Spec.TTFTScaleDownThresholdMs
+	input.QueueThresholdUp = tenant.Spec.QueueThreshold
+	input.QueueThresholdDown = tenant.Spec.QueueScaleDownThreshold
 	input.TenantQPS = nonNegative(tenant.Spec.QPS)
 
 	// 缩容阈值不能大于等于扩容阈值，否则就一直在那来回弹
@@ -181,7 +182,14 @@ func (r *OrchestratorReconciler) gatherDecisionInput(
 	input.ScaleUpCooldown = nonNegative(config.Spec.ScaleUpCooldownSeconds)
 	input.ScaleDownCooldown = nonNegative(config.Spec.ScaleDownCooldownSeconds)
 	input.MinReplicas = nonNegative(config.Spec.MinReplicas)
-	input.MaxReplicas = positiveOrDefault(config.Spec.MaxReplicas, defaultMaxReplicas)
+	if config.Spec.MaxReplicas <= 0 {
+		return input, fmt.Errorf(
+			"orchestrator %q has invalid maxReplicas %d; maxReplicas is required and must be positive",
+			config.Name,
+			config.Spec.MaxReplicas,
+		)
+	}
+	input.MaxReplicas = config.Spec.MaxReplicas
 	input.AllowScaleToZero = config.Spec.AllowScaleToZero
 
 	if input.MinReplicas > input.MaxReplicas {
@@ -242,13 +250,6 @@ func (r *OrchestratorReconciler) gatherDecisionInput(
 	// 把所有输入拼一起算个哈希，作为本次决策的 triggerID
 	input.TriggerID = decisionTriggerID(performance, &tenant, config, models, nodes, instances)
 	return input, nil
-}
-
-func positiveOrDefault(value, fallback int) int {
-	if value > 0 {
-		return value
-	}
-	return fallback
 }
 
 // decisionTriggerID 基于所有影响决策的输入计算一个哈希，输入不变则 ID 不变。

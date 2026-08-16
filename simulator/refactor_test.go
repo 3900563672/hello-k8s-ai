@@ -4,8 +4,6 @@ import (
 	"math"
 	"testing"
 	"time"
-
-	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
 )
 
 // TestColdStartFactorAt 验证冷启动因子的边界值和曲线形状
@@ -30,29 +28,6 @@ func TestColdStartFactorAt(t *testing.T) {
 				t.Fatalf("coldStartFactorAt() = %v, want %v", got, test.want)
 			}
 		})
-	}
-}
-
-// TestPerformanceDefaultsPreserveConfiguredValues 带默认值的性能参数，填了就用填的，没填用默认
-func TestPerformanceDefaultsPreserveConfiguredValues(t *testing.T) {
-	// 已经配置的值要原样保留
-	configured := platformv1.PerformanceSpec{
-		PrefillBaseMs:     1,
-		PrefillPerTokenUs: 2,
-		DecodePerTokenMs:  3,
-	}
-	if got := withPerformanceDefaults(configured); got != configured {
-		t.Fatalf("configured values changed: got %+v, want %+v", got, configured)
-	}
-
-	// 空结构体应返回完整默认值
-	want := platformv1.PerformanceSpec{
-		PrefillBaseMs:     defaultPrefillBaseMs,
-		PrefillPerTokenUs: defaultPrefillPerTokenUs,
-		DecodePerTokenMs:  defaultDecodePerTokenMs,
-	}
-	if got := withPerformanceDefaults(platformv1.PerformanceSpec{}); got != want {
-		t.Fatalf("defaults = %+v, want %+v", got, want)
 	}
 }
 

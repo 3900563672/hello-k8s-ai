@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BrainCircuit, DatabaseZap, History, RefreshCw, RotateCcw, Server, Settings2, Users } from 'lucide-react'
+import { BrainCircuit, DatabaseZap, History, RefreshCw, RotateCcw, Server, Settings2, SlidersHorizontal, Users } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { ConfigTabPanel } from './components/ConfigTabPanel'
 import { ModelTable } from './tables/ModelTable'
 import { NodeTable } from './tables/NodeTable'
+import { OrchestratorTable } from './tables/OrchestratorTable'
 import { TenantTable } from './tables/TenantTable'
 import { ModelForm } from './forms/ModelForm'
 import { NodeForm } from './forms/NodeForm'
+import { OrchestratorForm } from './forms/OrchestratorForm'
 import { TenantForm } from './forms/TenantForm'
 import { CreateDialog } from '@/components/shared/dialogs/CreateDialog'
 import { RenameDialog } from '@/components/shared/dialogs/RenameDialog'
@@ -15,30 +17,36 @@ import { BatchDeleteDialog } from '@/components/shared/dialogs/BatchDeleteDialog
 import {
     useCreateModel,
     useCreateNode,
+    useCreateOrchestrator,
     useCreateTenant,
     useDeleteModel,
     useDeleteModels,
     useDeleteNode,
     useDeleteNodes,
+    useDeleteOrchestrator,
+    useDeleteOrchestrators,
     useDeleteTenant,
     useDeleteTenants,
     useModels,
     useNodes,
+    useOrchestrators,
     useTenants,
     useUpdateModel,
     useUpdateNode,
+    useUpdateOrchestrator,
     useUpdateTenant,
 } from '@/api/queries/configQueries'
 import type { ModelFormValues } from '@/lib/validations/model.schema'
 import type { NodeFormValues } from '@/lib/validations/node.schema'
+import type { OrchestratorFormValues } from '@/lib/validations/orchestrator.schema'
 import type { TenantFormValues } from '@/lib/validations/tenant.schema'
-import type { ConfigResourceType, Model, Node, Tenant } from '@/types/config.types'
+import type { ConfigResourceType, Model, Node, Orchestrator, Tenant } from '@/types/config.types'
 import { useWorkspaceContext } from '@/hooks/useWorkspaceContext'
 import { useTimeStore } from '@/stores/timeSlice'
 import { formatUtcTimestamp } from '@/lib/formatters/timeFormatter'
-import { DEFAULT_MODEL, DEFAULT_NODE, DEFAULT_TENANT } from '@/lib/constants/defaultValues'
+import { DEFAULT_MODEL, DEFAULT_NODE, DEFAULT_ORCHESTRATOR, DEFAULT_TENANT } from '@/lib/constants/defaultValues'
 
-type ConfigTab = 'models' | 'nodes' | 'tenants'
+type ConfigTab = 'models' | 'nodes' | 'tenants' | 'orchestrators'
 type RenameTarget =
     | { type: 'model'; resource: Model }
     | { type: 'node'; resource: Node }
@@ -48,6 +56,7 @@ const resourceLabels: Record<ConfigResourceType, string> = {
     model: '模型',
     node: '节点',
     tenant: '租户',
+    orchestrator: '编排策略',
 }
 
 // 首次请求完成前 TanStack Query 会返回 undefined。使用稳定空数组，避免选择逻辑在每次
@@ -55,6 +64,7 @@ const resourceLabels: Record<ConfigResourceType, string> = {
 const EMPTY_MODELS: Model[] = []
 const EMPTY_NODES: Node[] = []
 const EMPTY_TENANTS: Tenant[] = []
+const EMPTY_ORCHESTRATORS: Orchestrator[] = []
 
 const mutationError = (error: unknown): string =>
     error instanceof Error ? error.message : '操作失败，请稍后重试'
@@ -86,7 +96,7 @@ const normalizeIdentifier = (value: string): string =>
         .replace(/^-+|-+$/g, '')
 
 const uniqueIdentifier = (value: string, type: ConfigResourceType, existingIds: string[]): string => {
-    const prefix = type === 'model' ? 'model' : type === 'node' ? 'node' : 'tenant'
+    const prefix = type === 'model' ? 'model' : type === 'node' ? 'node' : type === 'tenant' ? 'tenant' : 'orch'
     const normalized = normalizeIdentifier(value)
     const base = normalized || `${prefix}-${Date.now().toString(36)}`
     const existing = new Set(existingIds)
@@ -122,6 +132,15 @@ const tenantFormValues = (tenant: Tenant): TenantFormValues => ({
     queueScaleDownThreshold: tenant.queueScaleDownThreshold,
 })
 
+const orchestratorFormValues = (orchestrator: Orchestrator): OrchestratorFormValues => ({
+    tenantName: orchestrator.tenantRef.name,
+    scaleUpCooldownSeconds: orchestrator.scaleUpCooldownSeconds,
+    scaleDownCooldownSeconds: orchestrator.scaleDownCooldownSeconds,
+    allowScaleToZero: orchestrator.allowScaleToZero,
+    minReplicas: orchestrator.minReplicas,
+    maxReplicas: orchestrator.maxReplicas,
+})
+
 export function ConfigPage() {
     const [activeTab, setActiveTab] = useState<ConfigTab>('models')
     const workspace = useWorkspaceContext()
@@ -131,9 +150,11 @@ export function ConfigPage() {
     const modelsQuery = useModels()
     const nodesQuery = useNodes()
     const tenantsQuery = useTenants()
+    const orchestratorsQuery = useOrchestrators()
     const models = modelsQuery.data ?? EMPTY_MODELS
     const nodes = nodesQuery.data ?? EMPTY_NODES
     const tenants = tenantsQuery.data ?? EMPTY_TENANTS
+    const orchestrators = orchestratorsQuery.data ?? EMPTY_ORCHESTRATORS
 
     const createModel = useCreateModel()
     const updateModel = useUpdateModel()
@@ -147,14 +168,20 @@ export function ConfigPage() {
     const updateTenant = useUpdateTenant()
     const deleteTenant = useDeleteTenant()
     const deleteTenants = useDeleteTenants()
+    const createOrchestrator = useCreateOrchestrator()
+    const updateOrchestrator = useUpdateOrchestrator()
+    const deleteOrchestrator = useDeleteOrchestrator()
+    const deleteOrchestrators = useDeleteOrchestrators()
 
     const modelSelection = useResourceSelection(models)
     const nodeSelection = useResourceSelection(nodes)
     const tenantSelection = useResourceSelection(tenants)
+    const orchestratorSelection = useResourceSelection(orchestrators)
 
     const [selectedModels, setSelectedModels] = useState<string[]>([])
     const [selectedNodes, setSelectedNodes] = useState<string[]>([])
     const [selectedTenants, setSelectedTenants] = useState<string[]>([])
+    const [selectedOrchestrators, setSelectedOrchestrators] = useState<string[]>([])
 
     useEffect(() => {
         const ids = new Set(models.map((model) => model.name))
@@ -177,6 +204,13 @@ export function ConfigPage() {
             return next.length === selected.length ? selected : next
         })
     }, [tenants])
+    useEffect(() => {
+        const ids = new Set(orchestrators.map((orchestrator) => orchestrator.name))
+        setSelectedOrchestrators((selected) => {
+            const next = selected.filter((id) => ids.has(id))
+            return next.length === selected.length ? selected : next
+        })
+    }, [orchestrators])
 
     const [createOpen, setCreateOpen] = useState(false)
     const [createType, setCreateType] = useState<ConfigResourceType>('model')
@@ -195,6 +229,7 @@ export function ConfigPage() {
         setSelectedModels([])
         setSelectedNodes([])
         setSelectedTenants([])
+        setSelectedOrchestrators([])
         setCreateOpen(false)
         setRenameTarget(null)
         setBatchDeleteType(null)
@@ -205,7 +240,9 @@ export function ConfigPage() {
             ? models.map((item) => item.name)
             : createType === 'node'
               ? nodes.map((item) => item.name)
-              : tenants.map((item) => item.name)
+              : createType === 'tenant'
+                ? tenants.map((item) => item.name)
+                : orchestrators.map((item) => item.name)
     const identifierPreview = uniqueIdentifier(newName, createType, existingIds)
 
     const createPending =
@@ -213,7 +250,9 @@ export function ConfigPage() {
             ? createModel.isPending
             : createType === 'node'
               ? createNode.isPending
-              : createTenant.isPending
+              : createType === 'tenant'
+                ? createTenant.isPending
+                : createOrchestrator.isPending
 
     const renamePending =
         renameTarget?.type === 'model'
@@ -231,7 +270,9 @@ export function ConfigPage() {
               ? deleteNodes.isPending
               : batchDeleteType === 'tenant'
                 ? deleteTenants.isPending
-                : false
+                : batchDeleteType === 'orchestrator'
+                  ? deleteOrchestrators.isPending
+                  : false
 
     const openCreate = (type: ConfigResourceType) => {
         if (readOnly) return
@@ -262,7 +303,7 @@ export function ConfigPage() {
                 const node: Node = { name, displayName, ...DEFAULT_NODE }
                 await createNode.mutateAsync(node)
                 nodeSelection.setSelectedName(node.name)
-            } else {
+            } else if (createType === 'tenant') {
                 const tenant: Tenant = {
                     name,
                     displayName,
@@ -270,6 +311,20 @@ export function ConfigPage() {
                 }
                 await createTenant.mutateAsync(tenant)
                 tenantSelection.setSelectedName(tenant.name)
+            } else {
+                const tenantName = normalizeIdentifier(newName)
+                if (!tenants.some((item) => item.name === tenantName)) {
+                    setCreateError(`未找到租户“${newName.trim()}”，请先创建该租户`)
+                    return
+                }
+                const orchestrator: Orchestrator = {
+                    name,
+                    displayName: tenantName,
+                    ...DEFAULT_ORCHESTRATOR,
+                    tenantRef: { name: tenantName },
+                }
+                await createOrchestrator.mutateAsync(orchestrator)
+                orchestratorSelection.setSelectedName(orchestrator.name)
             }
             setCreateOpen(false)
             setNewName('')
@@ -307,7 +362,13 @@ export function ConfigPage() {
     const openBatchDelete = (type: ConfigResourceType) => {
         if (readOnly) return
         const count =
-            type === 'model' ? selectedModels.length : type === 'node' ? selectedNodes.length : selectedTenants.length
+            type === 'model'
+                ? selectedModels.length
+                : type === 'node'
+                  ? selectedNodes.length
+                  : type === 'tenant'
+                    ? selectedTenants.length
+                    : selectedOrchestrators.length
         if (count === 0) return
         setBatchDeleteType(type)
         setBatchDeleteError('')
@@ -324,9 +385,12 @@ export function ConfigPage() {
             } else if (batchDeleteType === 'node') {
                 await deleteNodes.mutateAsync(selectedNodes)
                 setSelectedNodes([])
-            } else {
+            } else if (batchDeleteType === 'tenant') {
                 await deleteTenants.mutateAsync(selectedTenants)
                 setSelectedTenants([])
+            } else {
+                await deleteOrchestrators.mutateAsync(selectedOrchestrators)
+                setSelectedOrchestrators([])
             }
             setBatchDeleteType(null)
         } catch (error) {
@@ -352,9 +416,23 @@ export function ConfigPage() {
         await updateTenant.mutateAsync({ ...tenantSelection.selectedItem, ...values })
     }
 
-    const loading = modelsQuery.isLoading || nodesQuery.isLoading || tenantsQuery.isLoading
-    const queryError = modelsQuery.error ?? nodesQuery.error ?? tenantsQuery.error
-    const totalResources = models.length + nodes.length + tenants.length
+    const saveOrchestrator = async (values: OrchestratorFormValues) => {
+        if (readOnly) return
+        if (!orchestratorSelection.selectedItem) return
+        await updateOrchestrator.mutateAsync({
+            ...orchestratorSelection.selectedItem,
+            tenantRef: { name: values.tenantName },
+            scaleUpCooldownSeconds: values.scaleUpCooldownSeconds,
+            scaleDownCooldownSeconds: values.scaleDownCooldownSeconds,
+            allowScaleToZero: values.allowScaleToZero,
+            minReplicas: values.minReplicas,
+            maxReplicas: values.maxReplicas,
+        })
+    }
+
+    const loading = modelsQuery.isLoading || nodesQuery.isLoading || tenantsQuery.isLoading || orchestratorsQuery.isLoading
+    const queryError = modelsQuery.error ?? nodesQuery.error ?? tenantsQuery.error ?? orchestratorsQuery.error
+    const totalResources = models.length + nodes.length + tenants.length + orchestrators.length
     const batchDeleteCount =
         batchDeleteType === 'model'
             ? selectedModels.length
@@ -362,7 +440,9 @@ export function ConfigPage() {
               ? selectedNodes.length
               : batchDeleteType === 'tenant'
                 ? selectedTenants.length
-                : 0
+                : batchDeleteType === 'orchestrator'
+                  ? selectedOrchestrators.length
+                  : 0
 
     if (loading) {
         return (
@@ -392,6 +472,7 @@ export function ConfigPage() {
                             void modelsQuery.refetch()
                             void nodesQuery.refetch()
                             void tenantsQuery.refetch()
+                            void orchestratorsQuery.refetch()
                         }}
                         className="mt-5 border-[#303C50] bg-[#111722] text-[#D8D8D8] hover:bg-[#1B2634] hover:text-white"
                     >
@@ -488,6 +569,14 @@ export function ConfigPage() {
                             租户
                             <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{tenants.length}</span>
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="orchestrators"
+                            className="h-7 gap-2 rounded-md px-3 text-xs text-[#748196] transition data-[state=active]:bg-[#202B3A] data-[state=active]:text-white data-[state=active]:shadow-none"
+                        >
+                            <SlidersHorizontal className="h-3.5 w-3.5" />
+                            编排策略
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{orchestrators.length}</span>
+                        </TabsTrigger>
                     </TabsList>
                 </Tabs>
             </header>
@@ -564,6 +653,29 @@ export function ConfigPage() {
                         readOnly={readOnly}
                     />
                 </TabsContent>
+
+                <TabsContent value="orchestrators" forceMount className="m-0 h-full min-h-0 data-[state=inactive]:hidden">
+                    <ConfigTabPanel<Orchestrator, OrchestratorFormValues>
+                        data={orchestrators}
+                        selectedItem={orchestratorSelection.selectedItem}
+                        onSelect={(item) => orchestratorSelection.setSelectedName(item.name)}
+                        onDelete={(name) => deleteOrchestrator.mutateAsync(name)}
+                        selectedIds={selectedOrchestrators}
+                        onSelectionChange={setSelectedOrchestrators}
+                        TableComponent={OrchestratorTable}
+                        FormComponent={OrchestratorForm}
+                        getFormValues={orchestratorFormValues}
+                        typeLabel="编排策略"
+                        listTitle="租户编排策略"
+                        listDescription="扩缩容冷却、副本范围与缩容行为"
+                        detailDescription="策略参数"
+                        resourceIcon={<SlidersHorizontal className="h-4 w-4" />}
+                        onCreate={() => openCreate('orchestrator')}
+                        onBatchDelete={() => openBatchDelete('orchestrator')}
+                        formSubmit={saveOrchestrator}
+                        readOnly={readOnly}
+                    />
+                </TabsContent>
             </Tabs>
 
             <CreateDialog
@@ -579,6 +691,7 @@ export function ConfigPage() {
                     setCreateError('')
                 }}
                 identifierPreview={newName.trim() ? identifierPreview : ''}
+                nameLabel={createType === 'orchestrator' ? '关联租户名称' : '显示名称'}
                 pending={createPending}
                 error={createError}
                 onConfirm={() => void confirmCreate()}

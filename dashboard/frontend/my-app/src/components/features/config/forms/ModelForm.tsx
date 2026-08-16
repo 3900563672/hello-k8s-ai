@@ -117,8 +117,8 @@ export const ModelForm = memo(function ModelForm({
                                         <div className="relative">
                                             <Input
                                                 type="number"
-                                                min="0"
-                                                step="any"
+                                                min="1"
+                                                step="1"
                                                 {...field}
                                                 value={Number.isNaN(field.value) ? '' : field.value}
                                                 onChange={(event) =>
@@ -256,8 +256,8 @@ export const ModelForm = memo(function ModelForm({
                                                 <div className="relative">
                                                     <Input
                                                         type="number"
-                                                        min="0"
-                                                        step="any"
+                                                        min="1"
+                                                        step="1"
                                                         {...field}
                                                         value={Number.isNaN(field.value) ? '' : field.value}
                                                         onChange={(event) =>
@@ -287,8 +287,8 @@ export const ModelForm = memo(function ModelForm({
                                                 <div className="relative">
                                                     <Input
                                                         type="number"
-                                                        min="0"
-                                                        step="any"
+                                                        min="1"
+                                                        step="1"
                                                         {...field}
                                                         value={Number.isNaN(field.value) ? '' : field.value}
                                                         onChange={(event) =>
@@ -318,8 +318,8 @@ export const ModelForm = memo(function ModelForm({
                                                 <div className="relative">
                                                     <Input
                                                         type="number"
-                                                        min="0"
-                                                        step="any"
+                                                        min="1"
+                                                        step="1"
                                                         {...field}
                                                         value={Number.isNaN(field.value) ? '' : field.value}
                                                         onChange={(event) =>

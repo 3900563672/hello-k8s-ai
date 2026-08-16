@@ -82,29 +82,29 @@ spec:
                 minimum: 0
                 type: integer
               queueScaleDownThreshold:
-                default: 30
-                description: 队列长度下限；低于该值时允许缩容，默认 30
+                description: 队列长度下限；低于该值时允许缩容，必填
                 minimum: 1
                 type: integer
               queueThreshold:
-                default: 100
-                description: 队列长度上限；超过时触发扩容，默认 100
+                description: 队列长度上限；超过时触发扩容，必填
                 minimum: 1
                 type: integer
               ttftScaleDownThresholdMs:
-                default: 200
-                description: TTFT 下限，单位为毫秒；低于该值时允许缩容，默认 200
+                description: TTFT 下限，单位为毫秒；低于该值时允许缩容，必填
                 minimum: 1
                 type: integer
               ttftThresholdMs:
-                default: 500
-                description: TTFT 上限，单位为毫秒；超过时触发扩容，默认 500
+                description: TTFT 上限，单位为毫秒；超过时触发扩容，必填
                 minimum: 1
                 type: integer
             required:
             - displayName
             - priority
             - qps
+            - queueScaleDownThreshold
+            - queueThreshold
+            - ttftScaleDownThresholdMs
+            - ttftThresholdMs
             type: object
             x-kubernetes-validations:
             - message: ttftScaleDownThresholdMs must be less than ttftThresholdMs

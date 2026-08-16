@@ -42,31 +42,27 @@ type TenantSpec struct {
 
 	// 扩容阈值
 
-	// TTFT 上限，单位为毫秒；超过时触发扩容，默认 500
+	// TTFT 上限，单位为毫秒；超过时触发扩容，必填
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:default=500
-	// +optional
-	TTFTThresholdMs int `json:"ttftThresholdMs,omitempty"`
+	// +required
+	TTFTThresholdMs int `json:"ttftThresholdMs"`
 
-	// 队列长度上限；超过时触发扩容，默认 100
+	// 队列长度上限；超过时触发扩容，必填
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:default=100
-	// +optional
-	QueueThreshold int `json:"queueThreshold,omitempty"`
+	// +required
+	QueueThreshold int `json:"queueThreshold"`
 
 	// 缩容阈值
 
-	// TTFT 下限，单位为毫秒；低于该值时允许缩容，默认 200
+	// TTFT 下限，单位为毫秒；低于该值时允许缩容，必填
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:default=200
-	// +optional
-	TTFTScaleDownThresholdMs int `json:"ttftScaleDownThresholdMs,omitempty"`
+	// +required
+	TTFTScaleDownThresholdMs int `json:"ttftScaleDownThresholdMs"`
 
-	// 队列长度下限；低于该值时允许缩容，默认 30
+	// 队列长度下限；低于该值时允许缩容，必填
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:default=30
-	// +optional
-	QueueScaleDownThreshold int `json:"queueScaleDownThreshold,omitempty"`
+	// +required
+	QueueScaleDownThreshold int `json:"queueScaleDownThreshold"`
 }
 
 // TenantStatus 保存租户的标准 Conditions。

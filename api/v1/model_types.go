@@ -24,16 +24,19 @@ import (
 // PerformanceSpec 定义模型打分和资源计算所需的静态性能参数。
 type PerformanceSpec struct {
 	// prefill 基础延迟，单位 ms，默认 50
+	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:default=50
 	// +optional
 	PrefillBaseMs int `json:"prefillBaseMs,omitempty"`
 
 	// 每个 prompt token 额外增加的 prefill 时间，单位微秒，默认 500µs
+	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:default=500
 	// +optional
 	PrefillPerTokenUs int `json:"prefillPerTokenUs,omitempty"`
 
 	// 每个生成 token 耗时，单位 ms，默认 20
+	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:default=20
 	// +optional
 	DecodePerTokenMs int `json:"decodePerTokenMs,omitempty"`

@@ -16,7 +16,7 @@ import {
 interface ConfigTableComponentProps<T> {
     data: T[]
     onSelect: (item: T) => void
-    onRename: (item: T) => void
+    onRename?: (item: T) => void
     onDelete: (name: string) => Promise<void>
     selectedName?: string
     selectedIds: string[]
@@ -35,7 +35,7 @@ interface ConfigTabPanelProps<TItem, TValues> {
     data: TItem[]
     selectedItem: TItem | null
     onSelect: (item: TItem) => void
-    onRename: (item: TItem) => void
+    onRename?: (item: TItem) => void
     onDelete: (name: string) => Promise<void>
     selectedIds: string[]
     onSelectionChange: (ids: string[]) => void

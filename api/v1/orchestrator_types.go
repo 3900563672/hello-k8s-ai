@@ -50,11 +50,10 @@ type OrchestratorSpec struct {
 	// +optional
 	MinReplicas int `json:"minReplicas,omitempty"`
 
-	// 租户所有实例的最大副本数
+	// 租户所有实例的最大副本数，必填
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:default=100
-	// +optional
-	MaxReplicas int `json:"maxReplicas,omitempty"`
+	// +required
+	MaxReplicas int `json:"maxReplicas"`
 }
 
 // OrchestratorStatus 记录最近一次扩缩操作和标准 Conditions。

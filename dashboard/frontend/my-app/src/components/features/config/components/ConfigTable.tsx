@@ -55,7 +55,7 @@ interface ConfigTableProps<T extends { name: string; displayName: string }> {
     selectedIds: string[]
     onSelectionChange: (ids: string[]) => void
     onSelect: (item: T) => void
-    onRename: (item: T) => void
+    onRename?: (item: T) => void
     onDelete: (name: string) => Promise<void>
     selectedName?: string
     typeLabel: string
@@ -167,13 +167,15 @@ export function ConfigTable<T extends { name: string; displayName: string }>({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40 border-[#263244] bg-[#101722] p-1 text-[#EDEDED]">
-                            <DropdownMenuItem
-                                onSelect={() => onRename(item)}
-                                className="cursor-pointer gap-2 focus:bg-[#252525] focus:text-white"
-                            >
-                                <Pencil className="h-3.5 w-3.5 text-[#8A8A8A]" />
-                                重命名
-                            </DropdownMenuItem>
+                            {onRename ? (
+                                <DropdownMenuItem
+                                    onSelect={() => onRename(item)}
+                                    className="cursor-pointer gap-2 focus:bg-[#252525] focus:text-white"
+                                >
+                                    <Pencil className="h-3.5 w-3.5 text-[#8A8A8A]" />
+                                    重命名
+                                </DropdownMenuItem>
+                            ) : null}
                             <DropdownMenuItem
                                 onSelect={() => {
                                     setDeleteError('')

@@ -89,13 +89,6 @@ func TestPoissonLargeLambdaHasCorrectOrderOfMagnitude(t *testing.T) {
 	}
 }
 
-func TestPerformanceDefaults(t *testing.T) {
-	got := withPerformanceDefaults(platformv1.PerformanceSpec{})
-	if got.PrefillBaseMs != 50 || got.PrefillPerTokenUs != 500 || got.DecodePerTokenMs != 20 {
-		t.Fatalf("defaults = %#v", got)
-	}
-}
-
 func TestSimulatorStatusPatchPreservesControllerOwnedFields(t *testing.T) {
 	scheme := runtime.NewScheme()
 	if err := platformv1.AddToScheme(scheme); err != nil {

@@ -9,3 +9,7 @@ spec:
   displayName: 演示租户
   priority: P3
   qps: 10
+  ttftThresholdMs: 500
+  queueThreshold: 100
+  ttftScaleDownThresholdMs: 200
+  queueScaleDownThreshold: 30

@@ -1,7 +1,7 @@
 export const TENANT_PRIORITIES = ['P1', 'P2', 'P3', 'P4', 'P5'] as const
 
 export type TenantPriority = (typeof TENANT_PRIORITIES)[number]
-export type ConfigResourceType = 'model' | 'node' | 'tenant'
+export type ConfigResourceType = 'model' | 'node' | 'tenant' | 'orchestrator'
 
 export interface ModelPerformance {
     prefillBaseMs: number
@@ -34,6 +34,15 @@ export interface TenantSpec {
     queueScaleDownThreshold: number
 }
 
+export interface OrchestratorSpec {
+    tenantRef: { name: string }
+    scaleUpCooldownSeconds: number
+    scaleDownCooldownSeconds: number
+    allowScaleToZero: boolean
+    minReplicas: number
+    maxReplicas: number
+}
+
 export interface Model extends ModelSpec {
     name: string
     uid?: string
@@ -54,6 +63,17 @@ export interface Node extends NodeSpec {
 
 export interface Tenant extends TenantSpec {
     name: string
+    uid?: string
+    resourceVersion?: string
+    status?: Record<string, unknown>
+    conditions?: KubernetesCondition[]
+    derived?: Record<string, unknown>
+}
+
+export interface Orchestrator extends OrchestratorSpec {
+    name: string
+    // Orchestrator 没有 displayName 字段，这里展示关联租户名以满足通用列表约束
+    displayName: string
     uid?: string
     resourceVersion?: string
     status?: Record<string, unknown>
@@ -99,7 +119,7 @@ export interface ConfigurationReadModel {
         tenantNode: BackendResource[]
         modelNode: BackendResource[]
     }
-    orchestrators: BackendResource[]
+    orchestrators: BackendResource<OrchestratorSpec & Record<string, unknown>>[]
     simulationClocks: BackendResource[]
     simulatorInstances: BackendResource[]
     tenantPerformance: BackendResource[]

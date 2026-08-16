@@ -126,10 +126,10 @@ Nginx listen 8080，`/api/` proxy Backend service，read timeout 1h、buffering/
 | Model.performance.prefillBaseMs | 50 |
 | Model.performance.prefillPerTokenUs | 500 |
 | Model.performance.decodePerTokenMs | 20 |
-| Tenant.ttftThresholdMs / down | 500 / 200 |
-| Tenant.queueThreshold / down | 100 / 30 |
+| Tenant.ttftThresholdMs / down | 必填，无默认 |
+| Tenant.queueThreshold / down | 必填，无默认 |
 | Orchestrator scaleUp/down cooldown | 60 / 120 s |
-| Orchestrator min/max replicas | 1 / 100 |
+| Orchestrator min / max replicas | 1 / 必填 |
 
 ## 10. 配置解析注意
 

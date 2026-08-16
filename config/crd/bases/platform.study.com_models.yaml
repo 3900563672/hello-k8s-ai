@@ -81,14 +81,17 @@ spec:
                   decodePerTokenMs:
                     default: 20
                     description: 每个生成 token 耗时，单位 ms，默认 20
+                    minimum: 1
                     type: integer
                   prefillBaseMs:
                     default: 50
                     description: prefill 基础延迟，单位 ms，默认 50
+                    minimum: 1
                     type: integer
                   prefillPerTokenUs:
                     default: 500
                     description: 每个 prompt token 额外增加的 prefill 时间，单位微秒，默认 500µs
+                    minimum: 1
                     type: integer
                 type: object
             required:

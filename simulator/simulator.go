@@ -19,10 +19,6 @@ import (
 )
 
 const (
-	defaultPrefillBaseMs     = 50
-	defaultPrefillPerTokenUs = 500
-	defaultDecodePerTokenMs  = 20
-
 	traceAttributeSimulatorInstanceName = "platform.simulator_instance.name"
 	traceAttributeSimulatorReporterID   = "platform.simulator.reporter.id"
 )
@@ -154,7 +150,7 @@ func (s *Simulator) reconcile(ctx context.Context) (operationErr error) {
 			s.metrics.engineReinitializations.Inc()
 		}
 	}
-	performanceSpec := withPerformanceDefaults(model.Spec.Performance)
+	performanceSpec := model.Spec.Performance
 	// 把总 QPS 均摊到每个副本
 	perReplicaQPS := 0.0
 	if availableReplicas > 0 {
@@ -233,20 +229,6 @@ func (s *Simulator) updateOwnedStatus(
 		latest.Status.ReporterID = s.reporterID
 		return s.client.Status().Patch(ctx, &latest, client.MergeFrom(before))
 	})
-}
-
-// withPerformanceDefaults 给模型性能参数填上默认值，避免零值导致除零或异常。
-func withPerformanceDefaults(spec platformv1.PerformanceSpec) platformv1.PerformanceSpec {
-	if spec.PrefillBaseMs <= 0 {
-		spec.PrefillBaseMs = defaultPrefillBaseMs
-	}
-	if spec.PrefillPerTokenUs <= 0 {
-		spec.PrefillPerTokenUs = defaultPrefillPerTokenUs
-	}
-	if spec.DecodePerTokenMs <= 0 {
-		spec.DecodePerTokenMs = defaultDecodePerTokenMs
-	}
-	return spec
 }
 
 // scaledScore 计算衰减后的单副本分数，避免溢出。

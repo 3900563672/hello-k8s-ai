@@ -5,7 +5,7 @@ import type { Node } from '@/types/config.types'
 interface NodeTableProps {
     data: Node[]
     onSelect: (node: Node) => void
-    onRename: (node: Node) => void
+    onRename?: (node: Node) => void
     onDelete: (name: string) => Promise<void>
     selectedName?: string
     selectedIds: string[]

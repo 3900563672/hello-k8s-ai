@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { BrainCircuit, Loader2, Plus, Server, Users } from 'lucide-react'
+import { BrainCircuit, Loader2, Plus, Server, SlidersHorizontal, Users } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ interface CreateDialogProps {
     value: string
     onValueChange: (value: string) => void
     identifierPreview: string
+    nameLabel?: string
     pending?: boolean
     error?: string
     onConfirm: () => void
@@ -22,6 +23,11 @@ const typeMeta = {
     model: { label: '模型', icon: BrainCircuit, description: '定义推理模型及其性能参数。' },
     node: { label: '节点', icon: Server, description: '定义可参与调度的计算资源。' },
     tenant: { label: '租户', icon: Users, description: '定义业务租户及其调度策略。' },
+    orchestrator: {
+        label: '编排策略',
+        icon: SlidersHorizontal,
+        description: '定义租户的扩缩容冷却、副本范围与缩容策略。',
+    },
 } as const
 
 export function CreateDialog({
@@ -31,6 +37,7 @@ export function CreateDialog({
     value,
     onValueChange,
     identifierPreview,
+    nameLabel = '显示名称',
     pending = false,
     error = '',
     onConfirm,
@@ -59,7 +66,7 @@ export function CreateDialog({
                 <div className="space-y-3 px-6 py-3">
                     <div>
                         <Label htmlFor="create-resource-name" className="text-xs font-medium text-[#A0A0A0]">
-                            显示名称
+                            {nameLabel}
                         </Label>
                         <Input
                             id="create-resource-name"
@@ -72,7 +79,7 @@ export function CreateDialog({
                                     onConfirm()
                                 }
                             }}
-                            placeholder={`输入${meta.label}名称`}
+                            placeholder={`输入${nameLabel}`}
                             autoComplete="off"
                             className="mt-2 border-[#303C50] bg-[#0A0A0A] text-[#F2F2F2] placeholder:text-[#555] focus-visible:border-[#5B8CFF]/60 focus-visible:ring-2 focus-visible:ring-[#5B8CFF]/15"
                         />

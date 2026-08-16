@@ -6,7 +6,7 @@ import type { Tenant, TenantPriority } from '@/types/config.types'
 interface TenantTableProps {
     data: Tenant[]
     onSelect: (tenant: Tenant) => void
-    onRename: (tenant: Tenant) => void
+    onRename?: (tenant: Tenant) => void
     onDelete: (name: string) => Promise<void>
     selectedName?: string
     selectedIds: string[]

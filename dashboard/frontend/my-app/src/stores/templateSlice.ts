@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createClientId } from '@/lib/clientId'
 import type { ModelFormValues } from '@/lib/validations/model.schema'
 import type { NodeFormValues } from '@/lib/validations/node.schema'
+import type { OrchestratorFormValues } from '@/lib/validations/orchestrator.schema'
 import type { TenantFormValues } from '@/lib/validations/tenant.schema'
 import type { ConfigTemplate } from '@/types/config.types'
 
@@ -9,12 +10,15 @@ interface TemplateStore {
     modelTemplates: ConfigTemplate<ModelFormValues>[]
     nodeTemplates: ConfigTemplate<NodeFormValues>[]
     tenantTemplates: ConfigTemplate<TenantFormValues>[]
+    orchestratorTemplates: ConfigTemplate<OrchestratorFormValues>[]
     addModelTemplate: (name: string, data: ModelFormValues) => void
     addNodeTemplate: (name: string, data: NodeFormValues) => void
     addTenantTemplate: (name: string, data: TenantFormValues) => void
+    addOrchestratorTemplate: (name: string, data: OrchestratorFormValues) => void
     removeModelTemplate: (id: string) => void
     removeNodeTemplate: (id: string) => void
     removeTenantTemplate: (id: string) => void
+    removeOrchestratorTemplate: (id: string) => void
 }
 
 const createTemplate = <T,>(name: string, data: T): ConfigTemplate<T> => ({
@@ -32,6 +36,7 @@ export const useTemplateStore = create<TemplateStore>()((set) => ({
     modelTemplates: [],
     nodeTemplates: [],
     tenantTemplates: [],
+    orchestratorTemplates: [],
     addModelTemplate: (name, data) =>
         set((state) => ({
             modelTemplates: [...state.modelTemplates, createTemplate(name, data)],
@@ -44,6 +49,10 @@ export const useTemplateStore = create<TemplateStore>()((set) => ({
         set((state) => ({
             tenantTemplates: [...state.tenantTemplates, createTemplate(name, data)],
         })),
+    addOrchestratorTemplate: (name, data) =>
+        set((state) => ({
+            orchestratorTemplates: [...state.orchestratorTemplates, createTemplate(name, data)],
+        })),
     removeModelTemplate: (id) =>
         set((state) => ({
             modelTemplates: state.modelTemplates.filter((template) => template.id !== id),
@@ -55,5 +64,9 @@ export const useTemplateStore = create<TemplateStore>()((set) => ({
     removeTenantTemplate: (id) =>
         set((state) => ({
             tenantTemplates: state.tenantTemplates.filter((template) => template.id !== id),
+        })),
+    removeOrchestratorTemplate: (id) =>
+        set((state) => ({
+            orchestratorTemplates: state.orchestratorTemplates.filter((template) => template.id !== id),
         })),
 }))

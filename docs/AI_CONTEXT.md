@@ -23,7 +23,7 @@ hello-k8s-ai 是一个 Kubernetes 原生 AI 推理调度与仿真平台。用户
 
 - Traffic 页面读取真实 Tenant 基线，但场景模板和 Overlay 只保存在内存；尚未调用 Traffic PATCH 写回。
 - 历史浏览读取 PostgreSQL 离散快照；不是完整事件溯源或确定性仿真重放。
-- Config UI 只编辑 Model、WorkerNode、Tenant；Backend 已允许三类 Policy 和 Orchestrator，但 UI 未覆盖。
+- Config UI 编辑 Model、WorkerNode、Tenant、Orchestrator；Backend 已允许三类 Policy，但 UI 未覆盖。
 - `/trace` 实际是 Data Overview（指标、资源、事件、Trace 合并页）；没有单独 `/dashboard` 或 `/data-view` 路由。
 
 ### 未实现或未生产化

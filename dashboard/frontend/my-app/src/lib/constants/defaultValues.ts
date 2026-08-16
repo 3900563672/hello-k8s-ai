@@ -1,14 +1,15 @@
-import type { Model, Node, Tenant } from '@/types/config.types'
+import type { Model, Node, Orchestrator, Tenant } from '@/types/config.types'
 
 export const DEFAULT_MODEL: Omit<Model, 'name' | 'displayName'> = {
     gpuUnits: 1,
     maxConcurrency: 1,
     absoluteScore: 100,
     coldStartMs: 0,
+    // 与 CRD 字段级默认值保持一致，保证新建资源无需编辑即可通过校验
     performance: {
-        prefillBaseMs: 0,
-        prefillPerTokenUs: 0,
-        decodePerTokenMs: 0,
+        prefillBaseMs: 50,
+        prefillPerTokenUs: 500,
+        decodePerTokenMs: 20,
     },
 }
 
@@ -20,8 +21,17 @@ export const DEFAULT_NODE: Omit<Node, 'name' | 'displayName'> = {
 export const DEFAULT_TENANT: Omit<Tenant, 'name' | 'displayName'> = {
     priority: 'P3',
     qps: 0,
-    ttftThresholdMs: 0,
-    queueThreshold: 0,
-    ttftScaleDownThresholdMs: 0,
-    queueScaleDownThreshold: 0,
+    // 阈值必填且必须为正数；初始值与 CRD 默认值一致，新建租户无需编辑即可通过校验
+    ttftThresholdMs: 500,
+    queueThreshold: 100,
+    ttftScaleDownThresholdMs: 200,
+    queueScaleDownThreshold: 30,
+}
+
+export const DEFAULT_ORCHESTRATOR: Omit<Orchestrator, 'name' | 'displayName' | 'tenantRef'> = {
+    scaleUpCooldownSeconds: 60,
+    scaleDownCooldownSeconds: 120,
+    allowScaleToZero: false,
+    minReplicas: 1,
+    maxReplicas: 10,
 }

@@ -84,10 +84,10 @@ Dashboard：Config 展示容量/使用；Data View 同时展示 WorkerNode 与 c
 | spec | `displayName` | 非空 | - |
 | spec | `priority` | P1（最高）到 P5 | - |
 | spec | `qps` | >=0，总请求 QPS | - |
-| spec | `ttftThresholdMs` | 扩容上阈值，>=1 | 500 |
-| spec | `queueThreshold` | 扩容上阈值，>=1 | 100 |
-| spec | `ttftScaleDownThresholdMs` | 缩容下阈值，>=1 | 200 |
-| spec | `queueScaleDownThreshold` | 缩容下阈值，>=1 | 30 |
+| spec | `ttftThresholdMs` | 扩容上阈值，>=1，必填 | - |
+| spec | `queueThreshold` | 扩容上阈值，>=1，必填 | - |
+| spec | `ttftScaleDownThresholdMs` | 缩容下阈值，>=1，必填 | - |
+| spec | `queueScaleDownThreshold` | 缩容下阈值，>=1，必填 | - |
 | status | `conditions` | 当前无项目内 Controller writer | - |
 
 CEL 要求 TTFT down < up 且 Queue down < up，形成迟滞，防止在单个阈值附近频繁抖动。
@@ -248,7 +248,7 @@ Dashboard：Traffic/Data View；Backend只读。
 | `scaleDownCooldownSeconds` | >=0，缩容方向独立冷却 | 120 |
 | `allowScaleToZero` | 无流量时可越过 min 到 0 | false |
 | `minReplicas` | >=0，且 <= max | 1 |
-| `maxReplicas` | >=1 | 100 |
+| `maxReplicas` | >=1，必填 | - |
 
 ### Status
 

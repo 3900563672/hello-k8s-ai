@@ -11,6 +11,8 @@ export const configKeys = {
     nodeDetail: (name: string) => [...configKeys.all, 'nodes', 'latest', name] as const,
     tenants: (version: string = 'latest') => [...configKeys.all, 'tenants', version] as const,
     tenantDetail: (name: string) => [...configKeys.all, 'tenants', 'latest', name] as const,
+    orchestrators: (version: string = 'latest') => [...configKeys.all, 'orchestrators', version] as const,
+    orchestratorDetail: (name: string) => [...configKeys.all, 'orchestrators', 'latest', name] as const,
 }
 
 const queryDefaults = {
@@ -61,6 +63,18 @@ export const useTenants = () => {
     })
 }
 
+export const useOrchestrators = () => {
+    const replay = useReplayTimeContext()
+    const query = replayQuery(replay.mode, replay.snapshotId, replay.effectiveAt)
+    return useQuery({
+        queryKey: configKeys.orchestrators(query.version),
+        queryFn: () => configApi.getOrchestrators(query.timestamp),
+        ...queryDefaults,
+        staleTime: query.historical ? Number.POSITIVE_INFINITY : queryDefaults.staleTime,
+        refetchInterval: query.historical ? false : queryDefaults.refetchInterval,
+    })
+}
+
 const useConfigMutation = <TVariables, TResult>(
     mutationFn: (variables: TVariables) => Promise<TResult>,
 ) => {
@@ -87,3 +101,8 @@ export const useCreateTenant = () => useConfigMutation(configApi.createTenant)
 export const useUpdateTenant = () => useConfigMutation(configApi.updateTenant)
 export const useDeleteTenant = () => useConfigMutation(configApi.deleteTenant)
 export const useDeleteTenants = () => useConfigMutation(configApi.deleteTenants)
+
+export const useCreateOrchestrator = () => useConfigMutation(configApi.createOrchestrator)
+export const useUpdateOrchestrator = () => useConfigMutation(configApi.updateOrchestrator)
+export const useDeleteOrchestrator = () => useConfigMutation(configApi.deleteOrchestrator)
+export const useDeleteOrchestrators = () => useConfigMutation(configApi.deleteOrchestrators)

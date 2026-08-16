@@ -7,6 +7,8 @@ import type {
     ModelSpec,
     Node,
     NodeSpec,
+    Orchestrator,
+    OrchestratorSpec,
     Tenant,
     TenantSpec,
 } from '@/types/config.types'
@@ -23,7 +25,7 @@ interface OperationReceipt {
     }>
 }
 
-type ConfigEntity = Model | Node | Tenant
+type ConfigEntity = Model | Node | Tenant | Orchestrator
 
 const idempotencyKey = () => createClientId('dashboard')
 
@@ -89,6 +91,20 @@ const nodeSpec = (node: Node): NodeSpec => ({
     maxConcurrency: node.maxConcurrency,
 })
 
+const toOrchestrator = (resource: BackendResource<OrchestratorSpec & Record<string, unknown>>): Orchestrator => ({
+    name: resource.ref.name,
+    displayName: resource.spec.tenantRef?.name ?? resource.ref.name,
+    tenantRef: resource.spec.tenantRef ?? { name: '' },
+    scaleUpCooldownSeconds: resource.spec.scaleUpCooldownSeconds ?? 0,
+    scaleDownCooldownSeconds: resource.spec.scaleDownCooldownSeconds ?? 0,
+    allowScaleToZero: resource.spec.allowScaleToZero ?? false,
+    minReplicas: resource.spec.minReplicas ?? 0,
+    maxReplicas: resource.spec.maxReplicas ?? 0,
+    status: resource.status,
+    conditions: resource.conditions,
+    derived: resource.derived,
+})
+
 const tenantSpec = (tenant: Tenant): TenantSpec => ({
     displayName: tenant.displayName,
     priority: tenant.priority,
@@ -99,10 +115,19 @@ const tenantSpec = (tenant: Tenant): TenantSpec => ({
     queueScaleDownThreshold: tenant.queueScaleDownThreshold,
 })
 
+const orchestratorSpec = (orchestrator: Orchestrator): OrchestratorSpec => ({
+    tenantRef: { name: orchestrator.tenantRef.name },
+    scaleUpCooldownSeconds: orchestrator.scaleUpCooldownSeconds,
+    scaleDownCooldownSeconds: orchestrator.scaleDownCooldownSeconds,
+    allowScaleToZero: orchestrator.allowScaleToZero,
+    minReplicas: orchestrator.minReplicas,
+    maxReplicas: orchestrator.maxReplicas,
+})
+
 async function applyResource<T extends ConfigEntity>(
-    kind: 'Model' | 'WorkerNode' | 'Tenant',
+    kind: 'Model' | 'WorkerNode' | 'Tenant' | 'Orchestrator',
     resource: T,
-    spec: ModelSpec | NodeSpec | TenantSpec,
+    spec: ModelSpec | NodeSpec | TenantSpec | OrchestratorSpec,
 ): Promise<T> {
     const receipt = await apiData<OperationReceipt>('/configuration:apply', {
         method: 'POST',
@@ -187,6 +212,21 @@ export const configApi = {
     deleteTenants: async (names: string[]): Promise<string[]> => {
         const resources = await configApi.getTenants()
         await Promise.all(resources.filter((item) => names.includes(item.name)).map((item) => deleteResource('Tenant', item)))
+        return names
+    },
+
+    getOrchestrators: async (timestamp?: string): Promise<Orchestrator[]> =>
+        (await configApi.getConfiguration(timestamp)).orchestrators.map(toOrchestrator),
+    createOrchestrator: (orchestrator: Orchestrator) => applyResource('Orchestrator', orchestrator, orchestratorSpec(orchestrator)),
+    updateOrchestrator: (orchestrator: Orchestrator) => applyResource('Orchestrator', orchestrator, orchestratorSpec(orchestrator)),
+    deleteOrchestrator: async (name: string): Promise<void> => {
+        const current = (await configApi.getOrchestrators()).find((item) => item.name === name)
+        if (!current) return
+        await deleteResource('Orchestrator', current)
+    },
+    deleteOrchestrators: async (names: string[]): Promise<string[]> => {
+        const resources = await configApi.getOrchestrators()
+        await Promise.all(resources.filter((item) => names.includes(item.name)).map((item) => deleteResource('Orchestrator', item)))
         return names
     },
 }
