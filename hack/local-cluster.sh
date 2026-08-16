@@ -538,7 +538,9 @@ start_port_forward() {
   if [[ -f "$pid_file" ]]; then
     pid="$(<"$pid_file")"
     args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    if [[ "$args" == *"port-forward"* && "$args" == *"$service"* ]]; then
+    # 进程在且目标端口真实在监听才算"已在运行"；否则清理残留 PID 文件并重建。
+    if [[ "$args" == *"port-forward"* && "$args" == *"$service"* ]] &&
+      (exec 3<>"/dev/tcp/127.0.0.1/$local_port") 2>/dev/null; then
       log "$key 端口转发已在运行（PID $pid）。"
       return 0
     fi
