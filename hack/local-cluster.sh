@@ -234,27 +234,45 @@ pull_runtime_images() {
 
   local image
   for image in "${RUNTIME_IMAGES[@]:4}"; do
+    if "$CONTAINER_TOOL" image inspect "$image" >/dev/null 2>&1; then
+      log "运行镜像已存在，跳过拉取：$image"
+      continue
+    fi
     log "拉取运行镜像：$image"
     retry 3 "$CONTAINER_TOOL" pull --platform "$TARGET_PLATFORM" "$image"
   done
 }
 
 build_project_images() {
-  log "构建 Controller：$MANAGER_IMG"
-  retry 2 env DOCKER_BUILDKIT=1 "$CONTAINER_TOOL" build --platform "$TARGET_PLATFORM" \
-    --target manager --tag "$MANAGER_IMG" "$ROOT_DIR"
+  # 四个镜像互相独立：并行构建（本机 CPU 充足时显著缩短启动时间）。
+  local image_pids=()
+  build_one() {
+    local label="$1"
+    shift
+    log "构建 $label"
+    if ! retry 2 env DOCKER_BUILDKIT=1 "$CONTAINER_TOOL" build \
+      --platform "$TARGET_PLATFORM" "$@"; then
+      fail "构建 $label 失败"
+    fi
+  }
 
-  log "构建 Simulator：$SIMULATOR_IMG"
-  retry 2 env DOCKER_BUILDKIT=1 "$CONTAINER_TOOL" build --platform "$TARGET_PLATFORM" \
-    --target simulator --tag "$SIMULATOR_IMG" "$ROOT_DIR"
+  build_one "Controller：$MANAGER_IMG" \
+    --target manager --tag "$MANAGER_IMG" "$ROOT_DIR" &
+  image_pids+=("$!")
+  build_one "Simulator：$SIMULATOR_IMG" \
+    --target simulator --tag "$SIMULATOR_IMG" "$ROOT_DIR" &
+  image_pids+=("$!")
+  build_one "Dashboard Backend：$BACKEND_IMG" \
+    --tag "$BACKEND_IMG" "$ROOT_DIR/dashboard/backend" &
+  image_pids+=("$!")
+  build_one "Dashboard Frontend：$FRONTEND_IMG" \
+    --tag "$FRONTEND_IMG" "$ROOT_DIR/dashboard/frontend/my-app" &
+  image_pids+=("$!")
 
-  log "构建 Dashboard Backend：$BACKEND_IMG"
-  retry 2 env DOCKER_BUILDKIT=1 "$CONTAINER_TOOL" build --platform "$TARGET_PLATFORM" \
-    --tag "$BACKEND_IMG" "$ROOT_DIR/dashboard/backend"
-
-  log "构建 Dashboard Frontend：$FRONTEND_IMG"
-  retry 2 env DOCKER_BUILDKIT=1 "$CONTAINER_TOOL" build --platform "$TARGET_PLATFORM" \
-    --tag "$FRONTEND_IMG" "$ROOT_DIR/dashboard/frontend/my-app"
+  local pid
+  for pid in "${image_pids[@]}"; do
+    wait "$pid"
+  done
 }
 
 import_images_to_nodes() {
