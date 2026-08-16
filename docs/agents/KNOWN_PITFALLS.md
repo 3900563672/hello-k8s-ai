@@ -18,6 +18,13 @@
 - 解决：提示词必须自包含（先读 AGENTS.md / README / phase prompt / problems.md），信息落仓库与 `.runtime/`；不要假设新会话有对话记忆。
 - 验证：`$CODEX_HOME/automations/<id>/automation.toml` 逆向 app.asar 确认 `kind="cron"` + `target={type="project"}` 语义。
 
+### 2026-08-17 自动化 TOML 必须显式写 model，否则用默认模型（自定义 Provider 会失败）
+- 现象：`night-run-phase-a-keepalive` 00:00 触发后只创建了线程（`state_5.sqlite` threads 表可见 `01a00b4d`，`model` 列为 None），turn 未启动，任务"没跑起来"；UI 显示模型为 SOL。
+- 原因：用户全局 `config.toml` 是自定义 Provider（`model_provider="deepseek"`、`model="deepseek-chat"`），但手写 automation.toml 未带 `model` 字段，自动化会话回落到 App 默认模型（SOL，用户实际不可用），线程启动失败。
+- 解决：automation.toml 显式加 `model = "deepseek-chat"`、`reasoning_effort = "max"`（与全局配置一致）。
+- 验证：tomllib 解析通过；最早实测点为 04:30 Phase B 空跑（若线程 `model` 列为 deepseek-chat 即生效），其次次日 00:00 Phase A。
+- 备注：用户"先创建会话再指定会话"的 heartbeat 方案可作备选（复用线程模型、不涉及默认模型），但会累积线程上下文。
+
 ### 2026-08-16 自动化触发前提：Codex 桌面 App 必须保持运行
 - 现象：App 退出/合盖时到点不触发自动化。
 - 解决：夜间运行前确认 App 保持运行；Phase A 开工先拉起 nohup 常驻 keepalive，会话中断脚本仍继续。

@@ -35,5 +35,6 @@
 ## 4. 未验证 / 风险
 
 - 自动化 TOML 由逆向 app.asar 所得格式手写，桌面 UI 是否立即显示待用户打开 Automations 面板确认；若未显示，重启 Codex 桌面应用后应加载。
+- 2026-08-17 实测：cron 型自动化未继承全局自定义 Provider 模型（回落默认模型），线程创建后 turn 未启动；已在两条 automation.toml 显式加 `model = "deepseek-chat"`、`reasoning_effort = "max"`（本机配置，不入库），坑位见 docs/agents/KNOWN_PITFALLS.md。
 - 快照脚本对 port-forward 偶发连接复用失败已加重试；长时间运行稳定性待夜间实测。
 - Phase B 的修复质量依赖提示词约束，首次运行后按实际问题复盘调整。
