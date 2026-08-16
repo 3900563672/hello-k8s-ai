@@ -207,6 +207,71 @@ func (database *Postgres) UpsertResourceStates(ctx context.Context, records []Re
 	return results.Close()
 }
 
+// businessResourceKinds 是随用户业务配置增删的 resource_states 种类；
+// Node/Deployment/Pod 等系统遥测始终反映真实集群，不做清理。
+var businessResourceKinds = []string{
+	"Model",
+	"WorkerNode",
+	"Tenant",
+	"TenantModelPolicy",
+	"TenantNodePolicy",
+	"ModelNodePolicy",
+	"Orchestrator",
+	"SimulationClock",
+	"SimulatorInstance",
+	"TenantPerformance",
+	"TenantRuntime",
+	"TenantTraffic",
+}
+
+// PruneResourceStates 按当前快照的活跃业务资源清理 resource_states，
+// 避免已删除资源以幽灵数据形式继续出现在读路径。
+func (database *Postgres) PruneResourceStates(ctx context.Context, active []ResourceStateRecord) error {
+	activeKeys := make(map[string]struct{}, len(active))
+	for _, record := range active {
+		activeKeys[resourceStateID(record)] = struct{}{}
+	}
+	rows, err := database.pool.Query(ctx, `
+		SELECT kind, namespace, name
+		FROM resource_states
+		WHERE kind = ANY($1)`, businessResourceKinds)
+	if err != nil {
+		return fmt.Errorf("query stale resource states: %w", err)
+	}
+	var stale []ResourceStateRecord
+	for rows.Next() {
+		var record ResourceStateRecord
+		if err := rows.Scan(&record.Kind, &record.Namespace, &record.Name); err != nil {
+			rows.Close()
+			return fmt.Errorf("scan stale resource state: %w", err)
+		}
+		if _, exists := activeKeys[resourceStateID(record)]; !exists {
+			stale = append(stale, record)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return fmt.Errorf("iterate stale resource states: %w", err)
+	}
+	rows.Close()
+	if len(stale) == 0 {
+		return nil
+	}
+	batch := &pgx.Batch{}
+	for _, record := range stale {
+		batch.Queue(`DELETE FROM resource_states WHERE kind=$1 AND namespace=$2 AND name=$3`,
+			record.Kind, record.Namespace, record.Name)
+	}
+	results := database.pool.SendBatch(ctx, batch)
+	for range stale {
+		if _, err := results.Exec(); err != nil {
+			_ = results.Close()
+			return fmt.Errorf("delete stale resource state: %w", err)
+		}
+	}
+	return results.Close()
+}
+
 func (database *Postgres) ListResourceStates(ctx context.Context, kind, namespace string, limit int) ([]ResourceStateRecord, error) {
 	if limit <= 0 {
 		limit = 100

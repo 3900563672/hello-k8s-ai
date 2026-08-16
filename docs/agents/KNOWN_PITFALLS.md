@@ -192,6 +192,13 @@
 - `asOf` 是数据库最新 `captured_at`（数据时间），可能比墙钟晚最多一个快照周期（默认 30s），不是 bug。
 - 修改读路径时保持响应结构与实时路径一致（空集合输出 `[]` 而非 `null`）。
 
+### 2026-08-16 resource_states 只增不改导致已删除资源变幽灵数据
+- 现象：删除 Model/WorkerNode/策略等资源后，`/configuration` 仍显示已删除对象；集群 `kubectl get` 已无该对象，数据库 `resource_states` 残留旧行。
+- 原因：`UpsertResourceStates` 只有 INSERT ... ON CONFLICT DO UPDATE，没有删除路径；快照循环每 30s 把当前态 upsert 进 `resource_states`，读路径又优先从该表重建当前态，已删除资源永远不会消失。
+- 解决：`persistSnapshot` 每次写当前态后调用新增的 `PruneResourceStates`，按本次快照的活跃业务资源集合删除库中不存在的业务行（Model/WorkerNode/Tenant/三种 Policy/Orchestrator/SimulationClock/SimulatorInstance/Performance/Runtime/Traffic）；Node/Deployment/Pod 系统遥测保留。无业务资源时同样清理，保证删除全部资源后读路径为空。
+- 验证：真实集群创建 model-prune-test → 快照写入 → API 删除 → 一个快照周期后库中与 `/configuration` 均消失；`TestPostgresLifecycle` 覆盖清理行为。
+- 备注：已部署环境的存量幽灵行需要手动 DELETE 一次，新代码只负责增量清理。
+
 ### 迁移规则（本次确立）
 - 新表/结构变更只追加 `migrations/NNN_*.sql`，不修改已应用的迁移（`schema_migrations` 已记录）。
 - 迁移必须幂等（`IF NOT EXISTS` / `ON CONFLICT`），Backend 启动自动应用。
@@ -209,6 +216,13 @@
 
 ## 集群操作与部署
 
+### 2026-08-16 Simulator Pod 调度绑定 WorkerNode 名：虚拟节点名无法调度
+- 现象：用虚拟节点名（如 node-gpu-1）创建 WorkerNode 并建 TenantNodePolicy 后，SimulatorInstance 副本一直 Pending，`describe` 显示 node selector 匹配不到真实节点。
+- 原因：Simulator 物化的 Pod 通过 affinity/nodeSelector 绑定 WorkerNode 名称，虚拟名在真实集群里不存在。
+- 解决：WorkerNode 的 name 必须使用集群真实节点名（docker-desktop 为 desktop-worker、desktop-worker2 ...）；建 WorkerNode 前先 `kubectl get nodes` 核对。
+- 验证：改为真实节点名后 SimulatorInstance 副本正常调度并 Running。
+- 备注：Docker Desktop 内置 K8s 的节点名是 desktop-worker*，与 Kind 测试集群（hello-k8s-ai-test-e2e 的 kind-control-plane/worker）不同，切换环境要重查。
+
 ### 2026-08-16 清理演示 CR 必须在 Controller 在线时进行
 - 现象：`cluster-down` 后删除 Tenant/Model/Policy 卡在 DeletionTimestamp，对象不消失。
 - 原因：tenant-model-policy、simulator-instance-controller、performance-collector、traffic-distribution 四个 finalizer 依赖 Controller 处理。
@@ -221,7 +235,7 @@
 - 原因：`persistSnapshot` 新增 `snapshotHasBusinessData` 判定，无模型/租户/节点/策略/编排器/实例时跳过写快照。
 - 解决：这是预期行为；`resource_events` 仍会记录真实系统 Lease/Node 心跳事件，不属于假数据。
 - 验证：`bash setup.sh` 干净模式验收通过。
-- 备注：旧版本后端（无跳过逻辑）写入的残留快照/状态不会自动消失；发现 `resource_snapshots` / `resource_states` 有历史行时 TRUNCATE 两张表后再验收（脚本断言只检查 `/replay` 响应，不检查库表行数）。
+- 备注：旧版本后端写入的残留快照不会自动消失；发现 `resource_snapshots` 有历史行时可 TRUNCATE 后再验收（脚本断言只检查 `/replay` 响应，不检查库表行数）。`resource_states` 的业务行已由 `PruneResourceStates` 自动清理，无需手工处理。
 
 ### 2026-08-16 本机 Go 测试 httptest 回环有约 300ms accept 延迟
 - 现象：`TestGrafanaProxyPreservesSubPathAndForwards`、`TestGrafanaProxyRootPath` 在本机 WSL 报 502，CI 正常。

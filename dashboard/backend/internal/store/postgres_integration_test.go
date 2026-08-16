@@ -67,6 +67,19 @@ func TestPostgresLifecycle(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("upsert states again: %v", err)
 	}
+	// 清理已删除业务资源：只保留活跃集合，验证不出现幽灵数据。
+	if err := database.PruneResourceStates(ctx, []ResourceStateRecord{
+		{Kind: "Tenant", Name: "tenant-a"},
+	}); err != nil {
+		t.Fatalf("prune states: %v", err)
+	}
+	remaining, err := database.ListResourceStates(ctx, "", "", 10)
+	if err != nil {
+		t.Fatalf("list states after prune: %v", err)
+	}
+	if len(remaining) != 1 || remaining[0].Name != "tenant-a" {
+		t.Fatalf("expected only tenant-a after prune, got %#v", remaining)
+	}
 	// 写入完成后的状态作为重启基线。
 	baseline, err := database.Status(ctx)
 	if err != nil {
@@ -93,14 +106,14 @@ func TestPostgresLifecycle(t *testing.T) {
 	if statusAfter.ResourceSnapshots != baseline.ResourceSnapshots {
 		t.Fatalf("snapshots changed across restart: %d -> %d", baseline.ResourceSnapshots, statusAfter.ResourceSnapshots)
 	}
-	if statusAfter.ResourceStates != 2 {
-		t.Fatalf("expected 2 resource states after restart, got %d", statusAfter.ResourceStates)
+	if statusAfter.ResourceStates != 1 {
+		t.Fatalf("expected 1 resource state after restart, got %d", statusAfter.ResourceStates)
 	}
-	states, err := restarted.ListResourceStates(ctx, "Model", "", 10)
+	states, err := restarted.ListResourceStates(ctx, "Tenant", "", 10)
 	if err != nil {
 		t.Fatalf("list states: %v", err)
 	}
-	if len(states) != 1 || states[0].Name != "gpt-4o" {
-		t.Fatalf("unexpected model states: %#v", states)
+	if len(states) != 1 || states[0].Name != "tenant-a" {
+		t.Fatalf("unexpected tenant states after prune: %#v", states)
 	}
 }

@@ -163,6 +163,11 @@ func (application *App) persistSnapshot(ctx context.Context) {
 	snapshot := application.aggregator.CurrentSnapshot(now)
 	if !snapshotHasBusinessData(snapshot) {
 		application.logger.Debug("跳过空配置快照：没有用户业务资源", "capturedAt", now)
+		writeContext, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+		if err := application.database.PruneResourceStates(writeContext, nil); err != nil {
+			application.logger.Error("Could not prune stale resource states", "error", err)
+		}
 		return
 	}
 	payload, err := json.Marshal(snapshot)
@@ -184,8 +189,12 @@ func (application *App) persistSnapshot(ctx context.Context) {
 	if err := application.database.SaveSnapshot(writeContext, record); err != nil {
 		application.logger.Error("Could not persist Dashboard resource snapshot", "error", err)
 	}
-	if err := application.database.UpsertResourceStates(writeContext, resourceStateRecords(snapshot, now)); err != nil {
+	records := resourceStateRecords(snapshot, now)
+	if err := application.database.UpsertResourceStates(writeContext, records); err != nil {
 		application.logger.Error("Could not persist current resource states", "error", err)
+	}
+	if err := application.database.PruneResourceStates(writeContext, records); err != nil {
+		application.logger.Error("Could not prune stale resource states", "error", err)
 	}
 }
 

@@ -63,6 +63,7 @@ type Store interface {
 	ReleaseIdempotency(context.Context, string, string) error
 	IndexTraces(context.Context, []model.TraceSummary) error
 	UpsertResourceStates(context.Context, []ResourceStateRecord) error
+	PruneResourceStates(context.Context, []ResourceStateRecord) error
 	ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error)
 	Prune(context.Context, time.Time) error
 	Close()
@@ -96,6 +97,9 @@ func (Disabled) CompleteIdempotency(context.Context, string, string, int, json.R
 func (Disabled) ReleaseIdempotency(context.Context, string, string) error { return ErrUnavailable }
 func (Disabled) IndexTraces(context.Context, []model.TraceSummary) error  { return ErrUnavailable }
 func (Disabled) UpsertResourceStates(context.Context, []ResourceStateRecord) error {
+	return ErrUnavailable
+}
+func (Disabled) PruneResourceStates(context.Context, []ResourceStateRecord) error {
 	return ErrUnavailable
 }
 func (Disabled) ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error) {
