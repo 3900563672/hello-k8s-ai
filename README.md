@@ -42,10 +42,9 @@ bash setup.sh
 
 | 组件 | 地址 |
 | --- | --- |
-| Dashboard | `http://localhost:8080` |
-| Grafana | `http://localhost:3000` |
-| Prometheus | `http://localhost:9090` |
-| Jaeger | `http://localhost:16686` |
+| Dashboard（唯一入口） | `http://localhost:8080` |
+
+Grafana、Prometheus 与 Jaeger 不再单独暴露端口：Grafana 监控面板在 Dashboard「监控面板」页内嵌，Prometheus 与 Jaeger 数据在「数据回显」页展示。
 
 常用命令：
 

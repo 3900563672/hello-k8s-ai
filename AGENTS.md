@@ -6,13 +6,14 @@
 2. 每次任务先读 `docs/agents/README.md` 与 `docs/agents/WORKFLOW.md`，按流程判断是否需要建 issue。
 3. 动手前扫一遍 `docs/agents/KNOWN_PITFALLS.md`。
 4. 涉及 CRD、Controller 或写 API 时，先核对 `docs/agents/PRINCIPLES.md` 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
+5. 涉及 GitHub Issue / Project 看板 / 批量任务时，先读 `docs/agents/PROJECT_REVIEW.md`（看板状态机与闭环规则，只动 `Approved` 条目）。
 
 源码和可执行清单优先于说明文档。没有运行证据时，不得把“清单中存在”写成“集群已就绪”。
 
 ## 文档维护边界
 
 - `docs/` 是人类文档：Agent 默认不读、不改；需要背景时按需阅读，事实以源码、生成清单和可执行测试为准。
-- Agent 只维护 `docs/agents/` 与 `change-history/`；修改人类文档需用户明确要求（或先列清单等授权）。
+- Agent 只维护 `docs/agents/` 与 `change-history/`；人类文档的更新默认需用户明确要求，但 README 与 `docs/` 中访问方式、架构、行为描述因本次改动过期时，必须同步更新并纳入本次提交（文档漂移检查是强制步骤，不得只归档不改文档）。
 - 每次交付后按 `docs/agents/SYNC.md` 同步：追加 `change-history/` 条目、更新本目录受影响文档、重新生成上下文包（`make context-pack`）、列出人类文档待同步清单。
 
 ## 工程结构
