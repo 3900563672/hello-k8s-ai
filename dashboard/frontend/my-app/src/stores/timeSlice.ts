@@ -182,6 +182,13 @@ export const useTimeStore = create<TimeState>()(
             setSnapshots: (nextSnapshots) => {
                 const state = get()
                 const ordered = sortSnapshots(nextSnapshots)
+                // 内容未变化（同一批事件/快照）时不更新状态，避免轮询导致整页重渲染与时间轴跳动。
+                if (
+                    state.snapshots.length === ordered.length &&
+                    state.snapshots.every((item, index) => item.id === ordered[index].id)
+                ) {
+                    return
+                }
                 const selected = state.mode === 'latest'
                     ? ordered.at(-1) ?? null
                     : ordered.find((snapshot) => snapshot.id === state.selectedSnapshotId)
@@ -217,6 +224,8 @@ export const useTimeStore = create<TimeState>()(
                 const state = get()
                 const parsed = Date.parse(timestamp)
                 if (!Number.isFinite(parsed) || parsed <= 0 || state.snapshots.length > 0 || state.mode !== 'latest') return
+                // 空时间线（干净环境）下只在首次设置权威时间，之后保持稳定，避免时间戳与视窗随轮询跳动。
+                if (Date.parse(state.timestamp) > 0) return
                 set(
                     {
                         timestamp: new Date(parsed).toISOString(),

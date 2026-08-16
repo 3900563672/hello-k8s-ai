@@ -273,13 +273,21 @@ func (database *Postgres) ListTimeline(ctx context.Context, limit int, before *t
 	if before != nil {
 		cutoff = before.UTC()
 	}
+	// 时间线只展示用户业务资源事件与快照切面；Lease/Node/Pod/Deployment 等
+	// 系统心跳事件仍完整落在 resource_events，但不进入回放时间线。
+	businessKinds := []string{
+		"Model", "Tenant", "WorkerNode",
+		"TenantModelPolicy", "TenantNodePolicy", "ModelNodePolicy",
+		"Orchestrator", "SimulatorInstance",
+		"TenantPerformance", "TenantRuntime", "SimulationClock",
+	}
 	rows, err := database.pool.Query(ctx, `
 		SELECT timeline_id, occurred_at, operation, kind, namespace, name
 		FROM (
 			SELECT event_id AS timeline_id, occurred_at, operation, kind,
 			       namespace, name, sequence
 			FROM resource_events
-			WHERE occurred_at < $1
+			WHERE occurred_at < $1 AND kind = ANY($2)
 			UNION ALL
 			SELECT snapshot_id AS timeline_id, captured_at AS occurred_at,
 			       'capture' AS operation, 'Snapshot' AS kind,
@@ -288,7 +296,7 @@ func (database *Postgres) ListTimeline(ctx context.Context, limit int, before *t
 			WHERE captured_at < $1
 		) AS timeline
 		ORDER BY occurred_at DESC, sequence DESC
-		LIMIT $2`, cutoff, limit)
+		LIMIT $3`, cutoff, businessKinds, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list timeline: %w", err)
 	}

@@ -58,9 +58,11 @@ export const useControlPlaneStore = create<ControlPlaneState>()(
                 const current = get().cluster
                 if (get().refreshPhase === 'pending') return
 
+                // 已连接时后台静默刷新，不把状态打成 connecting，避免顶部徽标每次轮询闪烁。
+                const nextStatus = current.connectionStatus === 'connected' ? 'connected' : 'connecting'
                 set(
                     {
-                        cluster: { ...current, connectionStatus: 'connecting' },
+                        cluster: { ...current, connectionStatus: nextStatus },
                         refreshPhase: 'pending',
                         lastError: null,
                     },
