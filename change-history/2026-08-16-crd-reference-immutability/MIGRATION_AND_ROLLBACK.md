@@ -12,7 +12,6 @@
 
 ## 3. 风险与注意
 
-- CEL 规则对 Create 也生效，创建时 oldSelf 为 null，因此规则统一使用 `!has(oldSelf) || self.name == oldSelf.name`：
-  - 创建时 `has(oldSelf)` 为 false，规则直接通过；
-  - 更新时比较新旧引用，不一致则拒绝。
-- 不能简写为 `self.name == oldSelf.name`：创建时 oldSelf 为 null，对 null 取字段会报错，导致创建被 API Server 拒绝。
+- CEL 规则为 transition rule，只在 UPDATE 时求值：更新时比较新旧引用（`oldSelf.name`），不一致则拒绝。
+- Create 天然不校验（transition rule 不在创建时求值），新增策略可以正常创建。
+- 不能使用 `!has(oldSelf) || ...`：字段级规则的 `oldSelf` 根变量不是 message，`has()` 无法编译（API Server 报 `invalid argument to has() macro`）。

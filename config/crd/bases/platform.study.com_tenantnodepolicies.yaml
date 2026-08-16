@@ -70,7 +70,7 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 节点引用不可变，变更请删除重建
-                  rule: '!has(oldSelf) || self.name == oldSelf.name'
+                  rule: self.name == oldSelf.name
               tenantRef:
                 description: 租户引用
                 properties:
@@ -83,7 +83,7 @@ spec:
                 type: object
                 x-kubernetes-validations:
                 - message: 租户引用不可变，变更请删除重建
-                  rule: '!has(oldSelf) || self.name == oldSelf.name'
+                  rule: self.name == oldSelf.name
             required:
             - effect
             - nodeRef

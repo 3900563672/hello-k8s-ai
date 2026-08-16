@@ -7,9 +7,10 @@
 
 ## 2. 修改
 
-- `api/v1/tenantmodelpolicy_types.go`：`TenantRef`、`ModelRef` 增加 `+kubebuilder:validation:XValidation:rule="!has(oldSelf) || self.name == oldSelf.name"`，message 提示"租户/模型引用不可变，变更请删除重建"。
+- `api/v1/tenantmodelpolicy_types.go`：`TenantRef`、`ModelRef` 增加 `+kubebuilder:validation:XValidation:rule="self.name == oldSelf.name"`，message 提示"租户/模型引用不可变，变更请删除重建"。
 - `api/v1/tenantnodepolicy_types.go`：`TenantRef`、`NodeRef` 同样处理。
-- 规则用 `!has(oldSelf) ||` 短路：CEL 的 `oldSelf` 在创建对象时为 null，直接 `oldSelf.name` 会让创建请求被拒；更新时 oldSelf 为对象，比较引用是否变化。
+- 规则是字段级 transition rule：Kubernetes 只在 UPDATE 时求值，Create 不执行。`oldSelf` 为旧对象中该字段的值；旧对象未设置该字段时为 null，比较结果为 false 同样拒绝，与不可变语义一致。
+- 注意：字段级 transition rule 的根变量不是 message，不能对 `oldSelf` 使用 `has()`（首次实现 `!has(oldSelf) || ...` 被 API Server 以 `invalid argument to has() macro` 拒绝，已按标准写法简化）。
 - 重新生成：`make manifests generate YEAR=2026`（controller-gen v0.21.0），仅 2 个 CRD 清单 + 2 个类型文件变化。
 
 ## 3. 未做

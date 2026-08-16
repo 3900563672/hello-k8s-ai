@@ -25,12 +25,12 @@ import (
 type TenantNodePolicySpec struct {
 	// 租户引用
 	// +required
-	// +kubebuilder:validation:XValidation:rule="!has(oldSelf) || self.name == oldSelf.name",message="租户引用不可变，变更请删除重建"
+	// +kubebuilder:validation:XValidation:rule="self.name == oldSelf.name",message="租户引用不可变，变更请删除重建"
 	TenantRef ObjectRef `json:"tenantRef"`
 
 	// 节点引用
 	// +required
-	// +kubebuilder:validation:XValidation:rule="!has(oldSelf) || self.name == oldSelf.name",message="节点引用不可变，变更请删除重建"
+	// +kubebuilder:validation:XValidation:rule="self.name == oldSelf.name",message="节点引用不可变，变更请删除重建"
 	NodeRef ObjectRef `json:"nodeRef"`
 
 	// Allow 或 Deny
