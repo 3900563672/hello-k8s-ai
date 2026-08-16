@@ -29,7 +29,8 @@ jobs:
     env:
       E2E_KIND_CLUSTER: hello-k8s-ai-test-e2e
       KIND_NODE_IMAGE: kindest/node:v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
-      DOCKER_BUILD_CACHE: --cache-from=type=gha --cache-to=type=gha,mode=max
+      # E2E 只复用 deployment 导出的缓存；并行构建时各自导出同一 scope 会互相覆盖。
+      DOCKER_BUILD_CACHE: --cache-from=type=gha
     steps:
       - name: 检出代码
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

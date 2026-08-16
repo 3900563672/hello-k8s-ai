@@ -53,27 +53,50 @@ func TestE2E(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	By("building the manager image")
-	cmd := exec.Command("make", "docker-build", fmt.Sprintf("IMG=%s", managerImage))
-	_, err := utils.Run(cmd)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to build the manager image")
+	// 镜像构建与 CertManager 安装互不依赖：并行执行以缩短 E2E 墙钟。
+	// 并行 goroutine 里只执行命令并回传错误，gomega 断言统一在主 goroutine 做。
+	needCertManager := os.Getenv("CERT_MANAGER_INSTALL_SKIP") != "true" && !utils.IsCertManagerCRDsInstalled()
+	if needCertManager {
+		shouldCleanupCertManager = true
+	}
+
+	By("并行构建 manager / simulator 镜像并安装 CertManager")
+	managerBuild := make(chan error, 1)
+	simulatorBuild := make(chan error, 1)
+	certManagerInstall := make(chan error, 1)
+
+	go func() {
+		cmd := exec.Command("make", "docker-build", fmt.Sprintf("IMG=%s", managerImage))
+		_, err := utils.Run(cmd)
+		managerBuild <- err
+	}()
+	go func() {
+		cmd := exec.Command("make", "docker-build-simulator", fmt.Sprintf("SIMULATOR_IMG=%s", simulatorImage))
+		_, err := utils.Run(cmd)
+		simulatorBuild <- err
+	}()
+	if needCertManager {
+		go func() {
+			certManagerInstall <- utils.InstallCertManager()
+		}()
+	} else {
+		certManagerInstall <- nil
+	}
+
+	ExpectWithOffset(1, <-managerBuild).NotTo(HaveOccurred(), "Failed to build the manager image")
+	ExpectWithOffset(1, <-simulatorBuild).NotTo(HaveOccurred(), "Failed to build the simulator image")
+	ExpectWithOffset(1, <-certManagerInstall).NotTo(HaveOccurred(), "Failed to install CertManager")
 
 	// 如果用 Kind 之外的环境跑，需要把镜像推到对应仓库，这里的 LoadImage 可以替换掉
 	By("loading the manager image on Kind")
-	err = utils.LoadImageToKindClusterWithName(managerImage)
+	err := utils.LoadImageToKindClusterWithName(managerImage)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the manager image into Kind")
-
-	By("building the simulator image")
-	cmd = exec.Command("make", "docker-build-simulator", fmt.Sprintf("SIMULATOR_IMG=%s", simulatorImage))
-	_, err = utils.Run(cmd)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to build the simulator image")
 
 	By("loading the simulator image on Kind")
 	err = utils.LoadImageToKindClusterWithName(simulatorImage)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the simulator image into Kind")
 
 	configureKubectlKubeRC()
-	setupCertManager()
 })
 
 var _ = AfterSuite(func() {
@@ -92,27 +115,6 @@ func configureKubectlKubeRC() {
 	} else {
 		_, _ = fmt.Fprintf(GinkgoWriter, "kubectl kuberc enabled (KUBECTL_KUBERC=true)\n")
 	}
-}
-
-// setupCertManager 如果环境里还没有 CertManager，就装一个。
-// 如果 CERT_MANAGER_INSTALL_SKIP=true 或者已经存在则跳过。
-func setupCertManager() {
-	if os.Getenv("CERT_MANAGER_INSTALL_SKIP") == "true" {
-		_, _ = fmt.Fprintf(GinkgoWriter, "Skipping CertManager installation (CERT_MANAGER_INSTALL_SKIP=true)\n")
-		return
-	}
-
-	By("checking if CertManager is already installed")
-	if utils.IsCertManagerCRDsInstalled() {
-		_, _ = fmt.Fprintf(GinkgoWriter, "CertManager is already installed. Skipping installation.\n")
-		return
-	}
-
-	// 标记为本 suite 安装的，后面 AfterSuite 要卸载掉
-	shouldCleanupCertManager = true
-
-	By("installing CertManager")
-	Expect(utils.InstallCertManager()).To(Succeed(), "Failed to install CertManager")
 }
 
 // teardownCertManager 仅卸载本 suite 安装的 CertManager，防止删掉用户自己装的。

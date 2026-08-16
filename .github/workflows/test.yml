@@ -101,12 +101,12 @@ jobs:
           npm ci
           npm run check
 
-  deployment:
+  verify-deploy:
     permissions:
       contents: read
-    name: 生成文件、部署清单与镜像
+    name: 生成文件与部署清单
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - name: 检出代码
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -124,6 +124,18 @@ jobs:
           git diff --exit-code -- api/v1 config/crd config/rbac
           make verify-deploy
           git diff --check
+
+  docker-images:
+    permissions:
+      contents: read
+    name: 构建并校验全部项目镜像
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: 构建并校验全部项目镜像（BuildKit gha 缓存）
         env:
