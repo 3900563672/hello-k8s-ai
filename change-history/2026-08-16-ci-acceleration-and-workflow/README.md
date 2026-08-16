@@ -44,8 +44,14 @@ GitHub Actions 全量测试耗时从"最慢 job 约 5-6 分钟且全部重复跑
 - [测试报告](TEST_REPORT.md)
 - [升级与回滚](MIGRATION_AND_ROLLBACK.md)
 
-## 5. 剩余未验证
+## 5. 实测结论与停止线
 
-- gha 镜像缓存在多次运行间的实际收益（本次为首个冷缓存运行，需后续运行对比）。
-- actions/cache 对 lint 的命中效果（首次未命中，需第二次运行验证）。
-- 多分支同时跑时 gha 缓存 key 的分支隔离行为。
+- lint 从 2m13s 降到 24s、verify-deploy 45s、backend/frontend 约 30s、controller 约 2.5min。
+- 整次 push 墙钟约 5m22s，瓶颈是 E2E：Go 编译（约 3 分钟，CPU 密集、源码变更必重编）+ kind（25s）+ 就绪轮询测试（约 1 分钟）。
+- E2E 与镜像 job 各编译一次 manager/simulator，是 job 隔离下的重复成本；共享产物会引入串行依赖（更慢），需 registry 预构建才能突破（架构级，暂缓）。
+- **停止线**：现有架构下约 5 分钟是现实下限，建议停止继续压 CI；后续如引入 ghcr 预构建镜像，再评估是否把墙钟压到约 3 分钟。
+
+## 6. 剩余未验证
+
+- ghcr 预构建镜像方案（未实施）。
+- gha 镜像缓存对 base / go mod 层的少量收益（当前未观察到明显命中）。

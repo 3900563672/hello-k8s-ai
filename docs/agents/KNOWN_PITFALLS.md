@@ -69,6 +69,30 @@
 - 解决：每 30 秒轮询一次（`gh run list` / `gh run view --json jobs`），预期 3-6 分钟，超过 10 分钟无结论再停下排查；失败取 `gh run view <run-id> --log-failed`。
 - 验证：本次交付全程 30 秒轮询，无空等。
 
+### 2026-08-16 墙钟由最慢 job 决定，优化墙钟以下的 job 不改变总耗时
+- 现象：lint / controller / verify-deploy 各自提速明显，但整次 push 墙钟仍约 5 分 20 秒。
+- 原因：三个 workflow 并行，墙钟 = 最慢 job = E2E（5m22s）；其余 job 本来就在墙钟内跑完。
+- 解决：先量各 job 耗时找出瓶颈（`gh run view --json jobs`），再决定优化对象；本次结论是 E2E 的 Go 编译（约 3 分钟）为硬成本。
+- 验证：lint 从 2m13s 降到 24s，墙钟不变；E2E 内部并行化后墙钟仍不变。
+
+### 2026-08-16 E2E 并行构建 Go 镜像无墙钟收益（CPU 密集）
+- 现象：BeforeSuite 并行构建 manager/simulator 镜像（两个 goroutine），构建阶段仍 2m55s，与串行相同。
+- 原因：Go 编译是 CPU 密集，4 vCPU runner 上并行两个编译 = 总 CPU 时间不变。
+- 解决：并行仍保留（收益在"与 CertManager 安装重叠"），但不要指望并行编译本身省时间；要省只能复用镜像产物（架构级改动，暂不做）。
+- 验证：f111704 实测构建阶段 2m55s（串行基线 1m46s + 1m09s）。
+
+### 2026-08-16 gha 镜像缓存对 Go 编译层无效
+- 现象：`--cache-from/--cache-to=type=gha` 参数正确传入、builder 用 docker-container，但层输出几乎没有 `CACHED`（4 个镜像仅 3 层）。
+- 原因：Dockerfile 里 `COPY . .` 之后是 `go build`；源码每次提交都变，编译层必然重跑。gha 能缓存的只有 base 镜像与 `go mod download` 层，收益约 1 分钟内。
+- 解决：保留 cache 参数（对依赖层有少量收益）；不要把镜像构建提速押在 gha 缓存上。
+- 备注：actions/cache 的命中匹配除 key 外还包含由 path 派生的 version；修改 cache path 会导致旧缓存 miss（属正常失效，不要误判为 bug）。
+
+### 2026-08-16 E2E 测试阶段约 1 分钟是就绪轮询
+- 现象：E2E 测试执行约 1m17s，其中约 24 秒的 spec 里有 11 次每秒一次的轮询。
+- 原因：spec 等待资源就绪（deployment/pod/端点），每次轮询间隔 1 秒，属于稳定逻辑。
+- 解决：不要为省时间调小轮询间隔（有偶发失败风险）；如确需优化，应改为"按事件等待"（需要较大重构）。
+- 验证：多次运行该 spec 稳定约 24 秒。
+
 ## YAML 与模板
 
 ### 2026-08-16 issue form description 中 `bug: ` 冒号被 YAML 解析
