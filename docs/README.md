@@ -10,9 +10,19 @@
 - “规划/建议”绝不写成现有能力。
 - Markdown 是内容源；PDF 从 `whitepaper/COMPLETE_OVERVIEW.md` 生成，不单独维护正文。
 
+## 文档分层
+
+| 层 | 读者 | 入口 |
+| --- | --- | --- |
+| 人类 | 开发与使用者 | 根目录 `README.md`、本索引、[INDEX.md](INDEX.md) |
+| Agent | 能操作本机仓库的 AI | 根目录 `AGENTS.md` + [agents/](agents/README.md) |
+| 远程 AI | 只在自己工作区、收打包内容的 AI | [remote-ai/](remote-ai/README.md)，包内先读 `CONTEXT_PACK.md`（`make context-pack` 生成） |
+
 ## 从哪里开始
 
-- AI 或第一次接手：先读 [AI_CONTEXT.md](AI_CONTEXT.md)。
+- 人类第一次接手：读根目录 [README.md](../README.md) 或 [PROJECT_OVERVIEW_NEW.md](../PROJECT_OVERVIEW_NEW.md)。
+- Agent：读根目录 `AGENTS.md` 与 [agents/README.md](agents/README.md)。
+- 远程 AI：读 [remote-ai/README.md](remote-ai/README.md)，包内先读 `CONTEXT_PACK.md`。
 - 想快速了解系统：读 [overview/PROJECT_OVERVIEW.md](overview/PROJECT_OVERVIEW.md) 和 [overview/ARCHITECTURE_OVERVIEW.md](overview/ARCHITECTURE_OVERVIEW.md)。
 - 要改代码：先查 [reference/SOURCE_MAP.md](reference/SOURCE_MAP.md)、[kubernetes/FIELD_OWNERSHIP.md](kubernetes/FIELD_OWNERSHIP.md) 和对应专题。
 - 要部署或排障：从 [getting-started/DEPLOYMENT.md](getting-started/DEPLOYMENT.md) 与 [operations/TROUBLESHOOTING.md](operations/TROUBLESHOOTING.md) 开始。

@@ -351,3 +351,13 @@ endef
 define gomodver
 $(shell go list -m -f '{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}' $(1) 2>/dev/null)
 endef
+
+# 生成远程 AI 上下文包（输出 .runtime/context-pack/，不提交）
+.PHONY: context-pack
+context-pack:
+	bash hack/gen-context-pack.sh
+
+# 检查 Markdown 相对链接与图片路径
+.PHONY: docs-check
+docs-check:
+	python3 hack/check-docs.py

@@ -2,9 +2,10 @@
 
 ## 开始前
 
-1. 完整阅读 `docs/AI_CONTEXT.md`。
-2. 通过 `docs/INDEX.md` 选择本次改动对应的专题文档。
-3. 涉及 CRD、Controller 或写 API 时，先核对 `docs/kubernetes/FIELD_OWNERSHIP.md`。
+1. 文档按读者分层：人类看 `docs/` 与根目录 README；能操作本机的 Agent 看本文件与 `docs/agents/`；只收打包内容的远程 AI 看 `docs/remote-ai/`。
+2. 每次任务先读 `docs/agents/README.md` 与 `docs/agents/WORKFLOW.md`，按流程判断是否需要建 issue。
+3. 动手前扫一遍 `docs/agents/KNOWN_PITFALLS.md`。
+4. 涉及 CRD、Controller 或写 API 时，先核对 `docs/agents/PRINCIPLES.md` 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
 
 源码和可执行清单优先于说明文档。没有运行证据时，不得把“清单中存在”写成“集群已就绪”。
 

@@ -1,10 +1,12 @@
 # 文档总索引
 
+> 文档按读者分层：人类（本索引）、本地 Agent（`docs/agents/`）、远程 AI（`docs/remote-ai/`，包内入口 `CONTEXT_PACK.md`）。本索引面向人类阅读路径；分层说明见 [docs/README.md](README.md)。
+
 ## 建议阅读路径
 
 ### 新人 60 分钟路径
 
-1. [AI 交接上下文](AI_CONTEXT.md) - 当前状态、不可破坏约束和重要目录。
+1. [AI_CONTEXT 分层入口](AI_CONTEXT.md) - 分层导航与基线速览。
 2. [项目总览](overview/PROJECT_OVERVIEW.md) - 业务问题、核心概念和边界。
 3. [架构总览](overview/ARCHITECTURE_OVERVIEW.md) - 组件、事实源和数据链路。
 4. [CRD 设计](kubernetes/CRD_DESIGN.md) - 业务语言。
