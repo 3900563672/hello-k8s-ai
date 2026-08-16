@@ -75,6 +75,12 @@ flowchart TD
   - `gh run view <run-id> --log-failed`：失败时取失败 job 日志定位原因，不盲改重推。
 - docs-only 提交只会触发"文档检查"；代码提交才会触发 lint / 单元测试 / E2E / 部署验证。
 
+## 4.2 夜间长时运行
+
+- 无人值守长时运行（维持 + 施压 + 采集 → 分析 + 修复）走 [hack/night-run/README.md](../../hack/night-run/README.md)。
+- 由 Codex 桌面自动化触发：00:00 Phase A（只采集不推码）、04:30 Phase B（按决策矩阵处理并提交）；非运行日自动空跑。
+- Phase A 的问题档案在 `.runtime/night-run/<日期>/problems.md`（不入库）；Phase B 修完必须同步 `change-history/` 与受影响 docs。
+
 ## 5. 提交
 
 - 提交信息：`feat:` / `fix:` / `docs:` / `chore:` / `refactor:` + 中文描述 +（`Fixes #N`）。
