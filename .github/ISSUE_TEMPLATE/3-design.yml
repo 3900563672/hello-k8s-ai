@@ -1,0 +1,55 @@
+name: 设计方案
+description: "架构、数据链路或接口设计，标题使用 `design: ` 前缀。"
+title: "design: "
+labels: ["design"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        设计类 issue 用于描述需要先评审再实施的改动，请在动手前补充完整。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 当前实现存在什么问题，为什么需要重新设计。
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: 当前状态
+      description: 现有实现与数据流的真实情况，可引用源码或文档位置。
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: 期望状态
+      description: 改动完成后的配置、数据与行为应该是什么。
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: 修改方向
+      description: 分阶段实施路径、涉及模块与边界。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 完成后必须满足的可验证标准。
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      options:
+        - P0
+        - P1
+        - P2
+      default: 1
+    validations:
+      required: true

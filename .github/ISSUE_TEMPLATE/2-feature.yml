@@ -1,0 +1,30 @@
+name: 功能与改进
+description: "新能力或现有功能增强，标题使用 `feat: ` 前缀。"
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        建议先阅读 [docs/INDEX.md](../../docs/INDEX.md) 了解项目结构与既有设计。
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景与目标
+      description: 为什么需要这个能力，解决什么问题。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 功能上线后应当如何工作，尽量包含可验证的验收标准。
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影响范围
+      description: 涉及模块（Controller / Simulator / Backend / Frontend）、CRD、API、文档与部署影响。
+    validations:
+      required: false
