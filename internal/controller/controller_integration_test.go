@@ -189,6 +189,9 @@ func TestWorkerNodeUsageIsGlobalAndResetsUnusedNodes(t *testing.T) {
 		WithScheme(scheme).
 		WithStatusSubresource(&platformv1.WorkerNode{}).
 		WithObjects(model, nodeA, nodeB, pod).
+		WithIndex(&corev1.Pod{}, podNodeNameIndex, func(obj client.Object) []string {
+			return []string{obj.(*corev1.Pod).Spec.NodeName}
+		}).
 		Build()
 	reconciler := &WorkerNodeUsageReconciler{Client: kubernetesClient, Scheme: scheme}
 

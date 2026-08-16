@@ -23,6 +23,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// podNodeNameIndex 是 Pod 的调度节点索引，避免每个节点 Reconcile 都遍历全部 Pod。
+const podNodeNameIndex = "spec.nodeName"
+
 // WorkerNodeUsageReconciler 是 WorkerNode 状态里用量的唯一写入者。
 // 根据调度上去的、非终态的模拟器 Pod 推算 GPU 和并发占用。
 type WorkerNodeUsageReconciler struct {
@@ -97,15 +100,16 @@ func (r *WorkerNodeUsageReconciler) calculateNodeUsage(ctx context.Context, node
 	}
 
 	var pods corev1.PodList
-	if err := r.List(ctx, &pods); err != nil {
+	// 只拉取调度到当前节点的 Pod，避免每个节点都遍历集群全部 Pod。
+	if err := r.List(ctx, &pods, client.MatchingFields{podNodeNameIndex: nodeName}); err != nil {
 		return 0, 0, fmt.Errorf("list pods for worker node usage: %w", err)
 	}
 	usedGPU := 0
 	usedConcurrency := 0
 	for i := range pods.Items {
 		pod := &pods.Items[i]
-		// 只统计当前节点上非 Succeeded/Failed 的 Pod
-		if pod.Spec.NodeName != nodeName || pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+		// 只统计非 Succeeded/Failed 的 Pod（NodeName 已由索引保证）
+		if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
 			continue
 		}
 		// 确认是模拟器 Pod（有标签或注解）
@@ -161,8 +165,12 @@ func (r *WorkerNodeUsageReconciler) updateWorkerNodeStatus(
 	})
 }
 
-// allWorkerNodeRequests 每次 Pod 或 Model 变化时，对所有 WorkerNode 触发一次 reconcile。
-func (r *WorkerNodeUsageReconciler) allWorkerNodeRequests(ctx context.Context, _ client.Object) []reconcile.Request {
+// allWorkerNodeRequests 把 Pod 或 Model 变化映射为 WorkerNode Reconcile 请求。
+// 已调度 Pod 只影响其所在节点，直接入队该节点；Model 事件与未调度 Pod 无法定位节点，广播全部节点兜底。
+func (r *WorkerNodeUsageReconciler) allWorkerNodeRequests(ctx context.Context, obj client.Object) []reconcile.Request {
+	if pod, ok := obj.(*corev1.Pod); ok && pod.Spec.NodeName != "" {
+		return []reconcile.Request{{NamespacedName: client.ObjectKey{Name: pod.Spec.NodeName}}}
+	}
 	var nodes platformv1.WorkerNodeList
 	if err := r.List(ctx, &nodes); err != nil {
 		return nil
@@ -191,6 +199,21 @@ func (r *WorkerNodeUsageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				oldPod.Labels[modelLabelKey] != newPod.Labels[modelLabelKey] ||
 				!oldPod.DeletionTimestamp.Equal(newPod.DeletionTimestamp))
 	})
+
+	if err := registerFieldIndexes(
+		context.Background(),
+		mgr,
+		"workernodeusage",
+		fieldIndex{
+			object: &corev1.Pod{},
+			field:  podNodeNameIndex,
+			extractor: func(obj client.Object) []string {
+				return nonEmptyIndexValue(obj.(*corev1.Pod).Spec.NodeName)
+			},
+		},
+	); err != nil {
+		return err
+	}
 
 	controllerBuilder := ctrl.NewControllerManagedBy(mgr).
 		Named("workernodeusage").
