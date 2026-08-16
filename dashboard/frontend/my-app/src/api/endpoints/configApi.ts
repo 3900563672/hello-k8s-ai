@@ -25,6 +25,7 @@ interface OperationReceipt {
         action: string
         resourceVersion?: string
         convergence: string
+        error?: string
     }>
 }
 

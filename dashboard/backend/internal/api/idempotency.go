@@ -110,6 +110,13 @@ func idempotencyMiddleware(
 		cancel()
 		if err != nil {
 			logger.Error("Could not complete command idempotency record", "key", key, "error", err)
+			// 完成记录失败时释放占位，避免同一 key 被 pending 卡满保留期；
+			// 命令本身已执行，重放依赖 Kubernetes 侧 apply 幂等语义。
+			releaseContext, releaseCancel := context.WithTimeout(context.WithoutCancel(request.Context()), 3*time.Second)
+			if releaseErr := database.ReleaseIdempotency(releaseContext, key, requestHash); releaseErr != nil {
+				logger.Error("Could not release idempotency reservation after completion failure", "key", key, "error", releaseErr)
+			}
+			releaseCancel()
 		}
 		copyHeaders(writer.Header(), response.header)
 		writer.WriteHeader(response.status)

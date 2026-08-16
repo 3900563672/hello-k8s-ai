@@ -145,6 +145,7 @@ interface OperationReceipt {
     results: Array<{
         resourceVersion?: string
         convergence: string
+        error?: string
     }>
 }
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/kubernetes"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
@@ -57,30 +60,55 @@ func (server *Server) handleApplyConfiguration(writer http.ResponseWriter, reque
 
 	operationID := randomIdentifier("op")
 	acceptedAt := time.Now().UTC()
-	results := make([]model.OperationResourceResult, 0, len(body.Resources))
-	for _, intent := range body.Resources {
-		object, action, err := server.gateway.Apply(request.Context(), intent, body.DryRun)
+	results, failed := server.applyConfigurationBatch(server.gateway, request, operationID, body.Resources, body.DryRun)
+	state := map[bool]string{true: "validated", false: "accepted"}[body.DryRun]
+	partial := false
+	var warnings []string
+	if failed != nil {
+		// 前序资源已生效，不能伪装成整体失败；返回逐项成功/失败明细。
+		state, partial = "partial", true
+		warnings = []string{"部分资源应用失败；已成功项与失败明细见 results。"}
+		results = append(results, *failed)
+	}
+	receipt := model.OperationReceipt{
+		OperationID: operationID,
+		AcceptedAt:  acceptedAt,
+		State:       state,
+		Results:     results,
+	}
+	writeData(writer, request, http.StatusAccepted, receipt, partial, warnings, sourceVersions(server.cache.SyncedAt()))
+}
+
+// resourceApplier 抽象 Kubernetes 写操作，便于对批量应用的部分失败语义做单元测试。
+type resourceApplier interface {
+	Apply(context.Context, kubernetes.ApplyIntent, bool) (*unstructured.Unstructured, string, error)
+}
+
+// applyConfigurationBatch 顺序应用一批配置。遇到失败时停止并返回已成功结果与失败明细，
+// 由调用方以 partial 状态返回，避免"前 N-1 个已生效但客户端只看到整体失败"。
+func (server *Server) applyConfigurationBatch(applier resourceApplier, request *http.Request, operationID string, resources []kubernetes.ApplyIntent, dryRun bool) ([]model.OperationResourceResult, *model.OperationResourceResult) {
+	results := make([]model.OperationResourceResult, 0, len(resources))
+	for _, intent := range resources {
+		object, action, err := applier.Apply(request.Context(), intent, dryRun)
 		if err != nil {
 			server.recordAudit(request, operationID, actionOrDefault(action, "apply"), model.ResourceRef{APIVersion: "platform.study.com/v1", Kind: intent.Kind, Name: intent.Name}, "error", err)
-			server.writeCommandError(writer, request, err)
-			return
+			return results, &model.OperationResourceResult{
+				Ref:         model.ResourceRef{APIVersion: "platform.study.com/v1", Kind: intent.Kind, Name: intent.Name},
+				Action:      actionOrDefault(action, "apply"),
+				Convergence: "failed",
+				Error:       err.Error(),
+			}
 		}
 		ref := model.ResourceRef{APIVersion: object.GetAPIVersion(), Kind: intent.Kind, Name: object.GetName(), UID: string(object.GetUID())}
 		results = append(results, model.OperationResourceResult{
 			Ref:             ref,
 			Action:          action,
 			ResourceVersion: object.GetResourceVersion(),
-			Convergence:     map[bool]string{true: "dry-run", false: "pending"}[body.DryRun],
+			Convergence:     map[bool]string{true: "dry-run", false: "pending"}[dryRun],
 		})
 		server.recordAudit(request, operationID, action, ref, "accepted", nil)
 	}
-	receipt := model.OperationReceipt{
-		OperationID: operationID,
-		AcceptedAt:  acceptedAt,
-		State:       map[bool]string{true: "validated", false: "accepted"}[body.DryRun],
-		Results:     results,
-	}
-	writeData(writer, request, http.StatusAccepted, receipt, false, nil, sourceVersions(server.cache.SyncedAt()))
+	return results, nil
 }
 
 func (server *Server) handleDeleteConfiguration(writer http.ResponseWriter, request *http.Request) {
@@ -205,7 +233,10 @@ func (server *Server) recordAudit(request *http.Request, operationID, action str
 		RequestID:   requestID(request.Context()),
 		Details:     details,
 	}
-	if err := server.store.RecordAudit(request.Context(), record); err != nil {
+	// 客户端断开不能丢审计：使用独立于请求生命周期的超时上下文。
+	auditContext, cancel := context.WithTimeout(context.WithoutCancel(request.Context()), 5*time.Second)
+	defer cancel()
+	if err := server.store.RecordAudit(auditContext, record); err != nil {
 		server.logger.Error("Could not persist Dashboard command audit event", "operationId", operationID, "error", err)
 	}
 }

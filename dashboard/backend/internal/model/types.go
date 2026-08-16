@@ -365,6 +365,7 @@ type OperationResourceResult struct {
 	Action          string      `json:"action"`
 	ResourceVersion string      `json:"resourceVersion,omitempty"`
 	Convergence     string      `json:"convergence"`
+	Error           string      `json:"error,omitempty"`
 }
 
 type ResourceChange struct {

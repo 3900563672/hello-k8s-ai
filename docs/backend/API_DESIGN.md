@@ -129,6 +129,13 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 - 相同 key + 相同命令返回缓存响应，并可带 `X-Idempotent-Replay`。
 - 相同 key + 不同 payload 必须拒绝，防止误重用。
 - 默认记录保留约 24 小时。
+- 命令完成记录写失败时立即释放占位，避免同一 key 被 pending 卡满保留期；重放依赖 Kubernetes apply 幂等语义。
+
+### 批量应用
+
+- 顺序应用一批资源；中途失败时返回 `state=partial` 的成功 envelope（`meta.partial=true`），
+  `results` 同时包含已成功项与失败项明细（`convergence=failed` + `error`），不再让客户端误以为整个批次失败。
+- dry-run 阶段失败仍整体拒绝，因为此时没有任何资源被写入。
 
 ### 乐观并发
 
@@ -142,7 +149,7 @@ Configuration apply 先对所有资源执行 API Server dry-run，捕获 CRD/CEL
 
 ### 审计
 
-命令记录 kind/name/action、请求、结果、时间和 request ID。写请求经过应用层认证：配置 `ADMIN_TOKEN` 后必须携带 Bearer Token；审计主体取自认证身份（匿名写时记录 `system:anonymous`）。`X-Remote-User` 只在请求通过认证且显式开启 `TRUST_REMOTE_USER_HEADER` 时才被信任，防止伪造上游身份头。生产环境必须配置 token，未配置时写接口返回 503。
+命令记录 kind/name/action、请求、结果、时间和 request ID。写请求经过应用层认证：配置 `ADMIN_TOKEN` 后必须携带 Bearer Token；审计主体取自认证身份（匿名写时记录 `system:anonymous`）。`X-Remote-User` 只在请求通过认证且显式开启 `TRUST_REMOTE_USER_HEADER` 时才被信任，防止伪造上游身份头。生产环境必须配置 token，未配置时写接口返回 503。审计持久化使用独立于请求生命周期的超时上下文，客户端断开不丢审计。
 
 ## 4. 字段权限
 
