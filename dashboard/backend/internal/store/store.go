@@ -101,6 +101,6 @@ func (Disabled) UpsertResourceStates(context.Context, []ResourceStateRecord) err
 func (Disabled) ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error) {
 	return nil, ErrUnavailable
 }
-func (Disabled) Prune(context.Context, time.Time) error                   { return ErrUnavailable }
-func (Disabled) Close()                                                   {}
-func (Disabled) Available() bool                                          { return false }
+func (Disabled) Prune(context.Context, time.Time) error { return ErrUnavailable }
+func (Disabled) Close()                                 {}
+func (Disabled) Available() bool                        { return false }

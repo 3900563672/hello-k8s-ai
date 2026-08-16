@@ -153,7 +153,6 @@ func (database *Postgres) SaveSnapshot(ctx context.Context, snapshot SnapshotRec
 	return nil
 }
 
-
 func (database *Postgres) Status(ctx context.Context) (StoreStatus, error) {
 	var status StoreStatus
 	if err := database.pool.QueryRow(ctx, `

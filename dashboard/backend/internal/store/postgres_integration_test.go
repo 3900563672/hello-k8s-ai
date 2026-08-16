@@ -47,9 +47,9 @@ func TestPostgresLifecycle(t *testing.T) {
 
 	now := time.Now().UTC()
 	if err := database.SaveSnapshot(ctx, SnapshotRecord{
-		ID:          fmt.Sprintf("snapshot-itest-%d", now.UnixNano()),
-		CapturedAt:  now,
-		LogicalTime: now,
+		ID:             fmt.Sprintf("snapshot-itest-%d", now.UnixNano()),
+		CapturedAt:     now,
+		LogicalTime:    now,
 		SourceVersions: map[string]string{"test": "1"},
 		Payload:        json.RawMessage(`{"configuration":{"models":[]}}`),
 	}); err != nil {
