@@ -78,7 +78,7 @@ flowchart TD
 ## 4.2 夜间长时运行
 
 - 无人值守长时运行（维持 + 施压 + 采集 → 分析 + 修复）走 [hack/night-run/README.md](../../hack/night-run/README.md)。
-- 由 Codex 桌面自动化触发：00:00 Phase A（只采集不推码）、04:30 Phase B（按决策矩阵处理并提交）；非运行日自动空跑。
+- 由 Codex 桌面自动化触发：00:00 Phase A（只采集不推码）、04:30 Phase B（按决策矩阵处理，**全部走 PR 不推 main**，早上用户审阅合并）；非运行日自动空跑。
 - Phase A 的问题档案在 `.runtime/night-run/<日期>/problems.md`（不入库）；Phase B 修完必须同步 `change-history/` 与受影响 docs。
 
 ## 5. 提交
