@@ -58,3 +58,10 @@ Codex 桌面自动化（`$CODEX_HOME/automations/`）在 00:00 与 04:30 各触�
 - Phase B：读 `hack/night-run/phase_b_prompt.md` 并严格执行。
 
 非运行日（非 2026-08-17）的触发会自动空跑退出，避免浪费 Token。
+
+## 会话模型（重要）
+
+- 两条自动化是 project 型 cron：**每次触发都是全新会话**，不复用任何已有会话，不存在上下文积压问题。
+- 新会话没有对话上下文，所以提示词要求"先读文件再干活"（AGENTS.md、README、phase prompt、problems.md），信息全部落在仓库与 `.runtime/`。
+- 前提：Codex 桌面 App 必须保持运行，到点才会触发；合盖/退出 App 会导致自动化不执行。
+- Phase A 开工后先拉起常驻 keepalive（nohup），即使自动化会话提前结束，健康检查与采集仍继续。

@@ -169,14 +169,19 @@ async function main() {
   }
 
   let allOk = await checkOnce();
-  // 仅当健康探针不可达（端口转发断了）时才恢复并重试；指标类失败不触发恢复
-  if (!allOk) {
+  // 启动阶段：健康探针不可达时最多尝试 3 轮恢复（间隔 10s），全部失败才退出 1。
+  // 指标类失败不触发恢复（端口转发正常时指标空是业务状态，不是故障）。
+  for (let attempt = 1; attempt <= 3 && !allOk; attempt += 1) {
     const live = await httpGet('/api/v1/health/live', 5000);
-    if (!live.ok) {
-      await restorePortForward();
-      await sleep(3000);
+    if (live.ok) {
       allOk = await checkOnce();
+      if (allOk) break;
+      continue;
     }
+    process.stderr.write(`${utcNow()} 恢复尝试 ${attempt}/3\n`);
+    await restorePortForward();
+    await sleep(10000);
+    allOk = await checkOnce();
   }
 
   if (!LOOP) {

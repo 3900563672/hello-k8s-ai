@@ -13,7 +13,8 @@
 
 1. 先读 `.runtime/night-run/2026-08-17/problems.md`（Phase A 的交接档案），再读 `docs/agents/WORKFLOW.md` 与 `docs/agents/KNOWN_PITFALLS.md`。
 2. 对照快照目录 `.runtime/night-run/2026-08-17/snapshots/` 核对指标曲线。
-3. 需要复现时，先确认集群当前状态（`kubectl get pods -A`、`curl http://localhost:8080/api/v1/health/ready`）。
+3. 若 problems.md 不完整（Phase A 会话可能提前中断）：以快照目录 + `keepalive.log` 为准补齐时间线，再判断每个问题的证据是否足够；证据不足的按"存疑"处理，不强行修复。
+4. 需要复现时，先确认集群当前状态（`kubectl get pods -A`、`curl http://localhost:8080/api/v1/health/ready`）。
 
 ## 决策矩阵
 
