@@ -201,6 +201,11 @@
 - `hack/local-cluster.sh` 可能丢失执行位（Windows 侧操作后 100644）：`setup.sh` 报 `Permission denied` 时先 `chmod +x hack/*.sh` 并提交 mode 变化。
 - 端口转发存活检查只看 ps 会误判：进程死亡但 PID 文件残留时 `cluster-open` 不会重建转发（8080 无监听但日志说"已在运行"）。修复后检查包含 `/dev/tcp` 端口探测；遇到 8080 无响应先看 `.runtime/port-forward-*.pid` 与 `ps aux | grep port-forward`。
 - 并行构建四个镜像后，构建日志会交错输出；判断失败以退出码与最终镜像存在为准，不要按日志顺序读。
+### 2026-08-16 rollout restart 会杀死 kubectl port-forward 进程
+- 现象：`rollout restart` backend/frontend 后，8080 变 000；`ps` 里 port-forward 进程消失，日志结尾是 `lost connection to pod`。
+- 原因：kubectl port-forward 在 pod 重建后不会自动恢复连接，进程直接退出；脚本的 pid 文件仍残留旧 PID。
+- 解决：部署后检查 `/dev/tcp/127.0.0.1/8080` 与 `ps aux | grep port-forward`；进程不存在就重建（`bash setup.sh open` 或手动 nohup + 更新 pid 文件）。
+- 验证：本次部署后手动重建转发，8080/guide 恢复 200。
 
 ## 集群操作与部署
 
