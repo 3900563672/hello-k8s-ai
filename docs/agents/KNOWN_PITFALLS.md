@@ -5,6 +5,24 @@
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
 
+## 夜间长时运行（night-run）
+
+### 2026-08-16 kubectl port-forward 偶发连接复用失败
+- 现象：Node fetch 连续请求 Backend 时偶发 `TypeError: fetch failed`，curl 同时刻正常。
+- 原因：port-forward 单监听 127.0.0.1:8080，Node 长连接复用被后端/隧道偶发重置。
+- 解决：脚本 httpGet 网络层错误自动重试 3 次（间隔 500ms）；keepalive 启动阶段健康探针失败最多恢复 3 轮（间隔 10s）。
+- 验证：重试后快照/健康检查稳定输出全绿。
+
+### 2026-08-16 自动化会话模型：cron 型每次触发都是全新会话
+- 现象/原因：project 型 cron 自动化按 rrule 触发新会话，不复用既有会话；thread heartbeat 型才会复用指定线程。
+- 解决：提示词必须自包含（先读 AGENTS.md / README / phase prompt / problems.md），信息落仓库与 `.runtime/`；不要假设新会话有对话记忆。
+- 验证：`$CODEX_HOME/automations/<id>/automation.toml` 逆向 app.asar 确认 `kind="cron"` + `target={type="project"}` 语义。
+
+### 2026-08-16 自动化触发前提：Codex 桌面 App 必须保持运行
+- 现象：App 退出/合盖时到点不触发自动化。
+- 解决：夜间运行前确认 App 保持运行；Phase A 开工先拉起 nohup 常驻 keepalive，会话中断脚本仍继续。
+- 验证：首次夜间运行（2026-08-17 00:00）实测。
+
 ## 命令与终端（WSL / Windows 宿主）
 
 ### 2026-08-16 apply_patch 无法写 UNC 路径
