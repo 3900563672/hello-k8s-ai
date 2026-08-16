@@ -4,11 +4,19 @@
 > 生成方式：`make context-pack`（hack/gen-context-pack.sh），源模板 `hack/context-pack-template.md`。
 > 本文件是打包内容的**第一入口**。远程 AI 请先读本文件，再按需读包内其他文件；能操作本机的 Agent 不需要本包。
 
-## 1. 项目一句话
+## 1. 包内容与阅读策略
+
+- 包模式：__MODE__
+- 包含：`CONTEXT_PACK.md`、源码（api/cmd/internal/simulator/dashboard/config/test）、`docs/agents/`、`docs/remote-ai/`、`change-history/`、`AGENTS.md`、`PROJECT_OVERVIEW_NEW.md`（背景一页）、`Makefile` 与 `go.mod`。
+- 默认**不包含** `docs/` 人类专题（叙事 / 教程 / 白皮书）；需要时请用户生成 FULL 包：`make context-pack FULL=1`。
+- 阅读顺序：先本文件 → `docs/remote-ai/` → 按任务读源码与 `change-history/`。
+- 人类文档不是事实源；事实以源码、生成清单与 `change-history/` 为准。
+
+## 2. 项目一句话
 
 基于 Kubernetes 的 AI 推理调度与仿真平台：React Frontend → Dashboard Backend → CRD → 7 个 Controller → Simulator → Prometheus / OpenTelemetry / Jaeger → Backend 聚合展示。Kubernetes API Server 是唯一事实源；PostgreSQL 只存历史快照、事件与审计。
 
-## 2. 当前状态基线（生成时）
+## 3. 当前状态基线（生成时）
 
 - 分支：`__BRANCH__`
 - 最近提交：
@@ -21,11 +29,11 @@ __OPEN_ISSUES__
 
 - 若上面两项为空，说明生成环境无网络或 gh 未认证；以 git 记录和包内文档为准。
 
-## 3. 仓库地图
+## 4. 仓库地图
 
 __TREE__
 
-## 4. 关键文件（事实源）
+## 5. 关键文件（事实源）
 
 | 路径 | 内容 |
 | --- | --- |
@@ -39,7 +47,7 @@ __TREE__
 | `docs/` | 文档体系：人类（docs/）、Agent（docs/agents/）、远程 AI（docs/remote-ai/） |
 | `change-history/` | 变更与决策记录（按日期） |
 
-## 5. 约束边界（摘要）
+## 6. 约束边界（摘要）
 
 - Kubernetes API Server 是当前状态的唯一事实源；PostgreSQL 不能反向驱动 Controller。
 - Frontend 只调用 Backend；Backend 写接口只修改白名单 CR 的 Spec。
@@ -49,7 +57,7 @@ __TREE__
 - 不宣称未验证的运行状态。
 - 完整约束见 `docs/agents/PRINCIPLES.md` 与 `AGENTS.md`。
 
-## 6. 文档分层
+## 7. 文档分层
 
 - 人类：根目录 `README.md`、`PROJECT_OVERVIEW_NEW.md`（初学者）、`docs/INDEX.md`。
 - 本地 Agent（能操作本机）：`AGENTS.md`、`docs/agents/`。

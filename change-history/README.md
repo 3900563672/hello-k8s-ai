@@ -9,3 +9,4 @@
 | 2026-08-14 | Orchestrator 放置修复的 CI 收敛 | P0 follow-up | [查看记录](2026-08-14-orchestrator-placement-ci-follow-up/README.md) |
 | 2026-08-14 | Orchestrator 选点执行契约修复 | P0 | [查看记录](2026-08-14-orchestrator-placement/README.md) |
 | 2026-08-16 | 文档体系分层重构 | P1 | [查看记录](2026-08-16-docs-hierarchy/README.md) |
+| 2026-08-16 | 分层文档维护边界与同步协议 | P1 | [查看记录](2026-08-16-docs-layered-ownership/README.md) |
