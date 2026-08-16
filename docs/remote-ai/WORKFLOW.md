@@ -1,5 +1,6 @@
 # 远程 AI 工作流
 
+> 维护层：remote-ai ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
 > 本文件给只在自己工作区工作的远程 AI。每次任务从"开工"走到"交接"，不跳步。
 > 能操作本机仓库的 Agent 走 [docs/agents/WORKFLOW.md](../agents/WORKFLOW.md)。
 
@@ -25,7 +26,14 @@
 - 涉及 CRD/API 的建议必须引用 `docs/kubernetes/FIELD_OWNERSHIP.md` 的归属，不要假设谁能写。
 - 涉及时间、倍速、历史数据的结论，先读 `docs/data-flow/TIME_AND_REPLAY.md` 再下判断。
 
-## 4. 交接
+## 4. 版本与同步义务
+
+- 交付物必须带日期，并声明"基于的包生成时间"（`CONTEXT_PACK.md` 顶部）。
+- 发现包内文档与源码不一致时，作为交付物列出差异，不静默按文档写代码。
+- 对 `docs/agents/`、`docs/remote-ai/`、`change-history/` 的建议可以直接给；对 `docs/` 人类文档的建议单独标注"人类文档"。
+- 完整规则见 [docs/agents/SYNC.md](../agents/SYNC.md) 第 5 节。
+
+## 5. 交接
 
 交付物固定结构：
 

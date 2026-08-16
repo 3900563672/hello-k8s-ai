@@ -1,5 +1,6 @@
 # Agent 工作流
 
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/WORKFLOW.md](../remote-ai/WORKFLOW.md)。
 
@@ -46,7 +47,7 @@ flowchart TD
 
 ## 3. 开发
 
-- 按任务读 `docs/` 对应专题与源码；事实以源码、生成清单和可执行测试为准。
+- 默认读 `docs/agents/` 文档与**源码**；`docs/` 人类专题仅按需作为背景，事实以源码、生成清单和可执行测试为准。
 - 涉及 CRD/Controller/API 先核对 [PRINCIPLES.md](PRINCIPLES.md) 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
 - 遵守 `AGENTS.md` 边界：Reconcile 幂等、保留 OwnerReference/finalizer/Watch/索引语义、不手改生成文件。
 - 改动尽量最小、可回滚；不为风格统一做无关重构。
@@ -67,11 +68,11 @@ flowchart TD
 - 中文提交信息用文件方式（`git commit -F`），避免终端编码丢失（见 KNOWN_PITFALLS.md）。
 - 提交前检查 `git status`：不提交 `.env`、`bin/`、`dist/`、`.runtime/`、覆盖率文件；`change-history/` 与文档改动记得一起提交。
 
-## 6. 归档
+## 6. 归档与同步
 
 - 交付后必须在 `change-history/` 追加日期条目：`README.md`（变更概述）、`IMPLEMENTATION_DETAILS.md`、`TEST_REPORT.md`、`MIGRATION_AND_ROLLBACK.md`，格式沿用现有条目。
-- 若改了 CRD/API/行为：同步更新 `docs/` 主文档、`FIELD_OWNERSHIP.md`、[PRINCIPLES.md](PRINCIPLES.md) 速查、白皮书。
-- 踩了新坑：追加 [KNOWN_PITFALLS.md](KNOWN_PITFALLS.md)。
+- 按 [SYNC.md](SYNC.md) 执行同步：更新本目录受影响文档（踩坑 / 原则 / 流程）、重新生成上下文包、列出人类文档待同步清单。
+- 人类文档（`docs/` 专题、`FIELD_OWNERSHIP.md`、白皮书）的更新只在用户明确要求时代笔；否则只列清单。
 
 ## 7. 汇报
 
