@@ -25,6 +25,16 @@
 - 重试逻辑未自动化测试（逻辑为循环 + 退避，简单；CI 编译与单元测试覆盖）。
 - 根 Go module（Controller/Simulator）未改动，不需要重跑。
 
+## CI 最终结果（2026-08-16）
+
+| Workflow | 结果 |
+| --- | --- |
+| 代码检查（fmt-check / vet / controller 测试 / 生成文件校验） | 通过 |
+| 源码与部署验证（含 Backend 测试 `go test -race ./...`、Frontend 检查、清单生成） | 通过 |
+| E2E 测试 | 通过 |
+
+- 首次推送后 `make fmt-check` 曾报三个 store 文件未格式化，已由 `fix: 修正 store 包 gofmt 格式 Refs #12`（52ded71）修正，重新推送后三个 workflow 全部通过。
+
 ## 结论
 
-Phase 1 + Phase 2 代码通过编译、vet 与全部测试；数据库生命周期与当前态入库行为有集成测试实证。CI 三个 workflow 作为最终门禁。
+Phase 1 + Phase 2 代码通过编译、vet 与全部测试；数据库生命周期与当前态入库行为有集成测试实证；CI 三个 workflow 最终全部通过。
