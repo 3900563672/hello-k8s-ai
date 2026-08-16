@@ -2,7 +2,15 @@ name: E2E 测试
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
 
 permissions: {}
 
@@ -16,6 +24,7 @@ jobs:
     env:
       E2E_KIND_CLUSTER: hello-k8s-ai-test-e2e
       KIND_NODE_IMAGE: kindest/node:v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
+      DOCKER_BUILD_CACHE: --cache-from=type=gha --cache-to=type=gha,mode=max
     steps:
       - name: 检出代码
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -27,13 +36,18 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: 安装固定版本 Kind
+      - name: 安装固定版本 Kind（预编译二进制，避免每次 go install 编译）
         run: |
-          go install sigs.k8s.io/kind@v0.32.0
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          mkdir -p "$HOME/.local/bin"
+          curl -sSLo "$HOME/.local/bin/kind" "https://github.com/kubernetes-sigs/kind/releases/download/v0.32.0/kind-linux-amd64"
+          chmod +x "$HOME/.local/bin/kind"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: 验证 Kind 安装
         run: kind version
+
+      - name: 初始化 BuildKit 缓存
+        run: docker buildx create --use --name ci-builder >/dev/null 2>&1 || true
 
       - name: 检查依赖并执行 E2E
         run: |

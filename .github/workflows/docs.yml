@@ -1,0 +1,30 @@
+name: 文档检查
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: 文档链接检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: 检查 Markdown 链接与图片路径
+        run: make docs-check

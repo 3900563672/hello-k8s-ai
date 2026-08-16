@@ -2,7 +2,15 @@ name: 代码检查
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
 
 permissions: {}
 
@@ -23,6 +31,25 @@ jobs:
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version-file: go.mod
+
+      - name: 恢复 golangci-lint 缓存（含自定义插件编译产物）
+        id: cache-gcl
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: bin
+          key: golangci-lint-${{ runner.os }}-${{ hashFiles('.custom-gcl.yml') }}-v2.12.2
+
+      - name: 安装固定版本 golangci-lint（预编译 + 编译自定义插件）
+        if: steps.cache-gcl.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p bin
+          curl -sSfL "https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz" | tar -xz -C /tmp
+          cp /tmp/golangci-lint-2.12.2-linux-amd64/golangci-lint "bin/golangci-lint-v2.12.2"
+          ln -sf "$(pwd)/bin/golangci-lint-v2.12.2" bin/golangci-lint
+          bin/golangci-lint version
+          bin/golangci-lint custom --destination bin --name golangci-lint-custom
+          mv -f bin/golangci-lint-custom bin/golangci-lint
+          bin/golangci-lint version
 
       - name: 校验 lint 配置
         run: make lint-config

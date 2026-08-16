@@ -2,7 +2,15 @@ name: 源码与部署验证
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'change-history/**'
+      - '*.md'
 
 permissions: {}
 
@@ -29,11 +37,11 @@ jobs:
           go mod tidy
           git diff --exit-code -- go.mod go.sum
 
-      - name: 检查格式并执行测试
+      - name: 检查格式并执行测试（全包一次 race，避免重复跑 Controller）
         run: |
           make fmt-check
-          make test
-          go test -race ./internal/controller -count=1
+          go vet ./...
+          go test -race $(go list ./... | grep -v /e2e) -count=1
 
   backend:
     permissions:
@@ -112,5 +120,9 @@ jobs:
           make verify-deploy
           git diff --check
 
-      - name: 构建并校验全部项目镜像
-        run: make docker-build-local
+      - name: 构建并校验全部项目镜像（BuildKit gha 缓存）
+        env:
+          DOCKER_BUILD_CACHE: --cache-from=type=gha --cache-to=type=gha,mode=max
+        run: |
+          docker buildx create --use --name ci-builder >/dev/null 2>&1 || true
+          make docker-build-local
