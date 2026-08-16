@@ -25,10 +25,12 @@ import (
 type TenantModelPolicySpec struct {
 	// 租户引用
 	// +required
+	// +kubebuilder:validation:XValidation:rule="!has(oldSelf) || self.name == oldSelf.name",message="租户引用不可变，变更请删除重建"
 	TenantRef ObjectRef `json:"tenantRef"`
 
 	// 模型引用
 	// +required
+	// +kubebuilder:validation:XValidation:rule="!has(oldSelf) || self.name == oldSelf.name",message="模型引用不可变，变更请删除重建"
 	ModelRef ObjectRef `json:"modelRef"`
 
 	// 策略效果，Allow 可用，Deny 禁止
