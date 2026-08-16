@@ -31,6 +31,8 @@
 - Phase B 的所有改动一律通过 PR 交付，**严禁 push main**；合并留给用户早上审阅后决定。
 - 每个逻辑问题一个分支/PR：分支名 `fix/<主题>` / `docs/<主题>` / `chore/<主题>`（kebab-case）；问题间有依赖时按依赖顺序创建。
 - 一个 PR 流程：`git checkout -b <分支>` → 提交（中文 `git commit -F`）→ `git push origin <分支>` → `gh pr create`（标题带 `fix:`/`docs:` 前缀 + 中文描述；正文写：问题/改动/验证/关联 `Fixes #N`）→ 等 PR 的 CI 绿（30s 轮询），不绿就在同一分支补丁重推。
+- **执行环境**：Windows 侧没有 `gh`，所有 git/gh 操作一律在 WSL 内执行（`wsl -d Ubuntu -- bash -lc "..."` 或先 `wsl -d Ubuntu`）；`gh` 已在该 WSL 内认证（account 3900563672）。
+- **gh 偶发超时**：`gh` 偶发 `TLS handshake timeout`（代理链路不稳），失败就等 5–8 秒重试，最多 5 次，不要因此怀疑认证。
 - PR 数量控制：一般 1–5 个；改动琐碎且同主题时可合并为 1 个 PR（如"夜间运行发现的问题一批"）。
 - 创建完 PR 后不点 Merge；最终汇报列出 PR 链接清单。
 
