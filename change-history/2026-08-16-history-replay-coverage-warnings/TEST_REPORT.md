@@ -16,3 +16,7 @@
 ## 3. 未验证项
 
 - 真实集群上 Prometheus 24h 边界与 Jaeger 内存淘汰的实际行为：由 CI E2E / 本地部署验证（告警为保守提示，不改变数据内容）。
+
+## 4. CI 备注
+
+- E2E 首次运行在全部用例通过后于 `make undeploy` 静默挂起至套件超时，`gh run rerun --failed` 重跑同一 commit 全绿；已确认是 runner 环境偶发 flake，与本次改动无关（E2E 不部署 Backend），记录见 `docs/agents/KNOWN_PITFALLS.md`。

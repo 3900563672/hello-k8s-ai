@@ -93,6 +93,12 @@
 - 解决：不要为省时间调小轮询间隔（有偶发失败风险）；如确需优化，应改为"按事件等待"（需要较大重构）。
 - 验证：多次运行该 spec 稳定约 24 秒。
 
+### 2026-08-16 E2E 偶发 make undeploy 静默挂起直到套件超时（runner 环境 flake）
+- 现象：4ab7ec9 的 E2E 全部用例通过后，`make undeploy` 静默挂起约 6 分钟直到 ginkgo 10 分钟超时；`gh run rerun --failed` 重跑同一 commit 直接全绿。
+- 原因：`kubectl delete -k config/default` 在 GitHub runner 上偶发不返回（疑似 kind API 或 docker 环境瞬时故障）；同一代码在其他多次运行中 undeploy 均 15 秒内完成。
+- 解决：先重跑确认（`gh run rerun <run-id> --failed`）；若同一 commit 复现再排查，看 `gh run view <run-id> --log` 超时前最后一步与挂起命令。
+- 验证：31942621277 重跑 success；369c158 等历史运行 undeploy 正常。
+
 ## 可观测性与 Grafana 嵌入
 
 ### 2026-08-16 Grafana sub-path 反代必须保留 /grafana 前缀
