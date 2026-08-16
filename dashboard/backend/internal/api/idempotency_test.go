@@ -145,3 +145,15 @@ func TestIdempotencyMiddlewareRequiresKeyForCommands(t *testing.T) {
 		t.Fatalf("missing key status = %d, want %d", response.Code, http.StatusBadRequest)
 	}
 }
+func TestIdempotencySkipsGrafanaProxyQueries(t *testing.T) {
+	handler := idempotencyMiddleware(nil, 1<<20, nil, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+	}))
+
+	request := httptest.NewRequest(http.MethodPost, "http://dashboard.example/grafana/api/ds/query", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		t.Fatalf("POST /grafana/api/ds/query = %d, want %d (no Idempotency-Key required)", response.Code, http.StatusOK)
+	}
+}

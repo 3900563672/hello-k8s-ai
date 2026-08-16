@@ -51,7 +51,9 @@ func idempotencyMiddleware(
 	next http.Handler,
 ) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if !isMutation(request.Method) {
+		// Grafana 面板经 /grafana/* 反代访问，其前端查询走 POST /api/ds/query，
+		// 属于上游 UI 流量而非 Dashboard 命令，不参与幂等记账。
+		if !isMutation(request.Method) || strings.HasPrefix(request.URL.Path, "/grafana/") {
 			next.ServeHTTP(writer, request)
 			return
 		}

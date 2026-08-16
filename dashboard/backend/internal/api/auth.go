@@ -48,6 +48,10 @@ func authMiddleware(httpConfig config.HTTPConfig, environment string, logger *sl
 }
 
 func isWriteRequest(request *http.Request) bool {
+	// Grafana 反代流量（含 POST /api/ds/query）不是 Dashboard 命令，不参与写认证。
+	if strings.HasPrefix(request.URL.Path, "/grafana/") {
+		return false
+	}
 	switch request.Method {
 	case http.MethodPost, http.MethodPatch, http.MethodDelete:
 		return true

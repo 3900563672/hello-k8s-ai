@@ -148,6 +148,8 @@
 - 原因：Backend `securityHeadersMiddleware` 对所有响应强制加 DENY，包括 `/grafana/*` 反代响应。
 - 解决：中间件对 `/grafana/` 前缀跳过 X-Frame-Options；API 路径保持 DENY。
 - 验证：`security_headers_test.go` 覆盖两条路径；8080 全链路无 X-Frame-Options。
+- 补充（同日）：引入幂等与写认证中间件后，Grafana 前端查询（`POST /api/ds/query`）被 `MISSING_IDEMPOTENCY_KEY` 400 拦截，面板全部 No data。修复：`idempotencyMiddleware` 与 `authMiddleware` 对 `/grafana/` 前缀直接放行（上游 UI 流量不是 Dashboard 命令），API 命令路径保持原有约束。
+- 验证：`idempotency_test.go` / `auth_test.go` 覆盖；真实集群 `POST /grafana/api/ds/query` 返回 10 个 frame 时间序列，控制器/编排器/模拟器面板查询均返回 1000+ 数据点。
 
 ### 2026-08-16 Grafana 384MiB 内存上限运行中打满
 - 现象：集群运行一段时间后 Grafana 探针间歇失败（`context deadline exceeded` / HTTP 503），日志大量 `http: Handler timeout` 与 8-10s 请求超时；RESTARTS 可能仍为 0。
@@ -222,6 +224,13 @@
 - 解决：WorkerNode 的 name 必须使用集群真实节点名（docker-desktop 为 desktop-worker、desktop-worker2 ...）；建 WorkerNode 前先 `kubectl get nodes` 核对。
 - 验证：改为真实节点名后 SimulatorInstance 副本正常调度并 Running。
 - 备注：Docker Desktop 内置 K8s 的节点名是 desktop-worker*，与 Kind 测试集群（hello-k8s-ai-test-e2e 的 kind-control-plane/worker）不同，切换环境要重查。
+
+### 2026-08-16 Docker Desktop 重建节点后可能出现重复主机 IP（双节点同 172.18.0.4）
+- 现象：rollout 新 Pod 卡 Init:0/1，init 容器 `wait-for-postgresql` 报 `no response`；Pod IP 属于其他节点网段（worker6 上的 Pod 拿到 10.244.2.x，而 worker6 的 CIDR 是 10.244.8.0/24）。
+- 原因：此前强杀 Docker Desktop 后内置 K8s 节点容器重建，desktop-worker6 与 desktop-worker9 主机 IP 都是 172.18.0.4（`kubectl get pods -A -o wide` 可见两个节点同 IP），CNI 分配混乱。
+- 解决：删除卡住的 Pod 让它重新调度到健康节点；必要时 `kubectl cordon desktop-worker6 desktop-worker9`。不要为此重建集群或重启 Docker。
+- 验证：新 Pod 落到 worker9（10.244.2.5）后 rollout 成功；演练数据（模拟器/数据库）全程不受影响。
+- 备注：彻底修复需 Docker Desktop → Settings → Kubernetes 重新启用节点容器（会中断全部工作负载），本次未做。
 
 ### 2026-08-16 清理演示 CR 必须在 Controller 在线时进行
 - 现象：`cluster-down` 后删除 Tenant/Model/Policy 卡在 DeletionTimestamp，对象不消失。

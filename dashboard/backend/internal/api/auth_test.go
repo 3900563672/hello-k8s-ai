@@ -140,3 +140,15 @@ func TestActorNameTrustsRemoteUserOnlyWhenAuthenticated(t *testing.T) {
 		})
 	}
 }
+func TestAuthSkipsGrafanaProxyQueries(t *testing.T) {
+	handler := authMiddleware(config.HTTPConfig{AdminToken: "secret"}, "production", authTestLogger(), http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+	}))
+
+	request := httptest.NewRequest(http.MethodPost, "http://dashboard.example/grafana/api/ds/query", nil)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("POST /grafana/api/ds/query with admin token configured = %d, want %d", recorder.Code, http.StatusOK)
+	}
+}
