@@ -16,5 +16,6 @@
 | 2026-08-16 | 可观测性收敛到 Dashboard 单入口（Prometheus / Jaeger / Grafana） | P1 | [查看记录](2026-08-16-observability-single-entry/README.md) |
 | 2026-08-16 | 修复 Grafana 运行中内存打满导致探针失败与组件意外停止 | P1 | [查看记录](2026-08-16-grafana-memory-stability/README.md) |
 | 2026-08-16 | 前端策略管理打通配置到真实工作负载的完整闭环 | P1 | [查看记录](2026-08-16-frontend-policy-closed-loop/README.md) |
+| 2026-08-16 | Dashboard Backend 写接口可信认证与授权边界 | P0 | [查看记录](2026-08-16-backend-write-auth/README.md) |
 
 > 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`。

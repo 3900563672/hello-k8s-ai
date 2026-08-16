@@ -32,6 +32,8 @@ type HTTPConfig struct {
 	ShutdownTimeout   time.Duration
 	AllowedOrigins    []string
 	MaxBodyBytes      int64
+	AdminToken        string
+	TrustRemoteUser   bool
 }
 
 type KubernetesConfig struct {
@@ -84,6 +86,8 @@ func Load() (Config, error) {
 			ShutdownTimeout:   duration("HTTP_SHUTDOWN_TIMEOUT", 15*time.Second),
 			AllowedOrigins:    csv("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
 			MaxBodyBytes:      int64(integer("HTTP_MAX_BODY_BYTES", 1<<20)),
+			AdminToken:        strings.TrimSpace(os.Getenv("ADMIN_TOKEN")),
+			TrustRemoteUser:   boolean("TRUST_REMOTE_USER_HEADER", false),
 		},
 		Kubernetes: KubernetesConfig{
 			Kubeconfig:       strings.TrimSpace(os.Getenv("KUBECONFIG")),

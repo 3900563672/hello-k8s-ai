@@ -142,7 +142,7 @@ Configuration apply 先对所有资源执行 API Server dry-run，捕获 CRD/CEL
 
 ### 审计
 
-命令记录 kind/name/action、请求、结果、时间和 request ID。当前缺少最终用户身份认证，所以生产前必须把可信 actor/subject 纳入审计。
+命令记录 kind/name/action、请求、结果、时间和 request ID。写请求经过应用层认证：配置 `ADMIN_TOKEN` 后必须携带 Bearer Token；审计主体取自认证身份（匿名写时记录 `system:anonymous`）。`X-Remote-User` 只在请求通过认证且显式开启 `TRUST_REMOTE_USER_HEADER` 时才被信任，防止伪造上游身份头。生产环境必须配置 token，未配置时写接口返回 503。
 
 ## 4. 字段权限
 

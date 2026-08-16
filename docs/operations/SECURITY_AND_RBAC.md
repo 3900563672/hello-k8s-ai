@@ -14,6 +14,12 @@ flowchart LR
 
 当前开发实现主要依赖 Kubernetes ServiceAccount/RBAC；没有完整最终用户认证和按用户/租户授权。任何把 Backend 暴露给不可信用户的部署都必须先补 IAM。
 
+写接口（配置批量应用、配置删除、租户 QPS、模拟倍速）已建立应用层认证边界：
+
+- 配置 `ADMIN_TOKEN` 后，写请求必须携带匹配的 `Authorization: Bearer <token>`；
+- 未配置 token 时，非生产环境保持匿名写（本地演示可用），生产环境直接拒绝写请求；
+- 审计主体取自认证身份；`X-Remote-User` 只在请求通过 Bearer 认证且显式开启 `TRUST_REMOTE_USER_HEADER` 时才被信任，任意调用方无法再伪造该头。
+
 ## 2. Backend RBAC
 
 ServiceAccount：`hello-k8s-ai-dashboard-backend`。
@@ -77,14 +83,16 @@ Simulator 没有业务 Service；不要无意公开 9090。
 
 已有：严格 JSON、1MiB 限制、显式 CORS、请求 ID、安全 headers、panic recovery、命名 PromQL、Trace 参数边界、幂等/resourceVersion、dry-run、audit。
 
+已有：写接口 Bearer 认证（`ADMIN_TOKEN`）、可信上游身份头开关（`TRUST_REMOTE_USER_HEADER`，默认关闭）。
+
 未有/需加强：
 
 - OIDC/session/JWT 验证和 CSRF 策略。
 - 按用户/租户的 authorization。
 - mutation/query rate limit、body/query complexity quota。
-- actor/IP/user-agent 的可信审计。
 - sensitive DTO/attribute 脱敏。
 - 防止 SSRF 的 provider URL 管理（只由受信配置设定）。
+- 生产环境启用 token 后的 Frontend 登录态与凭据传递方案。
 
 CORS 不是认证，Idempotency-Key 也不是授权。
 

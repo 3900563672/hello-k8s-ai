@@ -190,10 +190,7 @@ func (server *Server) recordAudit(request *http.Request, operationID, action str
 	if !server.store.Available() {
 		return
 	}
-	actor := strings.TrimSpace(request.Header.Get("X-Remote-User"))
-	if actor == "" {
-		actor = "system:anonymous"
-	}
+	actor := actorName(request, server.config.HTTP.TrustRemoteUser)
 	details, _ := json.Marshal(map[string]any{
 		"idempotencyKey": request.Header.Get("Idempotency-Key"),
 		"error":          errorText(commandErr),

@@ -95,6 +95,8 @@ func (server *Server) Handler() http.Handler {
 
 	var handler http.Handler = mux
 	handler = idempotencyMiddleware(server.store, server.config.HTTP.MaxBodyBytes, server.logger, handler)
+	// 认证在最外层写链路上生效：未认证的写请求不会进入幂等存储。
+	handler = authMiddleware(server.config.HTTP, server.config.Environment, server.logger, handler)
 	handler = requestTimeoutMiddleware(server.config.HTTP.WriteTimeout, handler)
 	handler = corsMiddleware(server.config.HTTP.AllowedOrigins, handler)
 	handler = securityHeadersMiddleware(handler)

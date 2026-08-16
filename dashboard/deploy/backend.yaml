@@ -64,6 +64,13 @@ spec:
           value: docker-desktop
         - name: DEPLOYMENT_ENVIRONMENT
           value: docker-desktop
+        # 可选：配置后写接口要求 Bearer 认证；生产环境必须配置。
+        # 生成方式：openssl rand -hex 32
+        # - name: ADMIN_TOKEN
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: hello-k8s-ai-dashboard-auth
+        #       key: admin-token
         - name: LOG_LEVEL
           value: info
         - name: SNAPSHOT_INTERVAL
