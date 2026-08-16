@@ -12,12 +12,12 @@
 ## 目标
 
 0. **启动即拉起常驻脚本（最高优先级）**：开工 10 分钟内执行
-   `nohup node hack/night-run/keepalive.mjs --loop --interval 900 > .runtime/night-run/2026-08-17/keepalive.log 2>&1 &`
+   `setsid nohup node hack/night-run/keepalive.mjs --loop --interval 900 < /dev/null >> .runtime/night-run/2026-08-17/keepalive.log 2>&1 &`（必须 setsid：nohup 挡不住 exec 会话进程组回收，见 KNOWN_PITFALLS）
    并确认日志出现"进入常驻循环"。常驻脚本负责持续健康检查与断线自恢复，即使会话中断脚本继续运行。
 1. 维持系统持续运行：模拟器、Controller、Dashboard、PostgreSQL、Grafana、Prometheus、Jaeger、OTel Collector 全部健康。
-2. 持续制造并保持流量：至少 1 个租户有稳定 qps（可在 5–60 qps 间按配置档位轮换），观察高流量下的行为。**变更小步走**：每次只动一档（如 qps +10 或 replica +2），观察 2–3 分钟确认收敛再动下一档。
+2. 持续制造并保持流量：至少 1 个租户有稳定 qps（可在 5–50 qps 间按配置档位轮换（首次实测 50qps@10 副本会触发队列积压，压测建议 25–35 健康档位小步调整）），观察高流量下的行为。**变更小步走**：每次只动一档（如 qps +10 或 rate ±1 档），观察 2–3 分钟确认收敛再动下一档。
 3. 每 30 分钟执行一次 `node hack/night-run/snapshot.mjs --once --summary`，把摘要与异常追加到问题档案；常驻 keepalive 的日志异常也要同步进档案。
-4. 主动施压与变更探测：至少 3 次修改配置（traffic 档位、replica 数量、倍速），每次变更记录：时间、期望、实际、差异。变更使用 Backend API（`PATCH /api/v1/tenants/{name}/traffic`、`PATCH /api/v1/clock/rate`、`POST /api/v1/configuration:apply`），带 `Idempotency-Key` 头；写前先 `GET` 当前值，避免基于过期值修改。
+4. 主动施压与变更探测：至少 3 次修改配置（traffic 档位、倍速；rate 有效范围 1–20；副本数由 Orchestrator 控制，不做 kubectl scale），每次变更记录：时间、期望、实际、差异。变更使用 Backend API（`PATCH /api/v1/tenants/{name}/traffic`、`PATCH /api/v1/clock/rate`、`POST /api/v1/configuration:apply`），带 `Idempotency-Key` 头；写前先 `GET` 当前值，避免基于过期值修改。
 5. 任何异常（Pod 崩溃、错误率上升、队列积压、API 失败、DB 异常、Grafana No data）都记录到问题档案，附时间戳、日志片段、复现上下文。
 6. 若发现 `make cluster-open` 反复失败或 keepalive 连续 3 轮无法恢复：停止重试，完整记录 kubectl/curl 证据后转入"维持记录"模式（只记录不折腾），把问题留给 Phase B。
 

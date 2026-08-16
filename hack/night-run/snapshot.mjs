@@ -28,6 +28,7 @@ const METRIC_IDS = ['controller.errorRate', 'simulator.errorRate', 'simulator.tt
 const SNAP_DIR = join('/root/hello-k8s-ai/.runtime/night-run', RUN_DATE, 'snapshots');
 
 const utcNow = () => new Date().toISOString();
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function httpGet(path, timeoutMs = 30000) {
   // port-forward 偶发连接复用失败：网络层错误自动重试（最多 3 次，间隔 500ms）

@@ -34,6 +34,7 @@
 - 不改 UI；不截图验证；不 `wsl --shutdown`；不强杀 Docker Desktop；不动代理（127.0.0.1:7890）；不重建集群。
 - Pod 卡 Init 且节点 IP 重复时，删 Pod 让其重调度（已知坑，见 docs/agents/KNOWN_PITFALLS.md）。
 - API 写操作需要 `Idempotency-Key` 头（≤200 安全字符）；当前部署 `ADMIN_TOKEN` 未配置，非生产环境匿名写可用。
+- 实测边界（2026-08-17 首次执行）：rate 有效范围 1–20；租户名为 `tenant-core`；50qps@10 副本触发队列积压（35qps 健康）；副本由 Orchestrator 控制，`kubectl scale` 不可用。
 
 ## 手动运行
 
@@ -41,8 +42,8 @@
 # 单次健康检查
 node hack/night-run/keepalive.mjs --once
 
-# 常驻循环（每 15 分钟一次）
-node hack/night-run/keepalive.mjs --loop --interval 900
+# 常驻循环（每 15 分钟一次；必须 setsid，nohup 挡不住 exec 进程组回收）
+setsid nohup node hack/night-run/keepalive.mjs --loop --interval 900 < /dev/null >> .runtime/night-run/<日期>/keepalive.log 2>&1 &
 
 # 抓一次快照
 node hack/night-run/snapshot.mjs --once
@@ -64,4 +65,4 @@ Codex 桌面自动化（`$CODEX_HOME/automations/`）在 00:00 与 04:30 各触�
 - 两条自动化是 project 型 cron：**每次触发都是全新会话**，不复用任何已有会话，不存在上下文积压问题。
 - 新会话没有对话上下文，所以提示词要求"先读文件再干活"（AGENTS.md、README、phase prompt、problems.md），信息全部落在仓库与 `.runtime/`。
 - 前提：Codex 桌面 App 必须保持运行，到点才会触发；合盖/退出 App 会导致自动化不执行。
-- Phase A 开工后先拉起常驻 keepalive（nohup），即使自动化会话提前结束，健康检查与采集仍继续。
+- Phase A 开工后先拉起常驻 keepalive（`setsid nohup`，见上），即使自动化会话提前结束，健康检查与采集仍继续。
