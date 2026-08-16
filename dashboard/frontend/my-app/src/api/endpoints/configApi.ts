@@ -9,6 +9,9 @@ import type {
     NodeSpec,
     Orchestrator,
     OrchestratorSpec,
+    Policy,
+    PolicyKind,
+    PolicySpec,
     Tenant,
     TenantSpec,
 } from '@/types/config.types'
@@ -25,7 +28,7 @@ interface OperationReceipt {
     }>
 }
 
-type ConfigEntity = Model | Node | Tenant | Orchestrator
+type ConfigEntity = Model | Node | Tenant | Orchestrator | Policy
 
 const idempotencyKey = () => createClientId('dashboard')
 
@@ -124,10 +127,54 @@ const orchestratorSpec = (orchestrator: Orchestrator): OrchestratorSpec => ({
     maxReplicas: orchestrator.maxReplicas,
 })
 
+type ConfigEntityKind = 'Model' | 'WorkerNode' | 'Tenant' | 'Orchestrator' | 'TenantModelPolicy' | 'TenantNodePolicy' | 'ModelNodePolicy'
+
+const policyKindToCrKind: Record<PolicyKind, ConfigEntityKind> = {
+    tenantModel: 'TenantModelPolicy',
+    tenantNode: 'TenantNodePolicy',
+    modelNode: 'ModelNodePolicy',
+}
+
+const policyDisplayName = (kind: PolicyKind, resource: BackendResource): string => {
+    const spec = resource.spec as Partial<PolicySpec>
+    const tenant = spec.tenantRef?.name
+    const model = spec.modelRef?.name
+    const node = spec.nodeRef?.name
+    if (kind === 'tenantModel') return `${tenant ?? '?'} → ${model ?? '?'}`
+    if (kind === 'tenantNode') return `${tenant ?? '?'} → ${node ?? '?'}`
+    return `${model ?? '?'} → ${node ?? '?'}`
+}
+
+const toPolicy = (resource: BackendResource, kind: PolicyKind): Policy => {
+    const spec = resource.spec as Partial<PolicySpec>
+    return {
+        name: resource.ref.name,
+        displayName: policyDisplayName(kind, resource),
+        kind,
+        ...(spec.tenantRef ? { tenantRef: { name: spec.tenantRef.name } } : {}),
+        ...(spec.modelRef ? { modelRef: { name: spec.modelRef.name } } : {}),
+        ...(spec.nodeRef ? { nodeRef: { name: spec.nodeRef.name } } : {}),
+        effect: spec.effect ?? 'Allow',
+        uid: resource.ref.uid,
+        resourceVersion: resource.metadata.resourceVersion,
+        status: resource.status,
+        conditions: resource.conditions,
+        derived: resource.derived,
+    }
+}
+
+const policySpec = (policy: Policy): PolicySpec => {
+    const spec: PolicySpec = { effect: policy.effect }
+    if (policy.tenantRef?.name) spec.tenantRef = { name: policy.tenantRef.name }
+    if (policy.modelRef?.name) spec.modelRef = { name: policy.modelRef.name }
+    if (policy.nodeRef?.name) spec.nodeRef = { name: policy.nodeRef.name }
+    return spec
+}
+
 async function applyResource<T extends ConfigEntity>(
-    kind: 'Model' | 'WorkerNode' | 'Tenant' | 'Orchestrator',
+    kind: ConfigEntityKind,
     resource: T,
-    spec: ModelSpec | NodeSpec | TenantSpec | OrchestratorSpec,
+    spec: ModelSpec | NodeSpec | TenantSpec | OrchestratorSpec | PolicySpec,
 ): Promise<T> {
     const receipt = await apiData<OperationReceipt>('/configuration:apply', {
         method: 'POST',
@@ -228,5 +275,19 @@ export const configApi = {
         const resources = await configApi.getOrchestrators()
         await Promise.all(resources.filter((item) => names.includes(item.name)).map((item) => deleteResource('Orchestrator', item)))
         return names
+    },
+
+    getPolicies: async (timestamp?: string): Promise<Policy[]> => {
+        const configuration = await configApi.getConfiguration(timestamp)
+        return [
+            ...configuration.policies.tenantModel.map((item) => toPolicy(item, 'tenantModel')),
+            ...configuration.policies.tenantNode.map((item) => toPolicy(item, 'tenantNode')),
+            ...configuration.policies.modelNode.map((item) => toPolicy(item, 'modelNode')),
+        ]
+    },
+    createPolicy: (policy: Policy) => applyResource(policyKindToCrKind[policy.kind] as ConfigEntityKind, policy, policySpec(policy)),
+    updatePolicy: (policy: Policy) => applyResource(policyKindToCrKind[policy.kind] as ConfigEntityKind, policy, policySpec(policy)),
+    deletePolicy: async (policy: Policy): Promise<void> => {
+        await deleteResource(policyKindToCrKind[policy.kind], policy)
     },
 }

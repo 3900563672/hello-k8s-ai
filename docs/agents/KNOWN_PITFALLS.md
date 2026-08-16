@@ -172,6 +172,8 @@
 - `TenantRuntime.status.instanceCount` 的实现含义是可用 Replica 总数。
 - `Model.spec.absoluteScore` 是用户/Backend 提供的必填能力基准；旧 `status.absoluteScore` 仅用于滚动升级兼容，不应再写入。
 - TenantNodePolicy、ModelNodePolicy 的 Status 当前没有 writer；空 Conditions 不等于失败。
+- 前端只创建 Model/Tenant/Orchestrator 不会启动工作负载：SimulatorInstance 由 TenantModelPolicy(Allow) 物化，节点可调度性由 TenantNodePolicy(Allow) 决定（无显式 Allow 不可调度），模型-节点范围由 ModelNodePolicy 过滤；三类策略缺一不可，Orchestrator 在无可行 placement 时副本保持 0。
+- 新租户没有 Simulator 时 Orchestrator 停在 MetricsNotReady 属正常引导态：性能指标来自运行中的 Simulator Pod，只有策略齐全后 bootstrap 扩容（到 minReplicas 地板）才会创建 Pod。
 - Backend watch ReplicaSet 并记录事件，但 Workloads DTO 当前未直接展示 ReplicaSet。
 - 数据库 `clock_state` 仍未驱动运行时。`SimulationClock/default` 只控制 Simulator 引擎倍速；Backend server/actual/logical time、Controller cooldown/freshness、Lease 和采集周期继续使用真实 UTC。
 - 配置批次会先 dry-run 全部对象，再顺序写入；跨对象写入并非数据库式原子事务。

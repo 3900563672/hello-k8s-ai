@@ -13,6 +13,7 @@ export const configKeys = {
     tenantDetail: (name: string) => [...configKeys.all, 'tenants', 'latest', name] as const,
     orchestrators: (version: string = 'latest') => [...configKeys.all, 'orchestrators', version] as const,
     orchestratorDetail: (name: string) => [...configKeys.all, 'orchestrators', 'latest', name] as const,
+    policies: (version: string = 'latest') => [...configKeys.all, 'policies', version] as const,
 }
 
 const queryDefaults = {
@@ -75,6 +76,18 @@ export const useOrchestrators = () => {
     })
 }
 
+export const usePolicies = () => {
+    const replay = useReplayTimeContext()
+    const query = replayQuery(replay.mode, replay.snapshotId, replay.effectiveAt)
+    return useQuery({
+        queryKey: configKeys.policies(query.version),
+        queryFn: () => configApi.getPolicies(query.timestamp),
+        ...queryDefaults,
+        staleTime: query.historical ? Number.POSITIVE_INFINITY : queryDefaults.staleTime,
+        refetchInterval: query.historical ? false : queryDefaults.refetchInterval,
+    })
+}
+
 const useConfigMutation = <TVariables, TResult>(
     mutationFn: (variables: TVariables) => Promise<TResult>,
 ) => {
@@ -106,3 +119,7 @@ export const useCreateOrchestrator = () => useConfigMutation(configApi.createOrc
 export const useUpdateOrchestrator = () => useConfigMutation(configApi.updateOrchestrator)
 export const useDeleteOrchestrator = () => useConfigMutation(configApi.deleteOrchestrator)
 export const useDeleteOrchestrators = () => useConfigMutation(configApi.deleteOrchestrators)
+
+export const useCreatePolicy = () => useConfigMutation(configApi.createPolicy)
+export const useUpdatePolicy = () => useConfigMutation(configApi.updatePolicy)
+export const useDeletePolicy = () => useConfigMutation(configApi.deletePolicy)

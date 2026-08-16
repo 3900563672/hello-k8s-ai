@@ -1,23 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BrainCircuit, DatabaseZap, History, RefreshCw, RotateCcw, Server, Settings2, SlidersHorizontal, Users } from 'lucide-react'
+import { BrainCircuit, DatabaseZap, History, RefreshCw, RotateCcw, Server, Settings2, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { ConfigTabPanel } from './components/ConfigTabPanel'
 import { ModelTable } from './tables/ModelTable'
 import { NodeTable } from './tables/NodeTable'
 import { OrchestratorTable } from './tables/OrchestratorTable'
+import { PolicyTable } from './tables/PolicyTable'
 import { TenantTable } from './tables/TenantTable'
 import { ModelForm } from './forms/ModelForm'
 import { NodeForm } from './forms/NodeForm'
 import { OrchestratorForm } from './forms/OrchestratorForm'
+import { PolicyForm } from './forms/PolicyForm'
 import { TenantForm } from './forms/TenantForm'
 import { CreateDialog } from '@/components/shared/dialogs/CreateDialog'
 import { RenameDialog } from '@/components/shared/dialogs/RenameDialog'
 import { BatchDeleteDialog } from '@/components/shared/dialogs/BatchDeleteDialog'
+import { PolicyCreateDialog } from '@/components/shared/dialogs/PolicyCreateDialog'
 import {
     useCreateModel,
     useCreateNode,
     useCreateOrchestrator,
+    useCreatePolicy,
     useCreateTenant,
     useDeleteModel,
     useDeleteModels,
@@ -25,28 +29,41 @@ import {
     useDeleteNodes,
     useDeleteOrchestrator,
     useDeleteOrchestrators,
+    useDeletePolicy,
     useDeleteTenant,
     useDeleteTenants,
     useModels,
     useNodes,
     useOrchestrators,
+    usePolicies,
     useTenants,
     useUpdateModel,
     useUpdateNode,
     useUpdateOrchestrator,
+    useUpdatePolicy,
     useUpdateTenant,
 } from '@/api/queries/configQueries'
+import type { PolicyFormValues } from '@/lib/validations/policy.schema'
 import type { ModelFormValues } from '@/lib/validations/model.schema'
 import type { NodeFormValues } from '@/lib/validations/node.schema'
 import type { OrchestratorFormValues } from '@/lib/validations/orchestrator.schema'
 import type { TenantFormValues } from '@/lib/validations/tenant.schema'
-import type { ConfigResourceType, Model, Node, Orchestrator, Tenant } from '@/types/config.types'
+import type {
+    ConfigResourceType,
+    Model,
+    Node,
+    Orchestrator,
+    Policy,
+    PolicyEffect,
+    PolicyKind,
+    Tenant,
+} from '@/types/config.types'
 import { useWorkspaceContext } from '@/hooks/useWorkspaceContext'
 import { useTimeStore } from '@/stores/timeSlice'
 import { formatUtcTimestamp } from '@/lib/formatters/timeFormatter'
 import { DEFAULT_MODEL, DEFAULT_NODE, DEFAULT_ORCHESTRATOR, DEFAULT_TENANT } from '@/lib/constants/defaultValues'
 
-type ConfigTab = 'models' | 'nodes' | 'tenants' | 'orchestrators'
+type ConfigTab = 'models' | 'nodes' | 'tenants' | 'orchestrators' | 'policies'
 type RenameTarget =
     | { type: 'model'; resource: Model }
     | { type: 'node'; resource: Node }
@@ -65,6 +82,7 @@ const EMPTY_MODELS: Model[] = []
 const EMPTY_NODES: Node[] = []
 const EMPTY_TENANTS: Tenant[] = []
 const EMPTY_ORCHESTRATORS: Orchestrator[] = []
+const EMPTY_POLICIES: Policy[] = []
 
 const mutationError = (error: unknown): string =>
     error instanceof Error ? error.message : '操作失败，请稍后重试'
@@ -141,6 +159,20 @@ const orchestratorFormValues = (orchestrator: Orchestrator): OrchestratorFormVal
     maxReplicas: orchestrator.maxReplicas,
 })
 
+const policyFormValues = (policy: Policy): PolicyFormValues => ({
+    kind: policy.kind,
+    tenantName: policy.tenantRef?.name ?? '',
+    modelName: policy.modelRef?.name ?? '',
+    nodeName: policy.nodeRef?.name ?? '',
+    effect: policy.effect,
+})
+
+const policyDisplayName = (kind: PolicyKind, tenantName: string, modelName: string, nodeName: string): string => {
+    if (kind === 'tenantModel') return `${tenantName} → ${modelName}`
+    if (kind === 'tenantNode') return `${tenantName} → ${nodeName}`
+    return `${modelName} → ${nodeName}`
+}
+
 export function ConfigPage() {
     const [activeTab, setActiveTab] = useState<ConfigTab>('models')
     const workspace = useWorkspaceContext()
@@ -151,10 +183,12 @@ export function ConfigPage() {
     const nodesQuery = useNodes()
     const tenantsQuery = useTenants()
     const orchestratorsQuery = useOrchestrators()
+    const policiesQuery = usePolicies()
     const models = modelsQuery.data ?? EMPTY_MODELS
     const nodes = nodesQuery.data ?? EMPTY_NODES
     const tenants = tenantsQuery.data ?? EMPTY_TENANTS
     const orchestrators = orchestratorsQuery.data ?? EMPTY_ORCHESTRATORS
+    const policies = policiesQuery.data ?? EMPTY_POLICIES
 
     const createModel = useCreateModel()
     const updateModel = useUpdateModel()
@@ -172,16 +206,21 @@ export function ConfigPage() {
     const updateOrchestrator = useUpdateOrchestrator()
     const deleteOrchestrator = useDeleteOrchestrator()
     const deleteOrchestrators = useDeleteOrchestrators()
+    const createPolicy = useCreatePolicy()
+    const updatePolicy = useUpdatePolicy()
+    const deletePolicy = useDeletePolicy()
 
     const modelSelection = useResourceSelection(models)
     const nodeSelection = useResourceSelection(nodes)
     const tenantSelection = useResourceSelection(tenants)
     const orchestratorSelection = useResourceSelection(orchestrators)
+    const policySelection = useResourceSelection(policies)
 
     const [selectedModels, setSelectedModels] = useState<string[]>([])
     const [selectedNodes, setSelectedNodes] = useState<string[]>([])
     const [selectedTenants, setSelectedTenants] = useState<string[]>([])
     const [selectedOrchestrators, setSelectedOrchestrators] = useState<string[]>([])
+    const [selectedPolicies, setSelectedPolicies] = useState<string[]>([])
 
     useEffect(() => {
         const ids = new Set(models.map((model) => model.name))
@@ -211,6 +250,13 @@ export function ConfigPage() {
             return next.length === selected.length ? selected : next
         })
     }, [orchestrators])
+    useEffect(() => {
+        const ids = new Set(policies.map((policy) => policy.name))
+        setSelectedPolicies((selected) => {
+            const next = selected.filter((id) => ids.has(id))
+            return next.length === selected.length ? selected : next
+        })
+    }, [policies])
 
     const [createOpen, setCreateOpen] = useState(false)
     const [createType, setCreateType] = useState<ConfigResourceType>('model')
@@ -224,15 +270,28 @@ export function ConfigPage() {
     const [batchDeleteType, setBatchDeleteType] = useState<ConfigResourceType | null>(null)
     const [batchDeleteError, setBatchDeleteError] = useState('')
 
+    const [policyCreateOpen, setPolicyCreateOpen] = useState(false)
+    const [policyCreateKind, setPolicyCreateKind] = useState<PolicyKind>('tenantModel')
+    const [policyTenantName, setPolicyTenantName] = useState('')
+    const [policyModelName, setPolicyModelName] = useState('')
+    const [policyNodeName, setPolicyNodeName] = useState('')
+    const [policyEffect, setPolicyEffect] = useState<PolicyEffect>('Allow')
+    const [policyCreateError, setPolicyCreateError] = useState('')
+    const [policyBatchDeleteOpen, setPolicyBatchDeleteOpen] = useState(false)
+    const [policyBatchDeleteError, setPolicyBatchDeleteError] = useState('')
+
     useEffect(() => {
         if (!readOnly) return
         setSelectedModels([])
         setSelectedNodes([])
         setSelectedTenants([])
         setSelectedOrchestrators([])
+        setSelectedPolicies([])
         setCreateOpen(false)
         setRenameTarget(null)
         setBatchDeleteType(null)
+        setPolicyCreateOpen(false)
+        setPolicyBatchDeleteOpen(false)
     }, [readOnly])
 
     const existingIds =
@@ -398,6 +457,111 @@ export function ConfigPage() {
         }
     }
 
+    const policyIdentifierPreview = (() => {
+        if (policyCreateKind === 'tenantModel') {
+            if (!policyTenantName || !policyModelName) return ''
+            const base = `${policyTenantName}-${policyModelName}`
+            const existing = new Set(policies.map((policy) => policy.name))
+            if (!existing.has(base)) return base
+            let suffix = 2
+            while (existing.has(`${base}-${suffix}`)) suffix += 1
+            return `${base}-${suffix}`
+        }
+        if (policyCreateKind === 'tenantNode') {
+            if (!policyTenantName || !policyNodeName) return ''
+            const base = `${policyTenantName}-${policyNodeName}`
+            const existing = new Set(policies.map((policy) => policy.name))
+            if (!existing.has(base)) return base
+            let suffix = 2
+            while (existing.has(`${base}-${suffix}`)) suffix += 1
+            return `${base}-${suffix}`
+        }
+        if (!policyModelName || !policyNodeName) return ''
+        const base = `${policyModelName}-${policyNodeName}`
+        const existing = new Set(policies.map((policy) => policy.name))
+        if (!existing.has(base)) return base
+        let suffix = 2
+        while (existing.has(`${base}-${suffix}`)) suffix += 1
+        return `${base}-${suffix}`
+    })()
+
+    const openCreatePolicy = (kind: PolicyKind) => {
+        if (readOnly) return
+        setPolicyCreateKind(kind)
+        setPolicyTenantName('')
+        setPolicyModelName('')
+        setPolicyNodeName('')
+        setPolicyEffect('Allow')
+        setPolicyCreateError('')
+        setPolicyCreateOpen(true)
+    }
+
+    const confirmCreatePolicy = async () => {
+        if (readOnly || createPolicy.isPending) return
+        const name = policyIdentifierPreview
+        if (!name) {
+            setPolicyCreateError('请先选择策略的引用对象')
+            return
+        }
+        setPolicyCreateError('')
+        const tenantName = policyCreateKind === 'modelNode' ? '' : policyTenantName
+        const modelName = policyCreateKind === 'tenantNode' ? '' : policyModelName
+        const nodeName = policyCreateKind === 'tenantModel' ? '' : policyNodeName
+        const policy: Policy = {
+            name,
+            displayName: policyDisplayName(policyCreateKind, tenantName, modelName, nodeName),
+            kind: policyCreateKind,
+            ...(tenantName ? { tenantRef: { name: tenantName } } : {}),
+            ...(modelName ? { modelRef: { name: modelName } } : {}),
+            ...(nodeName ? { nodeRef: { name: nodeName } } : {}),
+            effect: policyEffect,
+        }
+        try {
+            await createPolicy.mutateAsync(policy)
+            policySelection.setSelectedName(policy.name)
+            setPolicyCreateOpen(false)
+        } catch (error) {
+            setPolicyCreateError(mutationError(error))
+        }
+    }
+
+    const savePolicy = async (values: PolicyFormValues) => {
+        if (readOnly) return
+        if (!policySelection.selectedItem) return
+        await updatePolicy.mutateAsync({
+            ...policySelection.selectedItem,
+            ...(values.tenantName ? { tenantRef: { name: values.tenantName } } : {}),
+            ...(values.modelName ? { modelRef: { name: values.modelName } } : {}),
+            ...(values.nodeName ? { nodeRef: { name: values.nodeName } } : {}),
+            effect: values.effect,
+        })
+    }
+
+    const deletePolicyByName = async (name: string): Promise<void> => {
+        const policy = policies.find((item) => item.name === name)
+        if (!policy) return
+        await deletePolicy.mutateAsync(policy)
+    }
+
+    const openBatchDeletePolicy = () => {
+        if (readOnly) return
+        if (selectedPolicies.length === 0) return
+        setPolicyBatchDeleteError('')
+        setPolicyBatchDeleteOpen(true)
+    }
+
+    const confirmPolicyBatchDelete = async () => {
+        if (readOnly) return
+        setPolicyBatchDeleteError('')
+        try {
+            await Promise.all(selectedPolicies.map((name) => deletePolicyByName(name)))
+            setSelectedPolicies([])
+            setPolicyBatchDeleteOpen(false)
+        } catch (error) {
+            setPolicyBatchDeleteError(mutationError(error))
+        }
+    }
+
     const saveModel = async (values: ModelFormValues) => {
         if (readOnly) return
         if (!modelSelection.selectedItem) return
@@ -430,9 +594,9 @@ export function ConfigPage() {
         })
     }
 
-    const loading = modelsQuery.isLoading || nodesQuery.isLoading || tenantsQuery.isLoading || orchestratorsQuery.isLoading
-    const queryError = modelsQuery.error ?? nodesQuery.error ?? tenantsQuery.error ?? orchestratorsQuery.error
-    const totalResources = models.length + nodes.length + tenants.length + orchestrators.length
+    const loading = modelsQuery.isLoading || nodesQuery.isLoading || tenantsQuery.isLoading || orchestratorsQuery.isLoading || policiesQuery.isLoading
+    const queryError = modelsQuery.error ?? nodesQuery.error ?? tenantsQuery.error ?? orchestratorsQuery.error ?? policiesQuery.error
+    const totalResources = models.length + nodes.length + tenants.length + orchestrators.length + policies.length
     const batchDeleteCount =
         batchDeleteType === 'model'
             ? selectedModels.length
@@ -473,6 +637,7 @@ export function ConfigPage() {
                             void nodesQuery.refetch()
                             void tenantsQuery.refetch()
                             void orchestratorsQuery.refetch()
+                            void policiesQuery.refetch()
                         }}
                         className="mt-5 border-[#303C50] bg-[#111722] text-[#D8D8D8] hover:bg-[#1B2634] hover:text-white"
                     >
@@ -577,6 +742,14 @@ export function ConfigPage() {
                             编排策略
                             <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{orchestrators.length}</span>
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="policies"
+                            className="h-7 gap-2 rounded-md px-3 text-xs text-[#748196] transition data-[state=active]:bg-[#202B3A] data-[state=active]:text-white data-[state=active]:shadow-none"
+                        >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            策略
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{policies.length}</span>
+                        </TabsTrigger>
                     </TabsList>
                 </Tabs>
             </header>
@@ -676,7 +849,70 @@ export function ConfigPage() {
                         readOnly={readOnly}
                     />
                 </TabsContent>
+
+                <TabsContent value="policies" forceMount className="m-0 h-full min-h-0 data-[state=inactive]:hidden">
+                    <ConfigTabPanel<Policy, PolicyFormValues>
+                        data={policies}
+                        selectedItem={policySelection.selectedItem}
+                        onSelect={(item) => policySelection.setSelectedName(item.name)}
+                        onDelete={deletePolicyByName}
+                        selectedIds={selectedPolicies}
+                        onSelectionChange={setSelectedPolicies}
+                        TableComponent={PolicyTable}
+                        FormComponent={PolicyForm}
+                        getFormValues={policyFormValues}
+                        typeLabel="策略"
+                        listTitle="访问策略"
+                        listDescription="租户、模型与节点的 Allow / Deny 关系，Controller 据此拉起 Simulator"
+                        detailDescription="策略参数"
+                        resourceIcon={<ShieldCheck className="h-4 w-4" />}
+                        onCreate={() => openCreatePolicy('tenantModel')}
+                        onBatchDelete={openBatchDeletePolicy}
+                        formSubmit={savePolicy}
+                        readOnly={readOnly}
+                    />
+                </TabsContent>
             </Tabs>
+
+            <PolicyCreateDialog
+                open={policyCreateOpen}
+                onOpenChange={(open) => {
+                    setPolicyCreateOpen(open)
+                    if (!open) setPolicyCreateError('')
+                }}
+                kind={policyCreateKind}
+                onKindChange={(kind) => {
+                    setPolicyCreateKind(kind)
+                    setPolicyTenantName('')
+                    setPolicyModelName('')
+                    setPolicyNodeName('')
+                    setPolicyCreateError('')
+                }}
+                tenantName={policyTenantName}
+                onTenantNameChange={(value) => {
+                    setPolicyTenantName(value)
+                    setPolicyCreateError('')
+                }}
+                modelName={policyModelName}
+                onModelNameChange={(value) => {
+                    setPolicyModelName(value)
+                    setPolicyCreateError('')
+                }}
+                nodeName={policyNodeName}
+                onNodeNameChange={(value) => {
+                    setPolicyNodeName(value)
+                    setPolicyCreateError('')
+                }}
+                effect={policyEffect}
+                onEffectChange={setPolicyEffect}
+                identifierPreview={policyCreateOpen ? policyIdentifierPreview : ''}
+                tenants={tenants}
+                models={models}
+                nodes={nodes}
+                pending={createPolicy.isPending}
+                error={policyCreateError}
+                onConfirm={() => void confirmCreatePolicy()}
+            />
 
             <CreateDialog
                 open={createOpen}
@@ -730,6 +966,21 @@ export function ConfigPage() {
                 pending={batchDeletePending}
                 error={batchDeleteError}
                 onConfirm={() => void confirmBatchDelete()}
+            />
+
+            <BatchDeleteDialog
+                open={policyBatchDeleteOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setPolicyBatchDeleteOpen(false)
+                        setPolicyBatchDeleteError('')
+                    }
+                }}
+                typeLabel="策略"
+                count={selectedPolicies.length}
+                pending={deletePolicy.isPending}
+                error={policyBatchDeleteError}
+                onConfirm={() => void confirmPolicyBatchDelete()}
             />
         </div>
     )

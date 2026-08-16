@@ -81,6 +81,34 @@ export interface Orchestrator extends OrchestratorSpec {
     derived?: Record<string, unknown>
 }
 
+export const POLICY_EFFECTS = ['Allow', 'Deny'] as const
+
+export type PolicyEffect = (typeof POLICY_EFFECTS)[number]
+
+export type PolicyKind = 'tenantModel' | 'tenantNode' | 'modelNode'
+
+export interface PolicySpec {
+    tenantRef?: { name: string }
+    modelRef?: { name: string }
+    nodeRef?: { name: string }
+    effect: PolicyEffect
+}
+
+export interface Policy {
+    name: string
+    displayName: string
+    kind: PolicyKind
+    tenantRef?: { name: string }
+    modelRef?: { name: string }
+    nodeRef?: { name: string }
+    effect: PolicyEffect
+    uid?: string
+    resourceVersion?: string
+    status?: Record<string, unknown>
+    conditions?: KubernetesCondition[]
+    derived?: Record<string, unknown>
+}
+
 export interface KubernetesCondition {
     type: string
     status: string
