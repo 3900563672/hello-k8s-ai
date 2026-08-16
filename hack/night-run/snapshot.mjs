@@ -24,25 +24,32 @@ const localDate = () => {
 };
 const RUN_DATE = get('--date', localDate());
 const SUMMARY = args.includes('--summary');
-const METRIC_IDS = ['simulator.errorRate', 'simulator.ttft', 'simulator.queue', 'simulator.qps', 'simulator.tickLatency'];
+const METRIC_IDS = ['controller.errorRate', 'simulator.errorRate', 'simulator.ttft', 'simulator.queue', 'simulator.qps', 'simulator.tickLatency'];
 const SNAP_DIR = join('/root/hello-k8s-ai/.runtime/night-run', RUN_DATE, 'snapshots');
 
 const utcNow = () => new Date().toISOString();
 
 async function httpGet(path, timeoutMs = 30000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(`${BASE}${path}`, { signal: controller.signal });
-    const body = await response.text();
-    let json = null;
-    try { json = JSON.parse(body); } catch { /* 保留原文 */ }
-    return { ok: response.ok, status: response.status, json, body: body.slice(0, 300) };
-  } catch (error) {
-    return { ok: false, status: 0, json: null, body: String(error.message || error).slice(0, 300) };
-  } finally {
-    clearTimeout(timer);
+  // port-forward 偶发连接复用失败：网络层错误自动重试（最多 3 次，间隔 500ms）
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(`${BASE}${path}`, { signal: controller.signal });
+      const body = await response.text();
+      let json = null;
+      try { json = JSON.parse(body); } catch { /* 保留原文 */ }
+      return { ok: response.ok, status: response.status, json, body: body.slice(0, 300) };
+    } catch (error) {
+      if (attempt === 3) {
+        return { ok: false, status: 0, json: null, body: String(error.message || error).slice(0, 300) };
+      }
+      await sleep(500);
+    } finally {
+      clearTimeout(timer);
+    }
   }
+  return { ok: false, status: 0, json: null, body: 'unreachable' };
 }
 
 function latestValue(result) {
@@ -166,7 +173,7 @@ function summarize(snapshot) {
     `snapshot ${snapshot.collectedAt}`,
     `  clock=${snapshot.overview?.clockState} rate=${snapshot.overview?.rate}`,
     `  tenants=${snapshot.overview?.tenantCount} models=${snapshot.overview?.modelCount} nodes=${snapshot.overview?.nodeCount} leases=${snapshot.overview?.leaseCount}`,
-    `  errorRate=${fmt(m['simulator.errorRate'])} ttft=${fmt(m['simulator.ttft'])} queue=${fmt(m['simulator.queue'])} qps=${fmt(m['simulator.qps'])} tickLatency=${fmt(m['simulator.tickLatency'])}`,
+    `  controllerErrorRate=${fmt(m['controller.errorRate'])} simulatorErrorRate=${fmt(m['simulator.errorRate'])} ttft=${fmt(m['simulator.ttft'])} queue=${fmt(m['simulator.queue'])} qps=${fmt(m['simulator.qps'])} tickLatency=${fmt(m['simulator.tickLatency'])}`,
     `  instances: ${instanceSummary || '-'}`,
     `  traffic=${JSON.stringify(snapshot.traffic?.map((t) => `${t.tenant}=${t.allocatedQPS}qps(${t.runtimePhase})`) || snapshot.trafficError || [])}`,
     `  resources=${snapshot.resources?.count ?? '-'} (${JSON.stringify(snapshot.resources?.byKind ?? {})})`,

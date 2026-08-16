@@ -23,17 +23,26 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const utcNow = () => new Date().toISOString();
 
 async function httpGet(path, timeoutMs = 8000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(`${BASE}${path}`, { signal: controller.signal });
-    const body = await response.text();
-    let json = null;
-    try { json = JSON.parse(body); } catch { /* 非 JSON 响应保留原文 */ }
-    return { status: response.status, ok: response.ok, json, body: body.slice(0, 500) };
-  } finally {
-    clearTimeout(timer);
+  // port-forward 偶发连接复用失败：网络层错误自动重试（最多 3 次，间隔 500ms）
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(`${BASE}${path}`, { signal: controller.signal });
+      const body = await response.text();
+      let json = null;
+      try { json = JSON.parse(body); } catch { /* 非 JSON 响应保留原文 */ }
+      return { status: response.status, ok: response.ok, json, body: body.slice(0, 500) };
+    } catch (error) {
+      if (attempt === 3) {
+        return { status: 0, ok: false, json: null, body: String(error.message || error).slice(0, 500) };
+      }
+      await sleep(500);
+    } finally {
+      clearTimeout(timer);
+    }
   }
+  return { status: 0, ok: false, json: null, body: 'unreachable' };
 }
 
 function runKubectl(extraArgs) {
@@ -107,7 +116,7 @@ async function checkOnce() {
   }
 
   // 4) Reconcile 错误比例（Prometheus 经 Dashboard 代理）
-  const metrics = await httpGet('/api/v1/metrics?metricId=simulator.errorRate&step=300s');
+  const metrics = await httpGet('/api/v1/metrics?metricId=controller.errorRate&step=300s');
   if (metrics.ok) {
     const series = metrics.json?.data?.series || [];
     const last = series.map((s) => {
