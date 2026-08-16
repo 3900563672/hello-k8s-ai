@@ -119,6 +119,11 @@ func (r *TrafficReconciler) distributeTrafficForTenant(
 	if err != nil {
 		return err
 	}
+	// 缩容到零副本或删除中的实例不参与分配，但残留的旧 QPS 必须清零，
+	// 否则 Backend 聚合会出现 allocatedQPS 大于 requestedQPS 的不一致切面。
+	if err := r.zeroStaleTrafficQPS(ctx, tenant.Name, instances); err != nil {
+		return err
+	}
 	if len(instances) == 0 {
 		return nil
 	}
@@ -186,6 +191,33 @@ func (r *TrafficReconciler) collectTrafficInstances(ctx context.Context, tenantN
 		return cmp.Compare(left.name, right.name)
 	})
 	return result, nil
+}
+
+// zeroStaleTrafficQPS 清零不在活跃分配集合中但仍残留旧 QPS 的实例（如缩容到零副本）。
+// updateInstanceQPS 对不存在、删除中或值相同的实例自动跳过，不会产生副作用。
+func (r *TrafficReconciler) zeroStaleTrafficQPS(ctx context.Context, tenantName string, active []instanceData) error {
+	var instances platformv1.SimulatorInstanceList
+	if err := r.List(ctx, &instances, client.MatchingFields{trafficTenantIndex: tenantName}); err != nil {
+		return fmt.Errorf("list simulator instances for tenant %q: %w", tenantName, err)
+	}
+	activeNames := make(map[string]struct{}, len(active))
+	for _, instance := range active {
+		activeNames[instance.name] = struct{}{}
+	}
+	updateErrors := make([]error, 0)
+	for i := range instances.Items {
+		instance := &instances.Items[i]
+		if _, ok := activeNames[instance.Name]; ok {
+			continue
+		}
+		if instance.Spec.Traffic.QPS == 0 {
+			continue
+		}
+		if err := r.updateInstanceQPS(ctx, instance.Name, 0); err != nil {
+			updateErrors = append(updateErrors, fmt.Errorf("zero stale traffic QPS for %q: %w", instance.Name, err))
+		}
+	}
+	return errors.Join(updateErrors...)
 }
 
 type trafficRemainder struct {

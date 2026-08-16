@@ -1,11 +1,15 @@
 package controller
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
 
+	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 // 验证 Largest Remainder 分配在不同 QPS 下的结果是否与预期一致
@@ -74,5 +78,55 @@ func TestMetricIsFresh(t *testing.T) {
 	}
 	if metricIsFresh(nil, now) {
 		t.Fatal("missing observation time should be rejected")
+	}
+}
+
+// 缩容到零副本的实例不参与分配，但残留的旧 QPS 必须被清零，
+// 保证租户下实例 QPS 总和不超过请求值（分配不变量端到端闭环）。
+func TestZeroStaleTrafficQPSOnScaledToZeroInstances(t *testing.T) {
+	scheme := newControllerTestScheme(t)
+	active := &platformv1.SimulatorInstance{
+		ObjectMeta: metav1.ObjectMeta{Name: "tenant-a-model-a"},
+		Spec: platformv1.SimulatorInstanceSpec{
+			TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+			ModelRef:  platformv1.ObjectRef{Name: "model-a"},
+			Replicas:  2,
+			Traffic:   platformv1.TrafficSpec{QPS: 100},
+		},
+	}
+	stale := &platformv1.SimulatorInstance{
+		ObjectMeta: metav1.ObjectMeta{Name: "tenant-a-model-b"},
+		Spec: platformv1.SimulatorInstanceSpec{
+			TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+			ModelRef:  platformv1.ObjectRef{Name: "model-b"},
+			Replicas:  0,
+			Traffic:   platformv1.TrafficSpec{QPS: 80},
+		},
+	}
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithObjects(active, stale).
+		WithIndex(&platformv1.SimulatorInstance{}, trafficTenantIndex, func(obj client.Object) []string {
+			return []string{obj.(*platformv1.SimulatorInstance).Spec.TenantRef.Name}
+		}).
+		Build()
+	reconciler := &TrafficReconciler{Client: kubernetesClient}
+
+	if err := reconciler.zeroStaleTrafficQPS(context.Background(), "tenant-a", []instanceData{{name: "tenant-a-model-a"}}); err != nil {
+		t.Fatalf("zero stale QPS: %v", err)
+	}
+
+	var got platformv1.SimulatorInstance
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: "tenant-a-model-b"}, &got); err != nil {
+		t.Fatalf("get scaled-to-zero instance: %v", err)
+	}
+	if got.Spec.Traffic.QPS != 0 {
+		t.Fatalf("scaled-to-zero instance QPS = %d, want 0", got.Spec.Traffic.QPS)
+	}
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: "tenant-a-model-a"}, &got); err != nil {
+		t.Fatalf("get active instance: %v", err)
+	}
+	if got.Spec.Traffic.QPS != 100 {
+		t.Fatalf("active instance QPS = %d, want 100", got.Spec.Traffic.QPS)
 	}
 }
