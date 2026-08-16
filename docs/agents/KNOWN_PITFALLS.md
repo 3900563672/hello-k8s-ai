@@ -1,11 +1,31 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-night-run-first-execution/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
 
 ## 夜间长时运行（night-run）
+### 2026-08-17 宿主机空闲 15 分钟自动睡眠会冻结 WSL（值守事故根因）
+- 现象：2026-08-17 00:50 后值守会话与 keepalive 全部停滞约 7 小时，07:48 恢复；keepalive.log 无新检查记录、sleep 等待命令 7 小时不返回；恢复后系统本身无故障（18 Pod 全 Running）。
+- 原因：Windows 电源计划"平衡"下交流空闲 15 分钟自动睡眠（powercfg 实测 STANDBYIDLE AC=900s）、3 小时自动休眠（HIBERNATEIDLE=3h）；睡眠冻结整个 WSL VM。
+- 解决：夜间值守前禁用空闲睡眠/休眠（`powercfg /change standby-timeout-ac 0`、`powercfg /change hibernate-timeout-ac 0`，需管理员；PowerToys Awake 可作免管理员备选），值守结束恢复原值；提示词前提从"App 必须保持运行"扩展为"App 运行 + 宿主机不睡眠"。
+- 验证：07:48 唤醒后系统自动恢复，队列自动回排；未实测禁用睡眠后的整夜值守。
+- 备注：合盖行为由"合盖操作"设置单独控制，改空闲睡眠不影响合盖逻辑。
+
+### 2026-08-17 nohup 挡不住 exec 会话进程组回收，keepalive 必须 setsid 启动
+- 现象：`nohup node keepalive.mjs --loop ... &` 启动的常驻进程（PID 120061）在命令会话结束后静默消失，日志无第二轮检查、无错误输出。
+- 原因：Codex exec 在命令返回后回收该会话的进程组，nohup 只能忽略 SIGHUP、挡不住进程组终止。
+- 解决：`setsid nohup node ... < /dev/null >> log 2>&1 &`（setsid 脱离会话）；已在 phase_a_prompt.md 与 hack/night-run/README.md 同步。
+- 验证：setsid 重启（PID 122828）跨命令存活，首轮检查全绿。
+
+### 2026-08-17 snapshot.mjs 漏定义 sleep 导致采集崩溃（node --check 查不出）
+- 现象：`node hack/night-run/snapshot.mjs --once --summary` 在 port-forward 偶发失败走重试路径时崩溃：`ReferenceError: sleep is not defined`（snapshot.mjs:47），整份快照丢失。
+- 原因：从 keepalive.mjs 拷贝 httpGet 时漏拷 `const sleep` 辅助函数；`node --check` 只查语法不查运行时引用，所有 fetch 首试成功时脚本可跑通，掩盖了 bug。
+- 解决：snapshot.mjs 补 `const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));`。
+- 验证：修复后实跑 `snapshot.mjs --once --summary` 成功（2026-08-16T23:55:54Z 快照 ok:true）。
+- 备注：同类脚本改动后除 `node --check` 外，至少实跑一次触发重试路径（或直接跑通一次）。
+
 
 ### 2026-08-16 kubectl port-forward 偶发连接复用失败
 - 现象：Node fetch 连续请求 Backend 时偶发 `TypeError: fetch failed`，curl 同时刻正常。
