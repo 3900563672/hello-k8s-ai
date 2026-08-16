@@ -66,6 +66,11 @@
 - 注意：测试容器访问宿主端口用 `--network host`（WSL 原生 docker 没有 host.docker.internal）。
 - 测试用专用数据库，不要指向真实集群的库。
 
+### 2026-08-16 当前态读路径的降级边界
+- `/configuration`、`/overview`、`/traffic` 无 `at` 参数时优先从数据库 `resource_states` 重建当前态；数据库可用但表为空（快照循环未跑过）时同样回退实时聚合，不要误判为故障。
+- `asOf` 是数据库最新 `captured_at`（数据时间），可能比墙钟晚最多一个快照周期（默认 30s），不是 bug。
+- 修改读路径时保持响应结构与实时路径一致（空集合输出 `[]` 而非 `null`）。
+
 ### 迁移规则（本次确立）
 - 新表/结构变更只追加 `migrations/NNN_*.sql`，不修改已应用的迁移（`schema_migrations` 已记录）。
 - 迁移必须幂等（`IF NOT EXISTS` / `ON CONFLICT`），Backend 启动自动应用。

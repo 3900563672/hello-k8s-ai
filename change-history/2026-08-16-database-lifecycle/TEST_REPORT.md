@@ -35,6 +35,17 @@
 
 - 首次推送后 `make fmt-check` 曾报三个 store 文件未格式化，已由 `fix: 修正 store 包 gofmt 格式 Refs #12`（52ded71）修正，重新推送后三个 workflow 全部通过。
 
+## Phase 3 验证（2026-08-16）
+
+| 验证项 | 命令 / 方式 | 结果 |
+| --- | --- | --- |
+| gofmt 全仓 | `gofmt -l`（golang:1.26 容器） | 通过 |
+| 静态检查 | `go vet ./...`（容器） | 通过 |
+| Backend 全量测试（含新测试） | `go test -race ./... -count=1`（容器） | 全部包 ok |
+| 当前态重建单元测试 | `TestCurrentSnapshotFromRecords*`（api 包） | PASS：全 kind 重建、空记录 false、损坏 payload 跳过 |
+| 资源查询接口测试 | `TestHandleResourceStates*`（api 包） | PASS：过滤透传、503、limit 校验 |
+| 生命周期集成测试 | `TestPostgresLifecycle`（postgres:17-alpine，端口 55433，测后已删） | PASS：3 个迁移自动应用、当前态 upsert、重启后历史仍在 |
+
 ## 结论
 
-Phase 1 + Phase 2 代码通过编译、vet 与全部测试；数据库生命周期与当前态入库行为有集成测试实证；CI 三个 workflow 最终全部通过。
+Phase 1 + Phase 2 代码通过编译、vet 与全部测试；数据库生命周期与当前态入库行为有集成测试实证；CI 三个 workflow 最终全部通过。Phase 3 读路径切换与 `GET /api/v1/resources` 通过单元测试与全量测试；真实集群 initContainer 行为仍未在集群验证。

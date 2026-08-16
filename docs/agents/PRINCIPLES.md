@@ -108,3 +108,10 @@
 - 迁移必须幂等（`IF NOT EXISTS` / `ON CONFLICT`），由 Backend 启动自动应用，不需要人工建表。
 - 数据库写路径失败不得阻断控制面或 Simulator（记录日志继续运行）。
 - 涉及持久化行为时用 `TestPostgresLifecycle`（`TEST_DATABASE_URL`）验证迁移幂等与重启恢复。
+
+### 展示读路径（Phase 3）
+
+- 前端展示的当前态数据由 Backend 统一从 `resource_states`（数据库）读取；Kubernetes API Server 仍是 Controller 侧唯一事实源，数据库不反向驱动 Controller。
+- 读路径降级边界：存储不可用、记录为空或查询失败时回退 informer 实时聚合，不返回伪造数据；历史回放（`at` 参数）继续读数据库快照。
+- `GET /api/v1/resources` 直接暴露当前态记录；存储不可用时返回 503 problem（与 `/replay` 风格一致）。
+- 当前态 `asOf` 取 `resource_states` 最新 `captured_at`（数据时间），不伪装成请求时间。

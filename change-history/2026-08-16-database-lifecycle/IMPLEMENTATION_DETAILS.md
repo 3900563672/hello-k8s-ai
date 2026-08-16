@@ -23,6 +23,27 @@
 | `docs/agents/PRINCIPLES.md` | 新增"数据库 / Schema 修改"规范 |
 | `docs/agents/README.md` | 阅读决策表新增"数据库 / Schema 变更"行 |
 
+### 修改（Phase 3）
+
+| 路径 | 说明 |
+| --- | --- |
+| `dashboard/backend/internal/api/handlers_read.go` | 新增 `handleResourceStates`（`GET /api/v1/resources`）；`snapshotFor` 无 `at` 时数据库优先重建当前态（`currentSnapshotFromStore` / `currentSnapshotFromRecords`），失败回退实时；`capabilities` 中 PostgreSQL role 更新为 `persistent-current-and-history` |
+| `dashboard/backend/internal/api/server.go` | 注册 `GET /api/v1/resources` 路由 |
+| `dashboard/backend/internal/store/store.go` | `ResourceStateRecord` 补充 camelCase JSON tag（供 HTTP 输出） |
+
+### 新增（Phase 3）
+
+| 路径 | 说明 |
+| --- | --- |
+| `dashboard/backend/internal/api/resource_states_test.go` | `currentSnapshotFromRecords` 重建测试（全 kind / 空记录 / 损坏 payload 跳过）+ `/resources` handler 测试（过滤透传 / 503 / limit 校验） |
+
+## 设计要点（Phase 3）
+
+- 读路径切换发生在 Backend：`/configuration`、`/overview`、`/traffic` 响应结构不变，前端零改动、无感降级。
+- 数据库优先的边界：仅"最新当前态"（无 `at` 参数）切换；历史回放（`at` 参数）原本就走数据库快照，保持不变。
+- `asOf` 取 `resource_states` 最新 `captured_at`（数据时间），不伪装成请求时间。
+- `GET /api/v1/resources` 与历史回放接口一致：存储不可用时返回 503 problem，不返回伪造数据。
+
 ## 设计要点
 
 - 生命周期"自动"：迁移随 Backend 启动自动应用，部署用 initContainer 保证 DB 先就绪，进程内重试兜底，用户无需任何手工建表步骤。
