@@ -161,6 +161,10 @@ func (application *App) runSnapshots(ctx context.Context) {
 func (application *App) persistSnapshot(ctx context.Context) {
 	now := application.clock.State().LogicalTime
 	snapshot := application.aggregator.CurrentSnapshot(now)
+	if !snapshotHasBusinessData(snapshot) {
+		application.logger.Debug("跳过空配置快照：没有用户业务资源", "capturedAt", now)
+		return
+	}
 	payload, err := json.Marshal(snapshot)
 	if err != nil {
 		application.logger.Error("Could not serialize Dashboard resource snapshot", "error", err)
@@ -183,6 +187,23 @@ func (application *App) persistSnapshot(ctx context.Context) {
 	if err := application.database.UpsertResourceStates(writeContext, resourceStateRecords(snapshot, now)); err != nil {
 		application.logger.Error("Could not persist current resource states", "error", err)
 	}
+}
+
+// snapshotHasBusinessData 判断快照中是否存在用户业务资源。
+// SimulationClock/default 与集群基础工作负载（系统 Pod、物理节点）不构成业务历史，
+// 没有业务资源时不写快照，保证"没有运行就没有历史切面"。
+func snapshotHasBusinessData(snapshot model.CurrentSnapshot) bool {
+	configuration := snapshot.Configuration
+	return len(configuration.Models) > 0 ||
+		len(configuration.WorkerNodes) > 0 ||
+		len(configuration.Tenants) > 0 ||
+		len(configuration.Policies.TenantModel) > 0 ||
+		len(configuration.Policies.TenantNode) > 0 ||
+		len(configuration.Policies.ModelNode) > 0 ||
+		len(configuration.Orchestrators) > 0 ||
+		len(configuration.SimulatorInstances) > 0 ||
+		len(configuration.TenantPerformance) > 0 ||
+		len(configuration.TenantRuntimes) > 0
 }
 
 // resourceStateRecords 把聚合快照中的每个资源拆成一行"最新状态"，供数据库统一查询与恢复。

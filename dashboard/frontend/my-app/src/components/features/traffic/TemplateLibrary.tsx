@@ -1,6 +1,7 @@
 import { type MouseEvent, type PointerEvent, useMemo, useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import {
+    BookOpen,
     Clock3,
     Eye,
     GripVertical,
@@ -9,6 +10,7 @@ import {
     Sparkles,
     Trash2,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -206,6 +208,13 @@ export function TemplateLibrary({ onApply }: TemplateLibraryProps) {
                             </div>
                             <div className="text-xs font-medium text-[#8995A8]">模板库为空</div>
                             <p className="mt-1.5 text-[10px] leading-4 text-[#566174]">从真实的秒 / QPS 坐标开始绘制第一条流量曲线</p>
+                            <Link
+                                to="/guide"
+                                className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.025] px-3 text-[10px] text-[#8995A8] transition-colors hover:bg-white/[0.06] hover:text-white"
+                            >
+                                <BookOpen className="h-3.5 w-3.5" />
+                                查看填写指南
+                            </Link>
                         </div>
                     ) : templates.map((template) => (
                         <TemplateCard

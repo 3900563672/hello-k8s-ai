@@ -15,6 +15,7 @@ SIMULATOR_IMG="${SIMULATOR_IMG:-hello-k8s-ai-simulator:dev}"
 BACKEND_IMG="${BACKEND_IMG:-hello-k8s-ai-dashboard-backend:dev}"
 FRONTEND_IMG="${FRONTEND_IMG:-hello-k8s-ai-dashboard-frontend:dev}"
 DEMO_MODEL_ABSOLUTE_SCORE="${DEMO_MODEL_ABSOLUTE_SCORE:-100}"
+DEMO_ENABLED="${DEMO_ENABLED:-false}"
 
 RUNTIME_DIR="${RUNTIME_DIR:-$ROOT_DIR/.runtime}"
 mkdir -p "$RUNTIME_DIR"
@@ -498,28 +499,49 @@ deploy_demo() {
 verify_data_flow() {
   wait_for_text "Backend readiness 与 PostgreSQL" '"status":"ready"' 30 \
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/health/ready
-  wait_for_text "Backend Kubernetes 聚合" 'tenant-sample' 30 \
-    service_proxy hello-k8s-ai-dashboard-backend http /api/v1/configuration
   wait_for_text "Backend Simulator 倍速能力" '"simulatorAcceleration":true' 30 \
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/clock
   wait_for_text "SimulationClock 配置收敛" '1|1|True' 30 \
     kube get simulationclock/default \
     -o 'jsonpath={.spec.rate}{"|"}{.status.appliedRate}{"|"}{.status.conditions[?(@.type=="Ready")].status}'
-  kube wait --for=jsonpath='{.spec.timeScale}'=1 \
-    simulatorinstances --all --timeout=90s >/dev/null
-  log "SimulatorInstance 倍速同步：通过"
-  wait_for_text "PostgreSQL snapshot" 'snapshot-' 30 \
-    service_proxy hello-k8s-ai-dashboard-backend http /api/v1/replay
-  wait_for_text "Prometheus Simulator 指标" 'hello_k8s_ai_simulator_leader' 40 \
-    service_proxy hello-k8s-ai-prometheus http \
-    '/api/v1/query?query=hello_k8s_ai_simulator_leader'
-  wait_for_text "Prometheus Simulator 倍速指标" 'hello_k8s_ai_simulator_time_scale' 40 \
-    service_proxy hello-k8s-ai-prometheus http \
-    '/api/v1/query?query=hello_k8s_ai_simulator_time_scale'
-  wait_for_text "OpenTelemetry 到 Jaeger" 'hello-k8s-ai-' 40 \
-    service_proxy hello-k8s-ai-jaeger query /api/services
   wait_for_text "Frontend 页面" '<!doctype html>' 20 \
     service_proxy hello-k8s-ai-dashboard-frontend http /
+
+  if [[ "$DEMO_ENABLED" == "true" ]]; then
+    wait_for_text "Backend Kubernetes 聚合" 'tenant-sample' 30 \
+      service_proxy hello-k8s-ai-dashboard-backend http /api/v1/configuration
+    kube wait --for=jsonpath='{.spec.timeScale}'=1 \
+      simulatorinstances --all --timeout=90s >/dev/null
+    log "SimulatorInstance 倍速同步：通过"
+    wait_for_text "PostgreSQL snapshot" 'snapshot-' 30 \
+      service_proxy hello-k8s-ai-dashboard-backend http /api/v1/replay
+    wait_for_text "Prometheus Simulator 指标" 'hello_k8s_ai_simulator_leader' 40 \
+      service_proxy hello-k8s-ai-prometheus http \
+      '/api/v1/query?query=hello_k8s_ai_simulator_leader'
+    wait_for_text "Prometheus Simulator 倍速指标" 'hello_k8s_ai_simulator_time_scale' 40 \
+      service_proxy hello-k8s-ai-prometheus http \
+      '/api/v1/query?query=hello_k8s_ai_simulator_time_scale'
+    wait_for_text "OpenTelemetry 到 Jaeger" 'hello-k8s-ai-' 40 \
+      service_proxy hello-k8s-ai-jaeger query /api/services
+  else
+    verify_clean_state
+  fi
+}
+
+verify_clean_state() {
+  local leftover replay
+  leftover="$(kube get tenants,models,orchestrators,simulatorinstances,workernodes \
+    -o name 2>/dev/null || true)"
+  if [[ -n "$leftover" ]]; then
+    fail "干净环境断言失败：仍存在业务 CR：$leftover"
+  fi
+  log "干净环境断言：业务 CR 为空"
+
+  replay="$(service_proxy hello-k8s-ai-dashboard-backend http /api/v1/replay 2>/dev/null || true)"
+  if [[ "$replay" == *'snapshot-'* ]]; then
+    fail "干净环境断言失败：/replay 仍返回历史快照。"
+  fi
+  log "干净环境断言：无历史快照"
 }
 
 port_forward_pid_file() {
@@ -671,8 +693,12 @@ run_up() {
   step "部署 PostgreSQL、Backend 与 Frontend"
   deploy_dashboard
 
-  step "按现有 Worker Node 写入演示配置"
-  deploy_demo
+  if [[ "$DEMO_ENABLED" == "true" ]]; then
+    step "按现有 Worker Node 写入演示配置"
+    deploy_demo
+  else
+    log "演示数据已关闭（DEMO_ENABLED=false），保持干净环境。"
+  fi
 
   step "验证完整数据链路"
   verify_data_flow
@@ -688,11 +714,15 @@ usage() {
   cat <<'EOF'
 用法：hack/local-cluster.sh <up|status|open|urls|down>
 
-  up      构建、导入镜像、部署、写入演示数据并验收
+  up      构建、导入镜像、部署并验收（默认不写演示数据）
   status  查看 Kubernetes 资源与 Backend 健康状态
   open    启动 Dashboard 本地端口转发（可观测性经单入口访问）
   urls    打印访问地址
   down    停止工作负载，保留集群、CRD、CR 和数据库 PVC
+
+环境变量：
+  DEMO_ENABLED=true                  在 up 时写入演示配置（模型/租户/节点/策略/实例）
+  DEMO_MODEL_ABSOLUTE_SCORE=100      演示模型绝对分数（正整数）
 EOF
 }
 

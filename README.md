@@ -22,11 +22,13 @@ bash setup.sh
 4. 预拉取 PostgreSQL、Prometheus、OpenTelemetry Collector、Jaeger、Grafana 镜像。
 5. 把所有运行镜像导入当前 10 个 Kubernetes Node 的 containerd，避免 `ImagePullBackOff`。
 6. 部署 CRD、Controller、可观测性、PostgreSQL、Backend 与 Frontend。
-7. 按当前 Worker Node 动态创建演示 WorkerNode 与 Node Policy，不写死节点名。
-8. 验证 CR/Controller/Simulator、Metrics、Trace、数据库快照、Backend API 与 Frontend 页面。
+7. 默认不写入任何演示数据，保持干净环境；需要演示数据时设置 `DEMO_ENABLED=true`（此时按当前 Worker Node 动态创建演示配置，不写死节点名）。
+8. 验证 Backend API、SimulationClock 与 Frontend 页面；干净模式断言业务 CR 与历史快照为空，演示模式额外验证 Metrics、Trace 与数据库快照。
 9. 启动本地端口转发。
 
 首次构建需要下载基础镜像和依赖，时间取决于网络；脚本对镜像拉取有重试，任一步失败都会停止并将诊断保存到 `.runtime/last-failure.log`。
+
+一键启动得到的是干净环境：没有任何预置的租户、模型、节点与策略，也没有历史切面。你可以打开 Dashboard，参考「填写指南」（`/guide`）用预置模板从空开始创建自己的配置；没有运行就没有历史数据，这是预期行为。
 
 ## 前置条件
 
@@ -53,6 +55,7 @@ make cluster-status  # 查看工作负载、CR、PVC 与 Backend 状态
 make cluster-open    # 端口转发中断后重新启动
 make cluster-urls    # 只打印访问地址
 make cluster-down    # 停止工作负载，保留集群、CRD、CR、Secret 与 PVC
+DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 ```
 
 `make cluster-down` 不会删除 `docker-desktop`，也不会碰旁边的 `minikserve-demo` Kind 集群。
@@ -84,6 +87,9 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 | Simulator 运行时倍速（1x..20x） | 已实现；只加速离散事件引擎，不改变 Controller 冷却、数据新鲜度或历史时间 |
 | Backend Kubernetes cache、PostgreSQL、Prometheus、Jaeger 聚合 | 已实现 |
 | React Config、Traffic、Data Overview | 已接真实 Backend；Traffic Overlay 提交仍是部分实现 |
+| 预置配置模板与“从模板新建” | 已实现；模板只预填表单，提交与运行由用户决定 |
+| 参数与填写指南（/guide） | 已实现；集中展示字段含义、默认值与系统常量 |
+| 干净环境一键启动（默认无演示数据） | 已实现；DEMO_ENABLED=true 可恢复演示链路 |
 | Docker Desktop 完整栈一键部署 | 已实现；需要在目标机器执行真实运行验收 |
 | 生产认证、HA、备份、持久化可观测存储 | 未实现；当前仍是本地开发/演示拓扑 |
 

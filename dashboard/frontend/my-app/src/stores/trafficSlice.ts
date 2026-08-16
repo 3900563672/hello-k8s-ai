@@ -7,6 +7,7 @@ import type {
     TrafficViewMode,
     TrafficWorkspaceMode,
 } from '@/types/traffic.types'
+import { PRESET_TRAFFIC_TEMPLATES } from '@/lib/constants/presetTemplates'
 
 const overlayColors = ['#5B8CFF', '#43C6AC', '#F6B73C', '#B27CFF', '#FF7A90', '#44B9F1']
 
@@ -50,7 +51,7 @@ function sanitizePoints(points: TrafficPoint[]) {
 /** 模板与 Overlay 是未保存的 UI 草稿。服务端流量和历史数据由
  * TanStack Query/PostgreSQL 管理，因此此 Store 只保存在内存中，不写 localStorage。 */
 export const useTrafficStore = create<TrafficSlice>()((set, get) => ({
-    templates: [],
+    templates: PRESET_TRAFFIC_TEMPLATES,
     addTemplate: (template) => {
         const now = new Date().toISOString()
         const created: TrafficTemplate = {

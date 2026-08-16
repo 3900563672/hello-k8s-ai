@@ -1,4 +1,4 @@
-import { BarChart3, FileSearch, Gauge, Settings2 } from 'lucide-react'
+import { BarChart3, BookOpen, FileSearch, Gauge, Settings2 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 import {
     Tooltip,
@@ -14,6 +14,7 @@ const navigation = [
     { title: '流量布置', description: '模板与租户流量', to: '/traffic', icon: BarChart3 },
     { title: '数据回显', description: '历史指标与结果', to: '/trace', icon: FileSearch },
     { title: '监控面板', description: 'Grafana 统一视图', to: '/monitor', icon: Gauge },
+    { title: '填写指南', description: '参数含义与模板示例', to: '/guide', icon: BookOpen },
 ] as const
 
 export function AppSidebar() {

@@ -17,6 +17,7 @@ import { CreateDialog } from '@/components/shared/dialogs/CreateDialog'
 import { RenameDialog } from '@/components/shared/dialogs/RenameDialog'
 import { BatchDeleteDialog } from '@/components/shared/dialogs/BatchDeleteDialog'
 import { PolicyCreateDialog } from '@/components/shared/dialogs/PolicyCreateDialog'
+import { TemplateLibraryDialog } from '@/components/shared/dialogs/TemplateLibraryDialog'
 import {
     useCreateModel,
     useCreateNode,
@@ -45,9 +46,13 @@ import {
 } from '@/api/queries/configQueries'
 import type { PolicyFormValues } from '@/lib/validations/policy.schema'
 import type { ModelFormValues } from '@/lib/validations/model.schema'
+import { getModelPreview } from '@/lib/validations/model.schema'
 import type { NodeFormValues } from '@/lib/validations/node.schema'
+import { getNodePreview } from '@/lib/validations/node.schema'
 import type { OrchestratorFormValues } from '@/lib/validations/orchestrator.schema'
+import { getOrchestratorPreview } from '@/lib/validations/orchestrator.schema'
 import type { TenantFormValues } from '@/lib/validations/tenant.schema'
+import { getTenantPreview } from '@/lib/validations/tenant.schema'
 import type {
     ConfigResourceType,
     Model,
@@ -59,6 +64,8 @@ import type {
     Tenant,
 } from '@/types/config.types'
 import { useWorkspaceContext } from '@/hooks/useWorkspaceContext'
+import { useTemplateStore } from '@/stores/templateSlice'
+import type { ConnectionStatus } from '@/types/control-plane.types'
 import { useTimeStore } from '@/stores/timeSlice'
 import { formatUtcTimestamp } from '@/lib/formatters/timeFormatter'
 import { DEFAULT_MODEL, DEFAULT_NODE, DEFAULT_ORCHESTRATOR, DEFAULT_TENANT } from '@/lib/constants/defaultValues'
@@ -68,6 +75,31 @@ type RenameTarget =
     | { type: 'model'; resource: Model }
     | { type: 'node'; resource: Node }
     | { type: 'tenant'; resource: Tenant }
+
+type CreateTemplateSource =
+    | { type: 'model'; data: ModelFormValues }
+    | { type: 'node'; data: NodeFormValues }
+    | { type: 'tenant'; data: TenantFormValues }
+    | { type: 'orchestrator'; data: OrchestratorFormValues }
+
+// 连接状态来自 controlPlaneStore 的 cluster 快照，与 ClusterStatus 展示口径一致
+const connectionMeta: Record<ConnectionStatus, { label: string; dot: string; badge: string }> = {
+    connected: {
+        label: 'Backend 已连接',
+        dot: 'bg-[#57C894] shadow-[0_0_8px_rgba(87,200,148,0.8)]',
+        badge: 'border-emerald-500/20 bg-emerald-500/5 text-[#72CFA2]',
+    },
+    connecting: {
+        label: 'Backend 连接中',
+        dot: 'bg-amber-400',
+        badge: 'border-amber-400/20 bg-amber-400/5 text-amber-300',
+    },
+    disconnected: {
+        label: 'Backend 未连接',
+        dot: 'bg-red-400',
+        badge: 'border-red-400/20 bg-red-400/5 text-red-300',
+    },
+}
 
 const resourceLabels: Record<ConfigResourceType, string> = {
     model: '模型',
@@ -178,6 +210,7 @@ export function ConfigPage() {
     const workspace = useWorkspaceContext()
     const returnToLatest = useTimeStore((state) => state.returnToLatest)
     const readOnly = workspace.isHistorical
+    const connectionStatus = workspace.cluster.connectionStatus
 
     const modelsQuery = useModels()
     const nodesQuery = useNodes()
@@ -189,6 +222,17 @@ export function ConfigPage() {
     const tenants = tenantsQuery.data ?? EMPTY_TENANTS
     const orchestrators = orchestratorsQuery.data ?? EMPTY_ORCHESTRATORS
     const policies = policiesQuery.data ?? EMPTY_POLICIES
+
+    const {
+        modelTemplates,
+        nodeTemplates,
+        tenantTemplates,
+        orchestratorTemplates,
+        removeModelTemplate,
+        removeNodeTemplate,
+        removeTenantTemplate,
+        removeOrchestratorTemplate,
+    } = useTemplateStore()
 
     const createModel = useCreateModel()
     const updateModel = useUpdateModel()
@@ -262,6 +306,8 @@ export function ConfigPage() {
     const [createType, setCreateType] = useState<ConfigResourceType>('model')
     const [newName, setNewName] = useState('')
     const [createError, setCreateError] = useState('')
+    const [createFromTemplateOpen, setCreateFromTemplateOpen] = useState(false)
+    const [createTemplateSource, setCreateTemplateSource] = useState<CreateTemplateSource | null>(null)
 
     const [renameTarget, setRenameTarget] = useState<RenameTarget | null>(null)
     const [renameValue, setRenameValue] = useState('')
@@ -288,6 +334,8 @@ export function ConfigPage() {
         setSelectedOrchestrators([])
         setSelectedPolicies([])
         setCreateOpen(false)
+        setCreateFromTemplateOpen(false)
+        setCreateTemplateSource(null)
         setRenameTarget(null)
         setBatchDeleteType(null)
         setPolicyCreateOpen(false)
@@ -338,6 +386,23 @@ export function ConfigPage() {
         setCreateType(type)
         setNewName('')
         setCreateError('')
+        setCreateTemplateSource(null)
+        setCreateOpen(true)
+    }
+
+    const openCreateFromTemplate = (type: ConfigResourceType) => {
+        if (readOnly) return
+        setCreateType(type)
+        setCreateError('')
+        setCreateFromTemplateOpen(true)
+    }
+
+    const applyCreateTemplate = (source: CreateTemplateSource) => {
+        setCreateFromTemplateOpen(false)
+        setCreateTemplateSource(source)
+        // 预填创建弹窗名称：编排策略预填关联租户，其余预填显示名称
+        setNewName(source.type === 'orchestrator' ? source.data.tenantName : source.data.displayName)
+        setCreateError('')
         setCreateOpen(true)
     }
 
@@ -349,25 +414,41 @@ export function ConfigPage() {
         setCreateError('')
 
         try {
+            // 从模板新建时用模板数据替代 DEFAULT_* 组装；无模板时保持原有默认值行为
+            const template = createTemplateSource
             if (createType === 'model') {
-                const model: Model = {
-                    name,
-                    displayName,
-                    ...DEFAULT_MODEL,
-                    performance: { ...DEFAULT_MODEL.performance },
-                }
+                const model: Model = template?.type === 'model'
+                    ? {
+                        name,
+                        displayName,
+                        gpuUnits: template.data.gpuUnits,
+                        maxConcurrency: template.data.maxConcurrency,
+                        absoluteScore: template.data.absoluteScore,
+                        coldStartMs: template.data.coldStartMs,
+                        performance: { ...template.data.performance },
+                    }
+                    : {
+                        name,
+                        displayName,
+                        ...DEFAULT_MODEL,
+                        performance: { ...DEFAULT_MODEL.performance },
+                    }
                 await createModel.mutateAsync(model)
                 modelSelection.setSelectedName(model.name)
             } else if (createType === 'node') {
-                const node: Node = { name, displayName, ...DEFAULT_NODE }
+                const node: Node = template?.type === 'node'
+                    ? { name, ...template.data, displayName }
+                    : { name, displayName, ...DEFAULT_NODE }
                 await createNode.mutateAsync(node)
                 nodeSelection.setSelectedName(node.name)
             } else if (createType === 'tenant') {
-                const tenant: Tenant = {
-                    name,
-                    displayName,
-                    ...DEFAULT_TENANT,
-                }
+                const tenant: Tenant = template?.type === 'tenant'
+                    ? { name, ...template.data, displayName }
+                    : {
+                        name,
+                        displayName,
+                        ...DEFAULT_TENANT,
+                    }
                 await createTenant.mutateAsync(tenant)
                 tenantSelection.setSelectedName(tenant.name)
             } else {
@@ -376,17 +457,29 @@ export function ConfigPage() {
                     setCreateError(`未找到租户“${newName.trim()}”，请先创建该租户`)
                     return
                 }
-                const orchestrator: Orchestrator = {
-                    name,
-                    displayName: tenantName,
-                    ...DEFAULT_ORCHESTRATOR,
-                    tenantRef: { name: tenantName },
-                }
+                const orchestrator: Orchestrator = template?.type === 'orchestrator'
+                    ? {
+                        name,
+                        displayName: tenantName,
+                        tenantRef: { name: tenantName },
+                        scaleUpCooldownSeconds: template.data.scaleUpCooldownSeconds,
+                        scaleDownCooldownSeconds: template.data.scaleDownCooldownSeconds,
+                        allowScaleToZero: template.data.allowScaleToZero,
+                        minReplicas: template.data.minReplicas,
+                        maxReplicas: template.data.maxReplicas,
+                    }
+                    : {
+                        name,
+                        displayName: tenantName,
+                        ...DEFAULT_ORCHESTRATOR,
+                        tenantRef: { name: tenantName },
+                    }
                 await createOrchestrator.mutateAsync(orchestrator)
                 orchestratorSelection.setSelectedName(orchestrator.name)
             }
             setCreateOpen(false)
             setNewName('')
+            setCreateTemplateSource(null)
         } catch (error) {
             setCreateError(mutationError(error))
         }
@@ -671,16 +764,17 @@ export function ConfigPage() {
                     </div>
 
                     <div className="flex items-center gap-2 text-[11px] text-[#748196]">
-                        <span
-                            className={
-                                readOnly
-                                    ? 'flex items-center gap-1.5 rounded-full border border-[#7D8FFF]/20 bg-[#7D8FFF]/[0.06] px-2.5 py-1.5 text-[#AEB9FF]'
-                                    : 'flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-[#72CFA2]'
-                            }
-                        >
-                            {readOnly ? <History className="h-3 w-3" /> : <span className="h-1.5 w-1.5 rounded-full bg-[#57C894] shadow-[0_0_8px_rgba(87,200,148,0.8)]" />}
-                            {readOnly ? '历史只读' : 'Backend 已连接'}
-                        </span>
+                        {readOnly ? (
+                            <span className="flex items-center gap-1.5 rounded-full border border-[#7D8FFF]/20 bg-[#7D8FFF]/[0.06] px-2.5 py-1.5 text-[#AEB9FF]">
+                                <History className="h-3 w-3" />
+                                历史只读
+                            </span>
+                        ) : (
+                            <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 ${connectionMeta[connectionStatus].badge}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${connectionMeta[connectionStatus].dot}`} />
+                                {connectionMeta[connectionStatus].label}
+                            </span>
+                        )}
                         <span className="hidden rounded-full border border-[#263244] bg-[#101010] px-2.5 py-1.5 sm:inline-flex">
                             Kubernetes 数据源
                         </span>
@@ -773,6 +867,7 @@ export function ConfigPage() {
                         detailDescription="模型参数"
                         resourceIcon={<BrainCircuit className="h-4 w-4" />}
                         onCreate={() => openCreate('model')}
+                        onCreateFromTemplate={() => openCreateFromTemplate('model')}
                         onBatchDelete={() => openBatchDelete('model')}
                         formSubmit={saveModel}
                         readOnly={readOnly}
@@ -797,6 +892,7 @@ export function ConfigPage() {
                         detailDescription="容量参数"
                         resourceIcon={<Server className="h-4 w-4" />}
                         onCreate={() => openCreate('node')}
+                        onCreateFromTemplate={() => openCreateFromTemplate('node')}
                         onBatchDelete={() => openBatchDelete('node')}
                         formSubmit={saveNode}
                         readOnly={readOnly}
@@ -821,6 +917,7 @@ export function ConfigPage() {
                         detailDescription="调度策略"
                         resourceIcon={<Users className="h-4 w-4" />}
                         onCreate={() => openCreate('tenant')}
+                        onCreateFromTemplate={() => openCreateFromTemplate('tenant')}
                         onBatchDelete={() => openBatchDelete('tenant')}
                         formSubmit={saveTenant}
                         readOnly={readOnly}
@@ -844,6 +941,7 @@ export function ConfigPage() {
                         detailDescription="策略参数"
                         resourceIcon={<SlidersHorizontal className="h-4 w-4" />}
                         onCreate={() => openCreate('orchestrator')}
+                        onCreateFromTemplate={() => openCreateFromTemplate('orchestrator')}
                         onBatchDelete={() => openBatchDelete('orchestrator')}
                         formSubmit={saveOrchestrator}
                         readOnly={readOnly}
@@ -873,6 +971,58 @@ export function ConfigPage() {
                     />
                 </TabsContent>
             </Tabs>
+
+            <TemplateLibraryDialog
+                open={createFromTemplateOpen && createType === 'model'}
+                onOpenChange={setCreateFromTemplateOpen}
+                templates={modelTemplates}
+                typeLabel="模型"
+                pickMode
+                onLoad={(template) => {
+                    applyCreateTemplate({ type: 'model', data: template.data })
+                }}
+                onDelete={removeModelTemplate}
+                getPreview={getModelPreview}
+            />
+
+            <TemplateLibraryDialog
+                open={createFromTemplateOpen && createType === 'node'}
+                onOpenChange={setCreateFromTemplateOpen}
+                templates={nodeTemplates}
+                typeLabel="节点"
+                pickMode
+                onLoad={(template) => {
+                    applyCreateTemplate({ type: 'node', data: template.data })
+                }}
+                onDelete={removeNodeTemplate}
+                getPreview={getNodePreview}
+            />
+
+            <TemplateLibraryDialog
+                open={createFromTemplateOpen && createType === 'tenant'}
+                onOpenChange={setCreateFromTemplateOpen}
+                templates={tenantTemplates}
+                typeLabel="租户"
+                pickMode
+                onLoad={(template) => {
+                    applyCreateTemplate({ type: 'tenant', data: template.data })
+                }}
+                onDelete={removeTenantTemplate}
+                getPreview={getTenantPreview}
+            />
+
+            <TemplateLibraryDialog
+                open={createFromTemplateOpen && createType === 'orchestrator'}
+                onOpenChange={setCreateFromTemplateOpen}
+                templates={orchestratorTemplates}
+                typeLabel="编排策略"
+                pickMode
+                onLoad={(template) => {
+                    applyCreateTemplate({ type: 'orchestrator', data: template.data })
+                }}
+                onDelete={removeOrchestratorTemplate}
+                getPreview={getOrchestratorPreview}
+            />
 
             <PolicyCreateDialog
                 open={policyCreateOpen}

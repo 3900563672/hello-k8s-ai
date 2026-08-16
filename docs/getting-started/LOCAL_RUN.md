@@ -17,12 +17,13 @@ bash setup.sh
 3. 将九个运行镜像导入全部 Kubernetes Node 的 containerd。
 4. 应用 `config/dev` 与 `dashboard/deploy`。
 5. 自动生成随机 PostgreSQL 密码；重部署时保留原 Secret。
-6. 按真实 Worker Node 动态创建 WorkerNode 和 Allow Policy。
-7. 写入 Model 演示分数并等待 Controller 创建 Simulator Deployment。
-8. 验证 Simulator Status、Prometheus 指标、Jaeger Trace、PostgreSQL snapshot、Backend 和 Frontend。
-9. 后台启动四个端口转发。
+6. 默认不写入演示数据，保持干净环境；只有设置 `DEMO_ENABLED=true` 时才按真实 Worker Node 创建 WorkerNode 和 Allow Policy、写入演示 Model 分数并等待 Controller 创建 Simulator Deployment。
+7. 验证 Backend API、SimulationClock 与 Frontend 页面；干净模式断言业务 CR 与历史快照为空，演示模式额外验证 Simulator Status、Prometheus 指标、Jaeger Trace 与 PostgreSQL snapshot。
+8. 后台启动 Dashboard 端口转发（单入口）。
 
 任何一步失败都会停止；主要日志在 `.runtime/up-*.log`，聚合诊断在 `.runtime/last-failure.log`。
+
+一键启动得到的是干净环境：没有预置的租户、模型、节点与策略，也没有历史切面。用户可在 Dashboard 中用预置模板（模型/租户/节点/编排策略/流量）快速开始，或在「填写指南」（`/guide`）页查看字段含义、默认值与系统常量。
 
 ## 2. 访问与状态
 
@@ -48,7 +49,7 @@ make cluster-open
 
 `make cluster-up` 可以重复执行：
 
-- CRD、清单和演示 CR 使用声明式 apply。
+- CRD 与清单使用声明式 apply；默认不写入演示 CR。设置 `DEMO_ENABLED=true` 时会 apply `config/demo` 并强制触发演示编排。
 - 项目镜像重新构建后会再次导入所有 Node，并主动 restart 相关 Deployment。
 - 已存在的 PostgreSQL Secret 和 PVC 会保留，避免密码变化导致旧数据不可访问。
 - 旧 `orchestratorconfigs.platform.study.com` CRD 只提示，不自动删除。

@@ -84,15 +84,17 @@ export function FullscreenTimeline({
     const returnToLatest = useTimeStore((state) => state.returnToLatest)
     const focusDuration = useTimeStore((state) => state.focusDuration)
 
+    // 初始 timestamp 为 1970 纪元占位；权威时间到达前禁用精确跳转，避免展示纪元时间
+    const hasAuthoritativeTime = Date.parse(timestamp) > 0
     const [jumpValue, setJumpValue] = useState(() =>
-        toUtcDateTimeInput(timestamp),
+        hasAuthoritativeTime ? toUtcDateTimeInput(timestamp) : '',
     )
     const [jumpError, setJumpError] = useState('')
 
     useEffect(() => {
-        setJumpValue(toUtcDateTimeInput(timestamp))
+        setJumpValue(hasAuthoritativeTime ? toUtcDateTimeInput(timestamp) : '')
         setJumpError('')
-    }, [timestamp])
+    }, [hasAuthoritativeTime, timestamp])
 
     const bounds = useMemo(() => getTimelineBounds(snapshots), [snapshots])
     const visibleCount = useMemo(
@@ -289,9 +291,16 @@ export function FullscreenTimeline({
                                         onChange={(event) =>
                                             setJumpValue(event.target.value)
                                         }
+                                        disabled={!hasAuthoritativeTime}
+                                        placeholder={hasAuthoritativeTime ? undefined : '等待数据…'}
                                         aria-label="UTC 精确跳转时间"
-                                        className="h-9 border-white/[0.08] bg-white/[0.025] font-mono text-[10px] text-[#DCE4EE] [color-scheme:dark] focus-visible:border-[#6E8BFF]/50 focus-visible:ring-[#6E8BFF]/15"
+                                        className="h-9 border-white/[0.08] bg-white/[0.025] font-mono text-[10px] text-[#DCE4EE] placeholder:text-[#596579] [color-scheme:dark] focus-visible:border-[#6E8BFF]/50 focus-visible:ring-[#6E8BFF]/15 disabled:opacity-50"
                                     />
+                                    {!hasAuthoritativeTime && (
+                                        <p className="text-[10px] text-[#596579]">
+                                            等待 Backend 权威时间后可用精确跳转
+                                        </p>
+                                    )}
                                     {jumpError && (
                                         <p className="text-[10px] text-amber-300">
                                             {jumpError}
@@ -300,7 +309,8 @@ export function FullscreenTimeline({
                                     <Button
                                         type="submit"
                                         variant="outline"
-                                        className="h-8 w-full border-white/[0.08] bg-white/[0.03] text-[10px] text-[#B7C2D0] hover:bg-white/[0.07] hover:text-white"
+                                        disabled={!hasAuthoritativeTime}
+                                        className="h-8 w-full border-white/[0.08] bg-white/[0.03] text-[10px] text-[#B7C2D0] hover:bg-white/[0.07] hover:text-white disabled:opacity-40"
                                     >
                                         <Clock3 className="mr-1.5 h-3.5 w-3.5" />
                                         定位并回放

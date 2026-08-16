@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { AlertTriangle, Database, Plus, Search, SearchX, Trash2 } from 'lucide-react'
+import { AlertTriangle, BookOpen, Database, FolderOpen, Plus, Search, SearchX, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -48,6 +49,8 @@ interface ConfigTabPanelProps<TItem, TValues> {
     detailDescription: string
     resourceIcon: ReactNode
     onCreate: () => void
+    // 提供“从模板新建”入口；策略等无模板的类型不传，隐藏对应按钮
+    onCreateFromTemplate?: () => void
     onBatchDelete: () => void
     formSubmit: (data: TValues) => Promise<void>
     readOnly?: boolean
@@ -73,6 +76,7 @@ export function ConfigTabPanel<
     detailDescription,
     resourceIcon,
     onCreate,
+    onCreateFromTemplate,
     onBatchDelete,
     formSubmit,
     readOnly = false,
@@ -81,6 +85,7 @@ export function ConfigTabPanel<
     const [formDirty, setFormDirty] = useState(false)
     const [pendingSelection, setPendingSelection] = useState<TItem | null>(null)
     const [pendingCreate, setPendingCreate] = useState(false)
+    const [pendingTemplateCreate, setPendingTemplateCreate] = useState(false)
 
     const filteredData = useMemo(() => {
         const normalized = query.trim().toLocaleLowerCase()
@@ -94,6 +99,7 @@ export function ConfigTabPanel<
         setFormDirty(false)
         setPendingSelection(null)
         setPendingCreate(false)
+        setPendingTemplateCreate(false)
     }, [selectedItem?.name])
 
     const requestSelection = (item: TItem) => {
@@ -114,11 +120,22 @@ export function ConfigTabPanel<
         onCreate()
     }
 
+    const requestCreateFromTemplate = () => {
+        if (readOnly || !onCreateFromTemplate) return
+        if (formDirty) {
+            setPendingTemplateCreate(true)
+            return
+        }
+        onCreateFromTemplate()
+    }
+
     const confirmDiscard = () => {
         if (pendingSelection) onSelect(pendingSelection)
         if (pendingCreate) onCreate()
+        if (pendingTemplateCreate && onCreateFromTemplate) onCreateFromTemplate()
         setPendingSelection(null)
         setPendingCreate(false)
+        setPendingTemplateCreate(false)
         setFormDirty(false)
     }
 
@@ -136,17 +153,32 @@ export function ConfigTabPanel<
                             </div>
                             <p className="mt-1 text-xs leading-5 text-[#6F6F6F]">{listDescription}</p>
                         </div>
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={requestCreate}
-                            disabled={readOnly}
-                            title={readOnly ? '历史回放模式下不可新建资源' : undefined}
-                            className="h-8 shrink-0 gap-1.5 bg-[#5B8CFF] px-3 text-xs font-medium text-white hover:bg-[#70A0FF] disabled:bg-[#202837] disabled:text-[#596579]"
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            新建{typeLabel}
-                        </Button>
+                        <div className="flex shrink-0 items-center gap-2">
+                            {onCreateFromTemplate && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={requestCreateFromTemplate}
+                                    disabled={readOnly}
+                                    title={readOnly ? '历史回放模式下不可新建资源' : undefined}
+                                    className="h-8 gap-1.5 border-[#303C50] bg-[#111722] px-3 text-xs font-medium text-[#D8D8D8] hover:bg-[#1B2634] hover:text-white disabled:bg-[#202837] disabled:text-[#596579]"
+                                >
+                                    <FolderOpen className="h-3.5 w-3.5" />
+                                    从模板新建
+                                </Button>
+                            )}
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={requestCreate}
+                                disabled={readOnly}
+                                title={readOnly ? '历史回放模式下不可新建资源' : undefined}
+                                className="h-8 shrink-0 gap-1.5 bg-[#5B8CFF] px-3 text-xs font-medium text-white hover:bg-[#70A0FF] disabled:bg-[#202837] disabled:text-[#596579]"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                新建{typeLabel}
+                            </Button>
+                        </div>
                     </div>
 
                     <div className="relative mt-4">
@@ -199,17 +231,39 @@ export function ConfigTabPanel<
                             <p className="mt-1 max-w-64 text-xs leading-5 text-[#6E6E6E]">
                                 创建第一项资源后，即可在这里维护详细参数。
                             </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={requestCreate}
-                                disabled={readOnly}
-                                className="mt-4 border-[#303C50] bg-[#111722] text-[#D8D8D8] hover:bg-[#1B2634] hover:text-white"
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={requestCreate}
+                                    disabled={readOnly}
+                                    className="border-[#303C50] bg-[#111722] text-[#D8D8D8] hover:bg-[#1B2634] hover:text-white"
+                                >
+                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                    新建{typeLabel}
+                                </Button>
+                                {onCreateFromTemplate && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={requestCreateFromTemplate}
+                                        disabled={readOnly}
+                                        className="border-[#303C50] bg-[#111722] text-[#D8D8D8] hover:bg-[#1B2634] hover:text-white"
+                                    >
+                                        <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
+                                        从模板新建
+                                    </Button>
+                                )}
+                            </div>
+                            <Link
+                                to="/guide"
+                                className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-md border border-[#303C50] bg-[#111722] px-2.5 text-[11px] text-[#9AA7B9] transition-colors hover:bg-[#1B2634] hover:text-white"
                             >
-                                <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                新建{typeLabel}
-                            </Button>
+                                <BookOpen className="h-3.5 w-3.5" />
+                                查看填写指南
+                            </Link>
                         </div>
                     ) : (
                         <div className="flex h-52 flex-col items-center justify-center text-center">

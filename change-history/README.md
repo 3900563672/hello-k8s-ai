@@ -4,6 +4,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-16 | 一键启动默认干净环境：预置配置模板与参数填写指南 | P1 | [查看记录](2026-08-16-clean-startup-templates-guide/README.md) |
 | 2026-08-14 | Simulator 时间倍速控制链路 | P1 | [查看记录](2026-08-14-simulator-time-scale/README.md) |
 | 2026-08-14 | Model 能力基准分生产路径修复 | P0 | [查看记录](2026-08-14-model-absolute-score-production-path/README.md) |
 | 2026-08-14 | Orchestrator 放置修复的 CI 收敛 | P0 follow-up | [查看记录](2026-08-14-orchestrator-placement-ci-follow-up/README.md) |

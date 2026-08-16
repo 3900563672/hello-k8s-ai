@@ -76,9 +76,9 @@ data:
           "keepTime": true,
           "tags": [],
           "targetBlank": true,
-          "title": "在 Jaeger 中查看 Trace",
+          "title": "查看 Trace 明细",
           "type": "link",
-          "url": "http://localhost:16686"
+          "url": "http://localhost:8080/trace"
         }
       ],
       "panels": [

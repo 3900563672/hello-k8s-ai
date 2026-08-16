@@ -5,6 +5,12 @@ import type { NodeFormValues } from '@/lib/validations/node.schema'
 import type { OrchestratorFormValues } from '@/lib/validations/orchestrator.schema'
 import type { TenantFormValues } from '@/lib/validations/tenant.schema'
 import type { ConfigTemplate } from '@/types/config.types'
+import {
+    PRESET_MODEL_TEMPLATES,
+    PRESET_NODE_TEMPLATES,
+    PRESET_ORCHESTRATOR_TEMPLATES,
+    PRESET_TENANT_TEMPLATES,
+} from '@/lib/constants/presetTemplates'
 
 interface TemplateStore {
     modelTemplates: ConfigTemplate<ModelFormValues>[]
@@ -33,10 +39,10 @@ const createTemplate = <T,>(name: string, data: T): ConfigTemplate<T> => ({
  * 不会从浏览器状态恢复。
  */
 export const useTemplateStore = create<TemplateStore>()((set) => ({
-    modelTemplates: [],
-    nodeTemplates: [],
-    tenantTemplates: [],
-    orchestratorTemplates: [],
+    modelTemplates: PRESET_MODEL_TEMPLATES,
+    nodeTemplates: PRESET_NODE_TEMPLATES,
+    tenantTemplates: PRESET_TENANT_TEMPLATES,
+    orchestratorTemplates: PRESET_ORCHESTRATOR_TEMPLATES,
     addModelTemplate: (name, data) =>
         set((state) => ({
             modelTemplates: [...state.modelTemplates, createTemplate(name, data)],

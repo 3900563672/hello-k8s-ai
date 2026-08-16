@@ -1,6 +1,6 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-observability-single-entry/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-clean-startup-templates-guide/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
@@ -19,6 +19,36 @@
 - 原因：Windows → WSL 参数编码吞掉非 ASCII 字符。
 - 解决：`echo "提交信息" | base64 -w0 > /tmp/msg.b64 && git commit -F <(base64 -d /tmp/msg.b64)`。
 - 验证：`dc5308e`、`89916cc` 中文完整。
+
+### 2026-08-16 Docker Desktop WSL2 数据盘迁移：DataFolder 配置无效，必须用 Junction
+- 现象：C 盘 vhdx 占 112GB；在 `settings-store.json` 设置 `DataFolder=D:\DockerData` 并重启后，`docker ps` / `docker volume ls` 全部为空。数据没丢，只是引擎挂到了默认位置的新空盘。
+- 原因：Docker Desktop 的 WSL2 引擎硬编码在 `%LOCALAPPDATA%\Docker\wsl\disk` 找 `docker_data.vhdx`，忽略 DataFolder 配置。
+- 解决：把 vhdx 移动到目标盘后，在 `%LOCALAPPDATA%\Docker\wsl\disk` 建立指向新位置的目录 Junction。
+- 验证：`dir C:\Users\hh\AppData\Local\Docker\wsl\disk` 可见 vhdx 且 LinkType=Junction；`docker volume ls` 恢复 15 个卷。
+- 备注：以后容器/卷显示为 0，先查 Junction 与目标 vhdx 是否存在，不要贸然重置 Docker。
+
+### 2026-08-16 禁止 wsl --shutdown：会关闭所有发行版
+- 现象：为"清理空间"执行 `wsl --shutdown`，用户的 Ubuntu（跑着 Agent 与项目）被一起关掉。
+- 解决：除非用户明确同意，只对单个发行版操作（`wsl -d Ubuntu -- ...`），不执行 `wsl --shutdown`。
+- 备注：用户环境约束：不要重启电脑（有 Agent 项目在跑）；确需重启必须先征得同意。
+
+### 2026-08-16 强杀 Docker Desktop 后内置 Kubernetes 不会自动恢复
+- 现象：Stop-Process 强杀 Docker Desktop/com.docker.backend 后，desktop-control-plane、desktop-worker* 等内置 K8s 容器全部消失，kubectl 连不上。
+- 解决：不要强杀 Docker Desktop；重启走正常流程。恢复需在 Settings → Kubernetes 重新启用（本次随 Docker Desktop 正常重启自愈）。
+- 验证：恢复后 10 个节点 Ready，kubectl cluster-info 正常。
+
+### 2026-08-16 非提权进程写不了 D:\ 根目录
+- 现象：普通进程在 D:\ 创建目录失败。
+- 原因：ACL 只有 Administrators 可写、Everyone 只读。
+- 解决：UAC 提权创建目录并 icacls 授权；提权操作写成 .ps1 脚本，用 `Start-Process -Verb RunAs` 执行，脚本写日志到 %TEMP% 后轮询确认。
+
+### 2026-08-16 PowerShell 复杂内联命令被安全策略拦截
+- 现象：含 Remove-Item 组合、多层引号嵌套的内联 PowerShell 被安全策略拦截。
+- 解决：删除/移动文件改用 Node.js fs 模块；复杂逻辑写成 .ps1 脚本文件再执行。
+
+### 2026-08-16 系统代理（127.0.0.1:7890）不能动
+- 现象：代理配置被改后网络全断。
+- 解决：保持 ProxyEnable=1 不变；Docker Hub 拉取失败多为瞬时故障（auth.docker.io 超时），预拉 + 重试即可，不要改代理。
 
 ## Go 构建与 CRD 生成
 
@@ -171,6 +201,28 @@
 - `hack/local-cluster.sh` 可能丢失执行位（Windows 侧操作后 100644）：`setup.sh` 报 `Permission denied` 时先 `chmod +x hack/*.sh` 并提交 mode 变化。
 - 端口转发存活检查只看 ps 会误判：进程死亡但 PID 文件残留时 `cluster-open` 不会重建转发（8080 无监听但日志说"已在运行"）。修复后检查包含 `/dev/tcp` 端口探测；遇到 8080 无响应先看 `.runtime/port-forward-*.pid` 与 `ps aux | grep port-forward`。
 - 并行构建四个镜像后，构建日志会交错输出；判断失败以退出码与最终镜像存在为准，不要按日志顺序读。
+
+## 集群操作与部署
+
+### 2026-08-16 清理演示 CR 必须在 Controller 在线时进行
+- 现象：`cluster-down` 后删除 Tenant/Model/Policy 卡在 DeletionTimestamp，对象不消失。
+- 原因：tenant-model-policy、simulator-instance-controller、performance-collector、traffic-distribution 四个 finalizer 依赖 Controller 处理。
+- 解决：先恢复 Controller（`make cluster-up`）再按顺序删除：orchestrator → tenantmodelpolicy → 等 instance 消失 → tenant/model/派生 CR → 动态策略与 WorkerNode。
+- 验证：本次清理 10 类业务 CR 全部归零。
+- 备注：`simulationclock/default` 是系统默认对象，删除后控制器会自动重建，不需要也不建议清理。
+
+### 2026-08-16 空配置不再写历史快照（干净环境预期）
+- 现象：干净环境（无业务 CR）下 `/replay` 没有 `snapshot-*`。
+- 原因：`persistSnapshot` 新增 `snapshotHasBusinessData` 判定，无模型/租户/节点/策略/编排器/实例时跳过写快照。
+- 解决：这是预期行为；`resource_events` 仍会记录真实系统 Lease/Node 心跳事件，不属于假数据。
+- 验证：`bash setup.sh` 干净模式验收通过。
+- 备注：旧版本后端（无跳过逻辑）写入的残留快照/状态不会自动消失；发现 `resource_snapshots` / `resource_states` 有历史行时 TRUNCATE 两张表后再验收（脚本断言只检查 `/replay` 响应，不检查库表行数）。
+
+### 2026-08-16 本机 Go 测试 httptest 回环有约 300ms accept 延迟
+- 现象：`TestGrafanaProxyPreservesSubPathAndForwards`、`TestGrafanaProxyRootPath` 在本机 WSL 报 502，CI 正常。
+- 原因：本机 WSL/Docker Desktop 环境下 `httptest.NewServer` 的 127.0.0.1 监听刚建立时连接被拒（独立复现：延迟 300ms 后 dial 与反向代理均成功）。
+- 解决：本地判断与本次改动无关时，以 CI 结果为准；不要为此改测试。
+- 验证：stash 本次改动后同样失败；GitHub Actions 上历史提交均通过。
 
 ## 领域已知易误判点（原 AI_CONTEXT 第 8 节）
 

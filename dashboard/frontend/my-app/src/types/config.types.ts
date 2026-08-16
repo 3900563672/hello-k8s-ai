@@ -169,4 +169,6 @@ export interface ConfigTemplate<T> {
     name: string
     data: T
     createdAt: string
+    /** 预置模板为内置样例，只存在于内存；用户保存的模板不设置该字段。 */
+    preset?: boolean
 }
