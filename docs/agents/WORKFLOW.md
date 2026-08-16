@@ -1,6 +1,6 @@
 # Agent 工作流
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/WORKFLOW.md](../remote-ai/WORKFLOW.md)。
 
@@ -59,8 +59,19 @@ flowchart TD
 - Frontend：`cd dashboard/frontend/my-app && npm ci && npm run check`。
 - 清单渲染：`kubectl kustomize config/dev`、`config/demo`、`dashboard/deploy`。
 - 文档：`make docs-check`；生成包：`make context-pack`。
-- CI：推送后等三个 workflow（代码检查 / 源码与部署验证 / E2E 测试）全绿。
+- CI：推送后等 workflow 全绿（代码检查 / 源码与部署验证 / E2E 测试；docs-only 改动只跑"文档检查"），轮询节奏见 4.1。
 - 没有环境的项如实写"未验证"，禁止用旧结果或清单推断冒充。
+
+## 4.1 CI 轮询节奏
+
+- 推送后**立刻开始轮询，不要长 sleep 干等**：每 30 秒查一次，直到所有相关 run 有结论。
+- 预期耗时：普通 job 3-6 分钟；E2E / 镜像构建最慢（冷缓存首次会更久），最多等到 10 分钟。
+- 10 分钟仍无结论：先确认是失败、排队还是缓存冷启动，再决定重推或排查，并如实汇报。
+- 常用命令：
+  - `gh run list --limit 1`：看最新一次 push 的 run 与结论。
+  - `gh run view <run-id> --json jobs --jq '.jobs[] | "\(.name): \(.conclusion)"'`：看每个 job 结论。
+  - `gh run view <run-id> --log-failed`：失败时取失败 job 日志定位原因，不盲改重推。
+- docs-only 提交只会触发"文档检查"；代码提交才会触发 lint / 单元测试 / E2E / 部署验证。
 
 ## 5. 提交
 
@@ -70,7 +81,8 @@ flowchart TD
 
 ## 6. 归档与同步
 
-- 交付后必须在 `change-history/` 追加日期条目：`README.md`（变更概述）、`IMPLEMENTATION_DETAILS.md`、`TEST_REPORT.md`、`MIGRATION_AND_ROLLBACK.md`，格式沿用现有条目。
+- 交付后必须在 `change-history/` 追加日期条目，四件套齐全：`README.md` + `IMPLEMENTATION_DETAILS.md` + `TEST_REPORT.md` + `MIGRATION_AND_ROLLBACK.md`，格式沿用现有条目。
+- 详略规范：README 一页内概述"为什么改、改成什么、关键行为"；三个细节文件完整记录背景（改动前状态）、实现（文件与逻辑）、验证（命令与真实结果）、回滚与风险。禁止简写成一行结论；没有验证证据的写"未验证"。
 - 按 [SYNC.md](SYNC.md) 执行同步：更新本目录受影响文档（踩坑 / 原则 / 流程）、重新生成上下文包、列出人类文档待同步清单。
 - 人类文档（`docs/` 专题、`FIELD_OWNERSHIP.md`、白皮书）的更新只在用户明确要求时代笔；否则只列清单。
 

@@ -1,6 +1,6 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
@@ -45,6 +45,29 @@
 - 原因：token scopes 缺 `read:project`、`admin:public_key`。
 - 解决：先查 `totalCount` 判断"有没有"；缺 scope 需 `gh auth refresh` 或重新授权，不要根据报错断定无数据。
 - 验证：`projectsV2 totalCount=0` 确认真无 Projects。
+
+## GitHub Actions 与 CI
+
+### 2026-08-16 golangci-lint 预置普通二进制会跳过自定义插件编译
+- 现象：CI 直接把官方 golangci-lint 二进制放到 `bin/` 后，`make lint` 不再编译 `.custom-gcl.yml` 里的 logcheck 插件，lint 语义悄悄变化。
+- 原因：Makefile 的 `golangci-lint` 目标以文件存在性判断是否安装；v2.12.2 官方 release 没有 with-plugins 预编译资产。
+- 解决：CI 中先用官方二进制执行 `golangci-lint custom --destination bin --name golangci-lint-custom` 再 `mv` 覆盖 `bin/golangci-lint`，与本地 `make lint` 一致；`bin/` 用 actions/cache 缓存（key 含 `.custom-gcl.yml` 哈希）。
+- 验证：golang 容器内完整复现 CI 步骤，`golangci-lint run` 0 issues。
+
+### 2026-08-16 CI 里 go install kind 每次都要编译
+- 现象：E2E workflow 用 `go install sigs.k8s.io/kind@v0.32.0`，每次冷编译浪费约 1 分钟。
+- 解决：curl 官方 release 预编译二进制（`kind-linux-amd64`）到 `$HOME/.local/bin` 并加入 `GITHUB_PATH`。
+- 验证：`kind version` 通过，E2E 不再有 go install 编译阶段。
+
+### 2026-08-16 BuildKit gha 缓存要先 docker buildx create
+- 现象：`--cache-from/--cache-to=type=gha` 在 builder 未初始化时不生效或报错。
+- 解决：工作流先 `docker buildx create --use --name ci-builder`（`|| true` 容忍已存在）；Makefile 通过 `DOCKER_BUILD_CACHE` 变量注入缓存参数，本地默认空不受影响。
+- 验证：镜像构建 job 启用 gha 缓存；注意 `|| true` 会掩盖创建失败，出错时先查 builder。
+
+### 2026-08-16 等待 CI 不要长 sleep
+- 现象：Agent 等 CI 用固定长 sleep，用户看到"全部跑完了但还在等"。
+- 解决：每 30 秒轮询一次（`gh run list` / `gh run view --json jobs`），预期 3-6 分钟，超过 10 分钟无结论再停下排查；失败取 `gh run view <run-id> --log-failed`。
+- 验证：本次交付全程 30 秒轮询，无空等。
 
 ## YAML 与模板
 

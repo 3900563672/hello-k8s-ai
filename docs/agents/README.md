@@ -1,6 +1,6 @@
 # Agent 操作手册（docs/agents/）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
 > 本目录给**能操作当前机器与仓库**的 Agent（如 Codex、Claude Code）：可以读写本仓库、执行命令、访问 GitHub。
 > 只在自己工作区工作、收打包内容的远程 AI 见 [docs/remote-ai/](../remote-ai/README.md)；人类入口是根目录 [README.md](../../README.md) 与 [docs/INDEX.md](../INDEX.md)。
 
@@ -21,6 +21,7 @@
 | CRD / API / 数据链路变更 | PRINCIPLES.md、`api/v1/*_types.go`、生成清单、FIELD_OWNERSHIP | 对应专题、白皮书 |
 | 数据库 / Schema 变更 | PRINCIPLES.md、对应迁移文件、postgres_integration_test.go | DATABASE_DESIGN（人类文档，按需） |
 | 文档维护 | WORKFLOW.md、SYNC.md | docs/README.md |
+| CI / 工作流 / 变更归档 | WORKFLOW.md（4.1 轮询节奏）、SYNC.md、KNOWN_PITFALLS.md | 无 |
 | 打包给远程 AI | `make context-pack`，见 docs/remote-ai/README.md | 无 |
 
 ## 维护边界

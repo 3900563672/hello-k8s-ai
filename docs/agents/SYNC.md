@@ -1,6 +1,6 @@
 # 同步协议（SYNC）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ci-acceleration-and-workflow/
 > 目的：代码或行为变更后，让三层文档与 change-history 时间线保持一致，避免漂移。
 
 ## 1. 谁维护什么
@@ -20,6 +20,7 @@
 ## 3. 同步步骤（Agent 每次交付后执行）
 
 1. 追加 `change-history/YYYY-MM-DD-<主题>/` 条目（README / IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK），日期用 UTC 日期。
+   - 详略规范：README 一页内概述"为什么改、改成什么、关键行为"；三个细节文件完整记录背景（改动前状态）、实现（文件与逻辑）、验证（命令与真实结果）、回滚与风险；禁止简写成一行结论，无验证证据写"未验证"。
 2. 更新 `docs/agents/` 受影响文档：踩了新坑 → `KNOWN_PITFALLS.md`；契约或原则变化 → `PRINCIPLES.md`；流程变化 → `WORKFLOW.md`。
 3. 更新 `docs/remote-ai/`：远程 AI 的阅读、产出或交接方式受影响时。
 4. 重新生成上下文包：`make context-pack`（`CONTEXT_PACK.md` 顶部的生成时间即新时间戳）。
@@ -45,3 +46,9 @@
 ## 6. 可复用提示词（发给任何 AI）
 
 > 你是 <本地 Agent | 远程 AI>。本次任务：<任务>。请先读 <你的层入口>（本地 Agent：`AGENTS.md` + `docs/agents/README.md`；远程 AI：包内 `CONTEXT_PACK.md` + `docs/remote-ai/README.md`），按对应 WORKFLOW 执行；交付后按 SYNC 协议同步，并给出时间戳与 change-history 条目。涉及人类文档的改动先列出清单，不要直接改。
+
+## 7. CI 轮询节奏
+
+- 推送后每 30 秒轮询一次 run 结论（`gh run list` / `gh run view --json jobs`），**不要 sleep 到固定大间隔**。
+- 预期耗时：普通 job 3-6 分钟；E2E / 镜像构建最慢，冷缓存首次更久；最多等到 10 分钟再停下排查。
+- 失败先取 `gh run view <run-id> --log-failed` 定位原因，不盲改重推；docs-only 提交只触发"文档检查"。
