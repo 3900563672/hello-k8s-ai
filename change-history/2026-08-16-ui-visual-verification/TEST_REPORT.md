@@ -10,6 +10,7 @@
 | 控制台错误 | 脚本 stderr | 仅 Grafana Live WebSocket 400 噪音（已记录） |
 | 文档链接 | `make docs-check` | 通过（python3 hack/check-docs.py，docs-check OK） |
 | 上下文包 | `make context-pack` | 重新生成，生成时间 2026-08-16T14:50:54Z（UTC），`docs/agents/UI_VERIFICATION.md` 已入包（不提交） |
+| 基线快照 | `node hack/ui-check/grafana-panels.mjs --out change-history/2026-08-16-ui-visual-verification/screenshots/before-*.png` | monitor 278862B / config 140499B / traffic 125103B，均 1578×902，随本条目入库 |
 
 ## 2. 未验证
 

@@ -28,3 +28,9 @@
 | docs/agents | 新增 UI_VERIFICATION.md；README / WORKFLOW / KNOWN_PITFALLS 更新 |
 | docs | AI_CONTEXT 内容去向登记 |
 | change-history | 新增本条 |
+
+## 4. 补充（同日第二次提交：快照约定）
+
+- 新增快照约定：UI / 面板视觉改动条目须在 `screenshots/` 下成对提交 `before-<page>.png` / `after-<page>.png`，随改动一起入库（gitignore 不排除，GitHub 可预览）。
+- 本条目留存 2026-08-16 现状基线 3 张：monitor / config / traffic（[screenshots/README.md](screenshots/README.md) 含拍摄命令）。
+- 约定落点：`docs/agents/UI_VERIFICATION.md`「快照约定」、`docs/agents/SYNC.md` 第 3 节、`docs/agents/WORKFLOW.md` 第 5 节、`change-history/README.md` 详略规范。

@@ -25,4 +25,4 @@
 | 2026-08-16 | 提示词工作流体系：人类 / 本地 Agent / 远程 AI 三份协议 | P1 | [查看记录](2026-08-16-prompting-workflows/README.md) |
 | 2026-08-16 | UI 视觉验证链路沉淀：CDP 截图 + DOM 读取 + 监控面板现状 | P2 | [查看记录](2026-08-16-ui-visual-verification/README.md) |
 
-> 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`。
+> 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`；UI / 面板视觉改动另附 `screenshots/before-*.png` 与 `after-*.png`（约定见 `docs/agents/UI_VERIFICATION.md`）。

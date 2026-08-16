@@ -79,6 +79,7 @@ flowchart TD
 
 - 提交信息：`feat:` / `fix:` / `docs:` / `chore:` / `refactor:` + 中文描述 +（`Fixes #N`）。
 - 中文提交信息用文件方式（`git commit -F`），避免终端编码丢失（见 KNOWN_PITFALLS.md）。
+- UI / 面板视觉改动：提交前在条目 `change-history/<条目>/screenshots/` 下补 `before-<page>.png` 与 `after-<page>.png`（见 [UI_VERIFICATION.md](UI_VERIFICATION.md) 快照约定）。
 - 提交前检查 `git status`：不提交 `.env`、`bin/`、`dist/`、`.runtime/`、覆盖率文件；`change-history/` 与文档改动记得一起提交。
 
 ## 6. 归档与同步

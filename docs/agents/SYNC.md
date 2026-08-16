@@ -1,6 +1,6 @@
 # 同步协议（SYNC）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
+> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
 > 目的：代码或行为变更后，让三层文档与 change-history 时间线保持一致，避免漂移。
 
 ## 1. 谁维护什么
@@ -21,6 +21,7 @@
 ## 3. 同步步骤（Agent 每次交付后执行）
 
 1. 追加 `change-history/YYYY-MM-DD-<主题>/` 条目（README / IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK），日期用 UTC 日期。
+   - UI / 面板视觉改动：条目下附 `screenshots/before-<page>.png` 与 `after-<page>.png` 成对快照（约定见 `docs/agents/UI_VERIFICATION.md`「快照约定」）。
    - 详略规范：README 一页内概述"为什么改、改成什么、关键行为"；三个细节文件完整记录背景（改动前状态）、实现（文件与逻辑）、验证（命令与真实结果）、回滚与风险；禁止简写成一行结论，无验证证据写"未验证"。
 2. 更新 `docs/agents/` 受影响文档：踩了新坑 → `KNOWN_PITFALLS.md`；契约或原则变化 → `PRINCIPLES.md`；流程变化 → `WORKFLOW.md`。
 3. 更新 `docs/remote-ai/`：远程 AI 的阅读、产出或交接方式受影响时。

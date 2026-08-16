@@ -25,7 +25,22 @@ node hack/ui-check/grafana-panels.mjs --url http://localhost:8080/monitor --out 
 - stdout：JSON（`url` / `iframeUrl` / `bodyLen` / `panels[{title, body}]`），可直接解析。
 - stderr：进度、截图路径、控制台 error 汇总。
 - 脚本已内置：等待 25s 加载、滚动 Grafana iframe 到底（处理懒渲染）、按 `[class*="panel-container"]` 定位面板。
-- 截图给用户：复制到 `C:\Users\hh\.codex\visualizations\<会话目录>\monitor.png` 或直接给出 WSL 路径。
+- 截图给用户：正式快照进 `change-history/<条目>/screenshots/`（GitHub 可直接看）；临时预览可复制到 `C:\Users\hh\.codex\visualizations\<会话目录>\`。
+
+## 快照约定（截图进仓库）
+
+- 目录：`change-history/<条目>/screenshots/`，与改动同一次提交（不受 .gitignore 排除，随 git 版本化、可回滚、GitHub 可预览）。
+- 命名：`before-<page>.png`（改前）与 `after-<page>.png`（改后）成对提交；`<page>` 用 `monitor` / `config` / `traffic` / `trace` / `dashboard`。
+- 触发条件：涉及 UI / Grafana 面板 / 前端视觉的改动必须带快照；纯后端 / CRD / 文档改动不需要。
+- 命令：
+  ```bash
+  node hack/ui-check/grafana-panels.mjs --url http://localhost:8080/<page> --out change-history/<条目>/screenshots/before-<page>.png
+  # 改动完成后：
+  node hack/ui-check/grafana-panels.mjs --url http://localhost:8080/<page> --out change-history/<条目>/screenshots/after-<page>.png
+  ```
+- 体积控制：默认 1600×1000（约 120-280KB/张）；页面加载不稳定时加 `--wait <秒>`；不要上传超大或重复截图。
+- 基线参照：2026-08-16 现状基线在 `change-history/2026-08-16-ui-visual-verification/screenshots/`（monitor / config / traffic）。
+- `.codex-tmp/` 与 `.runtime/` 仍保持 gitignore，只放临时截图；正式快照一律进 change-history。
 
 ## 链路（一句话版）
 
