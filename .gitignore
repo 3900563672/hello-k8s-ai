@@ -8,9 +8,7 @@
 **/.idea/
 /output/
 /tmp/
-/project-review/
-/change-history/
-
+/AI_AUDIT_PACKAGE/
 # Local environment
 .env
 .env.*
@@ -35,3 +33,6 @@ Dockerfile.backup.*
 
 # Logs
 *.log
+
+A.sh
+
