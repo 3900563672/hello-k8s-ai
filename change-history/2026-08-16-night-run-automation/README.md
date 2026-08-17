@@ -19,7 +19,7 @@
 ## 2. 关键行为
 
 - Phase A：维持运行 + 施压 + 采集（每 15 分钟健康检查、每 30 分钟快照、至少 3 次配置变更），不推任何代码。
-- Phase B：读 `.runtime/night-run/<日期>/problems.md`，按决策矩阵直接修 / 建 issue / 存疑，本地验证后提交推送并等 CI。
+- Phase B：读 `.runtime/night-run/<日期>/problems.md`，按决策矩阵直接修 / 建 issue / 存疑，本地验证后**全部走 PR 交付（不推 main）**，创建完 PR 等其 CI 绿，早上由用户审阅合并。
 - 非运行日（非 2026-08-17）触发自动空跑退出，避免浪费 Token。
 - 快照采集真实链路：controller.errorRate（Reconcile 错误比例）、simulator.ttft/queue/qps/tickLatency、traffic 档位、资源计数、DB 状态。
 
