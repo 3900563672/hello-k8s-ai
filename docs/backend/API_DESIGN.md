@@ -1,5 +1,7 @@
 # API 设计
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/api/
+
 Base path：`/api/v1`。当前 API 是面向 Dashboard 的内部稳定契约；尚未生成正式 OpenAPI 文档，也没有公开版本兼容承诺。
 
 ## 1. 通用响应

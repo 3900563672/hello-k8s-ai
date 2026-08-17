@@ -1,5 +1,7 @@
 # 开发环境
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 ## 1. 一键部署所需环境
 
 | 工具/能力 | 要求 | 用途 |

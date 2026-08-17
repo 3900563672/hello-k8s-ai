@@ -1,5 +1,7 @@
 # 事件流
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/
+
 项目中“事件”有五种不同含义。把它们混在一起会造成错误的可靠性假设。
 
 ## 1. 五类事件

@@ -1,5 +1,7 @@
 # Controller 架构
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：internal/controller/、internal/k8sutil/ 等
+
 ## 1. Manager 中实际注册的七个 Reconciler
 
 | 文档简称 | Go 类型 | Primary resource |

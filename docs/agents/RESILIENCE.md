@@ -1,6 +1,6 @@
 # 稳定性与优雅降级矩阵（RESILIENCE）
 
-> 维护层：agents ｜ 最后同步：2026-08-18 ｜ 对应变更：change-history/2026-08-18-alert-drill-fixes/
+> 维护层：agent | last-reviewed：2026-08-18 | 事实源：源码与 docs/agents/
 > 目的：组件挂掉后系统"应该怎样表现"的对照表；长时运行前按此矩阵做验收（验收暂未执行）。
 
 ## 1. 总原则

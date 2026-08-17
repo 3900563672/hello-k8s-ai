@@ -1,20 +1,41 @@
 # hello-k8s-ai 维护指南
 
-## 开始前
+## 常用命令（开工前先看）
 
-1. 文档按读者分层：人类看 `docs/` 与根目录 README；能操作本机的 Agent 看本文件与 `docs/agents/`；只收打包内容的远程 AI 看 `docs/remote-ai/`。
-2. 每次任务先读 `docs/agents/README.md` 与 `docs/agents/WORKFLOW.md`，按流程判断是否需要建 issue。
-3. 动手前扫一遍 `docs/journal/` 与 `docs/lessons/`（踩坑流水账与蒸馏规则）。
-4. 涉及 CRD、Controller 或写 API 时，先核对 `docs/agents/PRINCIPLES.md` 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
-5. 涉及 GitHub Issue / Project 看板 / 批量任务时，先读 `docs/agents/PROJECT_REVIEW.md`（看板状态机与闭环规则，只动 `Approved` 条目）。
+```bash
+make fmt && make vet && make test && make lint   # Go 控制面
+make docs-check && make docs-sync-check          # 文档一致性与生成物漂移
+make docs-sync && make context-pack              # 重生成派生文件 / 远程 AI 上下文包
+make cluster-status / cluster-open / cluster-urls  # 集群状态 / 端口转发 / 访问地址
+make cluster-down                                # 停止工作负载，保留集群、CRD、CR、Secret 与 PVC
+bash setup.sh                                    # 完整开发栈部署（只复用 docker-desktop）
+```
 
-源码和可执行清单优先于说明文档。没有运行证据时，不得把“清单中存在”写成“集群已就绪”。
+## 三层行为准则
 
-## 文档维护边界
+### 必须（Always）
 
-- `docs/` 是人类文档：Agent 默认不读、不改；需要背景时按需阅读，事实以源码、生成清单和可执行测试为准。
-- Agent 只维护 `docs/agents/` 与 `change-history/`；人类文档的更新默认需用户明确要求，但 README 与 `docs/` 中访问方式、架构、行为描述因本次改动过期时，必须同步更新并纳入本次提交（文档漂移检查是强制步骤，不得只归档不改文档）。
-- 每次交付后按 `docs/agents/SYNC.md` 同步：追加 `change-history/` 条目、更新本目录受影响文档、重新生成上下文包（`make context-pack`）、列出人类文档待同步清单。
+1. 每次任务先读 `docs/agents/README.md` 与 `docs/agents/WORKFLOW.md`，按流程判断是否需要建 issue。
+2. 动手前扫一遍 `docs/journal/` 与 `docs/lessons/`（踩坑流水账与蒸馏规则）。
+3. 涉及 CRD、Controller 或写 API 时，先核对 `docs/agents/PRINCIPLES.md` 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
+4. 涉及 GitHub Issue / Project 看板 / 批量任务时，先读 `docs/agents/PROJECT_REVIEW.md`（看板状态机与闭环规则，只动 `Approved` 条目）。
+5. 源码和可执行清单优先于说明文档；没有运行证据时，不得把"清单中存在"写成"集群已就绪"。
+6. 每次交付后按 `docs/agents/WORKFLOW.md` 第 9 节同步：追加 `change-history/` 条目、更新受影响文档、重跑 `make docs-sync` 与 `make docs-check`、列出人类文档待同步清单。
+
+### 先问（Ask）
+
+1. 大改、重构、删除文件或调整部署脚本（`setup.sh`、Makefile 目标）前，先说明方案与影响面。
+2. 人类文档 `docs/` 默认不读、不改；需要改动时先列出清单再动手。例外：README 与 `docs/` 中访问方式、架构、行为描述因本次改动过期时，必须同步更新并纳入本次提交（文档漂移检查是强制步骤，不得只归档不改文档）。
+3. 动 Kubernetes 集群（重启节点、cordon/uncordon、删资源）、发起长时运行、合并 PR 或直接推送 main 前，先确认。
+4. 修改"不可破坏的边界"（见下）涉及的任何语义前，先说明影响面与回滚方案。
+
+### 禁止（Never）
+
+1. 不手工修改生成文件：`config/crd/bases/*.yaml`、`config/rbac/role.yaml`、`api/v1/zz_generated.deepcopy.go`、`PROJECT`；不删除 `+kubebuilder:scaffold:*`、`+kubebuilder:rbac:*` 与 CRD 校验标记。
+2. 不执行 `wsl --shutdown`、不强杀 Docker Desktop、不动代理配置（除非用户明确同意）。
+3. 部署脚本不得创建、重置或删除 Kubernetes 集群，也不得调用旁边的 `minikserve-demo`；自动化 E2E 只使用独立 Kind 集群 `hello-k8s-ai-test-e2e`，不复用日常开发或共享集群。
+4. 遥测失败不能阻止控制面或 Simulator 启动；不把 Frontend 的 pause/seek 或确定性回放扩展进 `SimulationClock`。
+5. 不提交 `.env`、`node_modules/`、`bin/`、`dist/`、覆盖率文件、IDE 配置或下载附加文件；Frontend 只保留 `package-lock.json`（npm）。
 
 ## 工程结构
 
@@ -28,7 +49,10 @@ dashboard/backend/            Backend API、Kubernetes cache、数据库与 Prov
 dashboard/frontend/my-app/    React 控制台
 dashboard/deploy/             Dashboard 与 PostgreSQL 清单
 config/                       CRD、RBAC、Docker Desktop 开发栈、样例和可观测性清单
-docs/                         当前工程文档
+docs/                         人类文档（Agent 默认不读、不改）
+docs/agents/                  本地 Agent 手册与工作流
+docs/remote-ai/               远程 AI 唯一入口（收打包内容）
+change-history/               变更归档（两代格式，见 README）
 ```
 
 ## 不可破坏的边界
@@ -51,8 +75,6 @@ docs/                         当前工程文档
 - `config/rbac/role.yaml`
 - `api/v1/zz_generated.deepcopy.go`
 - `PROJECT`
-
-不要删除 `+kubebuilder:scaffold:*`、`+kubebuilder:rbac:*` 和 CRD 校验标记。
 
 修改 `api/v1/*_types.go` 或 Kubebuilder 标记后执行：
 

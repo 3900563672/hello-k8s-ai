@@ -1,5 +1,7 @@
 # 部署架构
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/deploy/、config/default/ 等
+
 ## 1. 目标集群
 
 本地部署目标固定为用户已有的 Docker Desktop Kubernetes：

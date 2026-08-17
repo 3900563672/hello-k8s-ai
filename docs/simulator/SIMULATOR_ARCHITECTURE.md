@@ -1,5 +1,7 @@
 # Simulator 架构
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：simulator/
+
 ## 1. 定位
 
 Simulator 是受 Kubernetes 管理的推理实例池近似器。每个 SimulatorInstance 对应一个 Deployment；Deployment 可以有多个 Pod，但通过 Lease 只有一个 Pod 作为 reporter，周期计算并写回该 SimulatorInstance 的实时 Score 和 Performance。

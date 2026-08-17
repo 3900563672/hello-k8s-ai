@@ -1,5 +1,7 @@
 # Frontend 数据流
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/traffic/、dashboard/frontend/my-app/src/components/features/trace/ 等
+
 ## 1. 读取链路
 
 ```mermaid

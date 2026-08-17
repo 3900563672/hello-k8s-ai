@@ -1,5 +1,7 @@
 # 安全与 RBAC
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：config/rbac/
+
 ## 1. 当前信任边界
 
 ```mermaid

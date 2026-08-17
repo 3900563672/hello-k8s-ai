@@ -1,5 +1,7 @@
 # Prometheus
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/providers/、config/observability/ 等
+
 ## 1. 作用
 
 Prometheus 保存 Controller、Simulator 和 OTel Collector 的时间序列，用于运行趋势、错误率、延迟和容量诊断。它不保存 CR 完整状态，不替代 Kubernetes API 或 PostgreSQL snapshot。

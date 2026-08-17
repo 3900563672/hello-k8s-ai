@@ -1,5 +1,7 @@
 # 文档总索引
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 > 文档按读者分层：人类（本索引）、本地 Agent（`docs/agents/`）、远程 AI（`docs/remote-ai/`，包内入口 `CONTEXT_PACK.md`）。本索引面向人类阅读路径；分层说明见 [docs/README.md](README.md)。
 
 ## 按读者选择入口
