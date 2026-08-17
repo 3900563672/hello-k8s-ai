@@ -1,7 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-k8s-ai-jaeger-config
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: tracing-backend
+data:
+  config.yaml: |
+    service:
+      extensions: [jaeger_storage, jaeger_query, healthcheckv2]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [jaeger_storage_exporter]
+      telemetry:
+        resource:
+          service.name: jaeger
+        metrics:
+          level: detailed
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: 0.0.0.0
+                    port: 8888
+        logs:
+          level: info
+
+    extensions:
+      healthcheckv2:
+        use_v2: true
+        http:
+      jaeger_query:
+        storage:
+          traces: some_store
+      jaeger_storage:
+        backends:
+          some_store:
+            badger:
+              directories:
+                keys: "/tmp/jaeger/"
+                values: "/tmp/jaeger/"
+              ephemeral: false
+              # 7 天，与 Prometheus retention 对齐，保证历史回放窗口一致。
+              ttl:
+                spans: 168h
+              metrics_update_interval: 10s
+
+    receivers:
+      otlp:
+        protocols:
+          # 显式 0.0.0.0：不写 endpoint 时 Jaeger v2 默认只绑 127.0.0.1，
+          # otel-collector 从 Pod 网络无法连接。
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 1s
+
+    exporters:
+      jaeger_storage_exporter:
+        trace_storage: some_store
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hello-k8s-ai-jaeger-data
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: tracing-backend
+spec:
+  storageClassName: standard
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-k8s-ai-jaeger
+  annotations:
+    # badger 单副本 + RWO PVC：滚动更新会新旧 Pod 抢目录锁导致 CrashLoop，
+    # 重启/升级必须先 scale 到 0 再扩回 1（见 docs/agents/KNOWN_PITFALLS.md）。
+    platform.study.com/restart-procedure: scale-to-zero
   labels:
     app.kubernetes.io/name: jaeger
     app.kubernetes.io/component: tracing-backend
@@ -20,12 +106,16 @@ spec:
       enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
+        # 官方镜像默认 UID 10001、GID 0；fsGroup 0 使 local-path PVC 对容器组可写。
+        fsGroup: 0
         seccompProfile:
           type: RuntimeDefault
       containers:
       - name: jaeger
         image: cr.jaegertracing.io/jaegertracing/jaeger:2.20.0
         imagePullPolicy: IfNotPresent
+        args:
+        - --config=/etc/jaeger/config.yaml
         ports:
         - name: query
           containerPort: 16686
@@ -58,11 +148,18 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 5
         volumeMounts:
-        - name: tmp
+        - name: config
+          mountPath: /etc/jaeger
+          readOnly: true
+        - name: data
           mountPath: /tmp
       volumes:
-      - name: tmp
-        emptyDir: {}
+      - name: config
+        configMap:
+          name: hello-k8s-ai-jaeger-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: hello-k8s-ai-jaeger-data
       terminationGracePeriodSeconds: 20
 ---
 apiVersion: v1

@@ -13,7 +13,7 @@
 | AuthN/AuthZ | ServiceAccount | OIDC、用户/租户授权、审计 actor | 未完成 |
 | Secrets/TLS | 本地随机 Secret/集群内明文 | external secrets、rotation、TLS/mTLS | 未完成 |
 | PostgreSQL | 单实例 PVC | HA、PITR、备份恢复、监控 | 未完成 |
-| Metrics/Trace | emptyDir/易失 | 持久化/远端存储、HA、retention | 未完成 |
+| Metrics/Trace | 单副本 PVC（Prom 168h / Jaeger badger 168h） | 持久化/远端存储、HA、retention | 部分 |
 | Alerting | Prom rules | Alertmanager、routing、on-call/runbook | 未完成 |
 | 网络 | 基础 | default deny、最小 allowlist、Ingress TLS | 未完成 |
 | 可用性 | 多数 app 单副本 | replicas、PDB、anti-affinity、capacity | 未完成 |
@@ -29,11 +29,11 @@
 
 ### Prometheus
 
-本地 `emptyDir` 与 24h 仅开发。生产用持久 PVC + HA/remote_write/Thanos/Mimir 等组织标准方案；避免双副本重复告警；配置 Alertmanager。
+本地已 PVC + 168h（可支撑历史复盘，但单副本无 HA）。生产仍用持久 PVC + HA/remote_write/Thanos/Mimir 等组织标准方案；避免双副本重复告警；配置 Alertmanager。
 
 ### Jaeger
 
-配置受支持的持久 storage、retention、query/ingest HA；验证 Jaeger v2 API 兼容。Trace 采样和敏感属性政策先于扩容。
+本地已 badger + PVC（单副本、TTL 168h）；生产配置受支持的持久 storage、retention、query/ingest HA；验证 Jaeger v2 API 兼容。Trace 采样和敏感属性政策先于扩容。
 
 ### Grafana
 

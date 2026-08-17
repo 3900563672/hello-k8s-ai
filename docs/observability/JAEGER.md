@@ -13,10 +13,10 @@ Jaeger 是 Trace/Span 查询后端。OTel Collector 把 Controller/Simulator spa
 | Query/UI port | 16686 |
 | OTLP gRPC/HTTP | 4317 / 4318 |
 | Metrics | 8888 |
-| Storage | 未配置持久后端；开发型易失 |
+| Storage | badger 持久化（PVC `hello-k8s-ai-jaeger-data` 10Gi，spans TTL 168h） |
 | Service | `hello-k8s-ai-jaeger` |
 
-Pod 重启后历史 Trace 可能丢失。不要把 Jaeger 当前搜索结果当长期审计。
+数据卷为 PVC（badger 持久化），Pod 重启不丢 Trace；TTL 168h。单副本 + RWO，重启/升级需先 scale 0 再扩 1（badger 目录锁，见 `docs/agents/KNOWN_PITFALLS.md`）。
 
 ## 3. 数据链路
 

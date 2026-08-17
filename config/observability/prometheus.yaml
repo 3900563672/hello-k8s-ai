@@ -37,6 +37,10 @@ data:
       static_configs:
       - targets: ["hello-k8s-ai-jaeger:8888"]
 
+    - job_name: hello-k8s-ai-dashboard-backend
+      static_configs:
+      - targets: ["hello-k8s-ai-dashboard-backend:8080"]
+
     - job_name: hello-k8s-ai-simulator
       kubernetes_sd_configs:
       - role: pod
@@ -106,6 +110,28 @@ data:
         annotations:
           summary: "模拟器实例池没有状态上报 Leader"
           description: "SimulatorInstance {{ $labels.simulator_instance }} 已连续 1 分钟没有 Leader。"
+      - alert: HelloK8sAIDashboardEventsDropped
+        expr: sum(rate(hello_k8s_ai_dashboard_events_dropped_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dashboard 历史事件被丢弃"
+          description: "最近 5 分钟 Dashboard 历史事件缓冲或数据库写入存在丢弃，时间线将出现缺口。"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hello-k8s-ai-prometheus-data
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: metrics-backend
+spec:
+  storageClassName: standard
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -142,7 +168,7 @@ spec:
         args:
         - --config.file=/etc/prometheus/prometheus.yml
         - --storage.tsdb.path=/prometheus
-        - --storage.tsdb.retention.time=24h
+        - --storage.tsdb.retention.time=168h
         - --web.enable-lifecycle
         ports:
         - name: http
@@ -182,7 +208,8 @@ spec:
         configMap:
           name: hello-k8s-ai-prometheus-config
       - name: data
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: hello-k8s-ai-prometheus-data
       terminationGracePeriodSeconds: 30
 ---
 apiVersion: v1

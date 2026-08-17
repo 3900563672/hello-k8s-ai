@@ -87,7 +87,7 @@ flowchart TD
 - 让 Controller cooldown、Lease 或 Kubernetes 时间跟随 Simulator 倍速；
 - 保证 Prometheus、Jaeger 与 snapshot 属于同一事务时刻。
 
-历史 overview 对超出 Provider 保留能力的目标时间会在 `meta.warnings` 中明确告警：Prometheus 保留窗口（默认 24h，`PROMETHEUS_RETENTION` 可调）早于窗口时提示指标可能不完整；Jaeger 默认内存模式时，超过 15 分钟查询窗口的历史 Trace 提示仅随进程存活保留、可能已丢失（配置 `JAEGER_RETENTION` 后按配置窗口告警）。
+历史 overview 对超出 Provider 保留能力的目标时间会在 `meta.warnings` 中明确告警：Prometheus 保留窗口（部署 retention 168h；`PROMETHEUS_RETENTION` 为覆盖告警比对值，默认 24h 可调）早于窗口时提示指标可能不完整；Jaeger 已配置 badger 持久化（TTL 168h），超过保留窗口或 `JAEGER_RETENTION` 比对值的历史 Trace 提示可能已丢失。
 
 文案应使用“历史浏览/快照回看”。`simulationRun=false` 仍是正确能力声明；它与 `simulationRate=true` 不冲突。
 

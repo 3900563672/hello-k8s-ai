@@ -1,6 +1,6 @@
 # 设计与修改原则（PRINCIPLES）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-run-segment/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-observability-persistence/
 > 本文件汇总"不允许破坏的架构约束"与"修改规范"，原为 `docs/AI_CONTEXT.md` 第 3–7 节，2026-08-16 迁移至此。
 > 字段所有权完整版见 [docs/kubernetes/FIELD_OWNERSHIP.md](../kubernetes/FIELD_OWNERSHIP.md)。
 
@@ -123,3 +123,11 @@
 - 任一端无快照或存储不可用 → `availability=unavailable` + 明确告警，不伪造数据（同"历史不能冒充当前"）。
 - 段查询不做"按事件重新执行"或"确定性回放"（AGENTS.md 边界不变）；它只是把既有快照流、Prometheus 区间与 Jaeger 区间组合成一次可分析的时间段。
 - 前端段面板选择起点/终点快照（时间轴项）发起查询；时间轴"标记起点/终点"的交互属 UI 阶段，不改变 API 语义。
+
+### 可观测性持久化与事件缺口
+
+- 本地部署的 Prometheus/Jaeger 必须 PVC 持久化（`config/observability/`），retention 与历史回放承诺一致（当前 168h）；不允许回到 `emptyDir` 让"重启丢历史"复发。
+- 事件丢弃与数据库写失败必须可观测：Prometheus 计数器（`hello_k8s_ai_dashboard_events_dropped_total` / `..._write_failures_total`）+ `TimelineGap` 时间线记录，不允许只有进程内计数或日志。
+- `TimelineGap` 只声明"有事件丢失"与增量计数，不恢复丢失事件本身；精确顺序恢复依赖快照周期，不能把 gap 记录当事件源。
+- gap 记录写入失败不阻塞主循环：水位不前进，数据库恢复后补记（遥测失败不阻断控制面）。
+- 单副本 badger/TSDB + RWO PVC 的重启/升级必须先 scale 到 0 再扩回 1（目录锁），不使用 rollout restart。
