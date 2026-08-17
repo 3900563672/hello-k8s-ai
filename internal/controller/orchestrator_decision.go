@@ -70,29 +70,7 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 			input.AvgQueue < input.QueueThresholdDown)
 
 	if needUp {
-		// 到上限了就别扩了
-		if input.MaxReplicas > 0 && totalReplicas >= input.MaxReplicas {
-			return Decision{Action: NoOp, Reason: "maximum_replicas"}
-		}
-		// 扩容冷却期内，等一等
-		if remaining := cooldownRemaining(input.LastScaleUpTime, input.ScaleUpCooldown, now); remaining > 0 {
-			return Decision{Action: NoOp, Reason: "scale_up_cooldown", RequeueAfter: remaining}
-		}
-		// 找个最合适的实例扩容
-		candidate, found := findBestPlacement(input.AvailableModels, input.AvailableNodes, input.ExistingInstances)
-		if !found {
-			return placementUnavailableDecision(input.AvailableModels, input.ExistingInstances)
-		}
-		return Decision{
-			Action:           ScaleUp,
-			Reason:           scaleUpReason(input, needBootstrap),
-			InstanceName:     candidate.InstanceName,
-			NodeName:         candidate.NodeName,
-			ObservedReplicas: candidate.TargetReplicas - 1,
-			TargetReplicas:   candidate.TargetReplicas,
-			EffectiveScore:   candidate.EffectiveScore,
-			RequeueAfter:     time.Duration(input.ScaleUpCooldown) * time.Second,
-		}
+		return scaleUpDecision(input, now, floor, totalReplicas, needBootstrap)
 	}
 
 	// 不需要扩容，再看不缩容的理由
@@ -238,6 +216,78 @@ func placementRebalanceDecision(input DecisionInput) (Decision, bool) {
 		}
 	}
 	return Decision{}, false
+}
+
+// scaleUpDecision 生成一次扩容决策；无法扩容时返回 NoOp 及原因。
+func scaleUpDecision(input DecisionInput, now time.Time, floor, totalReplicas int, bootstrap bool) Decision {
+	// 到上限了就别扩了
+	if input.MaxReplicas > 0 && totalReplicas >= input.MaxReplicas {
+		return Decision{Action: NoOp, Reason: "maximum_replicas"}
+	}
+	// 扩容冷却期内，等一等
+	if remaining := cooldownRemaining(input.LastScaleUpTime, input.ScaleUpCooldown, now); remaining > 0 {
+		return Decision{Action: NoOp, Reason: "scale_up_cooldown", RequeueAfter: remaining}
+	}
+	// 决定这次补多少副本：引导期一次补到地板，高负载按队列缺口批量补，其余保持 +1。
+	delta := scaleUpDelta(input)
+	if bootstrap {
+		delta = clampInt(floor-totalReplicas, 1, maxScaleUpBatch)
+	}
+	// 单节点放不下整批时逐级减半，直到最小 +1；+1 都放不下才按容量不足处理。
+	candidate, found := findBestPlacement(input.AvailableModels, input.AvailableNodes, input.ExistingInstances, delta)
+	for !found && delta > 1 {
+		delta /= 2
+		candidate, found = findBestPlacement(input.AvailableModels, input.AvailableNodes, input.ExistingInstances, delta)
+	}
+	if !found {
+		return placementUnavailableDecision(input.AvailableModels, input.ExistingInstances)
+	}
+	return Decision{
+		Action:           ScaleUp,
+		Reason:           scaleUpReason(input, bootstrap),
+		InstanceName:     candidate.InstanceName,
+		NodeName:         candidate.NodeName,
+		ObservedReplicas: candidate.TargetReplicas - delta,
+		TargetReplicas:   candidate.TargetReplicas,
+		EffectiveScore:   candidate.EffectiveScore,
+		RequeueAfter:     time.Duration(input.ScaleUpCooldown) * time.Second,
+	}
+}
+
+// maxScaleUpBatch 单次扩容决策最多补的副本数。
+// 模拟器没有网关，副本可以无限增长；批量扩容配合冷却形成批次节奏，
+// 既避免大并发下“10→100 要等 90 次冷却”，也防止单次决策把副本数冲过头。
+const maxScaleUpBatch = 10
+
+// scaleUpDelta 估算一次扩容决策应补的副本数，范围 [1, maxScaleUpBatch]。
+// 队列指标能直接换算成副本缺口：缺口 / 单副本并发容量，向上取整。
+// TTFT 超标不参与批量放大，保持原有 +1 节奏，避免按延迟比例盲目扩。
+func scaleUpDelta(input DecisionInput) int {
+	perReplica := maxModelConcurrency(input.AvailableModels)
+	if perReplica <= 0 {
+		perReplica = 1
+	}
+	if input.HasQueue && input.AvgQueue > input.QueueThresholdUp && input.QueueThresholdUp > 0 {
+		gap := input.AvgQueue - input.QueueThresholdUp
+		return clampInt((gap+perReplica-1)/perReplica, 1, maxScaleUpBatch)
+	}
+	return 1
+}
+
+// maxModelConcurrency 取候选模型里最大的单副本并发容量，作为“每副本能吸收多少队列”的估算。
+func maxModelConcurrency(models []ModelInfo) int {
+	best := 0
+	for _, model := range models {
+		if model.MaxConcurrency > best {
+			best = model.MaxConcurrency
+		}
+	}
+	return best
+}
+
+// clampInt 把 value 限制在 [low, high] 内。
+func clampInt(value, low, high int) int {
+	return max(low, min(value, high))
 }
 
 // 根据扩容触发原因生成具体 reason 字符串

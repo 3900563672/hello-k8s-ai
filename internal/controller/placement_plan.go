@@ -124,17 +124,25 @@ func nodePlacementReplicaCount(plan nodePlacementPlan) int {
 }
 
 func addNodePlacement(plan nodePlacementPlan, nodeName string) (nodePlacementPlan, error) {
+	return addNodePlacements(plan, nodeName, 1)
+}
+
+// addNodePlacements 在目标节点上一次增加 count 个副本，供批量扩容计划使用。
+func addNodePlacements(plan nodePlacementPlan, nodeName string, count int) (nodePlacementPlan, error) {
 	if nodeName == "" {
 		return nodePlacementPlan{}, fmt.Errorf("scale-up placement has an empty node name")
+	}
+	if count < 1 {
+		return plan, fmt.Errorf("scale-up placement count must be positive, got %d", count)
 	}
 	plan.Version = placementPlanVersion
 	for i := range plan.Placements {
 		if plan.Placements[i].NodeName == nodeName {
-			plan.Placements[i].Replicas++
+			plan.Placements[i].Replicas += count
 			return plan, nil
 		}
 	}
-	plan.Placements = append(plan.Placements, nodePlacement{NodeName: nodeName, Replicas: 1})
+	plan.Placements = append(plan.Placements, nodePlacement{NodeName: nodeName, Replicas: count})
 	plan.Placements = sortedNodePlacements(plan.Placements)
 	if plan.PrimaryNode == "" {
 		plan.PrimaryNode = nodeName

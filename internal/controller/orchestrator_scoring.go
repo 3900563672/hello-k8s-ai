@@ -22,7 +22,7 @@ func FindBestCandidate(
 	nodes []NodeInfo,
 	instances []InstanceInfo,
 ) (instanceName string, targetReplicas int, effectiveScore int, found bool) {
-	candidate, found := findBestPlacement(models, nodes, instances)
+	candidate, found := findBestPlacement(models, nodes, instances, 1)
 	if !found {
 		return "", 0, 0, false
 	}
@@ -30,7 +30,11 @@ func FindBestCandidate(
 }
 
 // findBestPlacement 在所有可行的 (实例, 节点) 组合中找出最佳扩容目标。
-func findBestPlacement(models []ModelInfo, nodes []NodeInfo, instances []InstanceInfo) (placementCandidate, bool) {
+// extraReplicas 是本次决策要补的副本数（>=1），目标节点必须能一次容纳整批。
+func findBestPlacement(models []ModelInfo, nodes []NodeInfo, instances []InstanceInfo, extraReplicas int) (placementCandidate, bool) {
+	if extraReplicas < 1 {
+		extraReplicas = 1
+	}
 	if len(models) == 0 || len(nodes) == 0 || len(instances) == 0 {
 		return placementCandidate{}, false
 	}
@@ -51,7 +55,7 @@ func findBestPlacement(models []ModelInfo, nodes []NodeInfo, instances []Instanc
 		for _, instance := range modelInstances {
 			// 防止极端副本数导致溢出
 			if instance.CurrentReplicas < 0 ||
-				instance.CurrentReplicas == int(^uint(0)>>1) ||
+				instance.CurrentReplicas > int(^uint(0)>>1)-extraReplicas ||
 				(instance.CurrentReplicas > 0 && !instance.PlacementReady) {
 				continue
 			}
@@ -60,8 +64,9 @@ func findBestPlacement(models []ModelInfo, nodes []NodeInfo, instances []Instanc
 				if model.EligibleNodeNames != nil && !model.EligibleNodeNames[node.Name] {
 					continue
 				}
-				// 节点剩余资源必须满足模型需求。
-				if node.RemainingGPU < model.GPUUnits || node.RemainingConcurrency < model.MaxConcurrency {
+				// 节点剩余资源必须满足整批副本的需求（用除法避免乘法溢出）。
+				if node.RemainingGPU/extraReplicas < model.GPUUnits ||
+					node.RemainingConcurrency/extraReplicas < model.MaxConcurrency {
 					continue
 				}
 				score := scoreModel(model)
@@ -71,10 +76,10 @@ func findBestPlacement(models []ModelInfo, nodes []NodeInfo, instances []Instanc
 				candidates = append(candidates, placementCandidate{
 					InstanceName:   instance.Name,
 					NodeName:       node.Name,
-					TargetReplicas: instance.CurrentReplicas + 1,
+					TargetReplicas: instance.CurrentReplicas + extraReplicas,
 					EffectiveScore: score,
 					ModelGPU:       model.GPUUnits,
-					NodeGPULeft:    node.RemainingGPU - model.GPUUnits, // 扣完后的剩余量，越小表示越紧凑
+					NodeGPULeft:    node.RemainingGPU - model.GPUUnits*extraReplicas, // 扣完后的剩余量，越小表示越紧凑
 				})
 			}
 		}

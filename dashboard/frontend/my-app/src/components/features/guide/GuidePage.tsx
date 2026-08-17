@@ -303,6 +303,11 @@ export function GuidePage() {
                     >
                         <div className="space-y-0">
                             <FieldRow name="容量估算">模型 gpuUnits × 期望副本数 ≤ 可用节点 gpu 总和；模型 maxConcurrency × 副本数 ≤ 节点 maxConcurrency 总和。</FieldRow>
+                            <FieldRow name="副本吞吐换算">单副本吞吐 ≈ 模型 maxConcurrency ÷ 平均服务时长；平均服务时长 = prefillBaseMs + prefillPerTokenUs×0.5 + decodePerTokenMs×200（毫秒）。例：model-lite（50 + 500×0.5 + 20×200 = 4300 ms）单副本 ≈ 16 ÷ 4.3 ≈ 3.7 QPS。</FieldRow>
+                            <FieldRow name="所需副本估算">副本数 ≈ QPS × 平均服务时长 ÷ maxConcurrency；例如 400 QPS × 4.3s ÷ 16 ≈ 108 副本。队列持续增长说明目标容量远小于负载需求，先按此公式扩节点与副本。</FieldRow>
+                            <FieldRow name="节点能放多少副本">单节点可承载副本 = min(⌊gpu ÷ gpuUnits⌋, ⌊节点 maxConcurrency ÷ 模型 maxConcurrency⌋)；实例副本总数 = 各可用节点之和。扩容被节点容量挡住时 Orchestrator 返回 no_feasible_placement（属正常容量不足，不是错误）。</FieldRow>
+                            <FieldRow name="无限流量与天花板">maxReplicas 填 0 表示副本数不设上限；模拟器无网关、接受任意 QPS，副本可扩到节点配置容量为止。模拟资源由节点/模型配置决定，真实上限只受 Docker Desktop 宿主资源约束，一般到不了。</FieldRow>
+                            <FieldRow name="扩容节奏">高负载下按队列缺口批量扩容：一次决策最多补 10 副本，扩容冷却（默认 60s）作为批次间隔；扩到目标副本数的时间 ≈ 缺口 ÷ 每批上限 × 冷却。想更快可调小 scaleUpCooldownSeconds。</FieldRow>
                             <FieldRow name="QPS 与并发">目标 QPS × 平均服务时长（秒）≈ 所需并发；排队请求持续增长说明并发不足，应扩容或降低 QPS。</FieldRow>
                             <FieldRow name="冷启动窗口">coldStartMs 越大扩容生效越慢；控制器以 60 s 为基准打分，超过后权重按每 60 s 衰减 0.2、下限 0.7。延迟敏感租户建议小模型 + 小冷启动。</FieldRow>
                             <FieldRow name="阈值语义">TTFT 阈值衡量首 token 延时（ms），Queue 阈值衡量排队请求数；缩容阈值应明显低于扩容阈值（如 500/200、100/30），避免反复抖动。</FieldRow>

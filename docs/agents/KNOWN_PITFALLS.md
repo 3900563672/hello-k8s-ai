@@ -309,6 +309,20 @@
 - 备注：kubectl port-forward 日志“Handling connection”增加但连接仍失败 = 端口冲突特征；先查 Windows `netstat -ano | findstr 8080`。
 
 
+### 2026-08-17 批量扩容已上线：扩容会停在"节点容量上限"，不是 maxReplicas 的问题
+- 现象：400 QPS 压测下副本 16→18→20 后停止，队列 2 分钟冲到 7 万、TTFT 小时级；Orchestrator Ready=True 但不再扩。
+- 原因：单副本吞吐 = maxConcurrency ÷ 平均服务时长（model-lite 约 3.7 qps）；400 QPS 需 ≈108 副本，而 2 个 WorkerNode（各 maxConcurrency=160）÷ 模型 16 = 全租户最多 20 副本，扩容到节点容量即返回 `no_feasible_placement`（正常容量不足，不是错误）。`maxReplicas=0` 只解除策略上限，节点配置才是真实天花板。
+- 解决：测试前把 WorkerNode `spec.maxConcurrency`（和 gpu）调大，例如目标 N 副本 × 模型 maxConcurrency × 节点数；前端"配置详解-模拟条件下怎么填"有换算公式。
+- 验证：调大节点后副本应随批量扩容（每批 1..10，冷却 60s 一批）持续增长。
+- 备注：压测后队列清空需要时间（排水速度 = 副本×单副本吞吐）；TTFT 平均值会带峰值尾巴，看 queue 回落为准。
+
+### 2026-08-17 压测走 Backend API 需要 Idempotency-Key 头
+- 现象：`curl -X PATCH .../traffic` 返回 `MISSING_IDEMPOTENCY_KEY`。
+- 原因：Backend 写接口要求命令幂等键。
+- 解决：加 `-H 'Idempotency-Key: <任意唯一值>'`；day-watch.mjs 内部已处理，手工压测脚本要带上。
+- 验证：带键后返回 `state: accepted`，Tenant.spec.qps 已更新。
+
+
 ### 2026-08-17 更新 Controller 必须用 config/dev 部署，make deploy(config/default) 会丢掉 SIMULATOR_IMAGE env
 - 现象：`make deploy`（kustomize config/default）更新 controller 后，SimulatorInstance Controller 重建模拟器 Deployment，新 Pod 用 `simulator:latest`（本地很老、无 9090 端点的镜像）→ readiness/liveness 探针 connection refused → 29s 优雅退出循环（Exit 0 + Completed，易误判为正常退出）。
 - 原因：dev 栈的 `SIMULATOR_IMAGE=hello-k8s-ai-simulator:dev` env 在 `config/dev/manager-observability-patch.yaml` 里，`make deploy` 用 `config/default` 不含该 patch，apply 覆盖 Deployment 后 env 丢失，controller 回落默认 `simulator:latest`；本地 `simulator:latest` 是过期镜像。

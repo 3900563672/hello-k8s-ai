@@ -160,7 +160,7 @@ func (r *OrchestratorReconciler) persistScalePlan(ctx context.Context, plan scal
 		}
 		switch plan.Action {
 		case scalingActionUp:
-			placementPlan, err = addNodePlacement(placementPlan, plan.NodeName)
+			placementPlan, err = addNodePlacements(placementPlan, plan.NodeName, plan.NewReplicas-plan.OldReplicas)
 		case scalingActionDown:
 			placementPlan, err = removeNodePlacement(placementPlan, plan.NodeName)
 		case scalingActionRebalance:
