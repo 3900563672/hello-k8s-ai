@@ -1,6 +1,6 @@
 # Agent 操作手册（docs/agents/）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-scaleup-acceleration/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-capacity-calibration/
 > 本目录给**能操作当前机器与仓库**的 Agent（如 Codex、Claude Code）：可以读写本仓库、执行命令、访问 GitHub。
 > 只在自己工作区工作、收打包内容的远程 AI 见 [docs/remote-ai/](../remote-ai/README.md)；人类入口是根目录 [README.md](../../README.md) 与 [docs/INDEX.md](../INDEX.md)。
 

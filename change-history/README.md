@@ -4,6 +4,11 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-17 | 容量校准公式确立 + 长跑验证（14:00-18:00 执行中） | P1 | [查看记录](2026-08-17-longrun-capacity-calibration/README.md) |
+| 2026-08-17 | 扩容加速（批量扩容）+ 稳定性矩阵 + 容量指南 | P2 | [查看记录](2026-08-17-scaleup-acceleration/README.md) |
+| 2026-08-17 | Orchestrator maxReplicas 支持“无限制”（0 = 不限制副本数） | P2 | [查看记录](2026-08-17-orchestrator-max-replicas-unlimited/README.md) |
+| 2026-08-17 | 夜间长时运行首次执行：值守中断事故 + 工具修复与坑位沉淀 | P1 | [查看记录](2026-08-17-night-run-first-execution/README.md) |
+| 2026-08-17 | day-watch 首次白天值守：流量调整失效根因（8080 端口冲突）与修复 | P2 | [查看记录](2026-08-17-day-watch-port-conflict/README.md) |
 | 2026-08-16 | 一键启动默认干净环境：预置配置模板与参数填写指南 | P1 | [查看记录](2026-08-16-clean-startup-templates-guide/README.md) |
 | 2026-08-14 | Simulator 时间倍速控制链路 | P1 | [查看记录](2026-08-14-simulator-time-scale/README.md) |
 | 2026-08-14 | Model 能力基准分生产路径修复 | P0 | [查看记录](2026-08-14-model-absolute-score-production-path/README.md) |
