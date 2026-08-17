@@ -12,6 +12,7 @@
 - 修复问题：#2 snapshot.mjs 漏定义 `sleep`（采集崩溃）；#4 提示词租户示例 `core`→实际 `tenant-core`；#5 提示词 rate 示例 40/80 超出系统上限 20；#6 移除 `kubectl scale` 提示（副本归 Orchestrator）；#8 keepalive 启动命令加 `setsid`（nohup 挡不住 exec 进程组回收）。
 - 沉淀 3 条坑位：宿主机空闲 15 分钟自动睡眠冻结 WSL、nohup 进程组回收、snapshot sleep 漏拷（见 `docs/agents/KNOWN_PITFALLS.md`）。
 - 实测容量结论：50qps@10 副本触发队列积压（queue≈5000+、TTFT 分钟级），35qps@rate20 健康——队列无背压，待后续分析。
+- 休眠方案 A 已落地：新增 `hack/night-run/sleep-guard.ps1/.sh`（status/on/off），2026-08-17 08:14 CST 预授权执行 `on`（UAC 确认），当前 `guard=on`；收尾/日常恢复用 `off`（原值 15 分钟睡眠 / 3 小时休眠）。
 
 ## 2. 关键行为
 

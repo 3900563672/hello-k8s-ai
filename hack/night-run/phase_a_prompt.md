@@ -23,6 +23,7 @@
 
 ## 红线
 
+- **值守前提：宿主机不得空闲睡眠**（Windows 交流空闲 15 分钟自动睡眠会冻结 WSL，见 KNOWN_PITFALLS）。开工先 `bash hack/night-run/sleep-guard.sh status`，必须 `guard=on`；否则执行 `bash hack/night-run/sleep-guard.sh on`（会弹 UAC，需人在场点"是"）并复查 status。收尾（04:30 交接后）尝试 `bash hack/night-run/sleep-guard.sh off` 恢复睡眠（UAC 弹窗无人点则失败，可接受，见 README 手动恢复命令）。
 - **Phase A 不推任何代码、不建 issue、不改 UI、不截图验证。**
 - 不 `wsl --shutdown`；不强杀 Docker Desktop；不动代理（127.0.0.1:7890）；不重建/重置集群。
 - 不删 PVC、不重置数据库、不修改 CRD 定义。

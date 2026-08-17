@@ -18,6 +18,9 @@
 | hack/night-run/phase_a_prompt.md | 启动命令改 `setsid nohup ... < /dev/null >> log 2>&1 &` 并注明原因；qps 档位改 5–50 并注明 50 实测积压；小步档位改"qps +10 或 rate ±1 档"；目标 4 注明 rate 范围与"不做 kubectl scale" | #4/#5/#6/#8 |
 | hack/night-run/README.md | 常驻命令加 setsid 与说明；运行约定补充实测边界（rate 1–20、tenant-core、50qps 积压、副本归 Orchestrator） | #4/#5/#6/#8 |
 | docs/agents/KNOWN_PITFALLS.md | 新增 3 条坑位（睡眠冻结 WSL / nohup 进程组回收 / snapshot sleep 漏拷），更新头部时间戳 | #9/#8/#2 |
+| hack/night-run/sleep-guard.ps1/.sh（新增） | 睡眠守卫三动作 status/on/off：on 保存原值并设交流睡眠/休眠为 0，off 按保存值恢复；sh 为 WSL 包装（status 直查，on/off 走 UAC 提权 + 日志轮询）。实测坑：`powercfg /change` 不认 GUID 别名，必须用 `standby-timeout-ac`/`hibernate-timeout-ac` | #9（方案 A） |
+| hack/night-run/phase_a_prompt.md | 红线新增值守前提：开工确认 guard=on，收尾尝试 off | #9 |
+| hack/night-run/README.md | 新增"睡眠守卫"小节（用法/原值保存/UAC/预授权说明） | #9 |
 
 ## 3. 未修复问题（留档）
 

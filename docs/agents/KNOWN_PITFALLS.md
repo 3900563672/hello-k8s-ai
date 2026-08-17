@@ -9,7 +9,8 @@
 ### 2026-08-17 宿主机空闲 15 分钟自动睡眠会冻结 WSL（值守事故根因）
 - 现象：2026-08-17 00:50 后值守会话与 keepalive 全部停滞约 7 小时，07:48 恢复；keepalive.log 无新检查记录、sleep 等待命令 7 小时不返回；恢复后系统本身无故障（18 Pod 全 Running）。
 - 原因：Windows 电源计划"平衡"下交流空闲 15 分钟自动睡眠（powercfg 实测 STANDBYIDLE AC=900s）、3 小时自动休眠（HIBERNATEIDLE=3h）；睡眠冻结整个 WSL VM。
-- 解决：夜间值守前禁用空闲睡眠/休眠（`powercfg /change standby-timeout-ac 0`、`powercfg /change hibernate-timeout-ac 0`，需管理员；PowerToys Awake 可作免管理员备选），值守结束恢复原值；提示词前提从"App 必须保持运行"扩展为"App 运行 + 宿主机不睡眠"。
+- 解决：已落地 `hack/night-run/sleep-guard.ps1/.sh`（方案 A，2026-08-17 预授权执行 `on`，当前 guard=on）：`bash hack/night-run/sleep-guard.sh status|on|off`，on/off 走 UAC 提权并写 `%TEMP%\sleep-guard.log`；原值存 `%LOCALAPPDATA%\night-run-sleep-guard.json`。提示词前提从"App 必须保持运行"扩展为"App 运行 + 宿主机不睡眠"；PowerToys Awake 可作免管理员备选（方案 B，未选）。
+- 注意：`powercfg /change` 只认 `standby-timeout-ac`/`hibernate-timeout-ac` 专用名，不认 `STANDBYIDLE` 等 SUB_SLEEP GUID 别名（实测报"参数无效"）。
 - 验证：07:48 唤醒后系统自动恢复，队列自动回排；未实测禁用睡眠后的整夜值守。
 - 备注：合盖行为由"合盖操作"设置单独控制，改空闲睡眠不影响合盖逻辑。
 

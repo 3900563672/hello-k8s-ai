@@ -52,6 +52,20 @@ node hack/night-run/snapshot.mjs --once
 node hack/night-run/snapshot.mjs --once --summary
 ```
 
+## 睡眠守卫（sleep-guard，方案 A）
+
+宿主机交流空闲 15 分钟自动睡眠会冻结整个 WSL（2026-08-17 值守事故根因），值守前必须启用睡眠守卫：
+
+```bash
+bash hack/night-run/sleep-guard.sh status   # 查询：standby_ac=15 hibernate_ac=180 guard=off
+bash hack/night-run/sleep-guard.sh on       # 关闭交流空闲睡眠/休眠（弹 UAC，需人点"是"）
+bash hack/night-run/sleep-guard.sh off      # 恢复原值（15 分钟睡眠 / 3 小时休眠，弹 UAC）
+```
+
+- `on` 会把原值保存到 `%LOCALAPPDATA%\night-run-sleep-guard.json`，`off` 按保存值恢复，缺省 15/180。
+- 值守流程：开工确认 `guard=on`；收尾（Phase B 09:00 前后）尝试 `off`，弹窗无人点则失败可接受，事后手动恢复。
+- 预授权：白天先执行一次 `on`（本次已做，2026-08-17 08:14 CST），值守期间零弹窗；结束后记得 `off` 恢复日常睡眠习惯。
+
 ## 自动化入口
 
 Codex 桌面自动化（`$CODEX_HOME/automations/`）在 00:00 与 04:30 各触发一次：
