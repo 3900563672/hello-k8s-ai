@@ -17,7 +17,7 @@ BRANCH="$(git -C "$ROOT" branch --show-current)"
 RECENT_COMMITS="$(git -C "$ROOT" log --oneline -10 | sed 's/^/  - /')"
 OPEN_ISSUES="$(gh issue list --state open --limit 20 -R 3900563672/hello-k8s-ai 2>/dev/null | sed 's/^/  /' || echo '  （无法读取：生成环境无 gh 或未认证）')"
 TREE="$(cd "$ROOT" && find api cmd internal simulator dashboard config docs change-history test -maxdepth 2 -type d 2>/dev/null | sort | sed 's/^/  /')"
-MODE="$([ "${FULL:-0}" = "0" ] && echo "default（不含 docs/ 人类专题）" || echo "full（包含全部 docs/，含 journal/lessons）")"
+MODE="$([ "${FULL:-1}" = "0" ] && echo "default（不含 docs/ 人类专题）" || echo "full（包含全部 docs/，含 journal/lessons）")"
 
 # 用模板渲染 CONTEXT_PACK.md
 python3 - "$ROOT/hack/context-pack-template.md" "$PKG/CONTEXT_PACK.md" "$GENERATED_AT" "$BRANCH" "$RECENT_COMMITS" "$OPEN_ISSUES" "$TREE" "$MODE" <<'PYEOF'
@@ -43,7 +43,7 @@ cp -r "$ROOT/api" "$ROOT/cmd" "$ROOT/internal" "$ROOT/simulator" "$ROOT/config" 
 cp -r "$ROOT/dashboard" "$PKG/" 2>/dev/null || true
 
 # 文档：默认只带 AI 两层；FULL=1 时带全部
-if [ "${FULL:-0}" = "0" ]; then
+if [ "${FULL:-1}" = "0" ]; then
   cp -r "$ROOT/docs/agents" "$ROOT/docs/remote-ai" "$PKG/docs/"
 else
   cp -r "$ROOT/docs" "$PKG/"
