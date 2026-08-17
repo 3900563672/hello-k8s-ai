@@ -130,13 +130,19 @@ spec:
           capabilities:
             drop: [ALL]
           readOnlyRootFilesystem: true
+        env:
+        # badger 默认 BlockCacheSize 256MB + MemTable 64MB（v2.20.0 不暴露 cache 配置，
+        # 见 jaeger 源码 internal/storage/v1/badger/options.go），512Mi 上限在 100+ 模拟器
+        # Pod 流量下必 OOM。1Gi 上限 + 768Mi Go GC 软限（cache 在 Go 堆内）双保险。
+        - name: GOMEMLIMIT
+          value: "805306368"  # 768Mi 的字节数：Go GOMEMLIMIT 不接受 Mi 后缀
         resources:
           requests:
             cpu: 50m
-            memory: 128Mi
+            memory: 256Mi
           limits:
             cpu: 500m
-            memory: 512Mi
+            memory: 1Gi
         livenessProbe:
           tcpSocket:
             port: query

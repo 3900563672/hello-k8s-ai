@@ -49,6 +49,15 @@
 4. 缩容滞回（观察，未改策略）：model-lite TTFT 基线 320ms > 缩容下阈值 300ms，队列排空后 `needDown` 被 TTFT 挡住 → 峰值副本数保持不回落。长跑结束后副本保持峰值规模属预期，不是故障。
 5. 延迟舒适区：吞吐 break-even ≠ 延迟目标。650 QPS @ 200 副本（ρ≈0.88）queue 保持 0-20 但 TTFT 升到 ~1s（偶发 3-4.5s），而 300 QPS @ 141 副本（ρ≈0.57）TTFT=320ms。要维持基线延迟，峰值副本按 `QPS × 服务时长 ÷ (maxConcurrency × 0.6)` 预留余量（650 QPS ≈ 350 副本），否则需接受延迟升高。
 
+
+## 3.5 宿主内存预算与治理（31.4GB 机器，2026-08-17 实测）
+
+- **总预算**：物理 31.4GB。WSL2 VM 上限 12GB（`.wslconfig`，见 KNOWN_PITFALLS），Windows 侧进程约 17-20GB。
+- **VM 内固定开销（实测）**：Docker Desktop 内置 K8s 每节点容器（kubelet/containerd/kindnet）约 0.8-1.2GB，`KubernetesNodesCount=10` 时 **10 节点 ≈ 8-10GB**，加上可观测组件（Prometheus/Jaeger/Collector/Grafana/Backend/PG ≈ 2-3GB），VM 已接近 12GB 上限，**几乎没给模拟器负载留空间**。
+- **结论**：日常开发必须缩减节点数（10→4~5，省 4-6GB）后才谈得上跑负载；缩减前先备份 CRD/CR/PVC（改节点数可能重置内置 K8s，见 Issue #29 待办）。
+- **负载预算公式**：`可跑模拟负载 = 12GB - 节点开销(节点数×~1GB) - 可观测 2.5GB - 系统余量 1GB`。例：5 节点 → 12 - 5 - 2.5 - 1 ≈ 3.5GB 余量，约等于 30-50 个模拟器 Pod（每个 ~50-80MB）；10 节点 → 余量 < 0，必爆。
+- **长跑后强制清理（硬步骤）**：长时运行/大负载测试结束后必须：① `make cluster-down`；② 若之后要恢复 controller，先把长跑 CR `spec.replicas` 归零或删除（replicas=0 目前会触发校验报错，见 KNOWN_PITFALLS）；③ 确认 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件（≤6 个）；④ Windows 侧确认空闲内存 ≥ 5GB。
+- **内存告警阈值（建议）**：`vmmemWSL > 11GB` 或 Windows 空闲内存 < 2GB 时停止新增负载并清理（本轮后接入 preflight 检查）。
 ## 4. 长时运行验收清单（2026-08-17 14:00-18:00 已完成）
 
 > 状态：已完成（13:29-18:14 实跑，产物 `.runtime/longrun/2026-08-17/`，summary 已按 20 轮口径重生成）。执行规范先读 `hack/night-run/README.md` 与 `docs/agents/WORKFLOW.md` 4.2 节。
