@@ -182,9 +182,9 @@ func (r *OrchestratorReconciler) gatherDecisionInput(
 	input.ScaleUpCooldown = nonNegative(config.Spec.ScaleUpCooldownSeconds)
 	input.ScaleDownCooldown = nonNegative(config.Spec.ScaleDownCooldownSeconds)
 	input.MinReplicas = nonNegative(config.Spec.MinReplicas)
-	if config.Spec.MaxReplicas <= 0 {
+	if config.Spec.MaxReplicas < 0 {
 		return input, fmt.Errorf(
-			"orchestrator %q has invalid maxReplicas %d; maxReplicas is required and must be positive",
+			"orchestrator %q has invalid maxReplicas %d; maxReplicas must be non-negative (0 means unlimited)",
 			config.Name,
 			config.Spec.MaxReplicas,
 		)

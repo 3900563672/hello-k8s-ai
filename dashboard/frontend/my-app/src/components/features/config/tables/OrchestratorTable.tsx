@@ -27,7 +27,7 @@ const columns: ColumnDef<Orchestrator>[] = [
         header: '副本范围',
         cell: ({ row }) => (
             <span className="tabular-nums text-[#B7C2D1]">
-                {formatNumber.format(row.original.minReplicas)} – {formatNumber.format(row.original.maxReplicas)}
+                {formatNumber.format(row.original.minReplicas)} – {row.original.maxReplicas === 0 ? '∞' : formatNumber.format(row.original.maxReplicas)}
             </span>
         ),
     },

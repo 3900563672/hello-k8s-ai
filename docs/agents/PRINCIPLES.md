@@ -1,6 +1,6 @@
 # 设计与修改原则（PRINCIPLES）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-docs-layered-ownership/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-orchestrator-max-replicas-unlimited/
 > 本文件汇总"不允许破坏的架构约束"与"修改规范"，原为 `docs/AI_CONTEXT.md` 第 3–7 节，2026-08-16 迁移至此。
 > 字段所有权完整版见 [docs/kubernetes/FIELD_OWNERSHIP.md](../kubernetes/FIELD_OWNERSHIP.md)。
 
@@ -35,6 +35,7 @@
 | `TenantRuntime.status` | SimulatorInstance Controller | `instanceCount` 实际是可用副本合计，不是 CR 数。 |
 | `WorkerNode.status.usedGPU/usedConcurrency` | WorkerNodeUsage Controller | 根据已调度的非终态 Simulator Pod 推算。 |
 | `Orchestrator.status` | Orchestrator | 含动作、原因、冷却时间。 |
+| `Orchestrator.spec.maxReplicas` | kubectl / Dashboard Backend Command Gateway | 必填非负整数；0 表示不限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）。 |
 | PostgreSQL 当前态 | 无 | DB 只存历史/审计/索引，不能拥有最新 Kubernetes 状态。 |
 
 ## 3. 七个 Controller 的真实名称

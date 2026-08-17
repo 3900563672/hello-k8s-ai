@@ -113,7 +113,7 @@ curl -sS -X POST "$API/configuration:apply" \
         "scaleDownCooldownSeconds": 120,
         "allowScaleToZero": true,
         "minReplicas": 1,
-        "maxReplicas": 10
+        "maxReplicas": 0
       }
     }
   ]

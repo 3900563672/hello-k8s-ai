@@ -9,5 +9,5 @@ spec:
   tenantRef:
     name: tenant-sample
   minReplicas: 1
-  maxReplicas: 10
+  maxReplicas: 0 # 0 表示不限制副本数（模拟器无网关，接受任意 QPS）
   allowScaleToZero: true
