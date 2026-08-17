@@ -309,6 +309,14 @@
 - 备注：kubectl port-forward 日志“Handling connection”增加但连接仍失败 = 端口冲突特征；先查 Windows `netstat -ano | findstr 8080`。
 
 
+### 2026-08-17 kubectl 输出超过 1MB 时 spawnSync/execFileSync 报 ENOBUFS（Pod 多时 keepalive pods 检查必现）
+- 现象：副本扩到 141 后 `keepalive.mjs --once` 的 pods 检查失败 `spawnSync kubectl ENOBUFS`，其余检查全绿（假阴性）。
+- 原因：`execFileSync`/`spawnSync` 默认 maxBuffer=1MB；`kubectl get pods -o json` 在 100+ 模拟器 Pod 时 JSON 远超 1MB。
+- 解决：所有 kubectl 子进程调用加 `maxBuffer: 32 * 1024 * 1024`（keepalive.mjs runKubectl、day-watch.mjs kubeSnapshot）。
+- 验证：141 Pod 时 keepalive 全绿（simulatorPods=141 running=141 ready=141）。
+- 备注：副本少时不会触发，容易被漏测；长时测试扩到 100+ 副本后首次暴露。
+
+
 ### 2026-08-17 批量扩容已上线：扩容会停在"节点容量上限"，不是 maxReplicas 的问题
 - 现象：400 QPS 压测下副本 16→18→20 后停止，队列 2 分钟冲到 7 万、TTFT 小时级；Orchestrator Ready=True 但不再扩。
 - 原因：单副本吞吐 = maxConcurrency ÷ 平均服务时长（model-lite 约 3.7 qps）；400 QPS 需 ≈108 副本，而 2 个 WorkerNode（各 maxConcurrency=160）÷ 模型 16 = 全租户最多 20 副本，扩容到节点容量即返回 `no_feasible_placement`（正常容量不足，不是错误）。`maxReplicas=0` 只解除策略上限，节点配置才是真实天花板。
