@@ -25,12 +25,13 @@
 - 验证：修正后 Jaeger 正常 Ready（0 重启）。
 - 备注：Go 相关 env（GOMEMLIMIT/GOGC）一律查 `go doc runtime/debug.SetMemoryLimit` 再写，不要套 K8s 单位。
 
-### 2026-08-17 SimulatorInstance replicas=0 不是合法"停止"状态
-- 现象：把长跑遗留 CR `spec.replicas` 从 200 改为 0 后，controller 持续报错：`simulator instance "tenant-core-model-lite" has 0 replicas but its node placement plan contains 200`，reconcile 直接失败、不缩容；Deployment 手动缩 0 后 controller 不再拉起（校验前置失败），但日志持续报错、CR phase 变 Failed。
-- 原因：SimulatorInstance 校验把 `replicas=0` 当作与 node placement plan 冲突的非法状态，没有"暂停/停止"语义。
-- 解决：停止负载的可靠方式是 `make cluster-down`（连 controller 一起缩 0）；恢复 controller 后 CR 会按 spec 重建负载（见下条）。
-- 验证：手动把两个模拟器 Deployment 缩 0 + CR replicas=0 后，Pod 数归零（5 个系统组件），内存回落。
-- 备注：**待修**——`replicas=0` 应成为合法暂停态（node placement plan 同步归零），列入 Issue #29 后续项。
+### 2026-08-17 SimulatorInstance replicas=0 不是"停止"态（已修复失配死锁；停止请删 TenantModelPolicy）
+- 现象：把长跑遗留 CR `spec.replicas` 从 200 改为 0 后，controller 持续报错：`simulator instance "tenant-core-model-lite" has 0 replicas but its node placement plan contains 200`，reconcile 直接失败、不缩容。
+- 原因：replicas 与持久化放置计划（注解 `platform.study.com/node-placements`）失配时的一致性校验过于严格：`replicas=0` 是**合法最小值**（新实例骨架就是 0，Orchestrator 按流量扩容），但旧计划非空时校验死锁，无法缩也无法扩。
+- 解决（已修复）：`replicas=0` 时先清除历史放置计划注解再按空计划收敛（Deployment 缩 0、清理逐节点 Deployment）；Orchestrator 对 0 副本实例不再报错、暂停实例不参与资源预留；新增测试 `TestSimulatorInstancePauseClearsPlacementPlan`。
+- **重要结论（实测）**：`replicas=0` 不是"暂停"——Orchestrator 看到流量（qps>0）会从 0 自动扩容。**停止一个实例的正确方式是删除其 TenantModelPolicy**（Deny 时 `reconcileTenantModelPair` 自动删除 SimulatorInstance 并清理 Deployment）；只删 SimulatorInstance 会被策略立即重建。
+- 验证：删除 `tenantmodelpolicy tenant-core-model-lite` 后实例/Deployment/Pod 全部消失，Tenant/Model/WorkerNode 保留；新 controller（修复后）0 报错。
+- 备注：集群层面"全部停止"仍用 `make cluster-down`（停 controller 与全部工作负载）。
 
 ### 2026-08-17 cluster-down 后 kubectl apply config/dev 会复活 controller 并按 CR 重建模拟器
 - 现象：`make cluster-down` 后负载确实归零；但随后为部署 Jaeger 修复执行 `kubectl apply -f config/dev`，controller-manager 恢复 1 副本，Reconcile 看到 `SimulatorInstance.spec.replicas=200` 立即重建全部 200 个模拟器 Pod。

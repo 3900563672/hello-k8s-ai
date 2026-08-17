@@ -485,6 +485,103 @@ func TestPlacementRebalanceKeepsReplicaCount(t *testing.T) {
 	}
 }
 
+func TestSimulatorInstancePauseClearsPlacementPlan(t *testing.T) {
+	scheme := newControllerTestScheme(t)
+	if err := appsv1.AddToScheme(scheme); err != nil {
+		t.Fatalf("add apps scheme: %v", err)
+	}
+	placementPayload, err := encodeNodePlacementPlan(nodePlacementPlan{
+		Version:     placementPlanVersion,
+		PrimaryNode: "node-a",
+		Placements: []nodePlacement{
+			{NodeName: "node-a", Replicas: 1},
+			{NodeName: "node-b", Replicas: 2},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode placement: %v", err)
+	}
+	instance := &platformv1.SimulatorInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "instance-pause",
+			Annotations: map[string]string{nodePlacementsAnnotation: placementPayload},
+		},
+		Spec: platformv1.SimulatorInstanceSpec{
+			TenantRef: platformv1.ObjectRef{Name: "tenant-a"},
+			ModelRef:  platformv1.ObjectRef{Name: "model-a"},
+			Replicas:  3,
+		},
+	}
+	kubernetesClient := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
+	reconciler := &SimulatorInstanceReconciler{Client: kubernetesClient, Scheme: scheme}
+
+	if _, err := reconciler.reconcileDeploymentObjects(
+		context.Background(),
+		instance,
+		[]string{"node-a", "node-b"},
+	); err != nil {
+		t.Fatalf("reconcile placement Deployments: %v", err)
+	}
+	secondaryName := placementDeploymentName(instance.Name, "node-b")
+	if err := kubernetesClient.Get(
+		context.Background(),
+		client.ObjectKey{Namespace: defaultNamespace, Name: secondaryName},
+		&appsv1.Deployment{},
+	); err != nil {
+		t.Fatalf("secondary Deployment should exist before pause: %v", err)
+	}
+
+	// 暂停：spec.replicas=0，历史放置计划注解保留在 CR 上。
+	var paused platformv1.SimulatorInstance
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: instance.Name}, &paused); err != nil {
+		t.Fatal(err)
+	}
+	if paused.Annotations[nodePlacementsAnnotation] == "" {
+		t.Fatal("pause fixture must keep the persisted placement plan")
+	}
+	paused.Spec.Replicas = 0
+	if err := kubernetesClient.Update(context.Background(), &paused); err != nil {
+		t.Fatalf("pause simulator instance: %v", err)
+	}
+	// 暂停态不得再报 "node placement plan contains" 校验错误，必须干净缩容。
+	state, err := reconciler.reconcileDeploymentObjects(
+		context.Background(),
+		&paused,
+		[]string{"node-a", "node-b"},
+	)
+	if err != nil {
+		t.Fatalf("reconcile paused instance: %v", err)
+	}
+	if state.DesiredReplicas != 0 {
+		t.Fatalf("paused desired replicas = %d, want 0", state.DesiredReplicas)
+	}
+	var after platformv1.SimulatorInstance
+	if err := kubernetesClient.Get(context.Background(), client.ObjectKey{Name: instance.Name}, &after); err != nil {
+		t.Fatal(err)
+	}
+	if after.Annotations[nodePlacementsAnnotation] != "" {
+		t.Fatalf("placement plan annotation must be cleared while paused, got %q", after.Annotations[nodePlacementsAnnotation])
+	}
+	var primary appsv1.Deployment
+	if err := kubernetesClient.Get(
+		context.Background(),
+		client.ObjectKey{Namespace: defaultNamespace, Name: deploymentName(instance.Name)},
+		&primary,
+	); err != nil {
+		t.Fatalf("primary Deployment should be kept while paused: %v", err)
+	}
+	if primary.Spec.Replicas == nil || *primary.Spec.Replicas != 0 {
+		t.Fatalf("paused primary replicas = %#v, want 0", primary.Spec.Replicas)
+	}
+	if err := kubernetesClient.Get(
+		context.Background(),
+		client.ObjectKey{Namespace: defaultNamespace, Name: secondaryName},
+		&appsv1.Deployment{},
+	); !apierrors.IsNotFound(err) {
+		t.Fatalf("secondary Deployment should be removed while paused, got %v", err)
+	}
+}
+
 func TestSimulatorInstancePlacementCreatesNodePinnedDeployments(t *testing.T) {
 	scheme := newControllerTestScheme(t)
 	if err := appsv1.AddToScheme(scheme); err != nil {
