@@ -512,6 +512,10 @@ func (r *OrchestratorReconciler) collectExpectedNodeUsage(ctx context.Context) (
 		if !instance.DeletionTimestamp.IsZero() || instance.Annotations[nodePlacementsAnnotation] == "" {
 			continue
 		}
+		if instance.Spec.Replicas == 0 {
+			// 暂停实例不参与资源预留。
+			continue
+		}
 		plan, _, err := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
 		if err != nil {
 			return nil, fmt.Errorf("decode node placements on simulator instance %q: %w", instance.Name, err)
@@ -602,6 +606,10 @@ func (r *OrchestratorReconciler) collectExistingInstances(ctx context.Context, t
 			return nil, fmt.Errorf("decode node placements on simulator instance %q: %w", instance.Name, err)
 		}
 		switch {
+		case instance.Spec.Replicas == 0:
+			// 暂停态优先于历史计划：不校验旧副本数，直接使用空计划。
+			info.PlacementPlan = nodePlacementPlan{Version: placementPlanVersion}
+			info.PlacementReady = true
 		case persisted:
 			if nodePlacementReplicaCount(plan) != instance.Spec.Replicas {
 				return nil, fmt.Errorf(
@@ -612,9 +620,6 @@ func (r *OrchestratorReconciler) collectExistingInstances(ctx context.Context, t
 				)
 			}
 			info.PlacementPlan = plan
-			info.PlacementReady = true
-		case instance.Spec.Replicas == 0:
-			info.PlacementPlan = nodePlacementPlan{Version: placementPlanVersion}
 			info.PlacementReady = true
 		default:
 			plan, err = newNodePlacementPlan(observedPlacements[instance.Name])

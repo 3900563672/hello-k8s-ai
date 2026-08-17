@@ -56,7 +56,7 @@
 - **VM 内固定开销（实测）**：Docker Desktop 内置 K8s 每节点容器（kubelet/containerd/kindnet）约 0.8-1.2GB，`KubernetesNodesCount=10` 时 **10 节点 ≈ 8-10GB**，加上可观测组件（Prometheus/Jaeger/Collector/Grafana/Backend/PG ≈ 2-3GB），VM 已接近 12GB 上限，**几乎没给模拟器负载留空间**。
 - **结论**：日常开发必须缩减节点数（10→4~5，省 4-6GB）后才谈得上跑负载；缩减前先备份 CRD/CR/PVC（改节点数可能重置内置 K8s，见 Issue #29 待办）。
 - **负载预算公式**：`可跑模拟负载 = 12GB - 节点开销(节点数×~1GB) - 可观测 2.5GB - 系统余量 1GB`。例：5 节点 → 12 - 5 - 2.5 - 1 ≈ 3.5GB 余量，约等于 30-50 个模拟器 Pod（每个 ~50-80MB）；10 节点 → 余量 < 0，必爆。
-- **长跑后强制清理（硬步骤）**：长时运行/大负载测试结束后必须：① `make cluster-down`；② 若之后要恢复 controller，先把长跑 CR `spec.replicas` 归零或删除（replicas=0 目前会触发校验报错，见 KNOWN_PITFALLS）；③ 确认 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件（≤6 个）；④ Windows 侧确认空闲内存 ≥ 5GB。
+- **长跑后强制清理（硬步骤）**：长时运行/大负载测试结束后必须：① `make cluster-down`；② 删除长跑 `TenantModelPolicy`（自动删除 SimulatorInstance 与模拟器 Deployment；`replicas=0` 不是停止态，Orchestrator 会按流量扩容，见 KNOWN_PITFALLS）；③ 确认 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件（≤8 个）；④ Windows 侧确认空闲内存 ≥ 5GB。
 - **内存告警阈值（建议）**：`vmmemWSL > 11GB` 或 Windows 空闲内存 < 2GB 时停止新增负载并清理（本轮后接入 preflight 检查）。
 ## 4. 长时运行验收清单（2026-08-17 14:00-18:00 已完成）
 

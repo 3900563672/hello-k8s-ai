@@ -84,7 +84,7 @@ flowchart TD
 
 ### 4.2.1 长时运行结束必须清理（2026-08-17 硬步骤）
 
-- 大负载/长时运行结束（无论成败）必须执行：① `make cluster-down`；② 把长跑 `SimulatorInstance` CR 的 `spec.replicas` 归零或删除，避免下次 controller 恢复时自动重建 200 个 Pod 吃满内存；③ 验证 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件；④ 确认 Windows 空闲内存 ≥ 5GB、C 盘不被 pagefile 继续增长。
+- 大负载/长时运行结束（无论成败）必须执行：① `make cluster-down`；② **删除长跑 `TenantModelPolicy`**（`kubectl delete tenantmodelpolicy <name>`，会自动删除 SimulatorInstance 与模拟器 Deployment；`replicas=0` 不是停止态，Orchestrator 会按流量把实例重新扩起来，见 KNOWN_PITFALLS）；③ 验证 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件；④ 确认 Windows 空闲内存 ≥ 5GB、C 盘不被 pagefile 继续增长。
 - `cluster-down` 只缩 Deployment 不删 CR：之后再 `kubectl apply` 全量清单会复活 controller 并按 CR spec 重建负载（见 KNOWN_PITFALLS），必须先处理 CR。
 - 任何一次因内存/环境问题的干预后，先读 KNOWN_PITFALLS "宿主内存治理" 主题再动手。
 ## 5. 提交

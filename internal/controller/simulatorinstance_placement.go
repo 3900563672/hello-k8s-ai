@@ -30,11 +30,20 @@ func (r *SimulatorInstanceReconciler) reconcileDeploymentObjects(
 	instance *platformv1.SimulatorInstance,
 	eligibleNodes []string,
 ) (*simulatorDeploymentState, error) {
+	// 暂停态（replicas==0）：历史放置计划不再有效。先清除注解再按空计划收敛，
+	// 使 Deployment 缩到 0 并清理逐节点 Deployment；恢复时由 Orchestrator 重新放置。
+	if instance.Spec.Replicas == 0 && instance.Annotations != nil &&
+		instance.Annotations[nodePlacementsAnnotation] != "" {
+		delete(instance.Annotations, nodePlacementsAnnotation)
+		if err := r.Update(ctx, instance); err != nil {
+			return nil, fmt.Errorf("clear node placements while pausing simulator instance %q: %w", instance.Name, err)
+		}
+	}
 	plan, persisted, err := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
 	if err != nil {
 		return nil, fmt.Errorf("decode node placements on simulator instance %q: %w", instance.Name, err)
 	}
-	if persisted && nodePlacementReplicaCount(plan) != instance.Spec.Replicas {
+	if persisted && instance.Spec.Replicas > 0 && nodePlacementReplicaCount(plan) != instance.Spec.Replicas {
 		return nil, fmt.Errorf(
 			"simulator instance %q has %d replicas but its node placement plan contains %d",
 			instance.Name,
