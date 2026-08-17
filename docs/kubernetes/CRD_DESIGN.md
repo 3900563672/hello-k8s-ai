@@ -248,7 +248,7 @@ Dashboard：Traffic/Data View；Backend只读。
 | `scaleDownCooldownSeconds` | >=0，缩容方向独立冷却 | 120 |
 | `allowScaleToZero` | 无流量时可越过 min 到 0 | false |
 | `minReplicas` | >=0，且 <= max | 1 |
-| `maxReplicas` | >=1，必填 | - |
+| `maxReplicas` | 0 或正整数，0 = 不限制（扩到容量上限为止），必填 | - |
 
 ### Status
 

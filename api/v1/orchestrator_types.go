@@ -22,7 +22,7 @@ import (
 )
 
 // OrchestratorSpec 每个租户的扩缩容配置
-// +kubebuilder:validation:XValidation:rule="self.minReplicas <= self.maxReplicas",message="minReplicas must not exceed maxReplicas"
+// +kubebuilder:validation:XValidation:rule="self.maxReplicas == 0 || self.minReplicas <= self.maxReplicas",message="minReplicas must not exceed maxReplicas unless maxReplicas is 0 (unlimited)"
 type OrchestratorSpec struct {
 	// 属于哪个租户
 	// +required
@@ -50,8 +50,8 @@ type OrchestratorSpec struct {
 	// +optional
 	MinReplicas int `json:"minReplicas,omitempty"`
 
-	// 租户所有实例的最大副本数，必填
-	// +kubebuilder:validation:Minimum=1
+	// 租户所有实例的最大副本数，必填；0 表示不限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）
+	// +kubebuilder:validation:Minimum=0
 	// +required
 	MaxReplicas int `json:"maxReplicas"`
 }

@@ -237,7 +237,7 @@ export function GuidePage() {
                         <div className="space-y-0">
                             <FieldRow name="scaleUpCooldownSeconds" unit="s" defaultValue="60">扩容冷却：同方向扩容动作的最小间隔。</FieldRow>
                             <FieldRow name="scaleDownCooldownSeconds" unit="s" defaultValue="120">缩容冷却：同方向缩容动作的最小间隔。</FieldRow>
-                            <FieldRow name="minReplicas / maxReplicas" defaultValue="1..10">副本范围；要求 minReplicas ≤ maxReplicas，且均为正整数。</FieldRow>
+                            <FieldRow name="minReplicas / maxReplicas" defaultValue="1..∞">副本范围；maxReplicas 填 0 表示不限制（模拟器无网关，接受任意 QPS，扩到容量上限为止），正整数时要求 minReplicas ≤ maxReplicas。</FieldRow>
                             <FieldRow name="allowScaleToZero" defaultValue="false">允许缩到零：空闲时可将副本缩至 0（minReplicas 仍需 ≥ 1 通过校验）。</FieldRow>
                         </div>
                         <PresetList
@@ -245,7 +245,7 @@ export function GuidePage() {
                             rows={PRESET_ORCHESTRATOR_TEMPLATES.map((template) => ({
                                 id: template.id,
                                 name: template.name,
-                                summary: `${template.data.scaleUpCooldownSeconds}/${template.data.scaleDownCooldownSeconds} s · ${template.data.minReplicas}..${template.data.maxReplicas} · 缩零 ${template.data.allowScaleToZero ? '允许' : '禁止'}`,
+                                summary: `${template.data.scaleUpCooldownSeconds}/${template.data.scaleDownCooldownSeconds} s · ${template.data.minReplicas}..${template.data.maxReplicas === 0 ? '∞' : template.data.maxReplicas} · 缩零 ${template.data.allowScaleToZero ? '允许' : '禁止'}`,
                             }))}
                         />
                     </ConfigFormSection>

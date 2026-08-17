@@ -56,8 +56,8 @@ spec:
                 description: 允许缩到 0 吗？只在没流量时有用
                 type: boolean
               maxReplicas:
-                description: 租户所有实例的最大副本数，必填
-                minimum: 1
+                description: 租户所有实例的最大副本数，必填；0 表示不限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）
+                minimum: 0
                 type: integer
               minReplicas:
                 default: 1
@@ -89,8 +89,9 @@ spec:
             - tenantRef
             type: object
             x-kubernetes-validations:
-            - message: minReplicas must not exceed maxReplicas
-              rule: self.minReplicas <= self.maxReplicas
+            - message: minReplicas must not exceed maxReplicas unless maxReplicas
+                is 0 (unlimited)
+              rule: self.maxReplicas == 0 || self.minReplicas <= self.maxReplicas
           status:
             description: OrchestratorStatus 记录最近一次扩缩操作和标准 Conditions。
             properties:

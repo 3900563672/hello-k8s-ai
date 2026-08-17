@@ -14,11 +14,11 @@ export const orchestratorSchema = z
         scaleDownCooldownSeconds: nonNegativeInt('缩容冷却时间'),
         allowScaleToZero: z.boolean(),
         minReplicas: positiveInt('最小副本数'),
-        maxReplicas: positiveInt('最大副本数'),
+        maxReplicas: nonNegativeInt('最大副本数'),
     })
     .superRefine((data, context) => {
-        // 与 CRD XValidation 保持一致：最小副本数不能超过最大副本数
-        if (data.minReplicas > data.maxReplicas) {
+        // 与 CRD XValidation 保持一致：最小副本数不能超过最大副本数（maxReplicas=0 表示无限制，跳过比较）
+        if (data.maxReplicas !== 0 && data.minReplicas > data.maxReplicas) {
             context.addIssue({
                 code: 'custom',
                 path: ['minReplicas'],
@@ -33,6 +33,6 @@ export const getOrchestratorPreview = (data: OrchestratorFormValues): PreviewCon
     { key: '关联租户', value: data.tenantName },
     { key: '扩容冷却', value: data.scaleUpCooldownSeconds, unit: 's' },
     { key: '缩容冷却', value: data.scaleDownCooldownSeconds, unit: 's' },
-    { key: '副本范围', value: `${data.minReplicas} - ${data.maxReplicas}` },
+    { key: '副本范围', value: `${data.minReplicas} - ${data.maxReplicas === 0 ? '∞' : data.maxReplicas}` },
     { key: '允许缩到零', value: data.allowScaleToZero ? '是' : '否' },
 ]

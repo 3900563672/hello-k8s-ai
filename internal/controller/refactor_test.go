@@ -211,6 +211,21 @@ func TestDecideAtSupportsScaleToZeroAndMaximum(t *testing.T) {
 	if decision := DecideAt(input, now); decision.Action != NoOp {
 		t.Fatalf("maxReplicas decision = %+v, want NoOp", decision)
 	}
+
+	// maxReplicas=0 表示不限制：已有 10 个副本且仍有压力时，应继续扩容
+	input = DecisionInput{
+		TenantQPS:         10,
+		MaxReplicas:       0,
+		AvgQueue:          200,
+		HasQueue:          true,
+		QueueThresholdUp:  100,
+		AvailableModels:   []ModelInfo{{Name: "model-a", AbsoluteScore: 75, GPUUnits: 1, MaxConcurrency: 1}},
+		AvailableNodes:    []NodeInfo{{Name: "node-a", RemainingGPU: 8, RemainingConcurrency: 8}},
+		ExistingInstances: []InstanceInfo{{Name: "instance-a", ModelName: "model-a", CurrentReplicas: 10, PlacementReady: true}},
+	}
+	if decision := DecideAt(input, now); decision.Action != ScaleUp {
+		t.Fatalf("unlimited maxReplicas decision = %+v, want ScaleUp", decision)
+	}
 }
 
 func TestDecideAtReportsMissingModelAbsoluteScore(t *testing.T) {

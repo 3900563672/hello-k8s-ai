@@ -33,5 +33,5 @@ export const DEFAULT_ORCHESTRATOR: Omit<Orchestrator, 'name' | 'displayName' | '
     scaleDownCooldownSeconds: 120,
     allowScaleToZero: false,
     minReplicas: 1,
-    maxReplicas: 10,
+    maxReplicas: 0, // 0 = 无限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）
 }

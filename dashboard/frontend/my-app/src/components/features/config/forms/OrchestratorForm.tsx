@@ -85,7 +85,7 @@ export const OrchestratorForm = memo(function OrchestratorForm({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <ConfigNumberField control={form.control} name="minReplicas" label="最小副本数" />
 
-                        <ConfigNumberField control={form.control} name="maxReplicas" label="最大副本数" />
+                        <ConfigNumberField control={form.control} name="maxReplicas" label="最大副本数" min="0" description="填 0 表示不限制副本数（模拟器无网关，接受任意 QPS，扩到容量上限为止）" />
 
                         <FormField
                             control={form.control}
