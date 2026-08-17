@@ -30,7 +30,14 @@
 | `dashboard/frontend/my-app` | 校验、表单说明、表格/预览 ∞、默认值与模板、配置详解 |
 | `config/samples`、`docs/kubernetes/CRD_DESIGN.md`、`docs/reference/API_EXAMPLES.md` | 同步 0 = 无限制 |
 
+## 3.5 部署事故记录（已修复）
+
+- `make deploy`（config/default）覆盖 controller 时丢掉 dev 栈的 `SIMULATOR_IMAGE` env，controller 回落默认 `simulator:latest`（本地过期镜像，无 9090 端点），导致模拟器新副本 CrashLoop（探针 refused + 29s 优雅退出循环）。
+- 已用 `kubectl kustomize config/dev | kubectl apply -f -` 恢复 env 并重启 controller；模拟器 Deployment 模板被纠正回 `hello-k8s-ai-simulator:dev`，CrashLoop RS 缩到 0，实例恢复 Running 并继续扩缩（实测 REPLICAS 10→12）。
+- 坑位已沉淀：`docs/agents/KNOWN_PITFALLS.md`「集群操作与部署」新增条目。
+
 ## 4. 未验证 / 风险
+
 
 - 未对运行集群做“扩容超过 10 副本”的真实压测；真实上限由节点并发容量决定（model-lite 每副本 16 并发，2 个 desktop-worker 节点）。
 - 集群内已有 `orch-core` 仍是 `maxReplicas: 10`，需手动改为 0 才生效（见 MIGRATION_AND_ROLLBACK.md）。

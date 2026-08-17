@@ -301,6 +301,14 @@
 - 验证：本次部署后手动重建转发，8080/guide 恢复 200。
 
 ## 集群操作与部署
+### 2026-08-17 更新 Controller 必须用 config/dev 部署，make deploy(config/default) 会丢掉 SIMULATOR_IMAGE env
+- 现象：`make deploy`（kustomize config/default）更新 controller 后，SimulatorInstance Controller 重建模拟器 Deployment，新 Pod 用 `simulator:latest`（本地很老、无 9090 端点的镜像）→ readiness/liveness 探针 connection refused → 29s 优雅退出循环（Exit 0 + Completed，易误判为正常退出）。
+- 原因：dev 栈的 `SIMULATOR_IMAGE=hello-k8s-ai-simulator:dev` env 在 `config/dev/manager-observability-patch.yaml` 里，`make deploy` 用 `config/default` 不含该 patch，apply 覆盖 Deployment 后 env 丢失，controller 回落默认 `simulator:latest`；本地 `simulator:latest` 是过期镜像。
+- 解决：dev 集群更新 controller 一律 `kubectl kustomize config/dev | kubectl apply -f -`（幂等），之后 rollout restart；不要用 `make deploy`。判断依据：`kubectl get deploy hello-k8s-ai-controller-manager -n hello-k8s-ai-system -o yaml | grep SIMULATOR_IMAGE` 应有值。
+- 验证：config/dev 重部署后 controller 重建模拟器 Deployment 模板为 `hello-k8s-ai-simulator:dev`，CrashLoop 的 RS 缩到 0，实例恢复 Running 并继续扩缩（本次实测 REPLICAS 10→12）。
+- 备注：`simulator:latest` 默认值仅用于 CI/隔离环境；本机 dev 栈镜像 tag 是 `hello-k8s-ai-simulator:dev`（Makefile SIMULATOR_IMG）。
+
+
 
 ### 2026-08-16 Simulator Pod 调度绑定 WorkerNode 名：虚拟节点名无法调度
 - 现象：用虚拟节点名（如 node-gpu-1）创建 WorkerNode 并建 TenantNodePolicy 后，SimulatorInstance 副本一直 Pending，`describe` 显示 node selector 匹配不到真实节点。
