@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -362,6 +363,16 @@ func upsertSimulatorContainer(
 	})
 	container.LivenessProbe = httpProbe("/healthz", "metrics", 2)
 	container.ReadinessProbe = httpProbe("/readyz", "metrics", 1)
+	container.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("50m"),
+			corev1.ResourceMemory: resource.MustParse("64Mi"),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("500m"),
+			corev1.ResourceMemory: resource.MustParse("256Mi"),
+		},
+	}
 	container.SecurityContext = &corev1.SecurityContext{
 		AllowPrivilegeEscalation: new(false),
 		ReadOnlyRootFilesystem:   new(true),
