@@ -1,5 +1,7 @@
 # OpenTelemetry
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：internal/observability/、config/observability/
+
 ## 1. 作用
 
 OpenTelemetry 为 Controller Reconcile、业务操作、Simulator Tick、leader 变化和 Kubernetes client 请求建立 Trace。它回答“一次控制循环内部做了什么、哪里耗时/失败”，而不是保存资源当前态。

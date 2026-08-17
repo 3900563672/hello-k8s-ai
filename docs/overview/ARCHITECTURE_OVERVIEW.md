@@ -1,5 +1,7 @@
 # 架构总览
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：internal/controller/、cmd/
+
 ## 1. 系统分层
 
 ```mermaid

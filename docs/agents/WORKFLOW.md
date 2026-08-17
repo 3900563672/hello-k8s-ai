@@ -1,6 +1,6 @@
 # Agent 工作流
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
+> 维护层：agent | last-reviewed：2026-08-18 | 事实源：源码与 docs/agents/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/README.md](../remote-ai/README.md)。
 

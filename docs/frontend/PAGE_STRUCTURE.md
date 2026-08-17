@@ -1,5 +1,7 @@
 # 页面结构
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/traffic/、dashboard/frontend/my-app/src/components/features/config/ 等
+
 ## 1. 实际路由与产品概念
 
 用户要求的五个概念在当前实现中不是五条独立路由：

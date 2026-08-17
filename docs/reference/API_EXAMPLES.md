@@ -1,5 +1,7 @@
 # API 示例
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/api/
+
 示例假设 Backend 在 `http://localhost:8080`。生产环境必须通过认证/TLS；不要复制开发凭据。
 
 ```bash

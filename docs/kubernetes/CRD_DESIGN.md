@@ -1,5 +1,7 @@
 # CRD 设计
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：api/v1/
+
 ## 1. 通用约定
 
 - API Group/Version：`platform.study.com/v1`。

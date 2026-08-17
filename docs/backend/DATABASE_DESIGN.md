@@ -1,5 +1,7 @@
 # Database 设计
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/store/、dashboard/backend/deploy/
+
 ## 1. 角色和边界
 
 PostgreSQL 是 Dashboard 的历史、审计和可靠命令辅助存储。它回答“过去采集到什么、谁提交过什么、该幂等键是否执行过”，不回答“当前 CR/Pod 真相是什么”。

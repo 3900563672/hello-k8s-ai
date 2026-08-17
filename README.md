@@ -2,7 +2,18 @@
 
 hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型、逻辑 WorkerNode 和 Simulator 时间倍速；七个 Controller 将配置与策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
 
-第一次接手项目时，请先读 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。想用 AI 协作开发，先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。
+## 文档入口
+
+文档按读者分层，各层独立维护、互不串读；变更历史统一归档：
+
+| 读者 | 入口 |
+| --- | --- |
+| 人类 | [docs/INDEX.md](docs/INDEX.md)（专题索引）；想快速入门读 [PROJECT_OVERVIEW_NEW.md](PROJECT_OVERVIEW_NEW.md) |
+| 能操作本机的 Agent（Codex、Claude Code） | [AGENTS.md](AGENTS.md) + [docs/agents/README.md](docs/agents/README.md) |
+| 只在自己工作区、收打包内容的远程 AI | [docs/remote-ai/llms.txt](docs/remote-ai/llms.txt)，包内先读 `CONTEXT_PACK.md` |
+| 全部读者 | 变更历史 [change-history/README.md](change-history/README.md)；最近 5 条见下方时间线 |
+
+想用 AI 协作开发，人类可先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。
 
 ## 最省事的部署方式
 
@@ -100,7 +111,7 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 | Simulator 运行时倍速（1x..20x） | 已实现；只加速离散事件引擎，不改变 Controller 冷却、数据新鲜度或历史时间 |
 | Backend Kubernetes cache、PostgreSQL、Prometheus、Jaeger 聚合 | 已实现 |
 | React Config、Traffic、Data Overview | 已接真实 Backend；Traffic Overlay 提交仍是部分实现 |
-| 预置配置模板与“从模板新建” | 已实现；模板只预填表单，提交与运行由用户决定 |
+| 预置配置模板与"从模板新建" | 已实现；模板只预填表单，提交与运行由用户决定 |
 | 参数与填写指南（/guide） | 已实现；集中展示字段含义、默认值与系统常量 |
 | 干净环境一键启动（默认无演示数据） | 已实现；DEMO_ENABLED=true 可恢复演示链路 |
 | Docker Desktop 完整栈一键部署 | 已实现；需要在目标机器执行真实运行验收 |

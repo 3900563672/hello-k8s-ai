@@ -1,5 +1,7 @@
 # 时间、倍速与历史回看
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/store/
+
 ## 1. 当前时间域
 
 | 时间/状态 | 来源 | 当前语义 |

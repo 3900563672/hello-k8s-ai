@@ -1,5 +1,7 @@
 # 本地运行
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：config/samples/、config/demo/ 等
+
 ## 1. 完整系统
 
 覆盖项目文件后只执行：

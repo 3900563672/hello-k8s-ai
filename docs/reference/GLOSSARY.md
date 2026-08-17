@@ -1,5 +1,7 @@
 # 术语表
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 | 术语 | 定义 | 不等于 |
 | --- | --- | --- |
 | Actual/Server Time | Backend 的真实 UTC 墙钟 | 可加速仿真时间 |

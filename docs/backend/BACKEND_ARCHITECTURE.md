@@ -1,5 +1,7 @@
 # Backend 架构
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/kubernetes/、dashboard/backend/internal/api/ 等
+
 ## 1. Backend 的角色
 
 Dashboard Backend 是 Backend-for-Frontend、Read Model Aggregator 和受控 Command Gateway。它把 Kubernetes 的领域对象、Prometheus 时间序列、Jaeger Trace 与 PostgreSQL 历史转换为页面可稳定消费的契约。

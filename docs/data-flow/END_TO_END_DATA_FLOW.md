@@ -1,5 +1,7 @@
 # 端到端数据流
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 ## 1. 完整闭环
 
 ```mermaid
