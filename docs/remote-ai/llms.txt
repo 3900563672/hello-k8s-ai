@@ -1,0 +1,46 @@
+# hello-k8s-ai
+
+> hello-k8s-ai 是一个以 Kubernetes API 为唯一事实源的 AI 推理调度与仿真平台：React Frontend → Dashboard Backend → CRD → Controller → Simulator → Prometheus / OpenTelemetry / Jaeger → Backend 聚合展示。
+> 阅读顺序：先本索引，再按任务读源码与 change-history/；事实以源码、生成清单和可执行测试为准。
+
+- [docs/INDEX.md](docs/INDEX.md): 文档总索引
+- [docs/README.md](docs/README.md): hello-k8s-ai 文档体系
+- [docs/backend/API_DESIGN.md](docs/backend/API_DESIGN.md): API 设计
+- [docs/backend/BACKEND_ARCHITECTURE.md](docs/backend/BACKEND_ARCHITECTURE.md): Backend 架构
+- [docs/backend/DATABASE_DESIGN.md](docs/backend/DATABASE_DESIGN.md): Database 设计
+- [docs/backend/DATA_AGGREGATION.md](docs/backend/DATA_AGGREGATION.md): 数据聚合
+- [docs/data-flow/END_TO_END_DATA_FLOW.md](docs/data-flow/END_TO_END_DATA_FLOW.md): 端到端数据流
+- [docs/data-flow/EVENT_FLOW.md](docs/data-flow/EVENT_FLOW.md): 事件流
+- [docs/data-flow/TIME_AND_REPLAY.md](docs/data-flow/TIME_AND_REPLAY.md): 时间、倍速与历史回看
+- [docs/frontend/DATA_FLOW.md](docs/frontend/DATA_FLOW.md): Frontend 数据流
+- [docs/frontend/FRONTEND_ARCHITECTURE.md](docs/frontend/FRONTEND_ARCHITECTURE.md): Frontend 架构
+- [docs/frontend/PAGE_STRUCTURE.md](docs/frontend/PAGE_STRUCTURE.md): 页面结构
+- [docs/getting-started/AI_COLLABORATION.md](docs/getting-started/AI_COLLABORATION.md): 人类 × AI 协作手册
+- [docs/getting-started/DEPLOYMENT.md](docs/getting-started/DEPLOYMENT.md): 部署架构
+- [docs/getting-started/DEVELOPMENT_ENVIRONMENT.md](docs/getting-started/DEVELOPMENT_ENVIRONMENT.md): 开发环境
+- [docs/getting-started/LOCAL_RUN.md](docs/getting-started/LOCAL_RUN.md): 本地运行
+- [docs/getting-started/VERIFICATION.md](docs/getting-started/VERIFICATION.md): 验证指南
+- [docs/kubernetes/CONTROLLER_ARCHITECTURE.md](docs/kubernetes/CONTROLLER_ARCHITECTURE.md): Controller 架构
+- [docs/kubernetes/CRD_DESIGN.md](docs/kubernetes/CRD_DESIGN.md): CRD 设计
+- [docs/kubernetes/FIELD_OWNERSHIP.md](docs/kubernetes/FIELD_OWNERSHIP.md): 字段所有权
+- [docs/kubernetes/RESOURCE_LIFECYCLE.md](docs/kubernetes/RESOURCE_LIFECYCLE.md): 资源生命周期
+- [docs/observability/JAEGER.md](docs/observability/JAEGER.md): Jaeger
+- [docs/observability/OPENTELEMETRY.md](docs/observability/OPENTELEMETRY.md): OpenTelemetry
+- [docs/observability/PROMETHEUS.md](docs/observability/PROMETHEUS.md): Prometheus
+- [docs/operations/PRODUCTION_READINESS.md](docs/operations/PRODUCTION_READINESS.md): 生产就绪度
+- [docs/operations/SECURITY_AND_RBAC.md](docs/operations/SECURITY_AND_RBAC.md): 安全与 RBAC
+- [docs/operations/TROUBLESHOOTING.md](docs/operations/TROUBLESHOOTING.md): 排障
+- [docs/overview/ARCHITECTURE_OVERVIEW.md](docs/overview/ARCHITECTURE_OVERVIEW.md): 架构总览
+- [docs/overview/DESIGN_PHILOSOPHY.md](docs/overview/DESIGN_PHILOSOPHY.md): 设计哲学
+- [docs/overview/IMPLEMENTATION_RETROSPECTIVE.md](docs/overview/IMPLEMENTATION_RETROSPECTIVE.md): 实现复盘与工程评价
+- [docs/overview/PROJECT_OVERVIEW.md](docs/overview/PROJECT_OVERVIEW.md): 项目总览
+- [docs/overview/ROADMAP.md](docs/overview/ROADMAP.md): 路线图（ROADMAP）
+- [docs/reference/API_EXAMPLES.md](docs/reference/API_EXAMPLES.md): API 示例
+- [docs/reference/CONFIGURATION_REFERENCE.md](docs/reference/CONFIGURATION_REFERENCE.md): 配置参考
+- [docs/reference/GLOSSARY.md](docs/reference/GLOSSARY.md): 术语表
+- [docs/reference/SOURCE_MAP.md](docs/reference/SOURCE_MAP.md): 源码地图
+- [docs/simulator/SIMULATION_FLOW.md](docs/simulator/SIMULATION_FLOW.md): 仿真流程
+- [docs/simulator/SIMULATOR_ARCHITECTURE.md](docs/simulator/SIMULATOR_ARCHITECTURE.md): Simulator 架构
+- [docs/status.md](docs/status.md): 项目状态（生成）
+- [docs/whitepaper/BUILD_PDF.md](docs/whitepaper/BUILD_PDF.md): 从 Markdown 构建 PDF
+- [docs/whitepaper/COMPLETE_OVERVIEW.md](docs/whitepaper/COMPLETE_OVERVIEW.md): hello-k8s-ai 完整技术总览

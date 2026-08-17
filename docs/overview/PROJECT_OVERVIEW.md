@@ -79,5 +79,5 @@ flowchart LR
 
 - 理解分层与事实源：[ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
 - 理解设计取舍：[DESIGN_PHILOSOPHY.md](DESIGN_PHILOSOPHY.md)
-- 理解当前成熟度：[CURRENT_STATUS_AND_ROADMAP.md](CURRENT_STATUS_AND_ROADMAP.md)
+- 理解当前成熟度：[ROADMAP.md](ROADMAP.md)
 - 理解 CRD：[../kubernetes/CRD_DESIGN.md](../kubernetes/CRD_DESIGN.md)

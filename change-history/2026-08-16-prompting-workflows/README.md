@@ -12,8 +12,8 @@
 把"怎么给 AI 下任务"从零散经验沉淀为三份可复制的提示词协议，按读者分层：
 
 - 人类侧新增 [AI_COLLABORATION.md](../../docs/getting-started/AI_COLLABORATION.md)：任务五要素、五个可复制提示词模板（探索 / 最小改动 / 分批 / GitHub / 远程 AI）、好例子与坏例子、交付审核清单、协作节奏建议。
-- 本地 Agent 侧新增 [PROMPTING.md](../../docs/agents/PROMPTING.md)：任务五要素解析与默认假设、澄清协议、开工陈述模板、任务转交模板（给 Agent / 给远程 AI）、交付检查清单。
-- 远程 AI 侧新增 [PROMPTING.md](../../docs/remote-ai/PROMPTING.md)：收任务三步、产出组织规则、固定交接格式、红线（不假装验证）。
+- 本地 Agent 侧新增 [WORKFLOW.md 第 8 节](../../docs/agents/WORKFLOW.md)：任务五要素解析与默认假设、澄清协议、开工陈述模板、任务转交模板（给 Agent / 给远程 AI）、交付检查清单。
+- 远程 AI 侧新增 [README.md](../../docs/remote-ai/README.md)：收任务三步、产出组织规则、固定交接格式、红线（不假装验证）。
 
 ## 2. 关键行为
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 生成远程 AI 上下文包：CONTEXT_PACK.md + 源码 + AI 文档 + tar.gz
 # 输出到 .runtime/context-pack/（已被 .gitignore 忽略，不提交）
-# 用法：make context-pack           默认包（不含 docs/ 人类专题）
-#       make context-pack FULL=1    全量包（包含 docs/ 人类专题）
+# 用法：make context-pack           默认全量包（包含全部 docs/）
+#       make context-pack FULL=0    精简包（仅 docs/agents 与 docs/remote-ai）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,7 +17,7 @@ BRANCH="$(git -C "$ROOT" branch --show-current)"
 RECENT_COMMITS="$(git -C "$ROOT" log --oneline -10 | sed 's/^/  - /')"
 OPEN_ISSUES="$(gh issue list --state open --limit 20 -R 3900563672/hello-k8s-ai 2>/dev/null | sed 's/^/  /' || echo '  （无法读取：生成环境无 gh 或未认证）')"
 TREE="$(cd "$ROOT" && find api cmd internal simulator dashboard config docs change-history test -maxdepth 2 -type d 2>/dev/null | sort | sed 's/^/  /')"
-MODE="$([ "${FULL:-0}" = "1" ] && echo "full（包含 docs/ 人类专题）" || echo "default（不含 docs/ 人类专题）")"
+MODE="$([ "${FULL:-0}" = "0" ] && echo "default（不含 docs/ 人类专题）" || echo "full（包含全部 docs/，含 journal/lessons）")"
 
 # 用模板渲染 CONTEXT_PACK.md
 python3 - "$ROOT/hack/context-pack-template.md" "$PKG/CONTEXT_PACK.md" "$GENERATED_AT" "$BRANCH" "$RECENT_COMMITS" "$OPEN_ISSUES" "$TREE" "$MODE" <<'PYEOF'
@@ -34,7 +34,7 @@ open(out, "w", encoding="utf-8").write(text)
 PYEOF
 
 # 复制入口文件与根构建文件
-cp "$ROOT/AGENTS.md" "$ROOT/README.md" "$ROOT/PROJECT_OVERVIEW_NEW.md" "$ROOT/CHANGELOG.md" \
+cp "$ROOT/AGENTS.md" "$ROOT/README.md" "$ROOT/PROJECT_OVERVIEW_NEW.md" \
    "$ROOT/go.mod" "$ROOT/go.sum" "$ROOT/Makefile" "$ROOT/Dockerfile" "$ROOT/setup.sh" \
    "$ROOT/PROJECT" "$ROOT/.golangci.yml" "$ROOT/.custom-gcl.yml" "$PKG/" 2>/dev/null || true
 
@@ -43,10 +43,10 @@ cp -r "$ROOT/api" "$ROOT/cmd" "$ROOT/internal" "$ROOT/simulator" "$ROOT/config" 
 cp -r "$ROOT/dashboard" "$PKG/" 2>/dev/null || true
 
 # 文档：默认只带 AI 两层；FULL=1 时带全部
-if [ "${FULL:-0}" = "1" ]; then
-  cp -r "$ROOT/docs" "$PKG/"
-else
+if [ "${FULL:-0}" = "0" ]; then
   cp -r "$ROOT/docs/agents" "$ROOT/docs/remote-ai" "$PKG/docs/"
+else
+  cp -r "$ROOT/docs" "$PKG/"
 fi
 
 # 时间线（全部层共享）

@@ -1,23 +1,13 @@
 name: 文档检查
 
-on:
-  push:
-    paths:
-      - 'docs/**'
-      - 'change-history/**'
-      - '*.md'
-  pull_request:
-    paths:
-      - 'docs/**'
-      - 'change-history/**'
-      - '*.md'
+on: [push, pull_request]
 
 permissions:
   contents: read
 
 jobs:
   docs:
-    name: 文档链接检查
+    name: 文档链接与同步检查
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,6 +15,14 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          fetch-depth: 0
 
-      - name: 检查 Markdown 链接与图片路径
-        run: make docs-check
+      - name: 文档一致性（链接 / 白名单 / MAP 门禁 / 时间戳）
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            export DOCS_CHECK_BASE="origin/${{ github.base_ref }}"
+          fi
+          make docs-check
+
+      - name: 生成物一致性（docs-sync 后无差异）
+        run: make docs-sync-check

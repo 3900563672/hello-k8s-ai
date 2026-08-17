@@ -1,0 +1,94 @@
+# 源码路径 → 必须同 PR 更新的文档（make docs-check 的 MAP 门禁数据源）
+# 规则：
+# - 目录前缀（以 / 结尾）匹配该目录下全部文件；单文件键精确匹配。
+# - 命中多项映射时取最长匹配；命中后其映射文档必须出现在同一 PR/提交中。
+# - 生成物目录（config/crd/bases/、config/rbac/role.yaml、zz_generated）不单独映射，
+#   其源（api/v1/、internal/controller/）已映射；docs/、change-history/ 自身变化不触发。
+# - 新增文档必须在此登记；人类文档反向所有权表由 make docs-sync 渲染。
+api/v1/:
+  - docs/kubernetes/CRD_DESIGN.md
+  - docs/kubernetes/FIELD_OWNERSHIP.md
+  - docs/reference/CONFIGURATION_REFERENCE.md
+cmd/:
+  - docs/overview/ARCHITECTURE_OVERVIEW.md
+  - docs/kubernetes/CONTROLLER_ARCHITECTURE.md
+internal/controller/:
+  - docs/kubernetes/CONTROLLER_ARCHITECTURE.md
+  - docs/kubernetes/RESOURCE_LIFECYCLE.md
+  - docs/kubernetes/FIELD_OWNERSHIP.md
+  - docs/overview/ARCHITECTURE_OVERVIEW.md
+internal/k8sutil/:
+  - docs/kubernetes/CONTROLLER_ARCHITECTURE.md
+internal/observability/:
+  - docs/observability/OPENTELEMETRY.md
+  - docs/observability/JAEGER.md
+simulator/:
+  - docs/simulator/SIMULATOR_ARCHITECTURE.md
+  - docs/simulator/SIMULATION_FLOW.md
+  - docs/observability/PROMETHEUS.md
+dashboard/backend/cmd/:
+  - docs/backend/BACKEND_ARCHITECTURE.md
+dashboard/backend/internal/api/:
+  - docs/backend/API_DESIGN.md
+  - docs/backend/BACKEND_ARCHITECTURE.md
+  - docs/reference/API_EXAMPLES.md
+  - docs/frontend/DATA_FLOW.md
+dashboard/backend/internal/store/:
+  - docs/backend/DATABASE_DESIGN.md
+  - docs/data-flow/TIME_AND_REPLAY.md
+dashboard/backend/internal/readmodel/:
+  - docs/backend/DATA_AGGREGATION.md
+dashboard/backend/internal/providers/:
+  - docs/observability/PROMETHEUS.md
+  - docs/observability/JAEGER.md
+dashboard/backend/internal/kubernetes/:
+  - docs/backend/BACKEND_ARCHITECTURE.md
+dashboard/backend/internal/:
+  - docs/backend/BACKEND_ARCHITECTURE.md
+  - docs/data-flow/EVENT_FLOW.md
+dashboard/backend/deploy/:
+  - docs/getting-started/DEPLOYMENT.md
+  - docs/backend/DATABASE_DESIGN.md
+dashboard/frontend/my-app/src/components/features/config/:
+  - docs/frontend/PAGE_STRUCTURE.md
+  - docs/frontend/FRONTEND_ARCHITECTURE.md
+dashboard/frontend/my-app/src/components/features/traffic/:
+  - docs/frontend/PAGE_STRUCTURE.md
+  - docs/frontend/DATA_FLOW.md
+dashboard/frontend/my-app/src/components/features/trace/:
+  - docs/frontend/PAGE_STRUCTURE.md
+  - docs/frontend/DATA_FLOW.md
+dashboard/frontend/my-app/src/components/features/guide/:
+  - docs/frontend/PAGE_STRUCTURE.md
+  - docs/reference/CONFIGURATION_REFERENCE.md
+dashboard/frontend/my-app/src/:
+  - docs/frontend/FRONTEND_ARCHITECTURE.md
+  - docs/frontend/DATA_FLOW.md
+config/observability/:
+  - docs/observability/PROMETHEUS.md
+  - docs/observability/JAEGER.md
+  - docs/observability/OPENTELEMETRY.md
+  - docs/frontend/PAGE_STRUCTURE.md
+config/prometheus/:
+  - docs/observability/PROMETHEUS.md
+config/rbac/:
+  - docs/operations/SECURITY_AND_RBAC.md
+  - docs/reference/CONFIGURATION_REFERENCE.md
+config/dev/:
+  - docs/getting-started/DEPLOYMENT.md
+  - docs/getting-started/LOCAL_RUN.md
+config/demo/:
+  - docs/getting-started/DEPLOYMENT.md
+  - docs/getting-started/LOCAL_RUN.md
+config/default/:
+  - docs/getting-started/DEPLOYMENT.md
+config/manager/:
+  - docs/getting-started/DEPLOYMENT.md
+config/samples/:
+  - docs/getting-started/DEPLOYMENT.md
+  - docs/getting-started/LOCAL_RUN.md
+setup.sh:
+  - docs/getting-started/DEPLOYMENT.md
+hack/:
+  - docs/getting-started/DEPLOYMENT.md
+  - docs/operations/TROUBLESHOOTING.md

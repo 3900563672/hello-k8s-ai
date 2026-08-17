@@ -141,4 +141,4 @@ PostgreSQL 有 `clock_state` scaffold，Frontend 有时间条，但 Controller/S
 4. 加生产安全和持久化，再谈对外部署。
 5. 用新 CRD 设计真正的仿真时间与实验可复现性。
 
-详细优先级见 [CURRENT_STATUS_AND_ROADMAP.md](CURRENT_STATUS_AND_ROADMAP.md)。
+详细优先级见 [ROADMAP.md](ROADMAP.md)。
