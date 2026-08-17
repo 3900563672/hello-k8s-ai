@@ -4,7 +4,7 @@
 
 1. 文档按读者分层：人类看 `docs/` 与根目录 README；能操作本机的 Agent 看本文件与 `docs/agents/`；只收打包内容的远程 AI 看 `docs/remote-ai/`。
 2. 每次任务先读 `docs/agents/README.md` 与 `docs/agents/WORKFLOW.md`，按流程判断是否需要建 issue。
-3. 动手前扫一遍 `docs/agents/KNOWN_PITFALLS.md`。
+3. 动手前扫一遍 `docs/journal/` 与 `docs/lessons/`（踩坑流水账与蒸馏规则）。
 4. 涉及 CRD、Controller 或写 API 时，先核对 `docs/agents/PRINCIPLES.md` 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
 5. 涉及 GitHub Issue / Project 看板 / 批量任务时，先读 `docs/agents/PROJECT_REVIEW.md`（看板状态机与闭环规则，只动 `Approved` 条目）。
 

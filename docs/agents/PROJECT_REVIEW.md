@@ -52,7 +52,7 @@ flowchart LR
 1. 扫描：从 `project-review/` 与代码中提取候选问题，建 issue 并链接卡片，状态置 `To do`。
 2. 审核：用户把卡片置 `Approved`（或打回 `In review` 补充说明）。
 3. 执行：Agent 只取 `Approved` 条目，按 WORKFLOW.md 开发与验证，开工置 `In progress`，提交 `Fixes #N`。
-4. 交付：issue 自动关闭，卡片置 `Done`，追加 change-history 条目并按 SYNC.md 同步。
+4. 交付：issue 自动关闭，卡片置 `Done`，追加 change-history 条目并按 WORKFLOW.md 第 9 节同步。
 5. 归档：一批完成后 `item-archive` 归档卡片，汇报本批结果与下一批候选。
 
 

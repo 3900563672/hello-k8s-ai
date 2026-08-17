@@ -19,24 +19,7 @@
 
 ## 2. 字段所有权速查
 
-| 对象/字段 | 唯一或主要写入者 | 备注 |
-| --- | --- | --- |
-| 用户可写 CR `spec` | kubectl / Dashboard Backend Command Gateway | Backend 仅允许 7 种配置 CR；不允许写派生 CR。 |
-| `Model.spec.absoluteScore` | kubectl / Dashboard Backend Command Gateway | 必填正整数；模型能力配置的唯一权威来源。旧 `status.absoluteScore` 只读兼容。 |
-| `SimulatorInstance.spec.replicas` | Orchestrator | TenantModelPolicy 创建时初始为 0。 |
-| `SimulatorInstance.spec.traffic.qps` | Traffic Controller | Frontend 应改 Tenant.spec.qps，而不是直接改实例分配。 |
-| `SimulationClock/default.spec.rate` | kubectl / Dashboard Backend 专用 Clock API | 1..20；集群唯一配置，不通过通用配置白名单写入。 |
-| `SimulationClock.status` | SimulationClock Controller | 记录 generation、目标倍速向实例的同步计数和 Ready。 |
-| `SimulatorInstance.spec.timeScale` | SimulationClock Controller | 从全局 Clock 派生；Simulator 每个真实 Tick 读取。 |
-| `SimulatorInstance.status.phase/availableReplicas/Ready` | SimulatorInstance Controller | 从 Deployment 收敛状态获得。 |
-| `SimulatorInstance.status.effectiveScore` | Orchestrator | 扩容选择输出。 |
-| `SimulatorInstance.status.score/performance/observedAt/reporterID` | Simulator Leader | 非 Leader 不写。 |
-| `TenantPerformance.status` | PerformanceCollector | 只聚合新鲜 Running 样本。 |
-| `TenantRuntime.status` | SimulatorInstance Controller | `instanceCount` 实际是可用副本合计，不是 CR 数。 |
-| `WorkerNode.status.usedGPU/usedConcurrency` | WorkerNodeUsage Controller | 根据已调度的非终态 Simulator Pod 推算。 |
-| `Orchestrator.status` | Orchestrator | 含动作、原因、冷却时间。 |
-| `Orchestrator.spec.maxReplicas` | kubectl / Dashboard Backend Command Gateway | 必填非负整数；0 表示不限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）。 |
-| PostgreSQL 当前态 | 无 | DB 只存历史/审计/索引，不能拥有最新 Kubernetes 状态。 |
+完整字段所有权见 [docs/kubernetes/FIELD_OWNERSHIP.md](../kubernetes/FIELD_OWNERSHIP.md)，以源码与生成清单为准。本文件不再复制速查表（避免双源漂移）；涉及"谁能写哪个字段"的结论一律以该文档 + `api/v1/*_types.go` 为准。
 
 ## 3. 七个 Controller 的真实名称
 

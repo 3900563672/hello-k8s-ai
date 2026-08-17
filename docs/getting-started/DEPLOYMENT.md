@@ -96,3 +96,32 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 ## 7. 生产边界
 
 当前方案针对受控本机开发环境。Prometheus/Jaeger/Grafana 未持久化，PostgreSQL 单副本，未配置 OIDC、用户级授权、TLS、完整 NetworkPolicy、备份或 HA。不要把本地一键成功写成生产就绪。
+
+## 部署约束与静态工作负载（原 operations/CLUSTER_INFORMATION 第 5/6 节，2026-08-18 并入）
+
+## 5. 仓库部署约束
+
+| 项目 | 声明值 |
+| --- | --- |
+| Context | `docker-desktop` |
+| Namespace | `hello-k8s-ai-system` |
+| StorageClass | `standard` |
+| 镜像交付 | Docker build/save + 每 Node `ctr -n k8s.io images import` |
+| 动态 WorkerNode | 从非 control-plane Kubernetes Node 名生成 |
+| 数据库 | PostgreSQL 17，10Gi PVC，随机 Secret |
+| 停止语义 | 工作负载缩到 0，保留集群/CRD/CR/Secret/PVC |
+
+## 6. 部署后应出现的静态工作负载
+
+| Kind | Name | 副本 |
+| --- | --- | ---: |
+| Deployment | `hello-k8s-ai-controller-manager` | 1 |
+| Deployment | `hello-k8s-ai-otel-collector` | 1 |
+| Deployment | `hello-k8s-ai-jaeger` | 1 |
+| Deployment | `hello-k8s-ai-prometheus` | 1 |
+| Deployment | `hello-k8s-ai-grafana` | 1 |
+| StatefulSet | `hello-k8s-ai-dashboard-postgresql` | 1 |
+| Deployment | `hello-k8s-ai-dashboard-backend` | 1 |
+| Deployment | `hello-k8s-ai-dashboard-frontend` | 1 |
+
+Controller 还会按 SimulatorInstance 动态创建 `simulator-<instance>` Deployment。

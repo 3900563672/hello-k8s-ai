@@ -66,11 +66,11 @@
 
 ## 3.5 宿主内存预算与治理（31.4GB 机器，2026-08-17 实测）
 
-- **总预算**：物理 31.4GB。WSL2 VM 上限 12GB（`.wslconfig`，见 KNOWN_PITFALLS），Windows 侧进程约 17-20GB。
+- **总预算**：物理 31.4GB。WSL2 VM 上限 12GB（`.wslconfig`，见 docs/lessons/process-host-sleep-freeze.md），Windows 侧进程约 17-20GB。
 - **VM 内固定开销（实测）**：Docker Desktop 内置 K8s 每节点容器（kubelet/containerd/kindnet）约 0.8-1.2GB，`KubernetesNodesCount=10` 时 **10 节点 ≈ 8-10GB**，加上可观测组件（Prometheus/Jaeger/Collector/Grafana/Backend/PG ≈ 2-3GB），VM 已接近 12GB 上限，**几乎没给模拟器负载留空间**。
 - **结论**：日常开发必须缩减节点数（10→4~5，省 4-6GB）后才谈得上跑负载；缩减前先备份 CRD/CR/PVC（改节点数可能重置内置 K8s，见 Issue #29 待办）。
 - **负载预算公式**：`可跑模拟负载 = 12GB - 节点开销(节点数×~1GB) - 可观测 2.5GB - 系统余量 1GB`。例：5 节点 → 12 - 5 - 2.5 - 1 ≈ 3.5GB 余量，约等于 30-50 个模拟器 Pod（每个 ~50-80MB）；10 节点 → 余量 < 0，必爆。
-- **长跑后强制清理（硬步骤）**：长时运行/大负载测试结束后必须：① `make cluster-down`；② 删除长跑 `TenantModelPolicy`（自动删除 SimulatorInstance 与模拟器 Deployment；`replicas=0` 不是停止态，Orchestrator 会按流量扩容，见 KNOWN_PITFALLS）；③ 确认 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件（≤8 个）；④ Windows 侧确认空闲内存 ≥ 5GB。
+- **长跑后强制清理（硬步骤）**：长时运行/大负载测试结束后必须：① `make cluster-down`；② 删除长跑 `TenantModelPolicy`（自动删除 SimulatorInstance 与模拟器 Deployment；`replicas=0` 不是停止态，Orchestrator 会按流量扩容，见 docs/lessons/deploy-cluster-down-revive.md）；③ 确认 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件（≤8 个）；④ Windows 侧确认空闲内存 ≥ 5GB。
 - **内存告警阈值（建议）**：`vmmemWSL > 11GB` 或 Windows 空闲内存 < 2GB 时停止新增负载并清理（本轮后接入 preflight 检查）。
 ## 4. 长时运行验收清单（2026-08-17 14:00-18:00 已完成）
 
@@ -79,7 +79,7 @@
 - [x] 4 小时连续运行无 CrashLoop、无 keepalive/snapshot 失败（20 轮 0 失败）。
 - [x] 基线 300 QPS 下 queue≈0、TTFT ~320ms、副本稳定（141）。
 - [x] 峰值 650 QPS 触发队列与批量扩容：141→200 共 10 批（60s/批，+10×4/+5×2/+2×4 按队列缺口自适应），撞节点容量顶（200）。
-- [x] 峰值结束后队列排空（到顶后 ~6 分钟）、TTFT 回落 320ms；扩容节奏在 PG `resource_events` 5s 序列可见（rounds/ 快照粒度太粗，见 KNOWN_PITFALLS）。
+- [x] 峰值结束后队列排空（到顶后 ~6 分钟）、TTFT 回落 320ms；扩容节奏在 PG `resource_events` 5s 序列可见（rounds/ 快照粒度太粗，见 docs/journal/2026-08-17-longrun-tools.md）。
 - [x] 18:14 脚本恢复 35qps（旧版 --until 缺陷多跑一轮，已修复为整点停止）；副本保持 200 属预期（缩容滞回，见 3.4）。
 - [ ] 降级演练（可选，单组件逐项）：停 Prometheus / Grafana / Jaeger / PG 后系统继续扩缩；恢复后无数据损坏。
 - [ ] Simulator Leader 手动删除后 ≤30s 新 Leader 接管，性能指标继续，`SimulationElapsedMs` 不回退。

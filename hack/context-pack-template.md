@@ -7,9 +7,9 @@
 ## 1. 包内容与阅读策略
 
 - 包模式：__MODE__
-- 包含：`CONTEXT_PACK.md`、源码（api/cmd/internal/simulator/dashboard/config/test）、`docs/agents/`、`docs/remote-ai/`、`change-history/`、`AGENTS.md`、`PROJECT_OVERVIEW_NEW.md`（背景一页）、`Makefile` 与 `go.mod`。
-- 默认**不包含** `docs/` 人类专题（叙事 / 教程 / 白皮书）；需要时请用户生成 FULL 包：`make context-pack FULL=1`。
-- 阅读顺序：先本文件 → `docs/remote-ai/` → 按任务读源码与 `change-history/`。
+- 包含：`CONTEXT_PACK.md`、源码（api/cmd/internal/simulator/dashboard/config/test）、全部 `docs/`（人类专题 + journal/lessons + `remote-ai/llms.txt`）、`change-history/`、`AGENTS.md`、`PROJECT_OVERVIEW_NEW.md`（初学者入口）、`Makefile` 与 `go.mod`。
+- 默认全量包（`make context-pack`，含全部 `docs/`）；`FULL=0` 可生成精简包（仅 `docs/agents/` 与 `docs/remote-ai/`）。
+- 阅读顺序：先本文件 → `docs/remote-ai/llms.txt`（文档索引）→ 按任务读源码与 `change-history/`。
 - 人类文档不是事实源；事实以源码、生成清单与 `change-history/` 为准。
 
 ## 2. 项目一句话
@@ -60,10 +60,10 @@ __TREE__
 ## 7. 文档分层
 
 - 人类：根目录 `README.md`、`PROJECT_OVERVIEW_NEW.md`（初学者）、`docs/INDEX.md`。
-- 本地 Agent（能操作本机）：`AGENTS.md`、`docs/agents/`。
-- 远程 AI（你）：`docs/remote-ai/`（本包已包含全部）。
+- 本地 Agent（能操作本机）：`AGENTS.md`、`docs/agents/`、`docs/journal/` 与 `docs/lessons/`。
+- 远程 AI（你）：`docs/remote-ai/README.md` + `llms.txt`（本包已包含全部）。
 
-## 7. 验证命令速查（由本地 Agent 执行，你只能引用）
+## 8. 验证命令速查（由本地 Agent 执行，你只能引用）
 
 - Go 控制面：`make fmt` / `make vet` / `make test` / `make lint`
 - Dashboard Backend：`gofmt -w . && go vet ./... && go test ./...`

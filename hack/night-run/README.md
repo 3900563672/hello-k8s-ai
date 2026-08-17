@@ -32,7 +32,7 @@
 - 一切动作带 UTC 时间戳；问题档案原始文件不入库，摘要进 `change-history/`。
 - Phase A 不推任何代码；Phase B 按决策矩阵处理（小改直接改、契约变化建 issue）。
 - 不改 UI；不截图验证；不 `wsl --shutdown`；不强杀 Docker Desktop；不动代理（127.0.0.1:7890）；不重建集群。
-- Pod 卡 Init 且节点 IP 重复时，删 Pod 让其重调度（已知坑，见 docs/agents/KNOWN_PITFALLS.md）。
+- Pod 卡 Init 且节点 IP 重复时，删 Pod 让其重调度（已知坑，见 docs/journal/2026-08-16-cluster-and-deploy.md）。
 - API 写操作需要 `Idempotency-Key` 头（≤200 安全字符）；当前部署 `ADMIN_TOKEN` 未配置，非生产环境匿名写可用。
 - 实测边界（2026-08-17 首次执行）：rate 有效范围 1–20；租户名为 `tenant-core`；50qps@10 副本触发队列积压（35qps 健康）；副本由 Orchestrator 控制，`kubectl scale` 不可用。
 
@@ -63,7 +63,7 @@ setsid nohup node hack/night-run/day-watch.mjs --loop --interval 900 --until 18:
 - 产物统一落 `.runtime/longrun/<日期>/`：`rounds/` 每轮完整记录（JSON，含 keepalive/snapshot 全量与 kubectl 采集）、`snapshots/` 指标快照、`metric-samples/` 峰值中点采样、`meta.json`（run 窗口，summary 只统计本次 run）、结束时 `summary.md`（轮次统计 / 扩缩容事件 / 轮内指标 / 快照指标 / 趋势）。日志与快照不再分家。
 - 启动前强制 preflight：`start-longrun.sh` 先跑 `bash hack/preflight.sh`（`PREFLIGHT_REQUIRE_GUARD=1`：sleep-guard 未开启视为 FAIL），任一 FAIL 项直接不启动，先修复再跑。
 - 轮次间隔按"上一轮实际耗时"补足，长跑不漂移；异常只记录不折腾（维持模式），事后由 Agent 读 rounds/快照一次性分析。
-- 停止：`kill <PID>`（`ps aux | grep day-watch` 查 PID）。运行前确认 `sleep-guard.sh status` 为 `guard=on`、Backend 18080 可达（WSL 内脚本专用端口；8080 是 Windows 浏览器入口，见 KNOWN_PITFALLS）。
+- 停止：`kill <PID>`（`ps aux | grep day-watch` 查 PID）。运行前确认 `sleep-guard.sh status` 为 `guard=on`、Backend 18080 可达（WSL 内脚本专用端口；8080 是 Windows 浏览器入口，见 docs/journal/2026-08-16-cluster-and-deploy.md）。
 
 ## 手动运行
 
