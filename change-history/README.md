@@ -4,6 +4,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-18 | 降级演练缺陷修复：告警表达式三修 + 模拟器容器资源限制（Fixes #30） | P1 | [查看记录](2026-08-18-alert-drill-fixes/README.md) |
 | 2026-08-18 | 宿主工具链恢复：Codex 配置自修复 + 整机重启恢复顺序 + gocyclo 处理 | P2 | [查看记录](2026-08-18-host-toolchain-recovery/README.md) |
 | 2026-08-17 | 稳定性恢复顺序：运行前体检（preflight）+ 工具链自检（selfcheck）+ Prometheus 内存/重启告警 | P1 | [查看记录](2026-08-17-stability-recovery/README.md) |
 | 2026-08-17 | 宿主内存治理：WSL2 内存爆满根因修复（.wslconfig + 负载清零 + Jaeger 校准） | P0 | [查看记录](2026-08-17-host-memory-governance/README.md) |

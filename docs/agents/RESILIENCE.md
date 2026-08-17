@@ -1,6 +1,6 @@
 # 稳定性与优雅降级矩阵（RESILIENCE）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-stability-recovery/
+> 维护层：agents ｜ 最后同步：2026-08-18 ｜ 对应变更：change-history/2026-08-18-alert-drill-fixes/
 > 目的：组件挂掉后系统"应该怎样表现"的对照表；长时运行前按此矩阵做验收（验收暂未执行）。
 
 ## 1. 总原则
@@ -36,8 +36,8 @@
 | HelloK8sAITraceExportFailure | OTel Collector 导出 span 失败 | Trace 链路中断 | 查 collector 与 Jaeger |
 | HelloK8sAISimulatorLeaderMissing | 实例池无 Leader 持续 1 分钟 | 状态/性能指标停更，Orchestrator 将暂停扩缩 | 查模拟器租约与 Pod |
 | HelloK8sAIDashboardEventsDropped | 历史事件丢弃/写失败持续 5 分钟 | 时间线将出现缺口 | 查 backend 缓冲与 PG |
-| HelloK8sAIContainerMemoryHigh | 容器内存 >85% limit 持续 10 分钟（`hello-k8s-ai.*` 命名空间） | 内存逼近上限，可能 OOMKilled | 按 3.5 预算规则清理负载或调 limit |
-| HelloK8sAIContainerRestarted | 容器 `container_start_time_seconds` 10 分钟内变化 | 容器重启（含首次部署噪音） | 查 `kubectl describe pod` 的 OOMKilled / Last State |
+| HelloK8sAIContainerMemoryHigh | 容器内存 >85% limit 持续 10 分钟（仅统计有 limit 的容器，无 limit 不参与） | 内存逼近上限，可能 OOMKilled | 按 3.5 预算规则清理负载或调 limit |
+| HelloK8sAIContainerRestarted | 组件容器 `container_start_time_seconds` 与 10 分钟前差值 >60s（按 namespace+container 聚合，排除 simulator） | 稳定组件容器重启 | 查 `kubectl describe pod` 的 OOMKilled / Last State；模拟器按实例扩缩容不触发 |
 
 抓取侧：Prometheus 现经 API Server proxy 抓 cAdvisor（`/api/v1/nodes/${1}/proxy/metrics/cadvisor`，RBAC `nodes/proxy`），容器内存与重启指标由此而来；kube-state-metrics 未部署，重启检测用 start_time 突变近似。
 
