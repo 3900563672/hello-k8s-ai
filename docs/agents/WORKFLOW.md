@@ -59,6 +59,8 @@ flowchart TD
 - Dashboard Backend：`gofmt -w . && go vet ./... && go test ./...`。
 - Frontend：`cd dashboard/frontend/my-app && npm ci && npm run check`。
 - 清单渲染：`kubectl kustomize config/dev`、`config/demo`、`dashboard/deploy`。
+- 一键启动 / 长跑前：先跑 `bash hack/preflight.sh`（FAIL 项必须修复才能启动；长跑由 `start-longrun.sh` 强制 `PREFLIGHT_REQUIRE_GUARD=1`）。
+- 工具链自检：`make selfcheck`（已并入 `make verify`）——全部 `*.sh` `bash -n`、`hack/*.mjs` `node --check`、三套清单渲染；脚本类改动必须过此项。
 - 文档：`make docs-check`；生成包：`make context-pack`。
 - UI / 视觉验证：需要“看”页面或监控面板时，用 [UI_VERIFICATION.md](UI_VERIFICATION.md)，一条命令截图 + 读面板文本。
 - CI：推送后等 workflow 全绿（代码检查 / 源码与部署验证 / E2E 测试；docs-only 改动只跑"文档检查"），轮询节奏见 4.1。

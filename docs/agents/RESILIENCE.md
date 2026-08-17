@@ -1,6 +1,6 @@
 # 稳定性与优雅降级矩阵（RESILIENCE）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-tooling-fixes/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-stability-recovery/
 > 目的：组件挂掉后系统"应该怎样表现"的对照表；长时运行前按此矩阵做验收（验收暂未执行）。
 
 ## 1. 总原则
@@ -26,6 +26,20 @@
 | SimulationClock（Controller） | timeScale 保持最后值 | 无 | 恢复后继续 |
 | Simulator Leader | 租约 15s/10s/2s；Leader 只运行引擎与状态上报，Follower 空闲 | 状态与性能指标停更 ≤15s；性能过期后 Orchestrator 暂停扩缩 | 新 Leader 接管，冷启动进度从 Status 恢复（`SimulationElapsedMs`），不归零 |
 | Simulator 全部副本 | 无引擎处理流量 → 性能指标无来源 → MetricsNotReady | 扩缩容暂停 | 副本拉起后恢复 |
+
+### 2.1 告警矩阵（2026-08-17 新增，含 cAdvisor 抓取）
+
+| 告警 | 触发条件 | 含义 | 处置 |
+| --- | --- | --- | --- |
+| HelloK8sAITargetDown | `up{job!="prometheus"} == 0` 持续 2 分钟 | 某抓取目标不可达 | 看对应组件 Pod 状态与日志 |
+| HelloK8sAIControllerErrorRatioHigh | Reconcile 错误比例 >5% 持续 5 分钟 | 控制器持续报错 | 查 controller 日志与 Trace |
+| HelloK8sAITraceExportFailure | OTel Collector 导出 span 失败 | Trace 链路中断 | 查 collector 与 Jaeger |
+| HelloK8sAISimulatorLeaderMissing | 实例池无 Leader 持续 1 分钟 | 状态/性能指标停更，Orchestrator 将暂停扩缩 | 查模拟器租约与 Pod |
+| HelloK8sAIDashboardEventsDropped | 历史事件丢弃/写失败持续 5 分钟 | 时间线将出现缺口 | 查 backend 缓冲与 PG |
+| HelloK8sAIContainerMemoryHigh | 容器内存 >85% limit 持续 10 分钟（`hello-k8s-ai.*` 命名空间） | 内存逼近上限，可能 OOMKilled | 按 3.5 预算规则清理负载或调 limit |
+| HelloK8sAIContainerRestarted | 容器 `container_start_time_seconds` 10 分钟内变化 | 容器重启（含首次部署噪音） | 查 `kubectl describe pod` 的 OOMKilled / Last State |
+
+抓取侧：Prometheus 现经 API Server proxy 抓 cAdvisor（`/api/v1/nodes/${1}/proxy/metrics/cadvisor`，RBAC `nodes/proxy`），容器内存与重启指标由此而来；kube-state-metrics 未部署，重启检测用 start_time 突变近似。
 
 ## 3. 容量校准公式（设计剧本前必须先算，2026-08-17 实测确立）
 

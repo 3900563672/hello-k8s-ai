@@ -4,6 +4,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-17 | 稳定性恢复顺序：运行前体检（preflight）+ 工具链自检（selfcheck）+ Prometheus 内存/重启告警 | P1 | [查看记录](2026-08-17-stability-recovery/README.md) |
 | 2026-08-17 | 宿主内存治理：WSL2 内存爆满根因修复（.wslconfig + 负载清零 + Jaeger 校准） | P0 | [查看记录](2026-08-17-host-memory-governance/README.md) |
 | 2026-08-17 | 可观测组件持久化（Prometheus/Jaeger PVC）+ 事件丢弃可观测化（指标 + TimelineGap） | P0 | [查看记录](2026-08-17-observability-persistence/README.md) |
 | 2026-08-17 | 时间段切面（Run Segment）：起点/终点全局状态 + 区间指标与 Trace | P1 | [查看记录](2026-08-17-run-segment/README.md) |

@@ -681,6 +681,11 @@ run_up() {
   step "部署前检查"
   check_context_and_cluster
 
+  step "运行前体检"
+  if ! bash hack/preflight.sh; then
+    fail "运行前体检未通过，先修复再启动（见上方 FAIL 项）。"
+  fi
+
   step "准备第三方运行镜像"
   pull_runtime_images
 

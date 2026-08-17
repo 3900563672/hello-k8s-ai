@@ -28,16 +28,11 @@ for pid in $(pgrep -f 'hack/night-run/day-watch.mjs' || true); do
 done
 sleep 2
 
-# 前置快查：18080 与 sleep-guard（脚本内还有完整 preflight，这里只提示）
-if ! curl -s -m 5 -o /dev/null http://localhost:18080/api/v1/health/live; then
-  echo "WARN: Backend 18080 不可达，脚本会继续启动（keepalive 会尝试恢复端口转发）" >&2
+# 运行前体检（长跑强制 sleep-guard；FAIL 项中止启动）
+if ! PREFLIGHT_REQUIRE_GUARD=1 bash hack/preflight.sh; then
+  echo "ERROR: 运行前体检未通过，长跑不启动（先修复上方 FAIL 项）。" >&2
+  exit 1
 fi
-guard="$(bash hack/night-run/sleep-guard.sh status 2>/dev/null | tail -1)"
-echo "sleep-guard: $guard"
-case "$guard" in
-  *guard=on*) ;;
-  *) echo "WARN: sleep-guard 未开启，长跑可能被宿主机休眠打断（需要 UAC 点确认）" >&2 ;;
-esac
 
 setsid nohup node hack/night-run/day-watch.mjs --loop --interval "$INTERVAL" \
   --until "$UNTIL" \
