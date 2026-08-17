@@ -1,6 +1,6 @@
 # 设计与修改原则（PRINCIPLES）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-tooling-fixes/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-run-segment/
 > 本文件汇总"不允许破坏的架构约束"与"修改规范"，原为 `docs/AI_CONTEXT.md` 第 3–7 节，2026-08-16 迁移至此。
 > 字段所有权完整版见 [docs/kubernetes/FIELD_OWNERSHIP.md](../kubernetes/FIELD_OWNERSHIP.md)。
 
@@ -116,3 +116,10 @@
 - 读路径降级边界：存储不可用、记录为空或查询失败时回退 informer 实时聚合，不返回伪造数据；历史回放（`at` 参数）继续读数据库快照。
 - `GET /api/v1/resources` 直接暴露当前态记录；存储不可用时返回 503 problem（与 `/replay` 风格一致）。
 - 当前态 `asOf` 取 `resource_states` 最新 `captured_at`（数据时间），不伪装成请求时间。
+
+### 时间段切面（Run Segment）
+
+- `GET /api/v1/segment?start=...&end=...` 是只读时间段聚合：起点/终点快照（`store.SnapshotAt`，各取"之前最近"）+ `[start,end]` 区间指标与 Trace + 段级覆盖告警；`start < end` 且窗口 ≤ 24h。
+- 任一端无快照或存储不可用 → `availability=unavailable` + 明确告警，不伪造数据（同"历史不能冒充当前"）。
+- 段查询不做"按事件重新执行"或"确定性回放"（AGENTS.md 边界不变）；它只是把既有快照流、Prometheus 区间与 Jaeger 区间组合成一次可分析的时间段。
+- 前端段面板选择起点/终点快照（时间轴项）发起查询；时间轴"标记起点/终点"的交互属 UI 阶段，不改变 API 语义。

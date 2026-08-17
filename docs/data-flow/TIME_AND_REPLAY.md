@@ -91,6 +91,10 @@ flowchart TD
 
 文案应使用“历史浏览/快照回看”。`simulationRun=false` 仍是正确能力声明；它与 `simulationRate=true` 不冲突。
 
+### 时间段切面（Run Segment）
+
+除点查询外，`GET /api/v1/segment?start=<RFC3339>&end=<RFC3339>` 提供**时间段切面**：返回起点快照（start 之前最近）、终点快照（end 之前最近）、`[start,end]` 区间的指标与 Trace，以及针对段起止点的覆盖告警。它回答"一次调度/实验从什么状态开始、到什么状态结束、中间发生了什么"，适合故障复盘与容量分析。约束：`start < end`、窗口上限 24 小时、任一端无快照时返回 `unavailable` 与明确告警（不伪造数据）。前端 trace 页的"时间段切面（Run Segment）"面板选择起点/终点快照后调用该接口。
+
 ## 6. 新鲜度与一致性
 
 Traffic/Performance 对 `SimulatorInstance.status.observedAt` 使用约 30 秒真实时间窗口。即使 rate=20，也不会把 freshness 缩成 1.5 秒。Orchestrator 的 scale-up/scale-down cooldown 同样使用真实时间，避免倍速调整意外绕过容量保护。

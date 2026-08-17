@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchOverview, fetchTrace } from '@/api/endpoints/traceApi'
-import type { OverviewQuery } from '@/types/trace.types'
+import { fetchOverview, fetchSegment, fetchTrace } from '@/api/endpoints/traceApi'
+import type { OverviewQuery, SegmentQuery } from '@/types/trace.types'
 
 export const traceQueryKeys = {
     all: ['trace'] as const,
@@ -12,6 +12,15 @@ export const traceQueryKeys = {
         query.tenantId ?? null,
         query.modelId ?? null,
         query.instanceId ?? null,
+    ] as const,
+    segment: (query: SegmentQuery | null) => [
+        ...traceQueryKeys.all,
+        'segment',
+        query?.start ?? null,
+        query?.end ?? null,
+        query?.tenantId ?? null,
+        query?.modelId ?? null,
+        query?.instanceId ?? null,
     ] as const,
     detail: (traceId: string | null) => [...traceQueryKeys.all, 'detail', traceId] as const,
 }
@@ -32,6 +41,16 @@ export function useOverview(query: OverviewQuery) {
         queryFn: () => fetchOverview(query),
         staleTime: query.mode === 'latest' ? 8_000 : Number.POSITIVE_INFINITY,
         refetchInterval: query.mode === 'latest' ? 15_000 : false,
+        retry: 1,
+    })
+}
+
+export function useSegment(query: SegmentQuery | null) {
+    return useQuery({
+        queryKey: traceQueryKeys.segment(query),
+        queryFn: () => fetchSegment(query!),
+        enabled: query !== null,
+        staleTime: Number.POSITIVE_INFINITY,
         retry: 1,
     })
 }

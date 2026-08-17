@@ -85,6 +85,7 @@ func (server *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/replay", server.handleReplay)
 	mux.HandleFunc("GET /api/v1/replay/frame", server.handleOverview)
 	mux.HandleFunc("GET /api/v1/overview", server.handleOverview)
+	mux.HandleFunc("GET /api/v1/segment", server.handleSegment)
 	mux.HandleFunc("GET /api/v1/clock", server.handleClock)
 	mux.HandleFunc("PATCH /api/v1/clock/rate", server.handleSimulationRate)
 	mux.HandleFunc("GET /api/v1/stream", server.handleStream)

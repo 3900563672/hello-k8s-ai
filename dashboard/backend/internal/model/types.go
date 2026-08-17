@@ -296,6 +296,29 @@ type Overview struct {
 	Freshness     map[string]ProviderState `json:"freshness"`
 }
 
+// SegmentSnapshot 是段切面中起点或终点的全局状态快照。
+type SegmentSnapshot struct {
+	SnapshotID    string        `json:"snapshotId,omitempty"`
+	CapturedAt    time.Time     `json:"capturedAt"`
+	Configuration Configuration `json:"configuration"`
+	Traffic       Traffic       `json:"traffic"`
+	Workloads     Workloads     `json:"workloads"`
+}
+
+// SegmentOverview 是时间段切面：起点/终点全局状态 + 区间指标与 Trace。
+// 段查询回答"一次调度/实验从什么状态开始、到什么状态结束、中间发生了什么"，
+// 与点查询（Overview）互补：点查询看单一时刻，段查询看一段区间。
+type SegmentOverview struct {
+	Availability  string                   `json:"availability"`
+	Start         time.Time                `json:"start"`
+	End           time.Time                `json:"end"`
+	StartSnapshot *SegmentSnapshot         `json:"startSnapshot,omitempty"`
+	EndSnapshot   *SegmentSnapshot         `json:"endSnapshot,omitempty"`
+	Metrics       map[string]MetricResult  `json:"metrics"`
+	Traces        []TraceSummary           `json:"traces"`
+	Freshness     map[string]ProviderState `json:"freshness"`
+}
+
 type MetricPoint struct {
 	Time  time.Time `json:"time"`
 	Value float64   `json:"value"`

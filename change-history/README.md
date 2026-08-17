@@ -4,6 +4,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-17 | 时间段切面（Run Segment）：起点/终点全局状态 + 区间指标与 Trace | P1 | [查看记录](2026-08-17-run-segment/README.md) |
 | 2026-08-17 | 长跑工具修复（--until 精确停止 / 每轮指标 / summary 口径）+ 长跑验收结论 | P1 | [查看记录](2026-08-17-longrun-tooling-fixes/README.md) |
 | 2026-08-17 | 容量校准公式确立 + 长跑验证（14:00-18:00 执行中） | P1 | [查看记录](2026-08-17-longrun-capacity-calibration/README.md) |
 | 2026-08-17 | 扩容加速（批量扩容）+ 稳定性矩阵 + 容量指南 | P2 | [查看记录](2026-08-17-scaleup-acceleration/README.md) |
