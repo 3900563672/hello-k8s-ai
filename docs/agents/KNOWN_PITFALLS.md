@@ -1,6 +1,6 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-tooling-fixes/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-run-segment/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
@@ -337,6 +337,32 @@
 - 解决：dev 集群更新 controller 一律 `kubectl kustomize config/dev | kubectl apply -f -`（幂等），之后 rollout restart；不要用 `make deploy`。判断依据：`kubectl get deploy hello-k8s-ai-controller-manager -n hello-k8s-ai-system -o yaml | grep SIMULATOR_IMAGE` 应有值。
 - 验证：config/dev 重部署后 controller 重建模拟器 Deployment 模板为 `hello-k8s-ai-simulator:dev`，CrashLoop 的 RS 缩到 0，实例恢复 Running 并继续扩缩（本次实测 REPLICAS 10→12）。
 - 备注：`simulator:latest` 默认值仅用于 CI/隔离环境；本机 dev 栈镜像 tag 是 `hello-k8s-ai-simulator:dev`（Makefile SIMULATOR_IMG）。
+
+### 2026-08-17 节点 DNS 故障导致 nginx 启动失败：先验节点再怪代码
+- 现象：重新部署 frontend 后新 Pod `CrashLoopBackOff`，日志 `nginx: [emerg] host not found in upstream "hello-k8s-ai-dashboard-backend"`；同镜像旧 Pod（另一节点）一直正常，集群内 nslookup FQDN 也正常。
+- 原因：新 Pod 被调度到 `desktop-worker6`，该节点 kindnet 网络故障（kindnet/kube-proxy 均重启过 6 次），Pod 内 DNS 全超时（`busybox nslookup` 实测 `connection timed out`）。
+- 解决：`kubectl cordon desktop-worker6` 后 rollout restart，新 Pod 落到正常节点即恢复；根因修复后 `kubectl uncordon desktop-worker6`。
+- 验证：cordon 后 frontend rollout 成功、nginx 200；worker6 上 busybox 探针复现 DNS 全超时。
+- 备注：`nginx: emerg host not found in upstream` 先查节点与 DNS（`kubectl run` 探针），不要直接改 nginx.conf/重写 upstream。
+
+### 2026-08-17 镜像 tag 相同（:dev）时 kubectl apply 不触发滚动，必须 rollout restart
+- 现象：本地重新构建 `hello-k8s-ai-dashboard-backend:dev` 后 `kubectl kustomize config/dev | kubectl apply -f -` 显示 configured，但 Pod 仍是旧镜像内容（新路由 404）。
+- 原因：Kubernetes 按镜像 tag 判断 spec 是否变化，`:dev` tag 内容更新不改变 spec。
+- 解决：apply 后显式 `kubectl -n hello-k8s-ai-system rollout restart deployment <name>`。
+- 验证：restart 后新 Pod 生效（/segment 200）。
+
+### 2026-08-17 make lint 触发 golangci-lint 重下载时 GOSUMDB 校验失败（本机）
+- 现象：`make lint` 报 `invalid GOSUMDB: malformed verifier id`，且下载规则失败后把 `bin/golangci-lint` 符号链接删掉。
+- 原因：本机 Go 环境 GOSUMDB/代理校验异常，Makefile 按 mtime 判断需要重建工具。
+- 解决：直接运行已有二进制 `bin/golangci-lint-v2.12.2 run`（缺失时 `ln -sf bin/golangci-lint-v2.12.2 bin/golangci-lint`）。
+- 验证：`bin/golangci-lint run` → `0 issues`。
+
+### 2026-08-17 Prometheus emptyDir 重启即丢历史：段/历史查询出现"区间无数据"先查 Prometheus 存活时间
+- 现象：段查询 06:00Z-10:00Z 区间 qps/queue/ttft 全部 0 series，只有 errorRate 有 121 个常量 0 点（`or on() vector(0)` 空集保护产生）。
+- 原因：Prometheus 数据卷是 emptyDir，11:41Z 部署时重启过，重启前的原始指标全部丢失；errorRate 的空集保护会在无数据时填常量 0 系列，容易误读成"指标为 0"。
+- 解决：`kubectl get pods -n hello-k8s-ai-system | grep prometheus` 看 Age；与段窗口比对，窗口早于 Prometheus 启动时间即为"已丢失"，接口如实返回空 + 告警属正确行为。
+- 验证：最近 10 分钟窗口（Prometheus 存活期内）5 指标 series=1、points=121，数据正常。
+- 备注：根治方向是 issue-09 后续"按环境拆分可观测性存储（持久卷）"，本期未做。
 
 
 

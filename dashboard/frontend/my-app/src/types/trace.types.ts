@@ -8,6 +8,14 @@ export interface OverviewQuery extends ReplayTimeContext {
     instanceId?: string
 }
 
+export interface SegmentQuery {
+    start: string
+    end: string
+    tenantId?: string
+    modelId?: string
+    instanceId?: string
+}
+
 export interface NumberValue {
     value: number
     unit: string
@@ -209,6 +217,33 @@ export interface OverviewData {
     freshness: Record<string, ProviderState>
 }
 
+export interface SegmentSnapshotData {
+    snapshotId?: string
+    capturedAt: string
+    configuration: ConfigurationReadModel
+    traffic: { asOf: string; tenants: TenantTraffic[] }
+    workloads: {
+        nodes: BackendNode[]
+        pods: BackendPod[]
+        deployments: BackendDeployment[]
+        services: Array<{ ref: ResourceRef; type: string; clusterIP?: string }>
+        leases: BackendLease[]
+        events: BackendEvent[]
+    }
+}
+
+export interface SegmentOverviewData {
+    availability: 'available' | 'unavailable'
+    start: string
+    end: string
+    startSnapshot?: SegmentSnapshotData
+    endSnapshot?: SegmentSnapshotData
+    metrics: Record<string, MetricResult>
+    traces: TraceSummary[]
+    freshness: Record<string, ProviderState>
+}
+
 export type OverviewEnvelope = ApiEnvelope<OverviewData>
+export type SegmentEnvelope = ApiEnvelope<SegmentOverviewData>
 export type TraceDetailEnvelope = ApiEnvelope<TraceDetail>
 export type AnyPlatformResource = BackendResource<Record<string, unknown>>

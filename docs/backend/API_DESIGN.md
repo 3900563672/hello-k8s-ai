@@ -110,8 +110,9 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | GET | `/replay` | `limit`；数据库 snapshot timeline。 |
 | GET | `/replay/frame` | `at` 和 filters；与历史 Overview 兼容入口。 |
 | GET | `/overview` | `at` 和 tenant/model/instance/node 等过滤；聚合资源、指标、Trace。 |
+| GET | `/segment` | `start,end` 必填（RFC3339）、窗口 ≤ 24h、tenant/model/instance/node 过滤；返回起点/终点快照 + 区间指标与 Trace。 |
 
-`replay` 名称表示历史浏览，不代表事件重新执行。无 `at` 时读 live；旧 `at` 仅使用最后一个不晚于该时间的 snapshot。
+`replay` 名称表示历史浏览，不代表事件重新执行。无 `at` 时读 live；旧 `at` 仅使用最后一个不晚于该时间的 snapshot。`/segment` 是时间段切面（起点/终点快照 + 区间数据），与点查询互补；任一端无快照返回 `unavailable` + 告警，不伪造数据。
 
 ### Stream
 

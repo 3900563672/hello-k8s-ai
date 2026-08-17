@@ -192,6 +192,8 @@ curl -sS "$API/traffic"
 curl -sS "$API/traffic?tenant=tenant-demo"
 curl -sS "$API/overview"
 curl -sS "$API/overview?at=2026-08-12T14:00:00Z&tenant=tenant-demo"
+# 时间段切面：起点/终点快照 + [start,end] 区间指标与 Trace（窗口 ≤ 24h）
+curl -sS "$API/segment?start=2026-08-12T13:00:00Z&end=2026-08-12T14:00:00Z"
 ```
 
 ## 10. Metrics
