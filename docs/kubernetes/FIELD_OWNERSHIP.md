@@ -1,5 +1,7 @@
 # 字段所有权
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：internal/controller/、api/v1/
+
 本文件是修改 Controller、Simulator、Backend 和 CRD 前的强制检查表。`SimulatorInstance` 多 writer 设计只有在字段互不越界时安全。
 
 ## 1. 总原则

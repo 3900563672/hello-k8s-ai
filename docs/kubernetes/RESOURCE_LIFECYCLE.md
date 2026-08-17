@@ -1,5 +1,7 @@
 # 资源生命周期
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：internal/controller/
+
 ## 1. 从配置到运行
 
 ```mermaid

@@ -1,6 +1,6 @@
 # UI 视觉验证与监控链路（UI_VERIFICATION）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
+> 维护层：agent | last-reviewed：2026-08-18 | 事实源：源码与 docs/agents/
 > 给本地 Agent 的"看 UI / 监控面板"操作手册。目的：不再每次临时写脚本，一条命令拿到截图 + 面板文本。
 
 ## 什么时候用

@@ -1,6 +1,19 @@
 # 变更归档
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：change-history/ 目录本身
+
 本目录保存需要长期追踪的代码变更记录。它不替代 `docs/` 中的当前架构说明：`docs/` 描述现在如何运行，本目录说明某次修改为什么发生、改了什么、如何测试和回滚。
+
+## 格式规范
+
+- 每个变更一个目录：`YYYY-MM-DD-短横线-slug/`，内含 `README.md`（首行 H1，必带 `> 日期：YYYY-MM-DD` 元信息；`make docs-check` 强制校验）。
+- 两代格式并存：
+  - 旧格式（2026-08-16 及之前）：四件套——`README.md`（总览）/ `IMPLEMENTATION_DETAILS.md` / `TEST_REPORT.md` / `MIGRATION_AND_ROLLBACK.md`，适合大改动。
+  - 新格式（2026-08-17 起）：单文件 `README.md`，内含「为什么做 / 改成什么 / 关键行为 / 验证 / 回滚」等节，适合中小改动。
+- 追加或归档条目后运行 `make docs-sync`：README 时间线段与 `docs/status.md` 自动更新；未同步时 `make docs-check` 会失败。
+- 新条目按日期倒序写入下方索引表。
+
+## 变更索引
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
@@ -37,4 +50,4 @@
 | 2026-08-16 | 提示词工作流体系：人类 / 本地 Agent / 远程 AI 三份协议 | P1 | [查看记录](2026-08-16-prompting-workflows/README.md) |
 | 2026-08-16 | UI 视觉验证链路沉淀：CDP 截图 + DOM 读取 + 监控面板现状 | P2 | [查看记录](2026-08-16-ui-visual-verification/README.md) |
 
-> 详略规范：每条目四件套齐全（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），见 `docs/agents/SYNC.md`；UI / 面板视觉改动另附 `screenshots/before-*.png` 与 `after-*.png`（约定见 `docs/agents/UI_VERIFICATION.md`）。
+> 详略规范：大改动保持四件套（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），中小改动单文件多节；UI / 面板视觉改动另附 `screenshots/before-*.png` 与 `after-*.png`（约定见 `docs/agents/UI_VERIFICATION.md`）。

@@ -1,5 +1,7 @@
 # hello-k8s-ai 完整技术总览
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 副标题：Kubernetes 原生 AI 推理调度与仿真平台技术白皮书  
 文档基线：2026-08-14
 适用读者：第一次接触项目的开发者、架构师、SRE 与 AI 编程代理

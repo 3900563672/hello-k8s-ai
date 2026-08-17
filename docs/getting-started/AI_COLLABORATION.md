@@ -1,6 +1,6 @@
 # 人类 × AI 协作手册
 
-> 维护层：human ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
 > 面向项目所有者的「怎么指挥 AI」。AI 侧的工作流与约束见根目录 `AGENTS.md` + `docs/agents/WORKFLOW.md`（本地 Agent）与 `docs/remote-ai/README.md`（远程 AI）。
 
 本仓库同时存在两类 AI 协作者，能力边界完全不同：

@@ -1,5 +1,7 @@
 # 源码地图
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 ## 1. 根控制面
 
 | 路径 | 事实/职责 | 相关文档 |

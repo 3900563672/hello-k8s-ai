@@ -1,6 +1,6 @@
 # Project Review 看板与任务闭环
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-project-review-repo-level/
+> 维护层：agent | last-reviewed：2026-08-18 | 事实源：源码与 docs/agents/
 > 定义 GitHub Issue、GitHub Project v2 看板（Project Review）与仓库 `project-review/` 审查记录三者之间的关联模型和批量闭环规则。单条任务的开发流程仍以 [WORKFLOW.md](WORKFLOW.md) 为准，本文件只负责"从审查记录到看板、再到交付归档"这一段。
 
 ## 1. 为什么需要三者关联
