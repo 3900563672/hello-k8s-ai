@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-[[ -f "$ROOT_DIR/Makefile" && -f "$ROOT_DIR/docs/AI_CONTEXT.md" ]] || {
+[[ -f "$ROOT_DIR/Makefile" && -f "$ROOT_DIR/docs/README.md" ]] || {
   printf '拒绝清理：当前目录不像 hello-k8s-ai 项目。\n' >&2
   exit 1
 }
@@ -38,6 +38,7 @@ obsolete_paths=(
   "VALIDATION_REPORT.md"
   "package-lock.json"
   "hello-k8s-ai-architecture-guide.pdf"
+  "hello-k8s-ai-complete-overview.pdf"
 )
 
 removed=0

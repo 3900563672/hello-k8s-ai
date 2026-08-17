@@ -1,6 +1,8 @@
 /bin/
 /dist/
 /cover.out
+**/__pycache__/
+/hello-k8s-ai-complete-overview.pdf
 /Dockerfile.cross
 /.runtime/
 /.verify/
