@@ -25,7 +25,7 @@
 | CI / 工作流 / 变更归档 | WORKFLOW.md（第 10 节轮询节奏、第 9 节同步）、journal | 无 |
 | Project / 批量任务 | [PROJECT_REVIEW.md](PROJECT_REVIEW.md)、WORKFLOW.md | project-review/（问题背景） |
 | 提示词 / 任务转交 | WORKFLOW.md（第 8 节）、AI_COLLABORATION.md（人类侧） | 无 |
-| 打包给远程 AI | `make context-pack`，见 docs/remote-ai/README.md | 无 |
+| 打包给远程 AI | `make context-pack`，见 [docs/remote-ai/README.md](../remote-ai/README.md)（含决策矩阵/踩坑速查/交付模板） | 无 |
 | UI / 视觉验证 | [UI_VERIFICATION.md](UI_VERIFICATION.md)、journal/lessons | docs/observability/（按需背景） |
 
 ## 维护边界

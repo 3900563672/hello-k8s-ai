@@ -1,7 +1,7 @@
 # hello-k8s-ai 文档体系
 
 > 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
-> 本目录是**人类文档**。本地 Agent 默认不读本目录（见根目录 `AGENTS.md` 与 `docs/agents/`）；远程 AI 默认不接收本目录（见 `docs/remote-ai/` 与 `make context-pack`）。
+> 本目录是**人类文档**。本地 Agent 默认不读本目录（见根目录 `AGENTS.md` 与 `docs/agents/`）；远程 AI 的默认上下文包（`make context-pack`）会包含本目录，但只作背景，事实以包内源码与 [remote-ai/](remote-ai/README.md) 手册为准。
 
 本目录是项目工程知识库。内容以当前源码、生成的 CRD、Kustomize 清单和可执行测试为依据；已删除与当前实现冲突的旧文档副本。
 
@@ -53,8 +53,8 @@
 | `docs/data-flow/EVENT_FLOW.md` | `dashboard/backend/internal/` |
 | `docs/data-flow/TIME_AND_REPLAY.md` | `dashboard/backend/internal/store/` |
 | `docs/frontend/DATA_FLOW.md` | `dashboard/backend/internal/api/`、`dashboard/frontend/my-app/src/`、`dashboard/frontend/my-app/src/components/features/trace/`、`dashboard/frontend/my-app/src/components/features/traffic/` |
-| `docs/frontend/FRONTEND_ARCHITECTURE.md` | `dashboard/frontend/my-app/src/`、`dashboard/frontend/my-app/src/components/features/config/` |
-| `docs/frontend/PAGE_STRUCTURE.md` | `config/observability/`、`dashboard/frontend/my-app/src/components/features/config/`、`dashboard/frontend/my-app/src/components/features/guide/`、`dashboard/frontend/my-app/src/components/features/trace/`、`dashboard/frontend/my-app/src/components/features/traffic/` |
+| `docs/frontend/FRONTEND_ARCHITECTURE.md` | `dashboard/frontend/my-app/src/`、`dashboard/frontend/my-app/src/components/features/config/`、`dashboard/frontend/my-app/src/components/features/monitor/` |
+| `docs/frontend/PAGE_STRUCTURE.md` | `config/observability/`、`dashboard/frontend/my-app/src/components/features/config/`、`dashboard/frontend/my-app/src/components/features/guide/`、`dashboard/frontend/my-app/src/components/features/monitor/`、`dashboard/frontend/my-app/src/components/features/trace/`、`dashboard/frontend/my-app/src/components/features/traffic/` |
 | `docs/getting-started/DEPLOYMENT.md` | `config/default/`、`config/demo/`、`config/dev/`、`config/manager/`、`config/samples/`、`dashboard/backend/deploy/`、`hack/`、`setup.sh` |
 | `docs/getting-started/LOCAL_RUN.md` | `config/demo/`、`config/dev/`、`config/samples/` |
 | `docs/kubernetes/CONTROLLER_ARCHITECTURE.md` | `cmd/`、`internal/controller/`、`internal/k8sutil/` |
@@ -69,6 +69,7 @@
 | `docs/overview/ARCHITECTURE_OVERVIEW.md` | `cmd/`、`internal/controller/` |
 | `docs/reference/API_EXAMPLES.md` | `dashboard/backend/internal/api/` |
 | `docs/reference/CONFIGURATION_REFERENCE.md` | `api/v1/`、`config/rbac/`、`dashboard/frontend/my-app/src/components/features/guide/` |
+| `docs/remote-ai/README.md` | `hack/context-pack-template.md` |
 | `docs/simulator/SIMULATION_FLOW.md` | `simulator/` |
 | `docs/simulator/SIMULATOR_ARCHITECTURE.md` | `simulator/` |
 

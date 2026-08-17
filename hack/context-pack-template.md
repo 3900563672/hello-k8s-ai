@@ -61,7 +61,7 @@ __TREE__
 
 - 人类：根目录 `README.md`、`PROJECT_OVERVIEW_NEW.md`（初学者）、`docs/INDEX.md`。
 - 本地 Agent（能操作本机）：`AGENTS.md`、`docs/agents/`、`docs/journal/` 与 `docs/lessons/`。
-- 远程 AI（你）：`docs/remote-ai/README.md` + `llms.txt`（本包已包含全部）。
+- 远程 AI（你）：`docs/remote-ai/README.md`（含任务决策矩阵 / 踩坑速查 / 交付模板三份协议）+ `llms.txt`（本包已包含全部）。
 
 ## 8. 验证命令速查（由本地 Agent 执行，你只能引用）
 

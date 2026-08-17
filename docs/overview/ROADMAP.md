@@ -4,18 +4,19 @@
 
 > 由 `CURRENT_STATUS_AND_ROADMAP.md` 改造而来（2026-08-18）："当前状态"（能力矩阵）已由生成的 `docs/status.md` 承担，本文件只保留"下一步"。
 
-## 2. 已知问题清单
+## 1. 已知问题清单
 
 ### P0 - 上生产前必须解决
 
 - 本地 PostgreSQL Secret 已改为部署时随机生成；连接仍是受控本机集群内 `sslmode=disable`，生产必须启用 Secret 管理和 TLS。
 - Backend 没有最终用户身份认证与用户级授权；当前是 ServiceAccount 能力边界。
-- PostgreSQL 单实例，Prometheus/Jaeger/Grafana 使用开发型易失存储，无备份/恢复演练。
+- PostgreSQL、Prometheus、Jaeger 单实例（已 PVC 持久化），Grafana 易失，无备份/恢复演练。
 - 没有完整 NetworkPolicy、入口 TLS、镜像签名/扫描和 Secret 外部管理。
 - 没有从用户命令到页面回显的真实集群 E2E 证据。
 
 ### P1 - 下一开发周期
 
+- 告警规则实测触发验收（[#31](https://github.com/3900563672/hello-k8s-ai/issues/31)）：内存告警 10m 周期、Simulator Leader 接管演练，归档触发证据。
 - 把当前本地完整栈验收复刻到独立 CI Kind E2E，并归档失败证据。
 - 为 Traffic Overlay 增加 Preview -> Confirm -> PATCH -> Observe 的真实闭环。
 - 验证 Jaeger 2.20 部署是否持续提供 Backend 使用的 legacy Query API。
@@ -23,13 +24,14 @@
 
 ### P2 - 架构增强
 
+- 评估 Simulator 扩容节奏与超大副本行为（[#32](https://github.com/3900563672/hello-k8s-ai/issues/32)）：`maxReplicas=0` 无限制下的批量扩容、扩容冷却与队列收敛。
 - 在现有 `SimulationClock` 引擎倍速之上设计 `SimulationRun`，补可恢复逻辑时间、随机种子和 checkpoint。
 - 把 `TenantRuntime.status.instanceCount` 迁移为语义准确的字段名（需版本兼容）。
 - 增加领域 Event，或定义长期可重放的操作事件模型。
 - 支持 CRD v1alpha/v1beta/v1 转换和升级策略。
 - 根据规模引入 DB 分区、snapshot 压缩、Prom/Trace 长期存储。
 
-## 3. 推荐路线图
+## 2. 推荐路线图
 
 ```mermaid
 flowchart TB
@@ -79,7 +81,7 @@ flowchart TB
 - 接入真实模型服务器和 GPU telemetry，校准模拟参数。
 - 跨租户公平、优先级/抢占、成本/能耗目标。
 
-## 4. 取舍原则
+## 3. 取舍原则
 
 - 在完成 R1 前，不继续增加大量产品功能；否则无法判断回归来自哪里。
 - 在完成 R2 前，不把开发清单标记为生产就绪。

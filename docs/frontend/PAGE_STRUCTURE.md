@@ -13,6 +13,8 @@
 | Traffic | `TrafficPage` | `/traffic` | 真实流量基线 + 本地场景草稿/Overlay。 |
 | Trace | `DataOverviewPage` 内的 Trace 区域 | `/trace` | Trace 搜索摘要与 Span 树。 |
 | Data View | 同一个 `DataOverviewPage` | `/trace` | 资源、指标、事件、时间和 Trace 的综合视图。 |
+| Monitor | `MonitorPage` | `/monitor` | Grafana 统一监控视图，Dashboard 单入口。 |
+| Guide | `GuidePage` | `/guide` | 参数填写指南：字段含义、默认值、系统常量与填法。 |
 
 `/` 重定向到 `/config`，未知路由显示 NotFound。未来如新增独立 Dashboard/Data View，应先确定 URL 迁移和导航兼容。
 
@@ -150,7 +152,48 @@ Jaeger 是可选 provider，失败时页面应显示 warning 并继续展示 Kub
 
 Latest 默认约 15 秒 refetch；Historical 视图应保持不可变，除非用户选择另一个 snapshot。
 
-## 7. Mock 到真实 Backend 的迁移矩阵
+## 7. Monitor 页面
+
+### 目的
+
+在 Dashboard 内嵌 Grafana 统一监控视图，让 Prometheus 指标与 Jaeger 链路不再单独暴露端口。页面只做外壳与健康检查，图表由 Grafana 渲染。
+
+### 数据与 API
+
+- iframe 指向 `/grafana/d/hello-k8s-ai-overview?kiosk`（Backend 反向代理 `/grafana/`）。
+- 前端先请求 `/grafana/api/health` 判定 Grafana 状态：`checking` -> `ready` / `unavailable`，每 30 秒轮询。
+- `unavailable` 时页面顶部显示警告条（提示 `make cluster-up` 已完成、Backend `GRAFANA_URL` 指向 `hello-k8s-ai-grafana:3000`），不阻塞其他页面。
+
+### 状态管理
+
+Grafana 健康状态是页面本地 state；`reloadKey` 变化强制 iframe 重载（“刷新”按钮）。无 TanStack Query 状态。
+
+### 交互
+
+- “新窗口打开”指向 `/grafana/`（同一 Dashboard 入口）。
+- Grafana 不可用时页面仍可渲染外壳并给出可执行提示，属于优雅降级。
+
+## 8. Guide 页面
+
+### 目的
+
+面向第一次使用的用户：集中展示每个字段的含义、单位、默认值与归属（用户可配置 / 系统常量 / 开发测试），并给出“模拟条件下怎么填”的估算公式，避免用户对着空表单迷茫。
+
+### 数据
+
+- 预置模板（`src/lib/constants/presetTemplates.ts`）：模型、节点、租户、编排策略、流量五类，只预填表单，不写入集群。
+- 系统参数速查表（页面内常量 `systemParams`）：与模板、CRD 默认值和 Controller/Simulator 常量保持一致，归属“系统常量”的项不可通过表单修改。
+- 填法指南：容量估算、副本吞吐换算、无限流量与天花板（`maxReplicas=0` 不设上限）、扩容节奏、阈值语义等。
+
+### API 来源
+
+无专用 API；页面是纯静态指南，数据来自前端常量，不与 Backend 交互。
+
+### 状态管理
+
+无全局状态；复用的 `ConfigFormSection` / `FieldRow` 只负责展示。模板数据来源见 [DATA_FLOW.md](DATA_FLOW.md)。
+
+## 9. Mock 到真实 Backend 的迁移矩阵
 
 | 旧实现 | 当前替代 | 状态 |
 | --- | --- | --- |

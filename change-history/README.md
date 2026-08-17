@@ -17,6 +17,8 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-18 | 人类文档补全与远程 AI 手册完善：文档漂移全面对齐 | P2 | [查看记录](2026-08-18-docs-human-complete/README.md) |
+| 2026-08-18 | 文档体系重构：机械门禁、内容迁移与入口重写（PR #33/#34） | P1 | [查看记录](2026-08-18-docs-architecture-rework/README.md) |
 | 2026-08-18 | 降级演练缺陷修复：告警表达式三修 + 模拟器容器资源限制（Fixes #30） | P1 | [查看记录](2026-08-18-alert-drill-fixes/README.md) |
 | 2026-08-18 | 宿主工具链恢复：Codex 配置自修复 + 整机重启恢复顺序 + gocyclo 处理 | P2 | [查看记录](2026-08-18-host-toolchain-recovery/README.md) |
 | 2026-08-17 | 稳定性恢复顺序：运行前体检（preflight）+ 工具链自检（selfcheck）+ Prometheus 内存/重启告警 | P1 | [查看记录](2026-08-17-stability-recovery/README.md) |

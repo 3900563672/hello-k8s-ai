@@ -75,7 +75,8 @@ flowchart TB
 | PostgreSQL 17 | `postgres:17-alpine` | `standard`，10Gi RWO PVC |
 | Dashboard Backend | `hello-k8s-ai-dashboard-backend:dev` | 无本地卷，历史写 PostgreSQL |
 | Dashboard Frontend | `hello-k8s-ai-dashboard-frontend:dev` | 无 |
-| Prometheus / Jaeger / Grafana | 固定版本 | 当前仍为开发型易失存储 |
+| Prometheus / Jaeger | 固定版本 | PVC（20Gi / 10Gi RWO）、单副本 |
+| Grafana | 固定版本 | 无持久卷（开发型） |
 
 PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续复用 Kubernetes Secret。
 
@@ -99,9 +100,9 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 
 当前方案针对受控本机开发环境。Prometheus/Jaeger/Grafana 未持久化，PostgreSQL 单副本，未配置 OIDC、用户级授权、TLS、完整 NetworkPolicy、备份或 HA。不要把本地一键成功写成生产就绪。
 
-## 部署约束与静态工作负载（原 operations/CLUSTER_INFORMATION 第 5/6 节，2026-08-18 并入）
+## 8. 部署约束与静态工作负载（原 operations/CLUSTER_INFORMATION 第 5/6 节，2026-08-18 并入）
 
-## 5. 仓库部署约束
+### 8.1 仓库部署约束
 
 | 项目 | 声明值 |
 | --- | --- |
@@ -113,7 +114,7 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 | 数据库 | PostgreSQL 17，10Gi PVC，随机 Secret |
 | 停止语义 | 工作负载缩到 0，保留集群/CRD/CR/Secret/PVC |
 
-## 6. 部署后应出现的静态工作负载
+### 8.2 部署后应出现的静态工作负载
 
 | Kind | Name | 副本 |
 | --- | --- | ---: |

@@ -76,7 +76,7 @@
 | getting-started | [VERIFICATION](getting-started/VERIFICATION.md) | 如何验证改动与交付？ |
 | getting-started | [AI_COLLABORATION](getting-started/AI_COLLABORATION.md) | 如何指挥本地 Agent 与远程 AI？ |
 | frontend | [FRONTEND_ARCHITECTURE](frontend/FRONTEND_ARCHITECTURE.md) | 前端结构和状态边界是什么？ |
-| frontend | [PAGE_STRUCTURE](frontend/PAGE_STRUCTURE.md) | Dashboard、Config、Traffic、Trace/Data View 各做什么？ |
+| frontend | [PAGE_STRUCTURE](frontend/PAGE_STRUCTURE.md) | Dashboard、Config、Traffic、Trace/Data View、Monitor、Guide 各做什么？ |
 | frontend | [DATA_FLOW](frontend/DATA_FLOW.md) | 页面如何获取、刷新、提交数据？ |
 | backend | [BACKEND_ARCHITECTURE](backend/BACKEND_ARCHITECTURE.md) | Handler 到 Storage 如何分层？ |
 | backend | [API_DESIGN](backend/API_DESIGN.md) | 路由、契约、错误和权限是什么？ |
@@ -103,8 +103,11 @@
 | reference | [API_EXAMPLES](reference/API_EXAMPLES.md) | API 如何调用？ |
 | whitepaper | [COMPLETE_OVERVIEW](whitepaper/COMPLETE_OVERVIEW.md) | 十章完整技术白皮书内容源。 |
 | whitepaper | [BUILD_PDF](whitepaper/BUILD_PDF.md) | 如何从 Markdown 再生成 PDF？ |
+| 历史 | [变更归档](../change-history/README.md) | 每次代码/文档变更为什么发生、改了什么、如何验证和回滚？ |
 
 ## 文档状态说明
 
-- 本体系基于 2026-08-12 源码审计，并在 2026-08-13 至 2026-08-14 同步了 Docker Desktop 部署、Orchestrator 放置契约、Model 能力基准和 Simulator 时间倍速链路。
-- 2026-08-14 早前变更已有根 Go module、Dashboard Backend、E2E 编译和 Kustomize 渲染记录；本次 Simulator 倍速变更只在当前环境完成语法、lint、YAML、Shell 与文档静态检查，Go/生成门禁/完整 Frontend/Kind E2E 仍须 CI 或目标机重跑。完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。
+- 本体系基于 2026-08-18 源码审计与 [MAP.yaml](MAP.yaml) 所有权映射；机械门禁（`make docs-check` / `make docs-sync-check`）在 PR 与 CI 强制拦截源码-文档漂移。
+- 文档按读者分层维护：人类（本索引）、本地 Agent（[agents/](agents/README.md)）、远程 AI（[remote-ai/](remote-ai/README.md)）；三层互不串读，变更历史统一归档在 [change-history/](../change-history/README.md)（时间线见根 README 与 [status.md](status.md)）。
+- 所有专题已统一 front-matter（`维护层 | last-reviewed | 事实源`）；与当前实现冲突的旧描述已删除或迁移至 [journal/](journal/README.md)（流水账）与 [lessons/](lessons/README.md)（蒸馏规则）。
+- 专题文档内容以当前源码、生成清单和可执行测试为准；未在本机验证的运行结论一律标注“未验证”。完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。

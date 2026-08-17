@@ -73,8 +73,9 @@
 ```text
 附件是项目上下文包（生成时间见 CONTEXT_PACK.md 顶部）。
 任务：<目标>。
-请按 docs/remote-ai/README.md 的协议执行：
-结论先行、标注依据文件、未验证的写"未验证"、按固定交接格式产出。
+请按 docs/remote-ai/ 的协议执行（README 开工顺序 + DECISION_MATRIX 定位任务
+类型 + PITFALLS 避坑 + DELIVERY 交付模板）：结论先行、标注依据文件、
+未验证的写"未验证"、按固定交接格式产出。
 ```
 
 ## 3. 好例子与坏例子（来自本仓库实际协作）
