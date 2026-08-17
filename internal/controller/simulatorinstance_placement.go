@@ -23,6 +23,24 @@ type simulatorDeploymentState struct {
 	Failed            bool
 }
 
+// clearPlacementPlanWhenPaused 暂停态（replicas==0）时清除历史放置计划注解：
+// 历史计划不再有效，后续 reconcile 按空计划收敛（Deployment 缩到 0、清理逐节点
+// Deployment）；恢复时由 Orchestrator 重新放置。
+func (r *SimulatorInstanceReconciler) clearPlacementPlanWhenPaused(
+	ctx context.Context,
+	instance *platformv1.SimulatorInstance,
+) error {
+	if instance.Spec.Replicas != 0 || instance.Annotations == nil ||
+		instance.Annotations[nodePlacementsAnnotation] == "" {
+		return nil
+	}
+	delete(instance.Annotations, nodePlacementsAnnotation)
+	if err := r.Update(ctx, instance); err != nil {
+		return fmt.Errorf("clear node placements while pausing simulator instance %q: %w", instance.Name, err)
+	}
+	return nil
+}
+
 // reconcileDeploymentObjects 把放置计划物化为 Deployment。
 // 旧实例没有放置注解时仍使用单 Deployment；持久化计划后，每个节点由一个 Deployment 承载。
 func (r *SimulatorInstanceReconciler) reconcileDeploymentObjects(
@@ -30,14 +48,8 @@ func (r *SimulatorInstanceReconciler) reconcileDeploymentObjects(
 	instance *platformv1.SimulatorInstance,
 	eligibleNodes []string,
 ) (*simulatorDeploymentState, error) {
-	// 暂停态（replicas==0）：历史放置计划不再有效。先清除注解再按空计划收敛，
-	// 使 Deployment 缩到 0 并清理逐节点 Deployment；恢复时由 Orchestrator 重新放置。
-	if instance.Spec.Replicas == 0 && instance.Annotations != nil &&
-		instance.Annotations[nodePlacementsAnnotation] != "" {
-		delete(instance.Annotations, nodePlacementsAnnotation)
-		if err := r.Update(ctx, instance); err != nil {
-			return nil, fmt.Errorf("clear node placements while pausing simulator instance %q: %w", instance.Name, err)
-		}
+	if err := r.clearPlacementPlanWhenPaused(ctx, instance); err != nil {
+		return nil, err
 	}
 	plan, persisted, err := decodeNodePlacementPlan(instance.Annotations[nodePlacementsAnnotation])
 	if err != nil {
