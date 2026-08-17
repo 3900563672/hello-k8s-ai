@@ -66,6 +66,29 @@ data:
         target_label: tenant
       - source_labels: [__meta_kubernetes_pod_annotation_platform_study_com_model_name]
         target_label: model
+    - job_name: kubernetes-cadvisor
+      scheme: https
+      tls_config:
+        insecure_skip_verify: true
+      authorization:
+        type: Bearer
+        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+      - role: node
+      metrics_path: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+      - source_labels: [__meta_kubernetes_node_label_kubernetes_io_role]
+        target_label: node_role
   rules.yml: |
     groups:
     - name: hello-k8s-ai-recording
@@ -118,6 +141,24 @@ data:
         annotations:
           summary: "Dashboard 历史事件被丢弃"
           description: "最近 5 分钟 Dashboard 历史事件缓冲或数据库写入存在丢弃，时间线将出现缺口。"
+      - alert: HelloK8sAIContainerMemoryHigh
+        expr: |
+          (sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", namespace=~"hello-k8s-ai.*"})
+           / clamp_min(sum by (namespace, pod, container) (container_spec_memory_limit_bytes{container!="", namespace=~"hello-k8s-ai.*"}), 1)) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "组件容器内存持续超过 85% 限制"
+          description: "{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} 已连续 10 分钟内存使用超过其 limit 的 85%，继续上涨可能触发 OOMKilled。"
+      - alert: HelloK8sAIContainerRestarted
+        expr: sum by (namespace, pod, container) (changes(container_start_time_seconds{container!="", namespace=~"hello-k8s-ai.*"}[10m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "组件容器发生重启"
+          description: "{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} 在最近 10 分钟内重启（start_time 变化），请检查 OOMKilled 与崩溃原因。"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -142,6 +183,8 @@ metadata:
     app.kubernetes.io/component: metrics-backend
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus

@@ -101,8 +101,20 @@ verify-deploy: kustomize ## 检查脚本语法并渲染全部部署清单
 	"$(KUSTOMIZE)" build config/demo >/dev/null
 	"$(KUSTOMIZE)" build dashboard/deploy >/dev/null
 
+.PHONY: selfcheck
+selfcheck: ## 工具链自检：全部脚本语法 + Node 脚本语法 + 清单渲染（防"漏定义函数上线跑"）
+	@echo "== bash 语法 =="; \
+	set -e; for f in $$(find . -path ./node_modules -prune -o -name '*.sh' -print | grep -v node_modules); do bash -n "$$f" || exit 1; done; echo OK
+	@echo "== Node 脚本语法 =="; \
+	set -e; for f in $$(find hack -name '*.mjs'); do node --check "$$f" || exit 1; done; echo OK
+	@echo "== 清单渲染 =="; \
+	"$(KUSTOMIZE)" build config/dev >/dev/null && echo OK
+	"$(KUSTOMIZE)" build config/demo >/dev/null && echo OK
+	"$(KUSTOMIZE)" build dashboard/deploy >/dev/null && echo OK
+	@echo "selfcheck 通过"
+
 .PHONY: verify
-verify: fmt-check test test-backend test-e2e-compile test-frontend verify-deploy lint ## 执行提交前完整静态验证
+verify: fmt-check test test-backend test-e2e-compile test-frontend verify-deploy selfcheck lint ## 执行提交前完整静态验证
 
 # e2e 使用独立集群，避免测试清理误删日常开发集群。
 E2E_KIND_CLUSTER ?= hello-k8s-ai-test-e2e
