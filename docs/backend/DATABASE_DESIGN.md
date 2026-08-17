@@ -82,7 +82,7 @@ Informer callback 只做非阻塞 enqueue；后台 worker 批量/异步写 DB。
 
 ## 5. Retention
 
-当前默认 snapshot retention 720h（30 天），每日 prune。Prometheus dev retention 24h、Jaeger 更短/易失，因此同一个历史时间点可能只有 Kubernetes snapshot，没有指标或 Trace。
+当前默认 snapshot retention 720h（30 天），每日 prune。Prometheus/Jaeger dev retention 均为 168h（PVC），因此同一个历史时间点仍可能只有 Kubernetes snapshot，没有指标或 Trace（例如服务当时未运行或保留期已过）。
 
 容量规划应根据：
 

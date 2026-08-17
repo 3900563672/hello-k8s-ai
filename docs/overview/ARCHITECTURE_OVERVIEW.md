@@ -50,8 +50,8 @@ flowchart TB
 | --- | --- | --- | --- |
 | Kubernetes API | CR Spec/Status、Deployment、Pod、Lease、Event 的最新状态 | etcd 持久化、Watch、resourceVersion、最终一致 | 长期指标、Trace、完整历史快照 |
 | PostgreSQL | resource event、定时 snapshot、audit、idempotency、trace index | 当前清单 30 天保留，可查询旧 `at` | Kubernetes 最新状态和 Controller 决策权 |
-| Prometheus | Controller/Simulator 时间序列 | 当前开发清单 24h、emptyDir | 对象完整 Spec/Status、命令审计 |
-| Jaeger | Trace/Span | 当前开发清单无持久存储保证 | 指标、资源当前态、精确业务审计 |
+| Prometheus | Controller/Simulator 时间序列 | 当前开发清单 168h、PVC（20Gi RWO） | 对象完整 Spec/Status、命令审计 |
+| Jaeger | Trace/Span | 当前开发清单 168h、badger + PVC（10Gi RWO） | 指标、资源当前态、精确业务审计 |
 
 Backend 响应中的 `meta.partial`、`warnings`、`sourceVersions` 和时间字段用于承认这些来源并不构成一笔跨系统事务。
 

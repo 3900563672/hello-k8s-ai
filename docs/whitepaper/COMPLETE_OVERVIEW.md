@@ -3,7 +3,7 @@
 > 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
 
 副标题：Kubernetes 原生 AI 推理调度与仿真平台技术白皮书  
-文档基线：2026-08-14
+文档基线：2026-08-18（随文档体系重构全面核对，与当前源码一致）
 适用读者：第一次接触项目的开发者、架构师、SRE 与 AI 编程代理
 
 > 本文是 `hello-k8s-ai-complete-overview.pdf` 的唯一正文源。实现事实来自当前源码与清单；“声明部署”不等于当前集群 Ready；“未来设计”不等于现有能力。
@@ -113,8 +113,8 @@ flowchart TB
 | --- | --- | --- | --- |
 | Kubernetes | 最新 CR/Deployment/Pod/Lease/Event | etcd/watch 语义 | 长期趋势和 Trace |
 | PostgreSQL | Snapshot、resource event、audit、idempotency、trace index | 默认 30 天 snapshot | 最新控制状态 |
-| Prometheus | 指标时间序列 | dev 24h、emptyDir | CR 完整状态/审计 |
-| Jaeger | Trace/Span | dev 易失 | 指标或配置 |
+| Prometheus | 指标时间序列 | dev 168h、PVC（20Gi RWO） | CR 完整状态/审计 |
+| Jaeger | Trace/Span | dev 168h、PVC（badger 10Gi RWO） | 指标或配置 |
 
 跨来源聚合不是一笔强一致事务。响应必须携带 servedAt、capturedAt、observedAt、queriedAt、sourceVersions、partial 和 warnings。
 
@@ -159,6 +159,8 @@ flowchart TD
 | Traffic | `/traffic` | 查看真实 QPS/Instance 基线并编辑场景 | traffic；Backend已有 tenant QPS PATCH | baseline=Query；Overlay=内存草稿 |
 | Trace | `/trace` 的 Trace 区域 | 搜索 Trace、查看 Span tree | overview、traces、trace detail | Query + selected trace UI state |
 | Data View | 同一 `/trace` DataOverviewPage | 资源、指标、事件、Trace 综合解释 | overview/replay frame | latest 15s refetch；historical固定 |
+| Monitor | `/monitor` | Grafana 统一监控视图（单入口内嵌） | /grafana/ 反向代理 + /grafana/api/health | 页面本地 state，30s 探活 |
+| Guide | `/guide` | 参数填写指南：字段含义、默认值、系统常量与填法 | 无 API（前端常量与预置模板） | 无全局状态 |
 
 没有独立 `/dashboard` 或 `/data-view` route；`/` 重定向 `/config`。这不是文档遗漏，而是当前实现事实。
 
@@ -330,7 +332,7 @@ Readiness 必须有 cache；`DATABASE_REQUIRED=true` 时 DB 也是硬门。Prome
 
 跨对象执行使用 pending scale plan annotation 和 trigger SHA256：先持久化可恢复计划/replica，再写 effectiveScore/Orchestrator status，最后清 annotation；重启先恢复 pending。
 
-## 5.9 Controller 关系
+## 5.10 Controller 关系
 
 ```mermaid
 flowchart TB
@@ -387,7 +389,7 @@ Simulator RetryOnConflict，只 Patch score、performance、observedAt、reporte
 
 ## 7.1 Prometheus
 
-dev Prometheus 3.13，scrape 10s、retention 24h、emptyDir。抓取 Controller HTTPS authenticated metrics、Simulator Pods 9090 和 Collector 8888。Controller 指标覆盖 reconcile outcome、业务操作、Orchestrator decision/scaling/latency/pending plan、Traffic allocation/QPS、Performance sample/latency、Worker usage；Simulator 指标覆盖领导权、Tick、Status、QPS、Score、cold factor、Queue、TTFT。
+dev Prometheus 3.13，scrape 10s、retention 168h、PVC（20Gi RWO）。抓取 Controller HTTPS authenticated metrics、Simulator Pods 9090 和 Collector 8888。Controller 指标覆盖 reconcile outcome、业务操作、Orchestrator decision/scaling/latency/pending plan、Traffic allocation/QPS、Performance sample/latency、Worker usage；Simulator 指标覆盖领导权、Tick、Status、QPS、Score、cold factor、Queue、TTFT。
 
 Backend 只开放命名 metric catalog：simulator.ttft/queue/qps/errorRate/tickLatency、controller.errorRate/reconcileLatency、worker.gpuUsed；不接受任意 PromQL。当前没有 kube-state-metrics/cAdvisor，因此没有真实通用 CPU/memory 使用率。
 
@@ -399,11 +401,11 @@ dev sampler 为 parentbased_traceidratio=1.0；生产需成本策略。遥测 fa
 
 ## 7.3 Jaeger
 
-dev Jaeger 2.20 单副本、Query 16686、OTLP 4317/4318，未配置持久 storage。Backend 通过 legacy Query API 获取 services/traces/detail，窗口 <=24h、limit <=100，归一化 summary/Span tree，并将 metadata 写 trace_index。Jaeger v2 对 legacy API 的实际兼容必须运行验证。
+dev Jaeger 2.20 单副本、Query 16686、OTLP 4317/4318，badger 存储 + PVC（10Gi RWO）、spans TTL 168h。Backend 通过 legacy Query API 获取 services/traces/detail，窗口 <=24h、limit <=100，归一化 summary/Span tree，并将 metadata 写 trace_index。Jaeger v2 对 legacy API 的实际兼容必须运行验证。
 
 ## 7.4 Grafana
 
-Grafana 13 预置 Prometheus/Jaeger datasource 和 12 panels，适合运维探索。Dashboard Backend 直接查询数据源，不经 Grafana代理。当前匿名 Viewer/emptyDir 只限开发，生产需 SSO/RBAC/持久化。
+Grafana 13 预置 Prometheus/Jaeger datasource 和 12 panels，适合运维探索。Frontend 在「监控面板」（`/monitor`）内嵌 Grafana overview dashboard，通过 Backend 的 `/grafana/` 反向代理访问，不单独暴露 Grafana 端口；页面先探活 `/grafana/api/health`，不可用时降级为提示条。Dashboard Backend 聚合指标时直接查询数据源，不经 Grafana 代理。当前匿名 Viewer/emptyDir 只限开发，生产需 SSO/RBAC/持久化。
 
 ## 7.5 诊断组合
 
@@ -425,7 +427,7 @@ Backend informer 首次同步后，Aggregator 从同一进程 cache 读取 CR/�
 
 ## 8.2 历史读取
 
-无 `at` -> live cache；`at` 距现在 <=2s -> live；更旧 -> PostgreSQL 最新 `captured_at <= at` snapshot；没有 -> unavailable。请求 at 与 capturedAt 必须同时显示。Snapshot 每 30 秒，可能错过瞬态；Prom 24h、Jaeger易失与DB 30天 retention 不同，历史页面允许 section partial。
+无 `at` -> live cache；`at` 距现在 <=2s -> live；更旧 -> PostgreSQL 最新 `captured_at <= at` snapshot；没有 -> unavailable。请求 at 与 capturedAt 必须同时显示。Snapshot 每 30 秒，可能错过瞬态；Prom/Jaeger 168h 与 DB 30 天 retention 不同，历史页面允许 section partial。
 
 ## 8.3 Event 与 SSE
 
@@ -487,7 +489,7 @@ Backend get/list/watch 全 11 个 CRD；create/update/patch/delete 仅 7 个通�
 
 ## 9.6 生产差距
 
-本地 PostgreSQL 密码由部署脚本随机生成，但 DB 仍为集群内 sslmode=disable；PostgreSQL 单实例无备份；Prometheus/Jaeger/Grafana易失；无完整 OIDC/租户授权/TLS/NetworkPolicy/PDB/HA/Alertmanager/镜像供应链。当前部署只能称开发拓扑。
+本地 PostgreSQL 密码由部署脚本随机生成，但 DB 仍为集群内 sslmode=disable；PostgreSQL 单实例无备份；Prometheus/Jaeger 已 PVC（单副本），Grafana 仍易失；无完整 OIDC/租户授权/TLS/NetworkPolicy/PDB/HA/Alertmanager/镜像供应链。当前部署只能称开发拓扑。
 
 # 第十章：未来扩展
 

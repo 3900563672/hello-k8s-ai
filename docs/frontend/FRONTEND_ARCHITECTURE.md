@@ -36,7 +36,7 @@ flowchart TB
   APP["App / QueryClient / Router"] --> L["MainLayout"]
   L --> NAV["Sidebar + ClusterStatus"]
   L --> TIME["Global TimeTravelBar"]
-  L --> PAGE["Config / Traffic / Data Overview"]
+  L --> PAGE["Config / Traffic / Data Overview / Monitor / Guide"]
   PAGE --> Q["TanStack Query hooks"]
   PAGE --> Z["Zustand selectors/actions"]
   Q --> EP["Typed endpoint modules"]
@@ -48,7 +48,7 @@ flowchart TB
 | 路径 | 职责 |
 | --- | --- |
 | `src/app/` | Provider、Router、lazy route、全局错误边界。 |
-| `src/components/features/` | Config、Traffic、Trace/Data Overview 业务 UI。 |
+| `src/components/features/` | Config、Traffic、Trace/Data Overview、Monitor、Guide 业务 UI。 |
 | `src/components/shared/` | Layout、TimeTravelBar、通用对话框和反馈。 |
 | `src/api/endpoints/` | 每个领域的 HTTP/SSE 调用。 |
 | `src/api/queries/` | TanStack Query key、query/mutation 组合。 |
@@ -65,6 +65,8 @@ flowchart TB
 | latest/historical、selected snapshot、viewport | `timeSlice` | 内存 | 全局浏览上下文，不是服务事实。 |
 | Traffic templates/overlays | `trafficSlice` | 内存草稿 | 尚未提交控制面，刷新会丢失。 |
 | 表单临时值/对话框 | React local/form state | 组件生命周期 | 不需要全局共享。 |
+| Monitor 健康状态 | 页面本地 state | 组件生命周期 | Grafana 探活只服务于页面外壳，不进入 Backend 状态。 |
+| Guide 模板/参数 | 静态常量 | 不持久化 | 指南只展示，不产生请求；模板只预填表单。 |
 
 生产路径不写 localStorage。旧文档中的配置、模板、805 mock 切面持久化说明已废弃。
 

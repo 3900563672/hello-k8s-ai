@@ -92,7 +92,7 @@ hello-k8s-ai 采用 Kubernetes Controller Pattern 设计。
    Prometheus / OTel PostgreSQL
     |                     |
     v                     v
- Granafa                Jaeger
+ Grafana               Jaeger
     |                     |
     v                     v    
     +---------+-----------+
@@ -610,39 +610,20 @@ Frontend 最终通过 Backend 查询数据库展示。
 
 ```text
 hello-k8s-ai
-     
-     ├── api/
-     │
-     │ Kubernetes CRD 定义
-     │ Resource 类型
-     │
-     ├── cmd/
-     │
-     │ 程序入口
-     │
-     ├── internal/
-     │
-     │ 核心业务逻辑
-     │ Controller
-     │ Backend
-     │
-     ├── simulator/
-     │
-     │ AI workload 模拟
-     │ 性能数据生成
-     │
+     ├── api/v1/                  CRD Go 类型与 Kubebuilder 标记
+     ├── cmd/                     Controller Manager 入口
+     ├── internal/                7 个 Controller、observability
+     ├── simulator/               AI workload 模拟、Lease 选主、Metrics/Trace
      ├── dashboard/
-     │
-     │ Frontend
-     │ Backend API
-     │
-     ├── config/
-     │
-     │ Kubernetes 部署配置
-     │
-     └── docs/
-     
-     项目文档
+     │   ├── backend/             Backend API、Kubernetes cache、PostgreSQL
+     │   └── frontend/my-app/     React 控制台（5 个页面）
+     ├── config/                  CRD、RBAC、部署与可观测性清单
+     ├── docs/                    分层文档（人类 / Agent / 远程 AI）
+     ├── change-history/          每次变更的归档与时间线
+     ├── hack/                    部署、文档检查、长跑与验证脚本
+     ├── test/                    E2E 与测试工具
+     ├── Makefile / setup.sh      构建与一键部署入口
+     └── AGENTS.md                本地 Agent 工作准则
 ```
 
 ---
@@ -723,36 +704,38 @@ config/
 第一次接触项目：
 
 ```text
-      README
+      README.md（1 分钟：是什么、怎么跑）
      
         ↓
      
-  docs/INDEX.md
+ PROJECT_OVERVIEW_NEW.md（本文：10 分钟总览）
      
         ↓
      
- docs/INDEX.md
+  docs/INDEX.md（专题索引，按需进入）
      
         ↓
      
-PROJECT_OVERVIEW.md
+ docs/getting-started/LOCAL_RUN.md（动手跑起来）
      
         ↓
      
-       api/
+ docs/overview/ARCHITECTURE_OVERVIEW.md（理解架构）
      
-         ↓
+        ↓
      
-      internal/
-     
-         ↓
-     
-     simulator/
-     
-         ↓
-     
-     dashboard/
+       api/ → internal/ → simulator/ → dashboard/
 ```
+
+最快体验完整链路：
+
+```bash
+bash setup.sh
+# 打开 http://localhost:8080，进入「填写指南」（/guide）
+# 用预置模板创建模型、节点、租户与流量，再提交运行
+```
+
+一键启动得到的是干净环境：没有预置租户、模型与历史数据，这是预期行为；配置模板只预填表单，提交与运行由你决定。
 
 关注调度逻辑：
 
@@ -771,21 +754,25 @@ PROJECT_OVERVIEW.md
 关注用户功能：
 
 ```text
-dashboard/
+dashboard/frontend/my-app/
 
-    ↓
+        ↓
 
- backend/
+ dashboard/backend/
 ```
 
 关注部署：
 
 ```text
-       config/
+       setup.sh（一键入口）
 
          ↓
 
-docs/getting-started/
+       config/（Kubernetes 清单）
+
+         ↓
+
+docs/getting-started/DEPLOYMENT.md
 ```
 
 ---

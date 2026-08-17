@@ -104,7 +104,7 @@ PostgreSQL 有 `clock_state` scaffold，Frontend 有时间条，但 Controller/S
 
 ### 生产运维能力不足
 
-本地密码已改为部署时随机生成，但数据库连接仍是本机集群内明文；单副本数据库、易失 Prometheus/Jaeger、无完整 IAM/NetworkPolicy/备份/DR，使当前清单仍只能被称为开发环境。
+本地密码已改为部署时随机生成，但数据库连接仍是本机集群内明文；单副本数据库与单副本 Prometheus/Jaeger（已 PVC）、Grafana 易失、无完整 IAM/NetworkPolicy/备份/DR，使当前清单仍只能被称为开发环境。
 
 ### 若干技术债
 

@@ -77,10 +77,10 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
 - 2026-08-18 [变更总览：宿主工具链恢复——Codex 配置自修复、整机重启恢复顺序与圈复杂度处理](change-history/2026-08-18-host-toolchain-recovery/README.md)
+- 2026-08-18 [变更总览：人类文档补全与远程 AI 手册完善——文档漂移全面对齐](change-history/2026-08-18-docs-human-complete/README.md)
 - 2026-08-18 [变更总览：文档体系重构——机械门禁、内容迁移与入口重写](change-history/2026-08-18-docs-architecture-rework/README.md)
 - 2026-08-18 [变更总览：降级演练缺陷修复——告警表达式三修 + 模拟器容器资源限制](change-history/2026-08-18-alert-drill-fixes/README.md)
 - 2026-08-17 [变更总览：稳定性恢复顺序——运行前体检、工具链自检与 Prometheus 内存/重启告警](change-history/2026-08-17-stability-recovery/README.md)
-- 2026-08-17 [扩容加速（批量扩容）+ 稳定性矩阵 + 容量指南](change-history/2026-08-17-scaleup-acceleration/README.md)
 
 <!-- docs-sync:timeline-end -->
 
@@ -112,6 +112,7 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 | Backend Kubernetes cache、PostgreSQL、Prometheus、Jaeger 聚合 | 已实现 |
 | React Config、Traffic、Data Overview | 已接真实 Backend；Traffic Overlay 提交仍是部分实现 |
 | 预置配置模板与"从模板新建" | 已实现；模板只预填表单，提交与运行由用户决定 |
+| Monitor（Grafana 内嵌）与 Guide（填写指南） | 已实现；Grafana 经 Dashboard `/grafana/` 单入口访问，`/guide` 集中展示字段含义与系统常量 |
 | 参数与填写指南（/guide） | 已实现；集中展示字段含义、默认值与系统常量 |
 | 干净环境一键启动（默认无演示数据） | 已实现；DEMO_ENABLED=true 可恢复演示链路 |
 | Docker Desktop 完整栈一键部署 | 已实现；需要在目标机器执行真实运行验收 |

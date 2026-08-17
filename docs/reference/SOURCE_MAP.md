@@ -76,12 +76,14 @@
 
 | 路径 | 职责 |
 | --- | --- |
-| `dashboard/frontend/my-app/src/app/router.tsx` | `/config` `/traffic` `/trace` |
+| `dashboard/frontend/my-app/src/app/router.tsx` | `/config` `/traffic` `/trace` `/monitor` `/guide`（`/` 重定向 `/config`，未知路由 404） |
 | `src/components/shared/Layout/MainLayout.tsx` | app shell + sync |
 | `src/components/shared/TimeTravelBar/` | latest/historical UI |
 | `src/components/features/config/` | Config page/forms/tables |
 | `src/components/features/traffic/` | templates/canvas/overlay |
 | `src/components/features/trace/DataOverviewPage.tsx` | Data View + Trace |
+| `src/components/features/monitor/MonitorPage.tsx` | Grafana 监控面板（`/grafana/` 代理 + 健康检查） |
+| `src/components/features/guide/GuidePage.tsx` | 参数填写指南（预置模板 + 系统常量速查） |
 | `src/api/client.ts` | envelope/problem HTTP client |
 | `src/api/endpoints/` | domain endpoints |
 | `src/api/queries/` | TanStack Query |

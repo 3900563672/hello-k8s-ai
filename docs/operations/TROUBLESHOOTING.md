@@ -220,3 +220,13 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 ## 16. 收集故障证据
 
 提交 Issue/交接时附：时间范围与时区、Context/namespace、相关 CR YAML（Secret 脱敏）、Pod describe/events、Controller/Simulator/Backend requestId/traceID logs、Prom query、Jaeger traceID、Frontend request/response meta。不要附真实 Secret/DATABASE_URL/token。
+
+## 17. 上下文包生成失败（context-pack）
+
+`make context-pack` 把源码、`docs/` 与 `change-history/` 打包给远程 AI，输出 `.runtime/context-pack/`（已被 gitignore，不提交）。排查：
+
+- **目录残留/占用**：脚本先 `rm -rf` 旧包再重建；`.runtime/context-pack/` 被占用或只读会失败，删除该目录后重试。
+- **Open Issues 为空**：`gh` 未认证或网络不可用时，脚本把该段替换为“无法读取”提示而不是失败；确认 `gh auth status` 后重新生成。
+- **包模式不符**：`make context-pack` 默认全量包（`FULL=1`，含全部 `docs/`）；只要 AI 两层时用 `make context-pack FULL=0`（仅 `docs/agents/` 与 `docs/remote-ai/`）。
+- **包内容过旧**：重新执行 `make context-pack`；以 `CONTEXT_PACK.md` 顶部的生成时间与最近提交为准，包不是实时仓库。
+- **磁盘空间**：`tar` 失败通常伴随磁盘不足，检查 `.runtime/` 所在分区。
