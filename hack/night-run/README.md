@@ -36,7 +36,28 @@
 - API 写操作需要 `Idempotency-Key` 头（≤200 安全字符）；当前部署 `ADMIN_TOKEN` 未配置，非生产环境匿名写可用。
 - 实测边界（2026-08-17 首次执行）：rate 有效范围 1–20；租户名为 `tenant-core`；50qps@10 副本触发队列积压（35qps 健康）；副本由 Orchestrator 控制，`kubectl scale` 不可用。
 
+## 白天无人值守（day-watch，0 Token）
+
+潮汐/高峰时段不想耗 Token 时，用纯脚本按时间表跑流量并采集，事后一次性分析：
+
+```bash
+# 单轮试跑
+node hack/night-run/day-watch.mjs --once
+
+# 常驻：每小时前 45 分钟 35qps（基线）+ 后 15 分钟 50qps（压测），每 15 分钟一轮
+mkdir -p .runtime/day-run/$(date +%F)
+setsid nohup node hack/night-run/day-watch.mjs --loop --interval 900 \
+  < /dev/null >> .runtime/day-run/$(date +%F)/day-watch.log 2>&1 &
+
+# 自定义剧本：--baseline-qps / --peak-qps / --peak-minutes / --cycle-minutes / --tenant
+```
+
+- 每轮：按剧本判定目标 qps → GET `/api/v1/traffic` 对比 → 偏差时 `PATCH /api/v1/tenants/{name}/traffic`（带 `Idempotency-Key`）→ 跑 `keepalive.mjs --once` 健康检查 → 每 2 轮跑 `snapshot.mjs --once --summary` 快照。
+- 输出 JSON 行到日志；异常只记录不折腾（维持模式），事后由 Agent 读日志/快照一次性分析。
+- 停止：`kill <PID>`（`ps aux | grep day-watch` 查 PID）。运行前确认 `sleep-guard.sh status` 为 `guard=on`、Backend 8080 可达。
+
 ## 手动运行
+
 
 ```bash
 # 单次健康检查
