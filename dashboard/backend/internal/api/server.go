@@ -12,6 +12,7 @@ import (
 	prometheusprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/prometheus"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/readmodel"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/store"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Dependencies struct {
@@ -69,6 +70,8 @@ func (server *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/health/live", server.handleLive)
 	mux.HandleFunc("GET /api/v1/health/ready", server.handleReady)
+	// 自描述指标供 Prometheus 抓取，只读，不参与写认证。
+	mux.Handle("GET /metrics", promhttp.Handler())
 	mux.HandleFunc("GET /api/v1/capabilities", server.handleCapabilities)
 	mux.HandleFunc("GET /api/v1/bootstrap", server.handleBootstrap)
 	mux.HandleFunc("GET /api/v1/configuration", server.handleConfiguration)

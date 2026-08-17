@@ -1,6 +1,6 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-run-segment/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-observability-persistence/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
@@ -357,14 +357,45 @@
 - 解决：直接运行已有二进制 `bin/golangci-lint-v2.12.2 run`（缺失时 `ln -sf bin/golangci-lint-v2.12.2 bin/golangci-lint`）。
 - 验证：`bin/golangci-lint run` → `0 issues`。
 
-### 2026-08-17 Prometheus emptyDir 重启即丢历史：段/历史查询出现"区间无数据"先查 Prometheus 存活时间
+### 2026-08-17 Prometheus emptyDir 重启即丢历史：段/历史查询出现"区间无数据"先查 Prometheus 存活时间【已修复：PVC 化】
 - 现象：段查询 06:00Z-10:00Z 区间 qps/queue/ttft 全部 0 series，只有 errorRate 有 121 个常量 0 点（`or on() vector(0)` 空集保护产生）。
 - 原因：Prometheus 数据卷是 emptyDir，11:41Z 部署时重启过，重启前的原始指标全部丢失；errorRate 的空集保护会在无数据时填常量 0 系列，容易误读成"指标为 0"。
-- 解决：`kubectl get pods -n hello-k8s-ai-system | grep prometheus` 看 Age；与段窗口比对，窗口早于 Prometheus 启动时间即为"已丢失"，接口如实返回空 + 告警属正确行为。
-- 验证：最近 10 分钟窗口（Prometheus 存活期内）5 指标 series=1、points=121，数据正常。
-- 备注：根治方向是 issue-09 后续"按环境拆分可观测性存储（持久卷）"，本期未做。
+- 解决（2026-08-17 同日）：Prometheus 数据卷改 PVC（`hello-k8s-ai-prometheus-data` 20Gi），retention 24h→168h；Jaeger 同步改 badger + PVC。旧 emptyDir 数据不迁移，切换时从空开始属预期。查询"区间无数据"时仍先核对"窗口是否早于组件首次建库时间"与"是否超出 168h 保留窗口"。
+- 验证：PVC 化后 scale 0→1 重启，`count(up)` 205 不变、重启前 30 分钟采样仍在（见 change-history/2026-08-17-observability-persistence/TEST_REPORT.md）。
+- 备注：历史窗口早于 12:54Z（本次切 PVC 时间）的指标仍缺失，是历史数据损失，不是新问题。
 
 
+
+### 2026-08-17 Jaeger badger 单副本 + RWO PVC：重启/升级必须先 scale 到 0 再扩回 1
+- 现象：Deployment 滚动更新（rollout restart）时新 Pod CrashLoopBackOff，日志 `Cannot acquire directory lock on "/tmp/jaeger/". Another process is using this Badger database`；旧 Pod 一直 Terminating，rollout 卡死。
+- 原因：badger 在数据目录写 LOCK 文件；单副本 + RWO PVC 滚动更新会短暂出现新旧两个 Pod 同时挂载同一 PVC，新 Pod 抢不到锁即退出。
+- 解决：重启/升级 Jaeger 用 `kubectl scale deploy hello-k8s-ai-jaeger --replicas=0`（等 Pod 清空）→ `--replicas=1`，不要 rollout restart；Prometheus TSDB 同样有目录锁，按同一流程操作。清单已加注解 `platform.study.com/restart-procedure: scale-to-zero`。
+- 验证：scale 0→1 后 Jaeger 正常启动，重启前 Trace 仍在（badger 持久化生效）。
+- 备注：若已陷入"新旧 RS 抢锁"死锁，直接 scale 0 清空所有 Pod 再扩回即可，无需删除 RS。
+
+### 2026-08-17 Jaeger v2 显式配置后 OTLP receiver 默认只绑 127.0.0.1
+- 现象：给 Jaeger 加 config.yaml 后 otel-collector 持续 `connection refused`（`dial tcp ...:4317`），Jaeger 日志显示 OTLP 只监听 `127.0.0.1:4317/4318`。
+- 原因：Jaeger v2 带配置文件时 OTLP receiver 默认绑定 localhost；之前无配置时内置默认绑 0.0.0.0，掩盖了差异。
+- 解决：配置里显式写 `receivers.otlp.protocols.grpc.endpoint: 0.0.0.0:4317`、`http.endpoint: 0.0.0.0:4318`。
+- 验证：改后 Jaeger 监听 `[::]:4317/4318`（含 IPv4 映射），collector 导出自愈，`/api/services` 有数据。
+
+### 2026-08-17 prometheus/client_golang CounterVec 无 label 实例时不出现在 /metrics
+- 现象：Backend 加了 `promauto.NewCounterVec`，但 `/metrics` 里找不到该指标（以为没注册）；二进制 strings 又能搜到指标名。
+- 原因：CounterVec 的 Gather 只输出"已有 label 组合"的系列；从未 `WithLabelValues(...)` 过就不输出，静默期看不到 0 值。
+- 解决：需要"始终可见的 0 值"的计数用普通 `promauto.NewCounter`（无 label）；需要按 kind 拆分的场景要在启动时预建 label 实例或接受"首次发生才可见"。
+- 验证：改用普通 Counter 后 `/metrics` 立刻出现两个计数器（0 值）。
+
+### 2026-08-17 desktop-worker6 kindnet 网络持续故障（2026-08-17 13:10Z 复测），保持 cordon
+- 现象：cordon 后复测（busybox 调度到 worker6 执行 nslookup）仍 `connection timed out; no servers could be reached`；kindnet 日志持续 `lookup desktop-control-plane: i/o timeout`。
+- 原因：worker6 节点网络栈（kindnet/kube-proxy 均重启过 6 次）未自愈；根因未定位，疑似 Docker Desktop 内置 K8s 节点容器重建后的 CNI 混乱（历史上 desktop-worker6/9 曾同 IP）。
+- 解决：继续 `kubectl cordon desktop-worker6`；不要重启节点/集群（用户未批准）；后续从 kindnet/kube-proxy 日志与节点容器侧排查。
+- 验证：cordon 状态在 `kubectl get nodes` 可见（Ready,SchedulingDisabled），业务 Pod 全部跑在健康节点。
+
+### 2026-08-17 本机 go get 新依赖必须 GOSUMDB=off
+- 现象：`go get github.com/prometheus/client_golang@latest` 报 `verifying module: invalid GOSUMDB: malformed verifier id`（GOSUMDB=sum.goproxy.cn 本机异常）。
+- 原因：本机 Go 环境 sumdb 校验问题（与 `make lint` 的 GOSUMDB 失败同源）。
+- 解决：`export GOSUMDB=off` 后执行 `go get`/`go mod tidy`；go.sum 正常入库，CI 侧校验不受影响。
+- 验证：GOSUMDB=off 后依赖拉取成功、`go build ./...` 通过。
 
 ### 2026-08-16 Simulator Pod 调度绑定 WorkerNode 名：虚拟节点名无法调度
 - 现象：用虚拟节点名（如 node-gpu-1）创建 WorkerNode 并建 TenantNodePolicy 后，SimulatorInstance 副本一直 Pending，`describe` 显示 node selector 匹配不到真实节点。

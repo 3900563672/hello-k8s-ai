@@ -345,6 +345,7 @@ func (database *Postgres) ListTimeline(ctx context.Context, limit int, before *t
 		"TenantModelPolicy", "TenantNodePolicy", "ModelNodePolicy",
 		"Orchestrator", "SimulatorInstance",
 		"TenantPerformance", "TenantRuntime", "SimulationClock",
+		"TimelineGap",
 	}
 	rows, err := database.pool.Query(ctx, `
 		SELECT timeline_id, occurred_at, operation, kind, namespace, name
@@ -587,6 +588,17 @@ func timelineItem(eventID string, occurredAt time.Time, operation, kind, namespa
 			Source:  "postgresql/snapshot",
 			Impact:  map[string]int{"tenants": 0, "nodes": 0, "models": 0, "changes": 0},
 			Tags:    []string{"PostgreSQL", "Snapshot"},
+		}
+	}
+	if kind == "TimelineGap" {
+		return model.TimelineItem{
+			ID: eventID, Timestamp: occurredAt.UTC(), Weight: 9,
+			Type: "event", Trigger: "event", Domain: "runtime", Severity: "attention",
+			Title:   "历史事件缺口（事件被丢弃）",
+			Summary: "历史事件缓冲或数据库写入曾发生丢弃，计数见事件 payload 与 Prometheus 指标。",
+			Source:  "postgresql/gap",
+			Impact:  map[string]int{"tenants": 0, "nodes": 0, "models": 0, "changes": 1},
+			Tags:    []string{"History", "Gap"},
 		}
 	}
 	domain := "runtime"

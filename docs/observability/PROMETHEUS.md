@@ -12,13 +12,13 @@ Prometheus 保存 Controller、Simulator 和 OTel Collector 的时间序列，�
 | --- | --- |
 | Image | `prom/prometheus:v3.13.2` |
 | Scrape interval | 10s |
-| Retention | 24h |
-| Storage | `emptyDir` |
+| Retention | 168h（7 天） |
+| Storage | PVC `hello-k8s-ai-prometheus-data`（20Gi、RWO、local-path） |
 | Namespace | `hello-k8s-ai-system` |
 | Service | `hello-k8s-ai-prometheus:9090` |
 | Alertmanager | 未部署 |
 
-开发 Pod 重启/重建可能丢指标，不适合作长期容量报告。
+数据卷为 PVC（`hello-k8s-ai-prometheus-data`），Pod 重启/重建不丢历史；retention 168h。单副本 + RWO，重启/升级需先 scale 0 再扩 1（目录锁，见 `docs/agents/KNOWN_PITFALLS.md`）。
 
 ## 3. Scrape 路径
 
