@@ -1,6 +1,6 @@
 # 同步协议（SYNC）
 
-> 维护层：agents ｜ 最后同步：2026-08-18 ｜ 对应变更：change-history/2026-08-18-host-toolchain-recovery/
+> 维护层：agents ｜ 最后同步：2026-08-18 ｜ 对应变更：change-history/2026-08-18-alert-drill-fixes/
 > 目的：代码或行为变更后，让三层文档与 change-history 时间线保持一致，避免漂移。
 
 ## 1. 谁维护什么
