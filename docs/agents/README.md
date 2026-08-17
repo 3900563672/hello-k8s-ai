@@ -1,6 +1,6 @@
 # Agent 操作手册（docs/agents/）
 
-> 维护层：agents ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-ui-visual-verification/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-scaleup-acceleration/
 > 本目录给**能操作当前机器与仓库**的 Agent（如 Codex、Claude Code）：可以读写本仓库、执行命令、访问 GitHub。
 > 只在自己工作区工作、收打包内容的远程 AI 见 [docs/remote-ai/](../remote-ai/README.md)；人类入口是根目录 [README.md](../../README.md) 与 [docs/INDEX.md](../INDEX.md)。
 
@@ -18,6 +18,7 @@
 | --- | --- | --- |
 | 新需求 / 大改 | WORKFLOW.md、PRINCIPLES.md、对应源码 | docs/INDEX.md |
 | 修 bug | WORKFLOW.md、KNOWN_PITFALLS.md、对应源码 | 对应专题 |
+| 稳定性 / 长时运行 / 组件故障 | [RESILIENCE.md](RESILIENCE.md)、WORKFLOW.md（4.2）、对应源码 | docs/observability/ |
 | CRD / API / 数据链路变更 | PRINCIPLES.md、`api/v1/*_types.go`、生成清单、FIELD_OWNERSHIP | 对应专题、白皮书 |
 | 数据库 / Schema 变更 | PRINCIPLES.md、对应迁移文件、postgres_integration_test.go | DATABASE_DESIGN（人类文档，按需） |
 | 文档维护 | WORKFLOW.md、SYNC.md | docs/README.md |
@@ -36,4 +37,5 @@
 ## 维护规则
 
 - Agent 每次任务后：踩了新坑 → 追加 [KNOWN_PITFALLS.md](KNOWN_PITFALLS.md)；完成交付 → 在 `change-history/` 追加日期条目，并按 [SYNC.md](SYNC.md) 同步。
+- 稳定性相关交付（优雅降级、容量、长时运行）同步更新 [RESILIENCE.md](RESILIENCE.md) 的矩阵与验收清单。
 - 修改本目录与修改代码同等对待：提交、验证、可回滚。

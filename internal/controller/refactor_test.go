@@ -329,3 +329,64 @@ func TestPerformanceTenantIndexDefaultsAndCanBeOverridden(t *testing.T) {
 		t.Fatalf("custom index = %q, want %q", got, custom)
 	}
 }
+
+func TestDecideAtBatchesScaleUpByPressureGap(t *testing.T) {
+	now := time.Date(2026, time.August, 17, 12, 0, 0, 0, time.UTC)
+	base := DecisionInput{
+		TenantQPS:         50,
+		HasQueue:          true,
+		AvgQueue:          350,
+		QueueThresholdUp:  150,
+		MaxReplicas:       0,
+		AvailableModels:   []ModelInfo{{Name: "model-a", GPUUnits: 1, AbsoluteScore: 100, MaxConcurrency: 16}},
+		AvailableNodes:    []NodeInfo{{Name: "node-a", RemainingGPU: 64, RemainingConcurrency: 640}},
+		ExistingInstances: []InstanceInfo{{Name: "instance-a", ModelName: "model-a", CurrentReplicas: 10, PlacementReady: true}},
+	}
+
+	// 队列缺口 200 / 单副本并发 16 = 12.5 -> 取上限 10，一次 10->20
+	decision := DecideAt(base, now)
+	if decision.Action != ScaleUp || decision.ObservedReplicas != 10 || decision.TargetReplicas != 20 {
+		t.Fatalf("queue-gap batch decision = %+v, want 10->20", decision)
+	}
+
+	// 只有 TTFT 超标时保持原有 +1 节奏，不做批量放大
+	ttftOnly := base
+	ttftOnly.HasQueue = false
+	ttftOnly.HasTTFT = true
+	ttftOnly.AvgTTFT = 600
+	ttftOnly.TTFTThresholdUp = 500
+	decision = DecideAt(ttftOnly, now)
+	if decision.Action != ScaleUp || decision.TargetReplicas != 11 {
+		t.Fatalf("ttft-only decision = %+v, want 10->11", decision)
+	}
+
+	// 单节点放不下整批 10 个（GPU 只剩 4）时逐级减半，最终一次 10->12
+	tightNode := base
+	tightNode.AvailableNodes = []NodeInfo{{Name: "node-a", RemainingGPU: 4, RemainingConcurrency: 64}}
+	decision = DecideAt(tightNode, now)
+	if decision.Action != ScaleUp || decision.TargetReplicas != 12 {
+		t.Fatalf("tight-node batch decision = %+v, want 10->12", decision)
+	}
+
+	// 引导期低于地板时一次补到地板，但不超过批次上限：0->10（地板 12）
+	bootstrap := DecisionInput{
+		TenantQPS:         20,
+		MinReplicas:       12,
+		MaxReplicas:       0,
+		AvailableModels:   base.AvailableModels,
+		AvailableNodes:    []NodeInfo{{Name: "node-a", RemainingGPU: 64, RemainingConcurrency: 640}},
+		ExistingInstances: []InstanceInfo{{Name: "instance-a", ModelName: "model-a", CurrentReplicas: 0}},
+	}
+	decision = DecideAt(bootstrap, now)
+	if decision.Action != ScaleUp || decision.ObservedReplicas != 0 || decision.TargetReplicas != 10 {
+		t.Fatalf("bootstrap batch decision = %+v, want 0->10", decision)
+	}
+
+	// 整批和减半都放不下时仍按容量不足处理，不能给出非法计划
+	noRoom := base
+	noRoom.AvailableNodes = []NodeInfo{{Name: "node-a", RemainingGPU: 0, RemainingConcurrency: 0}}
+	decision = DecideAt(noRoom, now)
+	if decision.Action != NoOp || decision.Reason != "no_feasible_placement" {
+		t.Fatalf("no-room decision = %+v, want NoOp no_feasible_placement", decision)
+	}
+}
