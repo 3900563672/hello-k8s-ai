@@ -5,6 +5,45 @@
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
 
+## 宿主内存治理（2026-08-17）
+
+### 2026-08-17 整机内存爆满根因链（Commit 打满 → C 盘 pagefile 暴涨）
+- 现象：物理内存 31.4GB 被占满（空闲 0.4GB），C 盘被 pagefile 吃掉 20-30GB，WSL 内 kubectl 频繁超时（Wsl/Service/0x8007274c），Commit Charge 打满 68.7/68.7GB。
+- 原因（四层叠加）：
+  1. 无 `.wslconfig`：WSL2 默认占宿主 50% 内存（15.7GB）且**永不归还**（vmmem 只增不减，`autoMemoryReclaim` 未开启）；
+  2. Docker Desktop 内置 K8s 配置 `KubernetesNodesCount=10`：10 个节点容器（kubelet/containerd/kindnet）本身吃掉 VM 内 8-10GB；
+  3. 长跑测试遗留 `SimulatorInstance` CR（`spec.replicas=200`、rate=20）一直没清理，200 个模拟器 Pod 吃 5-8GB；
+  4. Jaeger limit 512Mi < badger 默认 BlockCacheSize 256MB + MemTable 64MB，反复 OOM CrashLoop 加剧压力。
+- 解决：`wsl --shutdown` 回收全部 WSL 内存（vmmemWSL 9.6GB→0.5GB）；新建 `.wslconfig`（`memory=12GB` + `autoMemoryReclaim=gradual`）；关闭 Docker AI（`EnableDockerAI=false`/`InferenceCanUseGPUVariant=false`，备份在 settings-store.json.memguard.bak）；`make cluster-down` + CR 副本归零清掉 200 Pod；Jaeger limit 升 1Gi + `GOMEMLIMIT=805306368`（768Mi）。
+- 验证：空闲内存 0.4GB→9.9GB；负载清零后 VM 内 10 节点仍占 ~11.7GB（12GB 上限），证明**节点数必须缩减**（见 RESILIENCE.md 内存预算节）。
+- 备注：Windows 自动管理 pagefile 会保留峰值大小（实测分配 38GB、当前仅用 3GB），C 盘被占是正常机制不是泄漏；固定大小需重启电脑，列为待办。
+
+### 2026-08-17 GOMEMLIMIT 不接受 K8s 风格 Mi 后缀（malformed GOMEMLIMIT）
+- 现象：Jaeger 容器启动即崩：`fatal error: malformed GOMEMLIMIT; see go doc runtime/debug.SetMemoryLimit`，CrashLoopBackOff。
+- 原因：`GOMEMLIMIT` 是 Go runtime 环境变量，只接受**十进制字节数**（如 `805306368`），`768Mi` 是 K8s 资源格式，Go 不认。
+- 解决：manifest 写字节数 `805306368`（=768Mi）并注释说明。
+- 验证：修正后 Jaeger 正常 Ready（0 重启）。
+- 备注：Go 相关 env（GOMEMLIMIT/GOGC）一律查 `go doc runtime/debug.SetMemoryLimit` 再写，不要套 K8s 单位。
+
+### 2026-08-17 SimulatorInstance replicas=0 不是合法"停止"状态
+- 现象：把长跑遗留 CR `spec.replicas` 从 200 改为 0 后，controller 持续报错：`simulator instance "tenant-core-model-lite" has 0 replicas but its node placement plan contains 200`，reconcile 直接失败、不缩容；Deployment 手动缩 0 后 controller 不再拉起（校验前置失败），但日志持续报错、CR phase 变 Failed。
+- 原因：SimulatorInstance 校验把 `replicas=0` 当作与 node placement plan 冲突的非法状态，没有"暂停/停止"语义。
+- 解决：停止负载的可靠方式是 `make cluster-down`（连 controller 一起缩 0）；恢复 controller 后 CR 会按 spec 重建负载（见下条）。
+- 验证：手动把两个模拟器 Deployment 缩 0 + CR replicas=0 后，Pod 数归零（5 个系统组件），内存回落。
+- 备注：**待修**——`replicas=0` 应成为合法暂停态（node placement plan 同步归零），列入 Issue #29 后续项。
+
+### 2026-08-17 cluster-down 后 kubectl apply config/dev 会复活 controller 并按 CR 重建模拟器
+- 现象：`make cluster-down` 后负载确实归零；但随后为部署 Jaeger 修复执行 `kubectl apply -f config/dev`，controller-manager 恢复 1 副本，Reconcile 看到 `SimulatorInstance.spec.replicas=200` 立即重建全部 200 个模拟器 Pod。
+- 原因：`stop_stack()` 只缩 Deployment 不删 CR；apply 全量清单把 controller 拉回，CR 是用户配置，controller 忠实执行。
+- 解决：先处理 CR（`replicas=0` 或删除）再恢复 controller；或 `cluster-down` 后不要直接 apply 全量清单，只 apply 目标组件。
+- 验证：CR 归零后 apply 不再拉起模拟器。
+- 备注：沉淀进 WORKFLOW 4.2 长跑结束清单。
+
+### 2026-08-17 .wslconfig 会被 Docker Desktop GUI 内存设置覆盖
+- 现象/原因：Docker Desktop 资源设置在 GUI 修改后会重写 `%USERPROFILE%\.wslconfig`，手动写入的 `memory`/`autoMemoryReclaim` 可能丢失。
+- 解决：`%USERPROFILE%\.wslconfig` 是唯一内存治理入口（当前 `memory=12GB` + `autoMemoryReclaim=gradual`），改 Docker GUI 内存后必须同步本文件；已在本文件注释说明。
+- 验证：wsl --shutdown 后 `vmmemWSL` 峰值从 15.7GB 降到 12GB 上限。
+
 ## 夜间长时运行（night-run）
 ### 2026-08-17 宿主机空闲 15 分钟自动睡眠会冻结 WSL（值守事故根因）
 - 现象：2026-08-17 00:50 后值守会话与 keepalive 全部停滞约 7 小时，07:48 恢复；keepalive.log 无新检查记录、sleep 等待命令 7 小时不返回；恢复后系统本身无故障（18 Pod 全 Running）。
