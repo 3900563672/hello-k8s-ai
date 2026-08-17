@@ -2,17 +2,24 @@
 
 > 文档按读者分层：人类（本索引）、本地 Agent（`docs/agents/`）、远程 AI（`docs/remote-ai/`，包内入口 `CONTEXT_PACK.md`）。本索引面向人类阅读路径；分层说明见 [docs/README.md](README.md)。
 
+## 按读者选择入口
+
+| 你是谁 | 入口 |
+| --- | --- |
+| 能操作本机仓库的 Agent（Codex、Claude Code） | 先读根目录 `AGENTS.md`，再读 [docs/agents/README.md](agents/README.md) |
+| 只在自己工作区工作、收打包内容的远程 AI | [docs/remote-ai/README.md](remote-ai/README.md)，包内先读 `CONTEXT_PACK.md` |
+| 人类读者 | 根目录 [README.md](../README.md)，或继续读本索引 |
+
 ## 建议阅读路径
 
 ### 新人 60 分钟路径
 
-1. [AI_CONTEXT 分层入口](AI_CONTEXT.md) - 分层导航与基线速览。
-2. [项目总览](overview/PROJECT_OVERVIEW.md) - 业务问题、核心概念和边界。
-3. [架构总览](overview/ARCHITECTURE_OVERVIEW.md) - 组件、事实源和数据链路。
-4. [CRD 设计](kubernetes/CRD_DESIGN.md) - 业务语言。
-5. [Controller 架构](kubernetes/CONTROLLER_ARCHITECTURE.md) - 控制循环。
-6. [端到端数据流](data-flow/END_TO_END_DATA_FLOW.md) - 从用户操作回到页面。
-7. [本地运行](getting-started/LOCAL_RUN.md) - 动手验证。
+1. [项目总览](overview/PROJECT_OVERVIEW.md) - 业务问题、核心概念和边界。
+2. [架构总览](overview/ARCHITECTURE_OVERVIEW.md) - 组件、事实源和数据链路。
+3. [CRD 设计](kubernetes/CRD_DESIGN.md) - 业务语言。
+4. [Controller 架构](kubernetes/CONTROLLER_ARCHITECTURE.md) - 控制循环。
+5. [端到端数据流](data-flow/END_TO_END_DATA_FLOW.md) - 从用户操作回到页面。
+6. [本地运行](getting-started/LOCAL_RUN.md) - 动手验证。
 
 想用 AI 协作开发，先读 [AI 协作与提示词手册](getting-started/AI_COLLABORATION.md)。
 
@@ -47,7 +54,6 @@
 - [本地运行](getting-started/LOCAL_RUN.md)
 - [部署](getting-started/DEPLOYMENT.md)
 - [验证](getting-started/VERIFICATION.md)
-- [集群信息](operations/CLUSTER_INFORMATION.md)
 - [排障](operations/TROUBLESHOOTING.md)
 - [安全与 RBAC](operations/SECURITY_AND_RBAC.md)
 - [生产就绪度](operations/PRODUCTION_READINESS.md)
@@ -57,11 +63,10 @@
 | 分区 | 文档 | 主问题 |
 | --- | --- | --- |
 | 根 | [README](README.md) | 文档如何使用和维护？ |
-| 根 | [AI_CONTEXT](AI_CONTEXT.md) | 下一位 AI 必须知道什么？ |
 | overview | [PROJECT_OVERVIEW](overview/PROJECT_OVERVIEW.md) | 项目是什么、解决什么问题？ |
 | overview | [ARCHITECTURE_OVERVIEW](overview/ARCHITECTURE_OVERVIEW.md) | 全系统如何分层连接？ |
 | overview | [DESIGN_PHILOSOPHY](overview/DESIGN_PHILOSOPHY.md) | 为什么这样设计？ |
-| overview | [CURRENT_STATUS_AND_ROADMAP](overview/CURRENT_STATUS_AND_ROADMAP.md) | 已完成、未完成、下一步是什么？ |
+| overview | [ROADMAP](overview/ROADMAP.md) | 下一步计划是什么？（状态见 status.md） |
 | overview | [IMPLEMENTATION_RETROSPECTIVE](overview/IMPLEMENTATION_RETROSPECTIVE.md) | 做过什么、怎么做、哪里还不够好？ |
 | getting-started | [DEVELOPMENT_ENVIRONMENT](getting-started/DEVELOPMENT_ENVIRONMENT.md) | 工具与环境如何准备？ |
 | getting-started | [LOCAL_RUN](getting-started/LOCAL_RUN.md) | 如何本地运行各层？ |
@@ -87,7 +92,6 @@
 | data-flow | [END_TO_END_DATA_FLOW](data-flow/END_TO_END_DATA_FLOW.md) | 用户到页面回显的完整闭环是什么？ |
 | data-flow | [EVENT_FLOW](data-flow/EVENT_FLOW.md) | Watch、SSE、事件、审计如何传播？ |
 | data-flow | [TIME_AND_REPLAY](data-flow/TIME_AND_REPLAY.md) | 当前态、历史快照、逻辑时间分别是什么？ |
-| operations | [CLUSTER_INFORMATION](operations/CLUSTER_INFORMATION.md) | 当前可观察环境与声明拓扑是什么？ |
 | operations | [TROUBLESHOOTING](operations/TROUBLESHOOTING.md) | 如何定位常见故障？ |
 | operations | [SECURITY_AND_RBAC](operations/SECURITY_AND_RBAC.md) | 权限和安全边界是什么？ |
 | operations | [PRODUCTION_READINESS](operations/PRODUCTION_READINESS.md) | 离生产还有哪些差距？ |
@@ -102,4 +106,3 @@
 
 - 本体系基于 2026-08-12 源码审计，并在 2026-08-13 至 2026-08-14 同步了 Docker Desktop 部署、Orchestrator 放置契约、Model 能力基准和 Simulator 时间倍速链路。
 - 2026-08-14 早前变更已有根 Go module、Dashboard Backend、E2E 编译和 Kustomize 渲染记录；本次 Simulator 倍速变更只在当前环境完成语法、lint、YAML、Shell 与文档静态检查，Go/生成门禁/完整 Frontend/Kind E2E 仍须 CI 或目标机重跑。完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。
-- 当前交付环境没有 kubectl、Docker、Kind 和目标集群，真实运行结论仍以 `make cluster-up` 或 CI Kind E2E 的实际输出为准；见 [CLUSTER_INFORMATION.md](operations/CLUSTER_INFORMATION.md)。

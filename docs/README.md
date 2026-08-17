@@ -35,20 +35,41 @@
 ## 文档维护规则
 
 1. 一个概念只指定一个主文档，其他位置使用链接和摘要，不复制大段说明。
-2. API、CRD 或字段所有权变更时，同一提交必须更新对应主文档和 AI_CONTEXT 的状态/约束。
+2. API、CRD 或字段所有权变更时，同一提交必须更新 MAP 映射的主文档（见下方所有权表）。
 3. 版本号只在参考表中记录，依赖锁文件仍是最终依据。
 4. 集群实况必须附采集时间、Context 和命令；无访问能力时写“未验证”，禁止根据清单推断 Ready。
 5. Mermaid 节点名保持短小；复杂字段关系使用表格。
 
-## 文档所有权
+## 文档所有权（由 docs/MAP.yaml 生成，运行 make docs-sync 更新）
 
-| 变化 | 必须更新 |
+<!-- docs-sync:ownership-start -->
+
+| 文档 | 映射源码路径 |
 | --- | --- |
-| CRD 字段或校验 | `kubernetes/CRD_DESIGN.md`、`kubernetes/FIELD_OWNERSHIP.md`、白皮书 |
-| Controller 读写或 Watch | `kubernetes/CONTROLLER_ARCHITECTURE.md`、`RESOURCE_LIFECYCLE.md`、字段所有权 |
-| Backend API/DTO | `backend/API_DESIGN.md`、对应 Frontend 数据流、`reference/API_EXAMPLES.md` |
-| 数据库迁移 | `backend/DATABASE_DESIGN.md`、生产就绪度、备份/恢复说明 |
-| 页面或路由 | `frontend/PAGE_STRUCTURE.md`、`frontend/DATA_FLOW.md` |
-| PromQL/Trace 接入 | 对应 `observability/` 文档与 Backend 聚合文档 |
-| 部署拓扑 | `getting-started/DEPLOYMENT.md`、`operations/CLUSTER_INFORMATION.md`、安全/生产就绪度 |
-| 当前里程碑 | `overview/CURRENT_STATUS_AND_ROADMAP.md`、`AI_CONTEXT.md` |
+| `docs/backend/API_DESIGN.md` | `dashboard/backend/internal/api/` |
+| `docs/backend/BACKEND_ARCHITECTURE.md` | `dashboard/backend/cmd/`、`dashboard/backend/internal/`、`dashboard/backend/internal/api/`、`dashboard/backend/internal/kubernetes/` |
+| `docs/backend/DATABASE_DESIGN.md` | `dashboard/backend/deploy/`、`dashboard/backend/internal/store/` |
+| `docs/backend/DATA_AGGREGATION.md` | `dashboard/backend/internal/readmodel/` |
+| `docs/data-flow/EVENT_FLOW.md` | `dashboard/backend/internal/` |
+| `docs/data-flow/TIME_AND_REPLAY.md` | `dashboard/backend/internal/store/` |
+| `docs/frontend/DATA_FLOW.md` | `dashboard/backend/internal/api/`、`dashboard/frontend/my-app/src/`、`dashboard/frontend/my-app/src/components/features/trace/`、`dashboard/frontend/my-app/src/components/features/traffic/` |
+| `docs/frontend/FRONTEND_ARCHITECTURE.md` | `dashboard/frontend/my-app/src/`、`dashboard/frontend/my-app/src/components/features/config/` |
+| `docs/frontend/PAGE_STRUCTURE.md` | `config/observability/`、`dashboard/frontend/my-app/src/components/features/config/`、`dashboard/frontend/my-app/src/components/features/guide/`、`dashboard/frontend/my-app/src/components/features/trace/`、`dashboard/frontend/my-app/src/components/features/traffic/` |
+| `docs/getting-started/DEPLOYMENT.md` | `config/default/`、`config/demo/`、`config/dev/`、`config/manager/`、`config/samples/`、`dashboard/backend/deploy/`、`hack/`、`setup.sh` |
+| `docs/getting-started/LOCAL_RUN.md` | `config/demo/`、`config/dev/`、`config/samples/` |
+| `docs/kubernetes/CONTROLLER_ARCHITECTURE.md` | `cmd/`、`internal/controller/`、`internal/k8sutil/` |
+| `docs/kubernetes/CRD_DESIGN.md` | `api/v1/` |
+| `docs/kubernetes/FIELD_OWNERSHIP.md` | `api/v1/`、`internal/controller/` |
+| `docs/kubernetes/RESOURCE_LIFECYCLE.md` | `internal/controller/` |
+| `docs/observability/JAEGER.md` | `config/observability/`、`dashboard/backend/internal/providers/`、`internal/observability/` |
+| `docs/observability/OPENTELEMETRY.md` | `config/observability/`、`internal/observability/` |
+| `docs/observability/PROMETHEUS.md` | `config/observability/`、`config/prometheus/`、`dashboard/backend/internal/providers/`、`simulator/` |
+| `docs/operations/SECURITY_AND_RBAC.md` | `config/rbac/` |
+| `docs/operations/TROUBLESHOOTING.md` | `hack/` |
+| `docs/overview/ARCHITECTURE_OVERVIEW.md` | `cmd/`、`internal/controller/` |
+| `docs/reference/API_EXAMPLES.md` | `dashboard/backend/internal/api/` |
+| `docs/reference/CONFIGURATION_REFERENCE.md` | `api/v1/`、`config/rbac/`、`dashboard/frontend/my-app/src/components/features/guide/` |
+| `docs/simulator/SIMULATION_FLOW.md` | `simulator/` |
+| `docs/simulator/SIMULATOR_ARCHITECTURE.md` | `simulator/` |
+
+<!-- docs-sync:ownership-end -->

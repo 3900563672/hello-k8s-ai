@@ -189,6 +189,8 @@ curl -sS localhost:8080/api/v1/capabilities
 
 批次中途失败可能已有前序对象写入，查询 audit 和实际 CR，不假设自动回滚。
 
+> WSL 内脚本访问 Backend 一律走 `18080`：Windows 侧 `localhost:8080` 是浏览器入口，WSL 内访问 8080 会与 Windows dllhost 转发冲突（时好时坏，见 `docs/journal/2026-08-16-cluster-and-deploy.md`）。
+
 ## 13. 历史页面为空/错时
 
 - `/replay` 是否有 snapshot，最早 capturedAt 是何时。

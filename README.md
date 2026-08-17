@@ -2,7 +2,7 @@
 
 hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型、逻辑 WorkerNode 和 Simulator 时间倍速；七个 Controller 将配置与策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
 
-第一次接手项目时，请先读 [docs/AI_CONTEXT.md](docs/AI_CONTEXT.md)，再按 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。想用 AI 协作开发，先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。
+第一次接手项目时，请先读 [docs/INDEX.md](docs/INDEX.md) 进入专题文档。想用 AI 协作开发，先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。
 
 ## 最省事的部署方式
 
@@ -60,6 +60,19 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 
 `make cluster-down` 不会删除 `docker-desktop`，也不会碰旁边的 `minikserve-demo` Kind 集群。
 
+## 最近变更
+
+<!-- docs-sync:timeline-start -->
+最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
+
+- 2026-08-18 [变更总览：宿主工具链恢复——Codex 配置自修复、整机重启恢复顺序与圈复杂度处理](change-history/2026-08-18-host-toolchain-recovery/README.md)
+- 2026-08-18 [变更总览：降级演练缺陷修复——告警表达式三修 + 模拟器容器资源限制](change-history/2026-08-18-alert-drill-fixes/README.md)
+- 2026-08-17 [变更总览：稳定性恢复顺序——运行前体检、工具链自检与 Prometheus 内存/重启告警](change-history/2026-08-17-stability-recovery/README.md)
+- 2026-08-17 [扩容加速（批量扩容）+ 稳定性矩阵 + 容量指南](change-history/2026-08-17-scaleup-acceleration/README.md)
+- 2026-08-17 [时间段切面（Run Segment）：起点/终点全局状态 + 区间指标与 Trace](change-history/2026-08-17-run-segment/README.md)
+
+<!-- docs-sync:timeline-end -->
+
 ## 系统边界
 
 ```mermaid
@@ -98,7 +111,6 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 - [本地运行](docs/getting-started/LOCAL_RUN.md)
 - [部署架构](docs/getting-started/DEPLOYMENT.md)
 - [验证指南](docs/getting-started/VERIFICATION.md)
-- [集群信息](docs/operations/CLUSTER_INFORMATION.md)
 - [排障](docs/operations/TROUBLESHOOTING.md)
 
 Kind 只保留给隔离的自动化 E2E，测试集群固定为 `hello-k8s-ai-test-e2e`，与日常 `docker-desktop` 部署无关。
