@@ -7,6 +7,7 @@
 // 前置：WSL 内 node >= 22；集群已启动（bash setup.sh 或已部署）；本地端口转发已建立。
 // 输出：stdout 为 JSON 行（Agent 解析用），失败项同时写 stderr；一切时间戳为 UTC。
 import { execFileSync } from 'node:child_process';
+import http from 'node:http';
 
 const args = process.argv.slice(2);
 const get = (name, dflt) => {
@@ -22,33 +23,49 @@ const REPO = '/root/hello-k8s-ai';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const utcNow = () => new Date().toISOString();
 
-async function httpGet(path, timeoutMs = 8000) {
-  // port-forward 偶发连接复用失败：网络层错误自动重试（最多 3 次，间隔 500ms）
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(`${BASE}${path}`, { signal: controller.signal });
-      const body = await response.text();
-      let json = null;
-      try { json = JSON.parse(body); } catch { /* 非 JSON 响应保留原文 */ }
-      return { status: response.status, ok: response.ok, json, body: body.slice(0, 500) };
-    } catch (error) {
-      if (attempt === 3) {
-        return { status: 0, ok: false, json: null, body: String(error.message || error).slice(0, 500) };
-      }
+function httpGet(path, timeoutMs = 8000) {
+  // port-forward 隧道对 keep-alive 长连接不友好（已知坑）：不用 fetch/undici 连接池，
+  // 每次请求新建 TCP 连接（agent:false），网络层错误自动重试（最多 3 次，间隔 500ms）。
+  const run = () => new Promise((resolve) => {
+    const url = new URL(BASE + path);
+    const request = http.request({
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname + url.search,
+      method: 'GET',
+      headers: { Connection: 'close' },
+      timeout: timeoutMs,
+      agent: false,
+    }, (response) => {
+      let body = '';
+      response.setEncoding('utf8');
+      response.on('data', (chunk) => { body += chunk; });
+      response.on('end', () => {
+        let json = null;
+        try { json = JSON.parse(body); } catch { /* 非 JSON 响应保留原文 */ }
+        resolve({ status: response.statusCode, ok: response.statusCode >= 200 && response.statusCode < 300, json, body: body.slice(0, 500) });
+      });
+    });
+    request.on('error', (error) => resolve({ status: 0, ok: false, json: null, body: String(error.message || error).slice(0, 500) }));
+    request.on('timeout', () => request.destroy(new Error('request timeout')));
+    request.end();
+  });
+  return (async () => {
+    let last;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      last = await run();
+      if (last.ok || last.status !== 0) return last;
       await sleep(500);
-    } finally {
-      clearTimeout(timer);
     }
-  }
-  return { status: 0, ok: false, json: null, body: 'unreachable' };
+    return last;
+  })();
 }
 
 function runKubectl(extraArgs) {
   try {
     const out = execFileSync('kubectl', extraArgs, {
       encoding: 'utf8', timeout: 15000,
+      maxBuffer: 32 * 1024 * 1024, // 141+ 个模拟器 Pod 时 JSON 输出远超默认 1MB（曾 ENOBUFS）
       env: { ...process.env, NAMESPACE },
     });
     return { ok: true, out: out.trim() };

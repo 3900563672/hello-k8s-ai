@@ -9,6 +9,7 @@
 // 前置：WSL 内 node >= 22；Backend 本地端口可达（keepalive.mjs 负责恢复）。
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import http from 'node:http';
 
 const args = process.argv.slice(2);
 const get = (name, dflt) => {
@@ -25,32 +26,49 @@ const localDate = () => {
 const RUN_DATE = get('--date', localDate());
 const SUMMARY = args.includes('--summary');
 const METRIC_IDS = ['controller.errorRate', 'simulator.errorRate', 'simulator.ttft', 'simulator.queue', 'simulator.qps', 'simulator.tickLatency'];
-const SNAP_DIR = join('/root/hello-k8s-ai/.runtime/night-run', RUN_DATE, 'snapshots');
+// 默认落 night-run/<日期>/snapshots/（夜间长跑）；day-watch 可传 --out-dir 统一到 longrun 目录
+const OUT_DIR = get('--out-dir', '');
+const SNAP_DIR = OUT_DIR || join('/root/hello-k8s-ai/.runtime/night-run', RUN_DATE, 'snapshots');
 
 const utcNow = () => new Date().toISOString();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function httpGet(path, timeoutMs = 30000) {
-  // port-forward 偶发连接复用失败：网络层错误自动重试（最多 3 次，间隔 500ms）
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(`${BASE}${path}`, { signal: controller.signal });
-      const body = await response.text();
-      let json = null;
-      try { json = JSON.parse(body); } catch { /* 保留原文 */ }
-      return { ok: response.ok, status: response.status, json, body: body.slice(0, 300) };
-    } catch (error) {
-      if (attempt === 3) {
-        return { ok: false, status: 0, json: null, body: String(error.message || error).slice(0, 300) };
-      }
+function httpGet(path, timeoutMs = 30000) {
+  // port-forward 隧道对 keep-alive 长连接不友好（已知坑）：不用 fetch/undici 连接池，
+  // 每次请求新建 TCP 连接（agent:false），网络层错误自动重试（最多 3 次，间隔 500ms）。
+  const run = () => new Promise((resolve) => {
+    const url = new URL(BASE + path);
+    const request = http.request({
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname + url.search,
+      method: 'GET',
+      headers: { Connection: 'close' },
+      timeout: timeoutMs,
+      agent: false,
+    }, (response) => {
+      let body = '';
+      response.setEncoding('utf8');
+      response.on('data', (chunk) => { body += chunk; });
+      response.on('end', () => {
+        let json = null;
+        try { json = JSON.parse(body); } catch { /* 保留原文 */ }
+        resolve({ ok: response.statusCode >= 200 && response.statusCode < 300, status: response.statusCode, json, body: body.slice(0, 300) });
+      });
+    });
+    request.on('error', (error) => resolve({ ok: false, status: 0, json: null, body: String(error.message || error).slice(0, 300) }));
+    request.on('timeout', () => request.destroy(new Error('request timeout')));
+    request.end();
+  });
+  return (async () => {
+    let last;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      last = await run();
+      if (last.ok || last.status !== 0) return last;
       await sleep(500);
-    } finally {
-      clearTimeout(timer);
     }
-  }
-  return { ok: false, status: 0, json: null, body: 'unreachable' };
+    return last;
+  })();
 }
 
 function latestValue(result) {
