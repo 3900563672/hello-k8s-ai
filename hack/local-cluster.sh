@@ -600,12 +600,15 @@ open_ports() {
   # 可观测性收敛到 Dashboard 单入口：Grafana 经 /grafana 反代，
   # Prometheus / Jaeger 由 Backend 代理（/api/v1/metrics、/api/v1/traces）。
   start_port_forward dashboard hello-k8s-ai-dashboard-frontend 8080 80
+  # WSL 内脚本专用端口：Windows 侧 localhost:8080 由 dllhost 转发宿主占用，
+  # WSL 内访问 8080 会与之冲突（时好时坏），脚本一律走 18080（见 KNOWN_PITFALLS）。
+  start_port_forward dashboard-internal hello-k8s-ai-dashboard-frontend 18080 80
   print_urls
 }
 
 stop_port_forwards() {
   local key pid_file pid args
-  for key in dashboard grafana prometheus jaeger; do
+  for key in dashboard dashboard-internal grafana prometheus jaeger; do
     pid_file="$(port_forward_pid_file "$key")"
     [[ -f "$pid_file" ]] || continue
     pid="$(<"$pid_file")"

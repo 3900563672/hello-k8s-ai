@@ -301,6 +301,14 @@
 - 验证：本次部署后手动重建转发，8080/guide 恢复 200。
 
 ## 集群操作与部署
+### 2026-08-17 WSL 内访问 localhost:8080 与 Windows dllhost 转发冲突（脚本必须走 18080）
+- 现象：day-watch 10:03 起 GET traffic 全部失败（`read ECONNRESET`/`fetch failed`），keepalive 每轮却 ok:true；WSL 内 curl 8080 时好时坏（首个 200、后续全 000）；Windows 侧访问 localhost:8080 始终 200。
+- 原因：Windows 侧 `dllhost.exe` 监听 `127.0.0.1:8080`（WSL2 localhost 转发宿主）；WSL 内 kubectl port-forward 也监听 8080，同端口冲突，WSL 内连接被抢占/重置。keepalive 每轮是独立新进程，首个连接成功即报 ok（假阳性）。
+- 解决：WSL 内脚本一律走 `18080`（`local-cluster.sh` 新增 `dashboard-internal` 转发 18080:80）；8080 保留给 Windows 浏览器。day-watch 默认 `--base-url http://localhost:18080` 并透传给 keepalive/snapshot。
+- 验证：18080 连续 4 次 200；PATCH 50→35 全链路成功；Windows 8080 保持 200。
+- 备注：kubectl port-forward 日志“Handling connection”增加但连接仍失败 = 端口冲突特征；先查 Windows `netstat -ano | findstr 8080`。
+
+
 ### 2026-08-17 更新 Controller 必须用 config/dev 部署，make deploy(config/default) 会丢掉 SIMULATOR_IMAGE env
 - 现象：`make deploy`（kustomize config/default）更新 controller 后，SimulatorInstance Controller 重建模拟器 Deployment，新 Pod 用 `simulator:latest`（本地很老、无 9090 端点的镜像）→ readiness/liveness 探针 connection refused → 29s 优雅退出循环（Exit 0 + Completed，易误判为正常退出）。
 - 原因：dev 栈的 `SIMULATOR_IMAGE=hello-k8s-ai-simulator:dev` env 在 `config/dev/manager-observability-patch.yaml` 里，`make deploy` 用 `config/default` 不含该 patch，apply 覆盖 Deployment 后 env 丢失，controller 回落默认 `simulator:latest`；本地 `simulator:latest` 是过期镜像。
