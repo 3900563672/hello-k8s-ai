@@ -192,7 +192,8 @@ func (r *OrchestratorReconciler) gatherDecisionInput(
 	input.MaxReplicas = config.Spec.MaxReplicas
 	input.AllowScaleToZero = config.Spec.AllowScaleToZero
 
-	if input.MinReplicas > input.MaxReplicas {
+	// maxReplicas=0 表示不限制，minReplicas 不参与比较
+	if input.MaxReplicas > 0 && input.MinReplicas > input.MaxReplicas {
 		return input, fmt.Errorf(
 			"orchestrator %q has minReplicas %d greater than maxReplicas %d",
 			config.Name,
