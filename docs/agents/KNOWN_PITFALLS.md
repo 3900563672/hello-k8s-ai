@@ -1,6 +1,6 @@
 # 已知坑位清单
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-capacity-calibration/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-tooling-fixes/
 > 记录格式：现象 → 原因 → 解决 → 验证 → 日期。新坑按日期倒序追加到对应主题。
 > 这是"踩坑即记录"的流水账，不替代 `docs/` 的正式说明。
 > 领域层面的"已知易误判点"（来自原 AI_CONTEXT 第 8 节）见本文最后一节。
@@ -380,7 +380,7 @@
 - 现象：200/350 QPS 剧本在 141 副本下 queue 始终为 0、TTFT 恒等于基线，扩容一次都不触发，看似"稳定"实为无效负载。
 - 原因：单副本容量 ≈ `maxConcurrency ÷ 平均服务时长`（model-lite ≈ 3.7 qps）；141 副本 × 3.7 ≈ 520 qps 总容量，剧本峰值远低于容量，请求永远不排队。
 - 解决：写剧本前先算容量公式与所需副本：`平均服务时长 = prefillBaseMs + prefillPerTokenUs×0.5 + decodePerTokenMs×200`（prompt 500 / output 200 固定）；`所需副本 ≈ QPS × 平均服务时长 ÷ maxConcurrency`；保证 `峰值 QPS ÷ 当前副本数 > 单副本容量` 才会产生队列与扩容。
-- 验证：650 QPS @ 141 副本（4.6/副本 = 1.25×容量）14:17 峰值验证中；300 QPS @ 141 副本（0.57×容量）实测 queue 0。
+- 验证：650 QPS @ 141 副本（4.6/副本 = 1.25×容量）实测触发批量扩容 141→200（queue 峰值 ~2491、TTFT 峰值 ~678s，到顶后 ~6 分钟排空）；300 QPS @ 141 副本（0.57×容量）实测 queue 0。
 - 备注：400 QPS @ 20 副本（5.4×容量）队列 2 分钟冲到 7 万、TTFT 小时级是数学结果，不是调度 bug；压测前先按公式放大 WorkerNode 容量（见 hack/night-run/README.md）。
 
 ### 2026-08-17 TTFT 只在排队时上升：TTFT=320ms 不代表没负载
@@ -394,6 +394,33 @@
 - 原因：Orchestrator 缩容同时看 TTFT 与 queue，model-lite TTFT 基线 320ms > 缩容下阈值 300ms，`needDown` 被 TTFT 挡住。
 - 解决：这是观察到的预期行为（滞回），长跑结束后副本保持峰值规模不算故障；要恢复需改缩容阈值策略（本期未改）。
 - 验证：2026-08-17 14:00-18:00 长跑观察中，结论以 summary.md 为准。
+
+## 长跑工具与可观测性（2026-08-17 修复）
+
+### 2026-08-17 --until 超时多跑一轮：轮间 sleep 不裁剪到截止时间（已修复）
+- 现象：`--until 18:00` 实际 18:14 才恢复流量并退出，18:14:49 还短时 patch 650qps（7 秒后恢复 35）。
+- 原因：旧版 do-while 循环里 `shouldStop()` 只在每轮结束后检查，轮间 sleep 固定 INTERVAL（900s），截止前最后一轮后仍睡满一轮。
+- 解决：`msUntilStop()` 计算剩余时间，`sleep = min(轮次间隔补足, 剩余)`；循环顶部 `round > 0` 时提前判停；`remaining == 0` 直接 break（day-watch.mjs 已修）。
+- 验证：`--until 19:34` 测试运行 19:34:07 整点停止（含恢复流量 + summary），无多余轮次。
+
+### 2026-08-17 30 分钟快照错过峰值强度：summary 会严重低估峰值指标
+- 现象：4 小时长跑 summary 显示 queue max=135，实际峰值 ~2491（PG `resource_events` 5s 序列）。
+- 原因：快照每 2 轮（30 分钟）一次，恰好落在峰值起始 2 秒处；15 分钟轮次也覆盖不到 15 分钟峰值的中间段。
+- 解决：day-watch 每轮轻量采样 6 个指标 + 进入峰值时预约「峰值中点」补采样（summary「轮内指标」节）；精确序列始终以 PG `resource_events`（5s）为准。
+- 验证：测试剧本触发峰值中点采样并落盘；正式 run 已重生成 summary（快照局限已注明）。
+
+### 2026-08-17 rounds 目录跨 run 复用：summary 混入历史轮次（已修复）
+- 现象：正式 run 的 summary「总轮数 29」，混入 13:21-13:29 测试轮次；陈旧扩缩容事件（05:12:53Z）入表。
+- 原因：rounds/ 按日期目录复用，多轮 run（测试/正式）文件混在一起，旧版 buildSummary 全量统计。
+- 解决：启动写 `meta.json`（startIso/endIso/args），summary 只统计 `[startIso, endIso]` 窗口；扩缩容事件按事件时间过滤；新增 `--resummarize` 重生成模式（无 meta.json 会拒绝，需手工补）。
+- 验证：正式 run 补 meta 后重生成：20 轮、事件 2 条、快照 10 个。
+
+### 2026-08-17 PromQL 空集：零错误时 ratio 类指标塌成空（errorRate 恒为 null，已修复）
+- 现象：controller.errorRate / simulator.errorRate 在快照与指标 API 里恒为 null，即使系统零错误。
+- 原因：`sum(rate(x{outcome="error"}[5m]))` 在没有任何 error 系列时返回空集，分子空 → 整个 ratio 表达式无结果（Prometheus 经典空集问题）。
+- 解决：分子分母都加 `or on() vector(0)`（`config/observability/prometheus.yaml` recording rule + `dashboard/backend/internal/providers/prometheus/client.go` simulator.errorRate 查询）。
+- 验证：部署后两个指标均返回 1 条 series、值 0。
+- 备注：以后写「错误比例 / 占比」类 PromQL 都要带空集保护，否则零错误时面板显示「无数据」而非 0。
 
 ## 领域已知易误判点（原 AI_CONTEXT 第 8 节）
 
