@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const BASE = get('--base-url', 'http://localhost:8080');
+// WSL 内脚本专用端口 18080：Windows 侧 dllhost 占用 localhost:8080 导致 WSL 内访问不稳（见 KNOWN_PITFALLS）
+const BASE = get('--base-url', 'http://localhost:18080');
 const INTERVAL = Number(get('--interval', '900'));
 const LOOP = args().includes('--loop');
 const TENANT = get('--tenant', 'tenant-core');
@@ -31,28 +32,50 @@ function get(name, fallback) {
   return index >= 0 ? args()[index + 1] : fallback;
 }
 
-async function httpJson(method, urlPath, body) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
-  try {
-    const response = await fetch(BASE + urlPath, {
+import http from 'node:http';
+
+// port-forward 隧道对 keep-alive 长连接不友好（已知坑）：不用 undici 连接池，
+// 每次请求新建 TCP 连接（agent:false），网络层错误自动重试（最多 3 次，间隔 1s）。
+function httpJson(method, urlPath, body, attempts = 3) {
+  const run = () => new Promise((resolve) => {
+    const url = new URL(BASE + urlPath);
+    const payload = body === undefined ? null : JSON.stringify(body);
+    const headers = { 'Content-Type': 'application/json', Connection: 'close' };
+    if (method === 'PATCH') {
+      headers['Idempotency-Key'] = `day-watch-${Date.now()}-${idemCounter++}`;
+    }
+    const request = http.request({
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname + url.search,
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(method === 'PATCH' ? { 'Idempotency-Key': `day-watch-${Date.now()}-${idemCounter++}` } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
+      headers,
+      timeout: 15000,
+      agent: false,
+    }, (response) => {
+      let text = '';
+      response.setEncoding('utf8');
+      response.on('data', (chunk) => { text += chunk; });
+      response.on('end', () => {
+        let json = null;
+        try { json = JSON.parse(text); } catch { /* 非 JSON 响应保留原文 */ }
+        resolve({ ok: response.statusCode >= 200 && response.statusCode < 300, status: response.statusCode, json, body: text.slice(0, 300) });
+      });
     });
-    const text = await response.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch { /* 非 JSON 响应 */ }
-    return { ok: response.ok, status: response.status, json, body: text.slice(0, 300) };
-  } catch (error) {
-    return { ok: false, status: 0, body: String(error.message || error) };
-  } finally {
-    clearTimeout(timer);
-  }
+    request.on('error', (error) => resolve({ ok: false, status: 0, json: null, body: String(error.message || error) }));
+    request.on('timeout', () => request.destroy(new Error('request timeout')));
+    if (payload) request.write(payload);
+    request.end();
+  });
+  return (async () => {
+    let last;
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      last = await run();
+      if (last.ok || last.status !== 0) return { ...last, attempt };
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    return { ...last, attempt: attempts };
+  })();
 }
 
 function targetQps(now) {
@@ -77,30 +100,32 @@ function runHelper(script, extraArgs) {
 
 async function adjustTraffic(target) {
   const current = await httpJson('GET', '/api/v1/traffic');
+  if (!current.ok) {
+    return { patched: false, reason: `traffic read failed: ${current.status} (${current.body || current.attempt})`, currentQps: null };
+  }
   const tenant = current.json?.data?.tenants?.find((t) => t.tenant?.name === TENANT);
   const currentQps = tenant?.allocatedQPS ?? tenant?.requestedQPS;
-  if (!current.ok) {
-    return { patched: false, reason: `traffic read failed: ${current.status}`, currentQps };
-  }
   if (currentQps === target) {
     return { patched: false, reason: 'already-at-target', currentQps };
   }
+  const failures = [];
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     const result = await httpJson('PATCH', `/api/v1/tenants/${TENANT}/traffic`, { qps: target });
     if (result.ok) return { patched: true, reason: `patched to ${target}qps (attempt ${attempt})`, currentQps };
-    await new Promise((resolve) => setTimeout(resolve, 10000));
+    failures.push(`${result.status}/${result.body || result.attempt}`);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-  return { patched: false, reason: `patch failed after 3 attempts`, currentQps };
+  return { patched: false, reason: `patch failed after 3 attempts: ${failures.join('; ')}`, currentQps };
 }
 
 async function runOnce(snapshotDue) {
   const now = new Date();
   const target = targetQps(now);
   const traffic = await adjustTraffic(target);
-  const keepalive = runHelper('keepalive.mjs', ['--once']);
+  const keepalive = runHelper('keepalive.mjs', ['--once', '--base-url', BASE]);
   let snapshot = null;
   if (snapshotDue) {
-    snapshot = runHelper('snapshot.mjs', ['--once', '--summary']);
+    snapshot = runHelper('snapshot.mjs', ['--once', '--summary', '--base-url', BASE]);
   }
   const record = {
     ts: utcNow(),

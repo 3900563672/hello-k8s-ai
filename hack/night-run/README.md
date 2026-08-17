@@ -54,7 +54,7 @@ setsid nohup node hack/night-run/day-watch.mjs --loop --interval 900 \
 
 - 每轮：按剧本判定目标 qps → GET `/api/v1/traffic` 对比 → 偏差时 `PATCH /api/v1/tenants/{name}/traffic`（带 `Idempotency-Key`）→ 跑 `keepalive.mjs --once` 健康检查 → 每 2 轮跑 `snapshot.mjs --once --summary` 快照。
 - 输出 JSON 行到日志；异常只记录不折腾（维持模式），事后由 Agent 读日志/快照一次性分析。
-- 停止：`kill <PID>`（`ps aux | grep day-watch` 查 PID）。运行前确认 `sleep-guard.sh status` 为 `guard=on`、Backend 8080 可达。
+- 停止：`kill <PID>`（`ps aux | grep day-watch` 查 PID）。运行前确认 `sleep-guard.sh status` 为 `guard=on`、Backend 18080 可达（WSL 内脚本专用端口；8080 是 Windows 浏览器入口，见 KNOWN_PITFALLS）。
 
 ## 手动运行
 
