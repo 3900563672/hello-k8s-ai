@@ -1,6 +1,6 @@
 # 稳定性与优雅降级矩阵（RESILIENCE）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-scaleup-acceleration/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-capacity-calibration/
 > 目的：组件挂掉后系统"应该怎样表现"的对照表；长时运行前按此矩阵做验收（验收暂未执行）。
 
 ## 1. 总原则
@@ -27,26 +27,38 @@
 | Simulator Leader | 租约 15s/10s/2s；Leader 只运行引擎与状态上报，Follower 空闲 | 状态与性能指标停更 ≤15s；性能过期后 Orchestrator 暂停扩缩 | 新 Leader 接管，冷启动进度从 Status 恢复（`SimulationElapsedMs`），不归零 |
 | Simulator 全部副本 | 无引擎处理流量 → 性能指标无来源 → MetricsNotReady | 扩缩容暂停 | 副本拉起后恢复 |
 
-## 3. 容量与"无限流量"事实（写前端指南的底稿）
+## 3. 容量校准公式（设计剧本前必须先算，2026-08-17 实测确立）
 
 - 模拟器是单 Leader 引擎：总 QPS 均摊到 `availableReplicas`，引擎并发槽 = 模型 `maxConcurrency`。所以"副本数"= 虚拟容量，节点/模型配置决定天花板，不是真实机器。
-- 单副本吞吐 ≈ `maxConcurrency / 平均服务时长`；model-lite（prefill 50ms + 500token×500us + 200token×20ms ≈ 4.3s）单副本 ≈ 3.7 qps。
-- 所需副本 ≈ `QPS × 平均服务时长 / maxConcurrency`：400 QPS × 4.3s / 16 ≈ 108 副本。
-- 单节点可承载副本 = `min(⌊gpu/gpuUnits⌋, ⌊maxConcurrency/模型maxConcurrency⌋)`；当前 2 节点 × 160 并发 ÷ 16 = 20 副本，是 2026-08-17 实测扩容的停止点（`no_feasible_placement`，非错误）。
+- **单副本容量（qps/副本）≈ `maxConcurrency ÷ 平均服务时长`**。
+- **平均服务时长（ms）= `prefillBaseMs + prefillPerTokenUs×0.5 + decodePerTokenMs×200`**（prompt 500 token / output 200 token 固定）。
+- model-lite 实例：50 + 500×0.5 + 20×200 = 4300ms → 单副本 ≈ 3.7 qps。
+- **TTFT 特性（关键）**：TTFT 只在"排队"时上升（每副本负载 ρ→1 后），低负载时恒等于服务基线（model-lite ≈ 320ms）。`TTFT=320ms 不代表没负载`，判断是否触发扩容以 `queue` 为主、TTFT 为辅。
+- 所需副本 ≈ `QPS × 平均服务时长 / maxConcurrency`；单节点可承载副本 = `min(⌊gpu/gpuUnits⌋, ⌊maxConcurrency/模型maxConcurrency⌋)`。
 - `maxReplicas=0`（无限制）+ 节点容量调大 = 副本理论上无限；真实上限只剩 Docker Desktop 宿主资源。
 - 批量扩容：单次决策按队列缺口最多补 10 副本，冷却（默认 60s）作为批次间隔；扩容总速度 = 每批 1..10 × 冷却节奏。
 
-## 4. 长时运行验收清单（暂未执行，等有时间跑）
+### 剧本设计规则（长跑/压测前必读）
 
-> 状态：未执行。跑前先读 `hack/night-run/README.md` 与 `docs/agents/WORKFLOW.md` 4.2 节。
+1. 先算单副本容量，再定 QPS：`峰值 QPS ÷ 当前副本数 > 单副本容量` 才会产生队列并触发扩容；否则整个剧本是无效负载。
+2. 实测校准（2026-08-17，rate=20，model-lite）：
+   - 400 QPS @ 20 副本（20/副本 = 5.4×容量）→ 队列 2 分钟冲到 7 万、TTFT 小时级。
+   - 300 QPS @ 141 副本（2.1/副本 = 0.57×容量）→ 队列 0、TTFT 320ms（稳定基线）。
+   - 650 QPS @ 141 副本（4.6/副本 = 1.25×容量）→ 应触发队列与批量扩容（14:17 峰值验证中，结论以 18:00 summary 为准）。
+3. 剧本示例（4 小时）：基线 300（稳定）+ 峰值 650（触发扩容至 ~176 副本 < 容量 200），周期 60min（45 基线 + 15 峰值）。
+4. 缩容滞回（观察，未改策略）：model-lite TTFT 基线 320ms > 缩容下阈值 300ms，队列排空后 `needDown` 被 TTFT 挡住 → 峰值副本数保持不回落。长跑结束后副本保持峰值规模属预期，不是故障。
 
-- [ ] 4 小时连续运行无 CrashLoop、无 Reconcile 错误率上升（Grafana Reconcile 错误比例面板为 0）。
-- [ ] 阶梯流量（如 50 → 100 → 200 → 400 QPS）下 queue 与 TTFT 收敛到阈值内，副本随批次扩容到容量上限。
-- [ ] 队列缺口大时单次扩容 ≥ 2 副本（批量生效）；冷却间隔内每轮一批。
+## 4. 长时运行验收清单（2026-08-17 14:00-18:00 执行中，结论以 summary.md 为准）
+
+> 状态：执行中（`day-watch.mjs --until 18:00 --baseline-qps 300 --peak-qps 650`，产物 `.runtime/longrun/2026-08-17/`）。执行规范先读 `hack/night-run/README.md` 与 `docs/agents/WORKFLOW.md` 4.2 节。
+
+- [ ] 4 小时连续运行无 CrashLoop、无 Reconcile 错误率上升（看 rounds/ 的 keepalive 与 summary.md）。
+- [ ] 基线 300 QPS 下 queue≈0、TTFT 回到 ~320ms，副本稳定。
+- [ ] 峰值 650 QPS 触发队列与批量扩容（每批 +10、冷却 60s），扩容到 ~176 副本以内且不撞容量顶（200）。
+- [ ] 峰值结束后队列排空、TTFT 回落；批量扩容节奏（+10/60s）在 rounds/ 的 scaling 事件中可见。
 - [ ] 降级演练（可选，单组件逐项）：停 Prometheus / Grafana / Jaeger / PG 后系统继续扩缩；恢复后无数据损坏。
 - [ ] Simulator Leader 手动删除后 ≤30s 新 Leader 接管，性能指标继续，`SimulationElapsedMs` 不回退。
-- [ ] 流量结束后副本按缩容冷却逐级回收，最终回到 minReplicas/floor。
-- [ ] 快照目录 `.runtime/night-run/YYYY-MM-DD/snapshots/` 每轮齐全，无端口冲突假阳性（走 18080）。
+- [ ] 18:00 脚本自动恢复 35qps 并生成 summary.md；副本保持峰值规模属预期（缩容滞回，见 3.4）。
 
 ## 5. 已知风险（2026-08-17 压测实测）
 
