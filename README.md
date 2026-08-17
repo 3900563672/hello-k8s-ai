@@ -77,10 +77,10 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
 - 2026-08-18 [变更总览：宿主工具链恢复——Codex 配置自修复、整机重启恢复顺序与圈复杂度处理](change-history/2026-08-18-host-toolchain-recovery/README.md)
+- 2026-08-18 [变更总览：文档体系重构——机械门禁、内容迁移与入口重写](change-history/2026-08-18-docs-architecture-rework/README.md)
 - 2026-08-18 [变更总览：降级演练缺陷修复——告警表达式三修 + 模拟器容器资源限制](change-history/2026-08-18-alert-drill-fixes/README.md)
 - 2026-08-17 [变更总览：稳定性恢复顺序——运行前体检、工具链自检与 Prometheus 内存/重启告警](change-history/2026-08-17-stability-recovery/README.md)
 - 2026-08-17 [扩容加速（批量扩容）+ 稳定性矩阵 + 容量指南](change-history/2026-08-17-scaleup-acceleration/README.md)
-- 2026-08-17 [时间段切面（Run Segment）：起点/终点全局状态 + 区间指标与 Trace](change-history/2026-08-17-run-segment/README.md)
 
 <!-- docs-sync:timeline-end -->
 
