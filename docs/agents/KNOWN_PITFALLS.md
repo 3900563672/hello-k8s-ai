@@ -23,6 +23,16 @@
 - 解决：夜间运行前确认 App 保持运行；Phase A 开工先拉起 nohup 常驻 keepalive，会话中断脚本仍继续。
 - 验证：首次夜间运行（2026-08-17 00:00）实测。
 
+### 2026-08-16 Windows 宿主没有 gh，GitHub 操作必须在 WSL 内执行
+- 现象：Codex 自动化/会话的工作目录是 `\\wsl.localhost\...`（UNC），Windows 侧 `gh` 不存在（`C:\Program Files\GitHub CLI\gh.exe` 也没有）。
+- 解决：一切 git/gh 操作走 `wsl -d Ubuntu -- bash -lc "..."`；WSL 内 `gh` 已认证（account 3900563672，scopes 含 repo）。
+- 验证：PR #24 创建成功。
+
+### 2026-08-16 gh 偶发 TLS handshake timeout（代理链路）
+- 现象：`gh pr create` / GraphQL 请求偶发 `TLS handshake timeout`，重试即成功；与 WSL http_proxy=127.0.0.1:7890（Clash）链路有关。
+- 解决：失败后等 5–8 秒重试，最多 5 次；不要怀疑认证或重复创建 PR（会报 "a pull request already exists"）。
+- 验证：PR #24 第 2 次尝试成功。
+
 ## 命令与终端（WSL / Windows 宿主）
 
 ### 2026-08-16 apply_patch 无法写 UNC 路径
