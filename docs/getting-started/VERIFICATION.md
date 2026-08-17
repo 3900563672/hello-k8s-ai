@@ -1,5 +1,7 @@
 # 验证指南
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 ## 1. 提交前一条命令
 
 在项目根目录执行：

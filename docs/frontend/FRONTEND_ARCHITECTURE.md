@@ -1,5 +1,7 @@
 # Frontend 架构
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/config/、dashboard/frontend/my-app/src/
+
 ## 1. 定位
 
 Frontend 是控制面的人类界面，不是业务事实源。它负责：

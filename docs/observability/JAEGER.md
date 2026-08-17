@@ -1,5 +1,7 @@
 # Jaeger
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/providers/、internal/observability/ 等
+
 ## 1. 作用与边界
 
 Jaeger 是 Trace/Span 查询后端。OTel Collector 把 Controller/Simulator spans 发给它；Grafana 和 Dashboard Backend 查询它。Jaeger 不存 Prometheus metrics，也不拥有 Kubernetes 状态。

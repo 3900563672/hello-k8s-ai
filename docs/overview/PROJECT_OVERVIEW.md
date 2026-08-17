@@ -1,5 +1,7 @@
 # 项目总览
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 ## 1. 一句话定义
 
 hello-k8s-ai 用 Kubernetes 自定义资源描述多租户 AI 推理调度问题，并用可观测 Simulator 闭环验证策略、容量、流量与扩缩容行为。

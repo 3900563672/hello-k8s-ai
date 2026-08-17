@@ -1,5 +1,7 @@
 # 配置参考
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/guide/、config/rbac/ 等
+
 本文件记录关键默认值，最终依据仍是源码和清单。修改默认值时同时更新测试与对应专题文档。
 
 ## 1. Controller Manager flags/env

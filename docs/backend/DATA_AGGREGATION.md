@@ -1,5 +1,7 @@
 # 数据聚合
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/readmodel/
+
 ## 1. 聚合目标
 
 前端不应理解 11 个 CRD、OwnerReference、Pod label、PromQL 和 Jaeger raw span。Aggregator 将这些来源转换为页面读模型，同时保留来源、新鲜度和不完整性。

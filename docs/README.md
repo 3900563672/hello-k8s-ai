@@ -1,6 +1,6 @@
 # hello-k8s-ai 文档体系
 
-> 维护层：human ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
 > 本目录是**人类文档**。本地 Agent 默认不读本目录（见根目录 `AGENTS.md` 与 `docs/agents/`）；远程 AI 默认不接收本目录（见 `docs/remote-ai/` 与 `make context-pack`）。
 
 本目录是项目工程知识库。内容以当前源码、生成的 CRD、Kustomize 清单和可执行测试为依据；已删除与当前实现冲突的旧文档副本。

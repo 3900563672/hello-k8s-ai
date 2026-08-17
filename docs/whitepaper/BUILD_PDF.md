@@ -1,5 +1,7 @@
 # 从 Markdown 构建 PDF
 
+> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+
 ## 单一内容源
 
 `COMPLETE_OVERVIEW.md` 是 `hello-k8s-ai-complete-overview.pdf` 的唯一正文源。不要直接编辑 PDF，也不要在脚本里维护另一套正文。
@@ -11,7 +13,7 @@
 ```bash
 $CODEX_PRIMARY_RUNTIME_PYTHON tools/build_overview_pdf.py \
   --source docs/whitepaper/COMPLETE_OVERVIEW.md \
-  --output hello-k8s-ai-complete-overview.pdf
+  --output .runtime/hello-k8s-ai-complete-overview.pdf
 ```
 
 若没有 Work Mode runtime，安装 Python 3.12+ 与 ReportLab 4，并将命令中的解释器替换为 `python3`。
@@ -26,8 +28,8 @@ $CODEX_PRIMARY_RUNTIME_PYTHON tools/build_overview_pdf.py \
 ## 验收
 
 ```bash
-pdfinfo hello-k8s-ai-complete-overview.pdf
-pdftoppm -png -r 120 hello-k8s-ai-complete-overview.pdf /tmp/hello-k8s-ai-overview
+pdfinfo .runtime/hello-k8s-ai-complete-overview.pdf
+pdftoppm -png -r 120 .runtime/hello-k8s-ai-complete-overview.pdf /tmp/hello-k8s-ai-overview
 ```
 
 逐页检查：
@@ -43,4 +45,4 @@ pdftoppm -png -r 120 hello-k8s-ai-complete-overview.pdf /tmp/hello-k8s-ai-overvi
 
 ## 发布位置
 
-PDF 直接生成到项目根 `hello-k8s-ai-complete-overview.pdf`，避免维护重复副本。根 README 链接 Markdown 与 PDF，二者版本应在同一提交更新。
+PDF 是构建产物，输出到 `.runtime/hello-k8s-ai-complete-overview.pdf`（`.runtime/` 已被 `.gitignore` 排除），不提交仓库。根 README 只链接 Markdown 源 `docs/whitepaper/COMPLETE_OVERVIEW.md`；需要交付 PDF 时从 `.runtime/` 单独取走。
