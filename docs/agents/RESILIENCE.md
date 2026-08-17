@@ -1,6 +1,6 @@
 # 稳定性与优雅降级矩阵（RESILIENCE）
 
-> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-capacity-calibration/
+> 维护层：agents ｜ 最后同步：2026-08-17 ｜ 对应变更：change-history/2026-08-17-longrun-tooling-fixes/
 > 目的：组件挂掉后系统"应该怎样表现"的对照表；长时运行前按此矩阵做验收（验收暂未执行）。
 
 ## 1. 总原则
@@ -44,24 +44,28 @@
 2. 实测校准（2026-08-17，rate=20，model-lite）：
    - 400 QPS @ 20 副本（20/副本 = 5.4×容量）→ 队列 2 分钟冲到 7 万、TTFT 小时级。
    - 300 QPS @ 141 副本（2.1/副本 = 0.57×容量）→ 队列 0、TTFT 320ms（稳定基线）。
-   - 650 QPS @ 141 副本（4.6/副本 = 1.25×容量）→ 应触发队列与批量扩容（14:17 峰值验证中，结论以 18:00 summary 为准）。
-3. 剧本示例（4 小时）：基线 300（稳定）+ 峰值 650（触发扩容至 ~176 副本 < 容量 200），周期 60min（45 基线 + 15 峰值）。
+   - 650 QPS @ 141 副本（4.6/副本 = 1.25×容量）→ 触发队列与批量扩容 141→200（10 批、60s/批），queue 峰值 ~2491、TTFT 峰值 ~678s，14:24 到顶后 ~6 分钟排空（2026-08-17 实测）。
+3. 剧本示例（4 小时）：基线 300（稳定）+ 峰值 650（触发扩容至 ~176 副本，实测撞 200 容量顶），周期 60min（45 基线 + 15 峰值）。
 4. 缩容滞回（观察，未改策略）：model-lite TTFT 基线 320ms > 缩容下阈值 300ms，队列排空后 `needDown` 被 TTFT 挡住 → 峰值副本数保持不回落。长跑结束后副本保持峰值规模属预期，不是故障。
+5. 延迟舒适区：吞吐 break-even ≠ 延迟目标。650 QPS @ 200 副本（ρ≈0.88）queue 保持 0-20 但 TTFT 升到 ~1s（偶发 3-4.5s），而 300 QPS @ 141 副本（ρ≈0.57）TTFT=320ms。要维持基线延迟，峰值副本按 `QPS × 服务时长 ÷ (maxConcurrency × 0.6)` 预留余量（650 QPS ≈ 350 副本），否则需接受延迟升高。
 
-## 4. 长时运行验收清单（2026-08-17 14:00-18:00 执行中，结论以 summary.md 为准）
+## 4. 长时运行验收清单（2026-08-17 14:00-18:00 已完成）
 
-> 状态：执行中（`day-watch.mjs --until 18:00 --baseline-qps 300 --peak-qps 650`，产物 `.runtime/longrun/2026-08-17/`）。执行规范先读 `hack/night-run/README.md` 与 `docs/agents/WORKFLOW.md` 4.2 节。
+> 状态：已完成（13:29-18:14 实跑，产物 `.runtime/longrun/2026-08-17/`，summary 已按 20 轮口径重生成）。执行规范先读 `hack/night-run/README.md` 与 `docs/agents/WORKFLOW.md` 4.2 节。
 
-- [ ] 4 小时连续运行无 CrashLoop、无 Reconcile 错误率上升（看 rounds/ 的 keepalive 与 summary.md）。
-- [ ] 基线 300 QPS 下 queue≈0、TTFT 回到 ~320ms，副本稳定。
-- [ ] 峰值 650 QPS 触发队列与批量扩容（每批 +10、冷却 60s），扩容到 ~176 副本以内且不撞容量顶（200）。
-- [ ] 峰值结束后队列排空、TTFT 回落；批量扩容节奏（+10/60s）在 rounds/ 的 scaling 事件中可见。
+- [x] 4 小时连续运行无 CrashLoop、无 keepalive/snapshot 失败（20 轮 0 失败）。
+- [x] 基线 300 QPS 下 queue≈0、TTFT ~320ms、副本稳定（141）。
+- [x] 峰值 650 QPS 触发队列与批量扩容：141→200 共 10 批（60s/批，+10×4/+5×2/+2×4 按队列缺口自适应），撞节点容量顶（200）。
+- [x] 峰值结束后队列排空（到顶后 ~6 分钟）、TTFT 回落 320ms；扩容节奏在 PG `resource_events` 5s 序列可见（rounds/ 快照粒度太粗，见 KNOWN_PITFALLS）。
+- [x] 18:14 脚本恢复 35qps（旧版 --until 缺陷多跑一轮，已修复为整点停止）；副本保持 200 属预期（缩容滞回，见 3.4）。
 - [ ] 降级演练（可选，单组件逐项）：停 Prometheus / Grafana / Jaeger / PG 后系统继续扩缩；恢复后无数据损坏。
 - [ ] Simulator Leader 手动删除后 ≤30s 新 Leader 接管，性能指标继续，`SimulationElapsedMs` 不回退。
-- [ ] 18:00 脚本自动恢复 35qps 并生成 summary.md；副本保持峰值规模属预期（缩容滞回，见 3.4）。
+- [ ] errorRate=0 复核：PromQL 空集问题已修复（controller/simulator errorRate 现在返回 0），下次长跑确认全程为 0。
 
 ## 5. 已知风险（2026-08-17 压测实测）
 
 - 400 QPS 在 20 副本（容量上限）下队列 2 分钟冲到 7 万、TTFT 到小时级：不是调度 bug，是"目标容量远小于负载需求"的数学结果；扩容被节点并发上限拦住时 Orchestrator 正常返回 `no_feasible_placement`（Ready=True）。
 - 缩容仍是逐副本 + 冷却（120s），大规模缩容较慢；4 小时测试后如需快速回收，可临时把副本缩到 floor 或重启实例。
 - 队列清空后 TTFT 平均值会携带峰值尾巴（已完成请求的等待时间），看面板时以 queue 回落为准。
+- 200 副本天花板（2×1600÷16）下 650 QPS 的 TTFT 约 1s（ρ≈0.88）：吞吐可扛但延迟有余压；要维持基线延迟需扩节点容量或按「延迟舒适区」公式预留副本（见 3.5）。
+- controller/simulator errorRate 在修复前因 PromQL 空集恒为 null（零错误反而无数据），2026-08-17 已加 `or on() vector(0)` 保护（见 change-history/2026-08-17-longrun-tooling-fixes/）。

@@ -237,7 +237,7 @@ func metricCatalog() map[string]metricDefinition {
 			build: func(filters map[string]string) string {
 				errorFilters := cloneFilters(filters)
 				errorFilters["outcome"] = "error"
-				return "sum(rate(" + selector("hello_k8s_ai_simulator_ticks_total", errorFilters) + "[5m])) / clamp_min(sum(rate(" + selector("hello_k8s_ai_simulator_ticks_total", filters) + "[5m])), 1e-9)"
+				return "(sum(rate(" + selector("hello_k8s_ai_simulator_ticks_total", errorFilters) + "[5m])) or on() vector(0)) / clamp_min((sum(rate(" + selector("hello_k8s_ai_simulator_ticks_total", filters) + "[5m])) or on() vector(0)), 1e-9)"
 			},
 		},
 		"simulator.tickLatency": {

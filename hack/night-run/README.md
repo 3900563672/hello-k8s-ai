@@ -55,11 +55,12 @@ setsid nohup node hack/night-run/day-watch.mjs --loop --interval 900 --until 18:
   < /dev/null >> .runtime/longrun/$(date +%F)/day-watch.log 2>&1 &
 
 # 自定义剧本：--baseline-qps / --peak-qps / --peak-minutes / --cycle-minutes / --tenant
-# 时长控制：--until HH:MM（本地时区，到点停止）或 --hours N（跑 N 小时）；--final-qps 结束时恢复的档位
+# 时长控制：--until HH:MM（本地时区，整点精确停止，已修复不再多跑一轮）或 --hours N（跑 N 小时）；--final-qps 结束时恢复的档位
+# 其他：--run-dir <dir> 覆盖产物目录（测试隔离）；--resummarize <dir> 只重生成 summary（需 meta.json）
 ```
 
-- 每轮：按剧本判定目标 qps（周期相位从进程启动起算，前 `cycle-peak` 分钟基线、最后 `peak` 分钟压测）→ GET `/api/v1/traffic` 对比 → 偏差时 `PATCH /api/v1/tenants/{name}/traffic`（带 `Idempotency-Key`）→ 跑 `keepalive.mjs --once` 健康检查 → 每 2 轮跑 `snapshot.mjs --once --summary` 快照 → `kubectl` 采集节点用量 / 最近扩缩 / 实例副本。
-- 产物统一落 `.runtime/longrun/<日期>/`：`rounds/` 每轮完整记录（JSON，含 keepalive/snapshot 全量与 kubectl 采集）、`snapshots/` 指标快照、结束时 `summary.md`（轮次统计 / 扩缩容事件 / 指标范围 / 趋势）。日志与快照不再分家。
+- 每轮：按剧本判定目标 qps（周期相位从进程启动起算，前 `cycle-peak` 分钟基线、最后 `peak` 分钟压测）→ GET `/api/v1/traffic` 对比 → 偏差时 `PATCH /api/v1/tenants/{name}/traffic`（带 `Idempotency-Key`）→ 轻量采样 6 个指标（轮次粒度；进入峰值时预约「峰值中点」补采样）→ 跑 `keepalive.mjs --once` 健康检查 → 每 2 轮跑 `snapshot.mjs --once --summary` 快照 → `kubectl` 采集节点用量 / 最近扩缩 / 实例副本。
+- 产物统一落 `.runtime/longrun/<日期>/`：`rounds/` 每轮完整记录（JSON，含 keepalive/snapshot 全量与 kubectl 采集）、`snapshots/` 指标快照、`metric-samples/` 峰值中点采样、`meta.json`（run 窗口，summary 只统计本次 run）、结束时 `summary.md`（轮次统计 / 扩缩容事件 / 轮内指标 / 快照指标 / 趋势）。日志与快照不再分家。
 - 启动时自动 preflight：18080 可达性（3 次探测）、`sleep-guard.sh status`；不满足只警告不阻塞（keepalive 会尝试恢复端口转发）。
 - 轮次间隔按"上一轮实际耗时"补足，长跑不漂移；异常只记录不折腾（维持模式），事后由 Agent 读 rounds/快照一次性分析。
 - 停止：`kill <PID>`（`ps aux | grep day-watch` 查 PID）。运行前确认 `sleep-guard.sh status` 为 `guard=on`、Backend 18080 可达（WSL 内脚本专用端口；8080 是 Windows 浏览器入口，见 KNOWN_PITFALLS）。
