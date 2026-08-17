@@ -533,7 +533,7 @@ Traffic Preview/Confirm/PATCH/Observe；Policy/Orchestrator UI；独立 Dashboar
 
 ## 10.4 新维护者行动清单
 
-1. 先读 `docs/AI_CONTEXT.md`、字段所有权和与你任务相关专题。
+1. 先读 `docs/INDEX.md`、字段所有权和与你任务相关专题。
 2. 在可访问集群采集 Cluster Information 实况。
 3. 运行根/Backend Go test、Frontend check、三套 Kustomize render。
 4. 不编辑生成 CRD/RBAC/DeepCopy。

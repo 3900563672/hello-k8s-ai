@@ -18,7 +18,7 @@ Prometheus 保存 Controller、Simulator 和 OTel Collector 的时间序列，�
 | Service | `hello-k8s-ai-prometheus:9090` |
 | Alertmanager | 未部署 |
 
-数据卷为 PVC（`hello-k8s-ai-prometheus-data`），Pod 重启/重建不丢历史；retention 168h。单副本 + RWO，重启/升级需先 scale 0 再扩 1（目录锁，见 `docs/agents/KNOWN_PITFALLS.md`）。
+数据卷为 PVC（`hello-k8s-ai-prometheus-data`），Pod 重启/重建不丢历史；retention 168h。单副本 + RWO，重启/升级需先 scale 0 再扩 1（目录锁，见 `docs/lessons/observability-pvc-single-replica.md`）。
 
 ## 3. Scrape 路径
 

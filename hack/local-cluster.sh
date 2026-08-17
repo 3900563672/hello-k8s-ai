@@ -601,7 +601,7 @@ open_ports() {
   # Prometheus / Jaeger 由 Backend 代理（/api/v1/metrics、/api/v1/traces）。
   start_port_forward dashboard hello-k8s-ai-dashboard-frontend 8080 80
   # WSL 内脚本专用端口：Windows 侧 localhost:8080 由 dllhost 转发宿主占用，
-  # WSL 内访问 8080 会与之冲突（时好时坏），脚本一律走 18080（见 KNOWN_PITFALLS）。
+  # WSL 内访问 8080 会与之冲突（时好时坏），脚本一律走 18080（见 docs/journal/2026-08-16-cluster-and-deploy.md）。
   start_port_forward dashboard-internal hello-k8s-ai-dashboard-frontend 18080 80
   print_urls
 }

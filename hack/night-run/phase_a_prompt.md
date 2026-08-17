@@ -12,7 +12,7 @@
 ## 目标
 
 0. **启动即拉起常驻脚本（最高优先级）**：开工 10 分钟内执行
-   `setsid nohup node hack/night-run/keepalive.mjs --loop --interval 900 < /dev/null >> .runtime/night-run/2026-08-17/keepalive.log 2>&1 &`（必须 setsid：nohup 挡不住 exec 会话进程组回收，见 KNOWN_PITFALLS）
+   `setsid nohup node hack/night-run/keepalive.mjs --loop --interval 900 < /dev/null >> .runtime/night-run/2026-08-17/keepalive.log 2>&1 &`（必须 setsid：nohup 挡不住 exec 会话进程组回收，见 docs/lessons/process-host-sleep-freeze.md）
    并确认日志出现"进入常驻循环"。常驻脚本负责持续健康检查与断线自恢复，即使会话中断脚本继续运行。
 1. 维持系统持续运行：模拟器、Controller、Dashboard、PostgreSQL、Grafana、Prometheus、Jaeger、OTel Collector 全部健康。
 2. 持续制造并保持流量：至少 1 个租户有稳定 qps（可在 5–50 qps 间按配置档位轮换（首次实测 50qps@10 副本会触发队列积压，压测建议 25–35 健康档位小步调整）），观察高流量下的行为。**变更小步走**：每次只动一档（如 qps +10 或 rate ±1 档），观察 2–3 分钟确认收敛再动下一档。
@@ -23,7 +23,7 @@
 
 ## 红线
 
-- **值守前提：宿主机不得空闲睡眠**（Windows 交流空闲 15 分钟自动睡眠会冻结 WSL，见 KNOWN_PITFALLS）。开工先 `bash hack/night-run/sleep-guard.sh status`，必须 `guard=on`；否则执行 `bash hack/night-run/sleep-guard.sh on`（会弹 UAC，需人在场点"是"）并复查 status。收尾（04:30 交接后）尝试 `bash hack/night-run/sleep-guard.sh off` 恢复睡眠（UAC 弹窗无人点则失败，可接受，见 README 手动恢复命令）。
+- **值守前提：宿主机不得空闲睡眠**（Windows 交流空闲 15 分钟自动睡眠会冻结 WSL，见 docs/lessons/process-host-sleep-freeze.md）。开工先 `bash hack/night-run/sleep-guard.sh status`，必须 `guard=on`；否则执行 `bash hack/night-run/sleep-guard.sh on`（会弹 UAC，需人在场点"是"）并复查 status。收尾（04:30 交接后）尝试 `bash hack/night-run/sleep-guard.sh off` 恢复睡眠（UAC 弹窗无人点则失败，可接受，见 README 手动恢复命令）。
 - **Phase A 不推任何代码、不建 issue、不改 UI、不截图验证。**
 - 不 `wsl --shutdown`；不强杀 Docker Desktop；不动代理（127.0.0.1:7890）；不重建/重置集群。
 - 不删 PVC、不重置数据库、不修改 CRD 定义。

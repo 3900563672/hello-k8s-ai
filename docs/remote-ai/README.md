@@ -1,8 +1,9 @@
 # 远程 AI 工作手册（docs/remote-ai/）
 
-> 维护层：remote-ai ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
-> 本目录给**只在自己工作区工作**的 AI（如网页版 ChatGPT / Claude，用 5.6 SOL 等模型）：它只能读取用户发来的打包内容，不能访问用户电脑、仓库或 GitHub。
-> 能操作本机仓库的 Agent 见 [docs/agents/](../agents/README.md)；人类入口是根目录 [README.md](../../README.md)。
+> 维护层：remote ｜ last-reviewed：2026-08-18 ｜ 事实源：docs/MAP.yaml、源码、change-history/
+
+> 本目录给**只在自己工作区工作**的 AI（如网页版 ChatGPT / Claude）：它只能读取用户发来的打包内容，不能访问用户电脑、仓库或 GitHub。
+> 能操作本机仓库的 Agent 见 [docs/agents/README.md](../agents/README.md)；人类入口是根目录 [README.md](../../README.md)。
 
 ## 你是谁
 
@@ -12,27 +13,30 @@
 
 ## 开工顺序（每次任务都走）
 
-1. 先读打包根目录的 `CONTEXT_PACK.md`（包的地图与当前状态，含生成日期）。
-2. 再读本手册、[PROMPTING.md](PROMPTING.md) 与 [WORKFLOW.md](WORKFLOW.md)。
-3. 默认事实源是包内**源码、生成清单与 `change-history/`**；包默认不含人类文档（`docs/` 专题），需要时请用户提供 FULL 包（`make context-pack FULL=1`）。
-4. 产出按 WORKFLOW.md 的交付格式，明确标注"推断 / 未验证"。
+1. 先读打包根目录的 `CONTEXT_PACK.md`（包的地图与生成时间）。
+2. 再读 `llms.txt`（本文档索引），按任务定位专题文档。
+3. 默认事实源是包内**源码、生成清单与 `change-history/`**；`docs/` 人类文档只作背景，不据此写代码。
 
-## 阅读决策
+## 产出规则
 
-| 任务 | 必读 |
-| --- | --- |
-| 理解项目 / 架构 | CONTEXT_PACK.md、PROJECT_OVERVIEW_NEW.md（背景一页） |
-| 写代码 / 审查代码 | CONTEXT_PACK.md、docs/agents/PRINCIPLES.md、PROMPTING.md、相关源码 |
-| 写文档 / 设计方案 | CONTEXT_PACK.md、docs/agents/WORKFLOW.md、docs/agents/SYNC.md |
-| 排查行为问题 | CONTEXT_PACK.md、相关源码、change-history/ |
+- **结论先行**：第一段给出结论与推荐做法，再给依据与细节；依据引用包内文件路径（`internal/controller/...`），不写"文档说"。
+- **来源分色**：源码与 `change-history/` 是事实；`docs/` 只是背景；推断必须显式标注。
+- **未验证写"未验证（原因）"**：你无法运行任何东西，不写"已测试 / 已部署 / 已验证"。
+- CRD/API 结论必须核对 `docs/kubernetes/FIELD_OWNERSHIP.md`；时间、倍速、历史语义先读 `docs/data-flow/TIME_AND_REPLAY.md`。
+- 发现文档与源码不一致时，作为交付物列出差异，不静默按文档写代码。
+
+## 交接格式
+
+```text
+标题：<任务名>（<日期>）
+结论：<一两句话>
+依据：<包内文件路径列表>
+交付物：<报告 / diff / 文档片段>
+未验证：<逐项列出与原因>
+给 Agent 的落地建议：<本地 Agent 执行时的注意点>
+```
 
 ## 包是怎么来的
 
-- 用户（或本地 Agent）执行 `make context-pack` 生成：`CONTEXT_PACK.md` + 关键文件副本 + `hello-k8s-ai-context-pack.tar.gz`，输出在 `.runtime/context-pack/`。
-- 生成脚本是 `hack/gen-context-pack.sh`，模板是 `hack/context-pack-template.md`。
+- 用户（或本地 Agent）执行 `make context-pack` 生成：`CONTEXT_PACK.md` + 全量 `docs/` + 源码副本 + `hello-k8s-ai-context-pack.tar.gz`，输出在 `.runtime/context-pack/`；`FULL=0` 生成精简包（仅 `docs/agents/` 与 `docs/remote-ai/`）。
 - 包不是实时仓库：一切以 `CONTEXT_PACK.md` 的生成日期与最近提交为准，不臆测更新。
-
-## 反馈回路
-
-- 你在文档、工作流、踩坑上的建议写成交付物（见 WORKFLOW.md 交接格式），用户带回后由本地 Agent 更新本目录或 `docs/agents/`。
-- 本目录与 `docs/agents/` 都允许远程 AI 提出修订，但落地必须由本地 Agent 执行并提交。

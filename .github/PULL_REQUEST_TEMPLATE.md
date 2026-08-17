@@ -19,6 +19,11 @@ Fixes #
 
 <!-- 缺少环境或集群时如实说明，例如：本机无 Docker / Kind，E2E 未执行。 -->
 
+## 文档同步（make docs-check 强制）
+
+- [ ] 本次变更命中的 MAP 映射文档已同步更新（`make docs-check` 输出确认）
+- [ ] 派生文件已重新生成（`make docs-sync` 后 `git status` 无意外差异）
+
 ## 部署影响
 
 <!-- 是否需要重新部署、变更 CRD / RBAC / 数据库，或影响既有数据。 -->

@@ -384,3 +384,15 @@ context-pack:
 .PHONY: docs-check
 docs-check:
 	python3 hack/check-docs.py
+
+# 生成派生文档（README 时间线段 / docs/status.md / llms.txt / 所有权表）
+.PHONY: docs-sync
+docs-sync:
+	python3 hack/gen-docs.py
+
+# 派生文档必须是最新的：先重新生成，再要求工作区无差异
+.PHONY: docs-sync-check
+docs-sync-check: docs-sync
+	@if [ -n "$$(git status --porcelain)" ]; then echo "派生文件或工作区存在未提交差异："; git status --porcelain; exit 1; fi
+	@echo "docs-sync-check OK"
+

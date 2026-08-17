@@ -1,3 +1,9 @@
+# 集群信息快照归档（2026-08-14 采集）
+
+> 日期：2026-08-14 ｜ 触发者：人类 ｜ 相关：原 docs/operations/CLUSTER_INFORMATION.md（2026-08-18 文档体系重构归档）
+
+> 集群实况是快照不是现状：现状只由 `make cluster-status` 采集，不再以静态文档承载。本节保留历史快照供回溯。
+
 # 集群信息
 
 本文件区分“用户提供的运行快照”“本仓库部署约束”和“本轮实际执行结果”。三者不可混写。
@@ -68,52 +74,3 @@ Docker 中另有独立 Kind 集群：
 | Kubernetes | v1.34.3 |
 
 它与当前 Context 不是同一个集群。日常部署不得调用 `kind load --name minikserve-demo`，也不得删除或重置它。
-
-## 5. 仓库部署约束
-
-| 项目 | 声明值 |
-| --- | --- |
-| Context | `docker-desktop` |
-| Namespace | `hello-k8s-ai-system` |
-| StorageClass | `standard` |
-| 镜像交付 | Docker build/save + 每 Node `ctr -n k8s.io images import` |
-| 动态 WorkerNode | 从非 control-plane Kubernetes Node 名生成 |
-| 数据库 | PostgreSQL 17，10Gi PVC，随机 Secret |
-| 停止语义 | 工作负载缩到 0，保留集群/CRD/CR/Secret/PVC |
-
-## 6. 部署后应出现的静态工作负载
-
-| Kind | Name | 副本 |
-| --- | --- | ---: |
-| Deployment | `hello-k8s-ai-controller-manager` | 1 |
-| Deployment | `hello-k8s-ai-otel-collector` | 1 |
-| Deployment | `hello-k8s-ai-jaeger` | 1 |
-| Deployment | `hello-k8s-ai-prometheus` | 1 |
-| Deployment | `hello-k8s-ai-grafana` | 1 |
-| StatefulSet | `hello-k8s-ai-dashboard-postgresql` | 1 |
-| Deployment | `hello-k8s-ai-dashboard-backend` | 1 |
-| Deployment | `hello-k8s-ai-dashboard-frontend` | 1 |
-
-Controller 还会按 SimulatorInstance 动态创建 `simulator-<instance>` Deployment。
-
-## 7. 采集最新运行快照
-
-```bash
-make cluster-status
-```
-
-或执行：
-
-```bash
-kubectl --context docker-desktop get nodes -o wide
-kubectl --context docker-desktop -n hello-k8s-ai-system \
-  get deployment,statefulset,pod,service,pvc,lease -o wide
-kubectl --context docker-desktop get crd | grep platform.study.com
-kubectl --context docker-desktop get \
-  models,workernodes,tenants,tenantmodelpolicies,tenantnodepolicies,modelnodepolicies,\
-simulatorinstances,tenantperformances,tenantruntimes,orchestrators
-```
-
-## 8. 当前结论
-
-目标集群信息已经足够明确，部署方案无需再创建集群或索取拓扑信息。真正的剩余证据是用户机器执行 `bash setup.sh` 后产生的自动验收结果；在此之前只能确认旧镜像问题与部署前置条件，不能声称新工作负载已经 Ready。

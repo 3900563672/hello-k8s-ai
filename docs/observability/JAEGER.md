@@ -16,7 +16,7 @@ Jaeger 是 Trace/Span 查询后端。OTel Collector 把 Controller/Simulator spa
 | Storage | badger 持久化（PVC `hello-k8s-ai-jaeger-data` 10Gi，spans TTL 168h） |
 | Service | `hello-k8s-ai-jaeger` |
 
-数据卷为 PVC（badger 持久化），Pod 重启不丢 Trace；TTL 168h。单副本 + RWO，重启/升级需先 scale 0 再扩 1（badger 目录锁，见 `docs/agents/KNOWN_PITFALLS.md`）。
+数据卷为 PVC（badger 持久化），Pod 重启不丢 Trace；TTL 168h。单副本 + RWO，重启/升级需先 scale 0 再扩 1（badger 目录锁，见 `docs/lessons/observability-pvc-single-replica.md`）。
 
 ## 3. 数据链路
 

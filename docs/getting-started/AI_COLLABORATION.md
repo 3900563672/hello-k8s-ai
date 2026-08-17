@@ -1,14 +1,14 @@
 # 人类 × AI 协作手册
 
 > 维护层：human ｜ 最后同步：2026-08-16 ｜ 对应变更：change-history/2026-08-16-prompting-workflows/
-> 面向项目所有者的「怎么指挥 AI」。AI 侧的工作流与约束见 `docs/agents/PROMPTING.md`（本地 Agent）与 `docs/remote-ai/PROMPTING.md`（远程 AI）。
+> 面向项目所有者的「怎么指挥 AI」。AI 侧的工作流与约束见根目录 `AGENTS.md` + `docs/agents/WORKFLOW.md`（本地 Agent）与 `docs/remote-ai/README.md`（远程 AI）。
 
 本仓库同时存在两类 AI 协作者，能力边界完全不同：
 
 | 协作者 | 能力 | 交付方式 | 对应的提示词协议 |
 | --- | --- | --- | --- |
-| 本地 Agent（Codex / Claude Code） | 能操作本机仓库：改代码、跑测试、访问 GitHub、提交推送 | 直接落地到仓库，你审核 diff 与 CI | `docs/agents/PROMPTING.md` |
-| 远程 AI（网页版 ChatGPT / Claude） | 只能读你打包发过去的内容，在自己工作区分析、写方案或代码 | 把交付物带回，由本地 Agent 落地 | `docs/remote-ai/PROMPTING.md` |
+| 本地 Agent（Codex / Claude Code） | 能操作本机仓库：改代码、跑测试、访问 GitHub、提交推送 | 直接落地到仓库，你审核 diff 与 CI | `AGENTS.md` + `docs/agents/WORKFLOW.md` |
+| 远程 AI（网页版 ChatGPT / Claude） | 只能读你打包发过去的内容，在自己工作区分析、写方案或代码 | 把交付物带回，由本地 Agent 落地 | `docs/remote-ai/README.md` |
 
 判断用谁：要"动手"（改文件、跑验证、提交）→ 本地 Agent；要"动脑"（方案、审查、长文分析）→ 两者都行，远程 AI 适合你想慢慢看产出、不想让它碰电脑的场景。
 
@@ -22,7 +22,7 @@
 4. **验收**：怎样算完成（测试、CI、你确认过的东西）。
 5. **交付**：汇报格式、提交/推送、文档同步要求。
 
-缺哪个要素，Agent 会按 `docs/agents/PROMPTING.md` 的默认假设补，但你自己写清楚更可控。
+缺哪个要素，Agent 会按 `docs/agents/WORKFLOW.md` 第 8 节的默认假设补，但你自己写清楚更可控。
 
 ## 2. 任务提示词模板（可复制）
 
@@ -73,7 +73,7 @@
 ```text
 附件是项目上下文包（生成时间见 CONTEXT_PACK.md 顶部）。
 任务：<目标>。
-请按 docs/remote-ai/PROMPTING.md 的协议执行：
+请按 docs/remote-ai/README.md 的协议执行：
 结论先行、标注依据文件、未验证的写"未验证"、按固定交接格式产出。
 ```
 

@@ -731,7 +731,7 @@ config/
      
         ↓
      
- docs/AI_CONTEXT.md
+ docs/INDEX.md
      
         ↓
      
