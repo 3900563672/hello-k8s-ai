@@ -121,7 +121,10 @@ func freshRound(checkWindows bool) (time.Duration, bool) {
 	winOK := false
 	if checkWindows {
 		time.Sleep(300 * time.Millisecond) // 留出 Windows 侧注册窗口
-		cmd := exec.Command("curl.exe", "-s", "-m", "3", "-o", "NUL", "-w", "%{http_code}", fmt.Sprintf("http://127.0.0.1:%d/", port))
+		cmd := exec.Command(
+			"curl.exe", "-s", "-m", "3", "-o", "NUL", "-w", "%{http_code}",
+			fmt.Sprintf("http://127.0.0.1:%d/", port),
+		)
 		out, err := cmd.Output()
 		winOK = err == nil && strings.Contains(string(out), "200")
 	}
