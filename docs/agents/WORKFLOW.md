@@ -171,6 +171,7 @@ flowchart TD
 
 - [ ] 只包含任务范围内改动；`git status` 无意外文件（`.env` / `bin/` / `dist/` / `.runtime/` / 覆盖率文件）。
 - [ ] 生成文件未手改；需要时通过 `make manifests generate YEAR=2026` 更新并核对差异。
+- [ ] 派生文件一致：提交前 `make docs-sync && make docs-sync-check` 全绿（README 时间线段 / docs/status.md / llms.txt 等生成物随提交一起）。
 - [ ] 能跑的验证都跑过，结果记录在汇报里。
 - [ ] change-history 条目已建；README 索引已登记。
 - [ ] 受影响文档已同步或列入"人类文档待同步清单"。
