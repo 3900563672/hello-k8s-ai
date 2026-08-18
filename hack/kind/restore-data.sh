@@ -44,7 +44,7 @@ spec:
   containers:
   - name: unpack
     image: busybox
-    command: ["sh", "-c", "tar xzf /in/data.tar.gz -C $src_path && sleep 3600"]
+    command: ["sh", "-c", "tar xzf /in/data.tar.gz -C $src_path && touch /in/done && sleep 3600"]
     volumeMounts:
     - name: data
       mountPath: $src_path
@@ -54,6 +54,16 @@ spec:
 EOF
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait --for=condition=Ready "pod/restore-$name" --timeout=120s >/dev/null
   kubectl --context "$KUBE_CONTEXT" cp "$in_file" "$NAMESPACE/restore-$name:/in/data.tar.gz"
+  # 解包完成标志：cp 完成后 tar 仍在解包，轮询 /in/done 再验证。
+  for _ in $(seq 1 60); do
+    kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- sh -c 'test -f /in/done' >/dev/null 2>&1 && break
+    sleep 5
+  done
+  kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- sh -c 'test -f /in/done' >/dev/null || {
+    echo "错误：restore-$name 解包超时（300s）" >&2
+    kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod "restore-$name" --wait=false >/dev/null
+    exit 1
+  }
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- sh -c "du -sh $src_path"
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod "restore-$name" --wait=false >/dev/null
   kube -n "$NAMESPACE" scale "deployment/$name" --replicas=1 >/dev/null
