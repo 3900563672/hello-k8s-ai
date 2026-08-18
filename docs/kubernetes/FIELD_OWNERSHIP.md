@@ -19,7 +19,7 @@
 | Model | `spec.*`（含 `absoluteScore`） | 用户/Backend | Policy、Instance、Orchestrator、Simulator、WorkerUsage | `absoluteScore` 必填且 >=1；Controller 不回写 Spec |
 | Model | `status.absoluteScore` | 无新 writer | Orchestrator（仅升级兼容） | Deprecated；禁止 Backend/Controller 新写入 |
 | WorkerNode | `spec.*` | 用户/Backend | Instance、Orchestrator | - |
-| WorkerNode | `status.used*`, Conditions | WorkerNodeUsage | Orchestrator/Backend | Backend 不写 |
+| WorkerNode | `status.used*`、`status.memoryUsagePercent`、`status.cpuUsagePercent`、Conditions | WorkerNodeUsage | Orchestrator/Backend | Backend 不写；水位 0-100，找不到同名 Node 时保持缺省 |
 | Tenant | `spec.*` | 用户/Backend | Traffic/Performance/Orchestrator | Traffic PATCH 只改 qps |
 | Tenant | `status.*` | 当前无内部 writer | Backend | 空不是错误 |
 | TenantModelPolicy | `spec.*` | 用户/Backend | Policy Controller/Orchestrator | - |
