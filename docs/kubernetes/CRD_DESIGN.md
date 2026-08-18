@@ -69,9 +69,11 @@ Backend 通过 dynamic informer 读取全部 CRD；通用 Command Gateway 允许
 | spec | `maxConcurrency` | >=1 | 用户/Backend |
 | status | `usedGPU` | >=0，已调度 Simulator Pod 对应 Model.gpuUnits 合计 | WorkerNodeUsage |
 | status | `usedConcurrency` | >=0，Model.maxConcurrency 合计 | WorkerNodeUsage |
-| status | `conditions` | UsageReady 等 | WorkerNodeUsage |
+| status | `memoryUsagePercent` | 0-100，同名真实 Node 已分配 requests 占 allocatable 的百分比；找不到同名 Node 时保持缺省 | WorkerNodeUsage |
+| status | `cpuUsagePercent` | 0-100，同上 | WorkerNodeUsage |
+| status | `conditions` | UsageReady、PhysicalPressure 等 | WorkerNodeUsage |
 
-生命周期：先有真实 Node，再创建同名 WorkerNode；Policy 引用它；Pods 调度到该 Node 后 Controller 更新 Status。它不是 Node 的替代品：Node Ready/taint/pressure 来自 core/v1 Node。
+生命周期：先有真实 Node，再创建同名 WorkerNode；Policy 引用它；Pods 调度到该 Node 后 Controller 更新 Status。它不是 Node 的替代品：Node Ready/taint/pressure 来自 core/v1 Node；WorkerNodeUsage 按同名真实 Node 计算物理水位（内存/CPU requests 占 allocatable 百分比），超阈值（90%）时置 PhysicalPressure=True，供 Orchestrator 停止扩容降级。
 
 Dashboard：Config 展示容量/使用；Data View 同时展示 WorkerNode 与 core Node。Backend 从 dynamic WorkerNode informer 和 typed Node/Pod informer聚合。
 
@@ -251,6 +253,7 @@ Dashboard：Traffic/Data View；Backend只读。
 | `allowScaleToZero` | 无流量时可越过 min 到 0 | false |
 | `minReplicas` | >=0，且 <= max | 1 |
 | `maxReplicas` | 0 或正整数，0 = 不限制（扩到容量上限为止），必填 | - |
+| `maxScaleUpBatch` | 0 或正整数，0 = 使用默认 10；单次扩容决策最多补的副本数，可选 | 10 |
 
 ### Status
 

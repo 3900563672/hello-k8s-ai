@@ -20,7 +20,7 @@ flowchart TD
 ## 2. 快速信息包
 
 ```bash
-CTX=docker-desktop
+CTX=kind-hello-k8s-ai-dev
 NS=hello-k8s-ai-system
 
 kubectl --context "$CTX" get nodes -o wide
@@ -38,14 +38,27 @@ kubectl --context "$CTX" -n "$NS" get events --sort-by=.lastTimestamp
 检查：
 
 ```bash
-kubectl --context docker-desktop -n hello-k8s-ai-system \
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system \
   describe deployment hello-k8s-ai-controller-manager
-kubectl --context docker-desktop -n hello-k8s-ai-system \
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system \
   logs deployment/hello-k8s-ai-controller-manager --all-containers --tail=300
-kubectl --context docker-desktop -n hello-k8s-ai-system get lease
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
 ```
 
 常见原因：CRD 未 Established、RBAC forbidden、镜像未导入 Node、leader Lease 权限、metrics cert/volume、启动参数/环境变量。完整部署失败时先看 `.runtime/last-failure.log`；OTel endpoint 失败不应使 Manager 退出，若退出则检查其他初始化错误。
+
+## 3.1 Kind 节点镜像拉取失败（ImagePullBackOff / proxyconnect connection refused）
+
+- 症状：Pod 事件 `Failed to pull image ... proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused`。
+- 原因：Kind 节点容器内无法访问宿主代理，任何要求“从 registry 拉取”的镜像都会失败；只有 `imagePullPolicy: IfNotPresent` 且镜像已被 `make cluster-up` 导入节点才能运行。
+- 常见触发：清单把 `:dev` 镜像写成 `imagePullPolicy: Always`；或辅助 Pod 使用无 tag 镜像（`busybox` 默认视为 `latest`，默认策略为 Always）。
+- 处置：镜像清单统一 `IfNotPresent`；工具镜像（如 `busybox`）加入 `hack/local-cluster.sh` 的 `RUNTIME_IMAGES`，随 `make cluster-up` 一并导入。
+
+## 3.2 Jaeger 滚动更新死锁（新旧 Pod 抢 badger 目录锁）
+
+- 症状：新 Pod `CrashLoopBackOff`，日志 `Cannot acquire directory lock on "/tmp/jaeger/". Another process is using this Badger database`，旧 Pod 一直 Running 导致 rollout 永不完成。
+- 原因：Jaeger badger 单副本 + RWO PVC，滚动更新会新旧 Pod 同时挂载同一卷抢锁。
+- 处置：`make cluster-up` 已识别 `platform.study.com/restart-procedure: scale-to-zero` 注解并自动“缩 0 → 扩 1”；手动升级 Jaeger 时同样先 `scale --replicas=0` 再扩回。
 
 ## 4. Tenant-Model 没有 SimulatorInstance
 
@@ -201,6 +214,19 @@ curl -sS localhost:8080/api/v1/capabilities
 - snapshot retention 是否已 prune。
 - Prom/Jaeger retention 是否短于 DB。
 - 当前数据绝不能填入历史空洞。
+
+## 13.1 备份/恢复包不完整（tar 半成品）
+
+- 症状：`backup-data.sh` 产出的 `prometheus.tar.gz` / `jaeger.tar.gz` 只有几 MB，`tar tzf` 报 `Unexpected EOF`。
+- 原因：早期版本 `kubectl wait Ready` 只等容器启动，不等 tar 完成就 `kubectl cp`，复制了未写完的文件。
+- 处置：备份脚本用 `/out/done` 标志轮询后 cp；恢复脚本先 cp 再 `kubectl exec` 同步解包（容器不自行解包，避免读到流式写入中的半成品）；升级脚本后重新执行，`tar tzf` 能完整列出即正常。
+- 备份目录在 `/var/tmp/`（不入库），迁移前确认三件套齐全：`dashboard.sql` / `prometheus.tar.gz` / `jaeger.tar.gz`。
+
+## 13.2 恢复后 Prometheus 起不来（segments are not sequential）
+
+- 症状：恢复数据后 Prometheus `CrashLoopBackOff`，日志 `opening storage failed: get segment range: segments are not sequential`。
+- 原因：`tar` 解包是覆盖式合并，新集群 Prometheus 初始化产生的 WAL/block 与恢复数据混合，TSDB 不连续；Jaeger badger 同理会数据错乱。
+- 处置：`restore-data.sh` 解包前先清空目标目录（`rm -rf $src_path/* $src_path/.[!.]*`）再解包；已损坏时删 PVC 重建后重新恢复。
 
 ## 14. Prometheus/Jaeger
 

@@ -135,6 +135,18 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              cpuUsagePercent:
+                description: 物理 CPU 水位（同上）
+                maximum: 100
+                minimum: 0
+                type: integer
+              memoryUsagePercent:
+                description: |-
+                  物理内存水位（真实 Node 已分配 requests 占 allocatable 的百分比，0-100；
+                  由 WorkerNodeUsage 控制器按同名 Kubernetes Node 计算，找不到 Node 时保持缺省）
+                maximum: 100
+                minimum: 0
+                type: integer
               usedConcurrency:
                 description: 已占用的并发
                 minimum: 0

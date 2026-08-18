@@ -9,7 +9,7 @@
 set -euo pipefail
 
 TARGET_REPLICAS="${TARGET_REPLICAS:-120}"
-CONTEXT="${CONTEXT:-docker-desktop}"
+CONTEXT="${CONTEXT:-kind-hello-k8s-ai-dev}"
 MODEL="${MODEL:-model-lite}"
 MODEL_CONCURRENCY="$(kubectl --context "$CONTEXT" get models "$MODEL" -o jsonpath='{.spec.maxConcurrency}')"
 MODEL_GPU="$(kubectl --context "$CONTEXT" get models "$MODEL" -o jsonpath='{.spec.gpuUnits}')"

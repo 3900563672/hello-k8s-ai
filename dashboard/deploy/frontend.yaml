@@ -27,8 +27,9 @@ spec:
       containers:
       - name: frontend
         image: hello-k8s-ai-dashboard-frontend:dev
-        # :dev 标签可变，Always 让每次部署都重新解析镜像 digest，避免 kubelet 缓存旧镜像。
-        imagePullPolicy: Always
+        # :dev 标签可变；镜像由 hack/local-cluster.sh 构建并导入节点（Kind 节点容器内
+        # 无法访问宿主代理，Always 拉取会失败）。IfNotPresent 直接使用节点内新镜像。
+        imagePullPolicy: IfNotPresent
         ports:
         - name: http
           containerPort: 8080

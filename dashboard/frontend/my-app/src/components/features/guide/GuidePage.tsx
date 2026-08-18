@@ -101,6 +101,7 @@ const systemParams: ParamRow[] = [
     { label: '租户 TTFT 扩容 / 队列扩容', value: '500 ms / 100', owner: '用户可配置' },
     { label: '租户 TTFT 缩容 / 队列缩容', value: '200 ms / 30', owner: '用户可配置' },
     { label: '编排 扩容冷却 / 缩容冷却', value: '60 s / 120 s', owner: '用户可配置' },
+    { label: '编排 扩容步长', value: '10 副本/轮', owner: '用户可配置' },
     { label: '编排 allowScaleToZero / 副本范围', value: 'false / 1..10', owner: '用户可配置' },
     { label: '控制器 冷启动打分基准 / 衰减 / 权重下限', value: '60 s / 0.2 / 0.7', owner: '系统常量' },
     { label: '控制器 指标新鲜度', value: '30 s', owner: '系统常量' },
@@ -237,6 +238,7 @@ export function GuidePage() {
                         <div className="space-y-0">
                             <FieldRow name="scaleUpCooldownSeconds" unit="s" defaultValue="60">扩容冷却：同方向扩容动作的最小间隔。</FieldRow>
                             <FieldRow name="scaleDownCooldownSeconds" unit="s" defaultValue="120">缩容冷却：同方向缩容动作的最小间隔。</FieldRow>
+                            <FieldRow name="maxScaleUpBatch" defaultValue="10">单次扩容步长：每轮最多补的副本数；填 0 使用默认 10，配合扩容冷却形成批次节奏。</FieldRow>
                             <FieldRow name="minReplicas / maxReplicas" defaultValue="1..∞">副本范围；maxReplicas 填 0 表示不限制（模拟器无网关，接受任意 QPS，扩到容量上限为止），正整数时要求 minReplicas ≤ maxReplicas。</FieldRow>
                             <FieldRow name="allowScaleToZero" defaultValue="false">允许缩到零：空闲时可将副本缩至 0（minReplicas 仍需 ≥ 1 通过校验）。</FieldRow>
                         </div>
@@ -307,7 +309,7 @@ export function GuidePage() {
                             <FieldRow name="所需副本估算">副本数 ≈ QPS × 平均服务时长 ÷ maxConcurrency；例如 400 QPS × 4.3s ÷ 16 ≈ 108 副本。队列持续增长说明目标容量远小于负载需求，先按此公式扩节点与副本。</FieldRow>
                             <FieldRow name="节点能放多少副本">单节点可承载副本 = min(⌊gpu ÷ gpuUnits⌋, ⌊节点 maxConcurrency ÷ 模型 maxConcurrency⌋)；实例副本总数 = 各可用节点之和。扩容被节点容量挡住时 Orchestrator 返回 no_feasible_placement（属正常容量不足，不是错误）。</FieldRow>
                             <FieldRow name="无限流量与天花板">maxReplicas 填 0 表示副本数不设上限；模拟器无网关、接受任意 QPS，副本可扩到节点配置容量为止。模拟资源由节点/模型配置决定，真实上限只受 Docker Desktop 宿主资源约束，一般到不了。</FieldRow>
-                            <FieldRow name="扩容节奏">高负载下按队列缺口批量扩容：一次决策最多补 10 副本，扩容冷却（默认 60s）作为批次间隔；扩到目标副本数的时间 ≈ 缺口 ÷ 每批上限 × 冷却。想更快可调小 scaleUpCooldownSeconds。</FieldRow>
+                            <FieldRow name="扩容节奏">高负载下按队列缺口批量扩容：一次决策最多补 maxScaleUpBatch 副本（默认 10，填 0 表示默认），扩容冷却（默认 60s）作为批次间隔；扩到目标副本数的时间 ≈ 缺口 ÷ 每批上限 × 冷却。想更快可调大步长或调小 scaleUpCooldownSeconds。</FieldRow>
                             <FieldRow name="QPS 与并发">目标 QPS × 平均服务时长（秒）≈ 所需并发；排队请求持续增长说明并发不足，应扩容或降低 QPS。</FieldRow>
                             <FieldRow name="冷启动窗口">coldStartMs 越大扩容生效越慢；控制器以 60 s 为基准打分，超过后权重按每 60 s 衰减 0.2、下限 0.7。延迟敏感租户建议小模型 + 小冷启动。</FieldRow>
                             <FieldRow name="阈值语义">TTFT 阈值衡量首 token 延时（ms），Queue 阈值衡量排队请求数；缩容阈值应明显低于扩容阈值（如 500/200、100/30），避免反复抖动。</FieldRow>
