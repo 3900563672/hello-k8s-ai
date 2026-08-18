@@ -230,3 +230,12 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **包模式不符**：`make context-pack` 默认全量包（`FULL=1`，含全部 `docs/`）；只要 AI 两层时用 `make context-pack FULL=0`（仅 `docs/agents/` 与 `docs/remote-ai/`）。
 - **包内容过旧**：重新执行 `make context-pack`；以 `CONTEXT_PACK.md` 顶部的生成时间与最近提交为准，包不是实时仓库。
 - **磁盘空间**：`tar` 失败通常伴随磁盘不足，检查 `.runtime/` 所在分区。
+
+## 18. 文档门禁检查失败（docs-check）
+
+`make docs-check`（即 `hack/check-docs.py`）是全仓库文档门禁，CI 同样执行。常见失败：
+
+- **根目录 Markdown 不在白名单**：新增根目录 .md 必须加入 `hack/check-docs.py` 的根目录白名单（当前允许 README / AGENTS / PROJECT_OVERVIEW_NEW / CONTRIBUTING），否则 docs-check 报“未在白名单”。
+- **MAP 门禁**：diff 命中 `docs/MAP.yaml` 映射的源码路径（如 `hack/`）时，映射的文档必须同时在本提交中更新；先看 `docs/MAP.yaml` 确认应同步哪份人类文档。
+- **链接/行数限制**：所有 Markdown 链接必须指向现有文件；README 等有行数上限，超限需精简内容。
+- **本地与 CI 差异**：CI 用 PR base 计算 diff（`DOCS_CHECK_BASE`），本地默认 `HEAD~1`；合并前 base 变化时可能需要在分支内先同步目标文档再推。

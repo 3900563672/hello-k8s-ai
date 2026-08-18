@@ -113,6 +113,7 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 | 动态 WorkerNode | 从非 control-plane Kubernetes Node 名生成 |
 | 数据库 | PostgreSQL 17，10Gi PVC，随机 Secret |
 | 停止语义 | 工作负载缩到 0，保留集群/CRD/CR/Secret/PVC |
+| 文档门禁 | 根目录 Markdown 白名单与 MAP 同步由 hack/check-docs.py 强制（make docs-check） |
 
 ### 8.2 部署后应出现的静态工作负载
 
