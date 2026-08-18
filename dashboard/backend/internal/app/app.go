@@ -17,6 +17,7 @@ import (
 	jaegerprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/jaeger"
 	prometheusprovider "github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/providers/prometheus"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/readmodel"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/segment"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/store"
 )
 
@@ -29,6 +30,7 @@ type App struct {
 	aggregator *readmodel.Aggregator
 	clock      *clock.Clock
 	httpServer *http.Server
+	sampler    *segment.Sampler
 }
 
 func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, error) {
@@ -68,6 +70,14 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 	clockState := clock.New(cacheState)
 	aggregator := readmodel.NewAggregator(cacheState)
 	gateway := kubernetes.NewGateway(cacheState)
+	segmentSampler := segment.New(segment.Config{
+		BaselineInterval:   cfg.Persistence.SegmentBaselineInterval,
+		BurstInterval:      cfg.Persistence.SegmentBurstInterval,
+		QuiescenceWindow:   cfg.Persistence.SegmentQuiescenceWindow,
+		BurstReplicaDelta:  cfg.Persistence.SegmentBurstReplicaDelta,
+		ErrorRateThreshold: cfg.Persistence.SegmentErrorRateThreshold,
+		TTFTThresholdMS:    cfg.Persistence.SegmentTTFTThresholdMS,
+	}, database, prometheusClient, aggregator, logger)
 	apiServer := api.NewServer(api.Dependencies{
 		Config: cfg, Logger: logger, Cache: cacheState, Aggregator: aggregator,
 		Gateway: gateway, Store: database, Prometheus: prometheusClient,
@@ -85,6 +95,7 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 	return &App{
 		config: cfg, logger: logger, database: database, recorder: recorder,
 		cache: cacheState, aggregator: aggregator, clock: clockState, httpServer: httpServer,
+		sampler: segmentSampler,
 	}, nil
 }
 
@@ -102,6 +113,7 @@ func (application *App) Run(ctx context.Context) error {
 			}
 		}()
 		go application.runSnapshots(ctx)
+		go application.runSegmentSampler(ctx)
 	}
 	go func() {
 		application.logger.Info("Dashboard Backend HTTP server started", "address", application.httpServer.Addr)
@@ -127,6 +139,16 @@ func (application *App) Run(ctx context.Context) error {
 	}
 	application.database.Close()
 	return runErr
+}
+
+func (application *App) runSegmentSampler(ctx context.Context) {
+	waitContext, cancel := context.WithTimeout(ctx, application.config.Kubernetes.CacheSyncTimeout+time.Second)
+	defer cancel()
+	if err := application.cache.WaitUntilSynced(waitContext); err != nil {
+		application.logger.Error("Could not start Segment sampler", "error", err)
+		return
+	}
+	application.sampler.Run(ctx)
 }
 
 func (application *App) runSnapshots(ctx context.Context) {

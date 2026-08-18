@@ -11,6 +11,11 @@ import (
 
 var ErrUnavailable = errors.New("persistent store is unavailable")
 
+// 切面（Segment）相关记录类型复用 model 包定义，store 层只做持久化。
+type SegmentRecord = model.SegmentRecord
+type SegmentEvent = model.SegmentEvent
+type MetricBucket = model.MetricBucket
+
 type SnapshotRecord struct {
 	ID             string
 	CapturedAt     time.Time
@@ -65,6 +70,17 @@ type Store interface {
 	UpsertResourceStates(context.Context, []ResourceStateRecord) error
 	PruneResourceStates(context.Context, []ResourceStateRecord) error
 	ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error)
+	ListResourceEvents(context.Context, time.Time, int) ([]model.ResourceChange, error)
+	CreateSegment(context.Context, SegmentRecord) error
+	UpdateSegmentLifecycle(context.Context, string, string, string, json.RawMessage, json.RawMessage) error
+	ListSegments(context.Context, int, string) ([]SegmentRecord, error)
+	GetSegment(context.Context, string) (*SegmentRecord, error)
+	RecordSegmentEvent(context.Context, SegmentEvent) error
+	AppendSegmentMetrics(context.Context, string, []MetricBucket) error
+	LinkSegmentTraces(context.Context, string, []string) error
+	ListSegmentEvents(context.Context, string, int) ([]SegmentEvent, error)
+	ListSegmentMetrics(context.Context, string, int) ([]MetricBucket, error)
+	ListSegmentTraces(context.Context, string) ([]model.TraceSummary, error)
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -103,6 +119,33 @@ func (Disabled) PruneResourceStates(context.Context, []ResourceStateRecord) erro
 	return ErrUnavailable
 }
 func (Disabled) ListResourceStates(context.Context, string, string, int) ([]ResourceStateRecord, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListResourceEvents(context.Context, time.Time, int) ([]model.ResourceChange, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateSegment(context.Context, SegmentRecord) error { return ErrUnavailable }
+func (Disabled) UpdateSegmentLifecycle(context.Context, string, string, string, json.RawMessage, json.RawMessage) error {
+	return ErrUnavailable
+}
+func (Disabled) ListSegments(context.Context, int, string) ([]SegmentRecord, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) GetSegment(context.Context, string) (*SegmentRecord, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) RecordSegmentEvent(context.Context, SegmentEvent) error { return ErrUnavailable }
+func (Disabled) AppendSegmentMetrics(context.Context, string, []MetricBucket) error {
+	return ErrUnavailable
+}
+func (Disabled) LinkSegmentTraces(context.Context, string, []string) error { return ErrUnavailable }
+func (Disabled) ListSegmentEvents(context.Context, string, int) ([]SegmentEvent, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListSegmentMetrics(context.Context, string, int) ([]MetricBucket, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListSegmentTraces(context.Context, string) ([]model.TraceSummary, error) {
 	return nil, ErrUnavailable
 }
 func (Disabled) Prune(context.Context, time.Time) error { return ErrUnavailable }
