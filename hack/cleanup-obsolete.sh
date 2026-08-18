@@ -18,7 +18,6 @@ obsolete_paths=(
   "coverage.html"
   "output"
   "tmp"
-  "config/kind"
   "dashboard/frontend/my-app/.audit"
   "dashboard/frontend/my-app/dist"
   "dashboard/frontend/my-app/node_modules"

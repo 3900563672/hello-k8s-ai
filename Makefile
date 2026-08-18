@@ -26,8 +26,8 @@ else
 BUILD_CMD := $(CONTAINER_TOOL) buildx build --load
 endif
 
-# 本地完整栈固定复用 Docker Desktop 已有 Kubernetes 集群。
-KUBE_CONTEXT ?= docker-desktop
+# 本地完整栈默认使用 Kind 开发集群（kind-hello-k8s-ai-dev）；兼容 docker-desktop 旧 Context。
+KUBE_CONTEXT ?= kind-hello-k8s-ai-dev
 NAMESPACE ?= hello-k8s-ai-system
 # MANAGER_IMG 默认跟随 IMG，保证 `make docker-build IMG=...` 等旧用法仍然有效。
 MANAGER_IMG ?= $(IMG)
@@ -118,6 +118,7 @@ verify: fmt-check test test-backend test-e2e-compile test-frontend verify-deploy
 
 # e2e 使用独立集群，避免测试清理误删日常开发集群。
 E2E_KIND_CLUSTER ?= hello-k8s-ai-test-e2e
+DEV_KIND_CLUSTER ?= hello-k8s-ai-dev
 # 固定 Kind 节点镜像，避免 CI 因 latest 指向变化而漂移。
 KIND_NODE_IMAGE ?= kindest/node:v1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
 
@@ -266,7 +267,13 @@ undeploy: kustomize ## 卸载 controller
 ##@ Docker Desktop 本地完整栈
 
 .PHONY: cluster-up
-cluster-up: ## 复用当前 docker-desktop，一键构建、部署、验收并打开本地端口
+kind-up: ## 创建/复用 Kind 开发集群并安装持久化存储（幂等）
+	@DEV_KIND_CLUSTER="$(DEV_KIND_CLUSTER)" KIND_NODE_IMAGE="$(KIND_NODE_IMAGE)" ./hack/kind/cluster-up.sh
+
+kind-down: ## 删除 Kind 开发集群（PVC 数据保留在 /var/lib/hello-k8s-ai-pv，重建自动挂回）
+	@DEV_KIND_CLUSTER="$(DEV_KIND_CLUSTER)" ./hack/kind/cluster-down.sh
+
+cluster-up: kind-up ## 一键：Kind 集群（没有才建）→ 构建部署 → 验收 → 本地端口
 	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" \
 		MANAGER_IMG="$(MANAGER_IMG)" SIMULATOR_IMG="$(SIMULATOR_IMG)" \
 		BACKEND_IMG="$(BACKEND_IMG)" FRONTEND_IMG="$(FRONTEND_IMG)" \
