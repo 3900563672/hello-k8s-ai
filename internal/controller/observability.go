@@ -129,18 +129,42 @@ var (
 	// 各节点已用 GPU 量（从调度上去的 pod 推算）
 	workerNodeGPUUnitsUsed = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: metricsNamespace,
-		Subsystem: "worker_node",
+		Subsystem: metricsSubsystemWorkerNode,
 		Name:      "gpu_units_used",
 		Help:      "GPU units currently derived from scheduled simulator pods.",
-	}, []string{"node"})
+	}, []string{metricLabelNode})
 
 	// 各节点已用并发数
 	workerNodeConcurrencyUsed = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: metricsNamespace,
-		Subsystem: "worker_node",
+		Subsystem: metricsSubsystemWorkerNode,
 		Name:      "concurrency_used",
 		Help:      "Concurrency currently derived from scheduled simulator pods.",
-	}, []string{"node"})
+	}, []string{metricLabelNode})
+
+	// 各节点物理内存水位（同名真实 Node 已分配 requests 占 allocatable 百分比）
+	workerNodeMemoryUsagePercent = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: metricsNamespace,
+		Subsystem: metricsSubsystemWorkerNode,
+		Name:      "memory_usage_percent",
+		Help:      "Physical memory pressure percent derived from node allocatable and pod requests.",
+	}, []string{metricLabelNode})
+
+	// 各节点物理 CPU 水位
+	workerNodeCPUUsagePercent = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: metricsNamespace,
+		Subsystem: metricsSubsystemWorkerNode,
+		Name:      "cpu_usage_percent",
+		Help:      "Physical CPU pressure percent derived from node allocatable and pod requests.",
+	}, []string{metricLabelNode})
+
+	// Orchestrator 资源受限降级状态（1=任一可调度节点物理水位超阈值，扩容被挂起）
+	orchestratorResourceLimited = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: metricsNamespace,
+		Subsystem: componentOrchestrator,
+		Name:      "resource_limited",
+		Help:      "Whether the orchestrator is in resource-limited degradation (1) or not (0).",
+	}, []string{"tenant"})
 )
 
 func init() {
@@ -161,6 +185,9 @@ func init() {
 		performanceFreshSampleCount,
 		workerNodeGPUUnitsUsed,
 		workerNodeConcurrencyUsed,
+		workerNodeMemoryUsagePercent,
+		workerNodeCPUUsagePercent,
+		orchestratorResourceLimited,
 	)
 }
 

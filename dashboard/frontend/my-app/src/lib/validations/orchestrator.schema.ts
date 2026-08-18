@@ -15,6 +15,7 @@ export const orchestratorSchema = z
         allowScaleToZero: z.boolean(),
         minReplicas: positiveInt('最小副本数'),
         maxReplicas: nonNegativeInt('最大副本数'),
+        maxScaleUpBatch: nonNegativeInt('单次扩容步长'),
     })
     .superRefine((data, context) => {
         // 与 CRD XValidation 保持一致：最小副本数不能超过最大副本数（maxReplicas=0 表示无限制，跳过比较）
@@ -34,5 +35,6 @@ export const getOrchestratorPreview = (data: OrchestratorFormValues): PreviewCon
     { key: '扩容冷却', value: data.scaleUpCooldownSeconds, unit: 's' },
     { key: '缩容冷却', value: data.scaleDownCooldownSeconds, unit: 's' },
     { key: '副本范围', value: `${data.minReplicas} - ${data.maxReplicas === 0 ? '∞' : data.maxReplicas}` },
+    { key: '扩容步长', value: data.maxScaleUpBatch === 0 ? '默认 10' : `${data.maxScaleUpBatch} 副本/轮` },
     { key: '允许缩到零', value: data.allowScaleToZero ? '是' : '否' },
 ]

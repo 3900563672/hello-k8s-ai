@@ -59,6 +59,8 @@ HTTP mutation 成功只表示意图被 API Server 接受。页面应继续显示
 | Trace list/detail | `/traces`、`/traces/{id}` | 无 | latest 可刷新；detail 按 traceId 缓存 |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
 
+编排策略表单字段与 CRD/Backend 白名单一致：含 scaleUpCooldownSeconds、scaleDownCooldownSeconds、min/maxReplicas、maxScaleUpBatch（扩容步长）与 allowScaleToZero。
+
 ## 4. Latest 与 Historical 切换
 
 1. 用户在 TimeTravelBar 选择 snapshot。

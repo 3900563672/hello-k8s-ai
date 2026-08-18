@@ -51,6 +51,19 @@ type WorkerNodeStatus struct {
 	// +optional
 	UsedConcurrency int `json:"usedConcurrency,omitempty"`
 
+	// 物理内存水位（真实 Node 已分配 requests 占 allocatable 的百分比，0-100；
+	// 由 WorkerNodeUsage 控制器按同名 Kubernetes Node 计算，找不到 Node 时保持缺省）
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=100
+	// +optional
+	MemoryUsagePercent int `json:"memoryUsagePercent,omitempty"`
+
+	// 物理 CPU 水位（同上）
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=100
+	// +optional
+	CPUUsagePercent int `json:"cpuUsagePercent,omitempty"`
+
 	// 标准的 K8s conditions
 	// +listType=map
 	// +listMapKey=type

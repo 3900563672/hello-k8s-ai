@@ -203,6 +203,33 @@ func (r *OrchestratorReconciler) Reconcile(
 		return ctrl.Result{RequeueAfter: orchestratorSyncPeriod}, nil
 	}
 
+	// 资源受限降级：物理水位超阈值导致扩容挂起时置条件并提前返回；
+	// 其余情况清除条件，继续正常决策流程。
+	resourceLimited := decision.Action == NoOp && decision.Reason == decisionReasonResourceLimited
+	if resourceLimited {
+		orchestratorResourceLimited.WithLabelValues(tenantName).Set(1)
+		if err := r.setOrchestratorResourceLimitedCondition(
+			ctx,
+			config.Name,
+			true,
+			decision.Reason,
+			input,
+		); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: nextOrchestratorRequeue(decision.RequeueAfter)}, nil
+	}
+	orchestratorResourceLimited.WithLabelValues(tenantName).Set(0)
+	if err := r.setOrchestratorResourceLimitedCondition(
+		ctx,
+		config.Name,
+		false,
+		"Normal",
+		input,
+	); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// 如果连一个有效的性能指标都没有，不能做决策，等下一轮
 	if !input.HasTTFT && !input.HasQueue && decision.Action == NoOp {
 		if err := r.setOrchestratorReadyCondition(
@@ -358,6 +385,51 @@ func (r *OrchestratorReconciler) setOrchestratorReadyCondition(
 		})
 }
 
+// setOrchestratorResourceLimitedCondition 更新 Orchestrator 的资源受限降级条件。
+// 受限时同时把 Ready 置为 True（Reason=ResourceLimited）：降级是预期行为不是故障，
+// 系统仍在运行，只是扩容被挂起；非受限时只清除降级条件，Ready 由主流程维护。
+func (r *OrchestratorReconciler) setOrchestratorResourceLimitedCondition(
+	ctx context.Context,
+	name string,
+	limited bool,
+	reason string,
+	input DecisionInput,
+) error {
+	status := metav1.ConditionFalse
+	message := "all nodes are below the physical pressure threshold"
+	if limited {
+		status = metav1.ConditionTrue
+		var pressured []string
+		for _, node := range input.AvailableNodes {
+			if node.PhysicalPressure {
+				pressured = append(pressured, node.Name)
+			}
+		}
+		message = "scale-up suspended: nodes under physical pressure: " + strings.Join(pressured, ", ")
+	}
+	return k8sutil.PatchStatusWithRetry(ctx, r.Client, name, false,
+		func() *platformv1.Orchestrator { return &platformv1.Orchestrator{} },
+		func(config *platformv1.Orchestrator) error {
+			meta.SetStatusCondition(&config.Status.Conditions, metav1.Condition{
+				Type:               conditionTypeResourceLimited,
+				Status:             status,
+				ObservedGeneration: config.Generation,
+				Reason:             reason,
+				Message:            message,
+			})
+			if limited {
+				meta.SetStatusCondition(&config.Status.Conditions, metav1.Condition{
+					Type:               conditionTypeReady,
+					Status:             metav1.ConditionTrue,
+					ObservedGeneration: config.Generation,
+					Reason:             "ResourceLimited",
+					Message:            message,
+				})
+			}
+			return nil
+		})
+}
+
 // orchestratorRequestsForTenant 根据租户名找到对应的 Orchestrator 资源，生成 reconcile 请求。
 func (r *OrchestratorReconciler) orchestratorRequestsForTenant(ctx context.Context, tenantName string) []reconcile.Request {
 	if tenantName == "" {
@@ -504,7 +576,9 @@ func (r *OrchestratorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return oldOK && newOK &&
 			(oldNode.Generation != newNode.Generation ||
 				oldNode.Status.UsedGPU != newNode.Status.UsedGPU ||
-				oldNode.Status.UsedConcurrency != newNode.Status.UsedConcurrency)
+				oldNode.Status.UsedConcurrency != newNode.Status.UsedConcurrency ||
+				oldNode.Status.MemoryUsagePercent != newNode.Status.MemoryUsagePercent ||
+				oldNode.Status.CPUUsagePercent != newNode.Status.CPUUsagePercent)
 	})
 
 	controllerBuilder := ctrl.NewControllerManagedBy(mgr).

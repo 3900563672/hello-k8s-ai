@@ -4,7 +4,7 @@
 
 ## 1. 作用与边界
 
-Jaeger 是 Trace/Span 查询后端。OTel Collector 把 Controller/Simulator spans 发给它；Grafana 和 Dashboard Backend 查询它。Jaeger 不存 Prometheus metrics，也不拥有 Kubernetes 状态。
+Jaeger 是 Trace/Span 查询后端。OTel Collector 把 Controller/Simulator spans 发给它；Grafana 和 Dashboard Backend 查询它。Jaeger 不存 Prometheus metrics，也不拥有 Kubernetes 状态。Trace 导出失败由 Prometheus 告警兜底（`HelloK8sAITraceExportFailure`，规则见 PROMETHEUS.md）。
 
 ## 2. 开发部署
 

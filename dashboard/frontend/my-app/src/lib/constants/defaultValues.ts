@@ -34,4 +34,5 @@ export const DEFAULT_ORCHESTRATOR: Omit<Orchestrator, 'name' | 'displayName' | '
     allowScaleToZero: false,
     minReplicas: 1,
     maxReplicas: 0, // 0 = 无限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）
+    maxScaleUpBatch: 10, // 0 = 使用默认 10（每轮扩容最多补的副本数）
 }
