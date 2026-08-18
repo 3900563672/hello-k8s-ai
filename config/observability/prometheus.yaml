@@ -126,13 +126,18 @@ data:
           summary: "OpenTelemetry Collector 导出 Trace 失败"
           description: "Collector 向 Jaeger 导出 span 时持续出现失败。"
       - alert: HelloK8sAISimulatorLeaderMissing
-        expr: sum by (simulator_instance) (hello_k8s_ai_simulator_leader) == 0
+        expr: |
+          (absent(sum by (simulator_instance) (hello_k8s_ai_simulator_leader)) == 1
+           and
+           sum(container_memory_working_set_bytes{namespace="hello-k8s-ai-system", pod=~"simulator-.*"}) > 0)
+          or
+          (sum by (simulator_instance) (hello_k8s_ai_simulator_leader) == 0)
         for: 1m
         labels:
           severity: warning
         annotations:
           summary: "模拟器实例池没有状态上报 Leader"
-          description: "SimulatorInstance {{ $labels.simulator_instance }} 已连续 1 分钟没有 Leader。"
+          description: "SimulatorInstance {{ $labels.simulator_instance }} 已连续 1 分钟没有 Leader（全部 Pod 消失时实例标签可能为空；clean 集群不触发）。"
       - alert: HelloK8sAIDashboardEventsDropped
         expr: sum(rate(hello_k8s_ai_dashboard_events_dropped_total[5m])) > 0
         for: 5m

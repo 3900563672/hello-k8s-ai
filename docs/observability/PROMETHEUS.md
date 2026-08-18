@@ -104,7 +104,7 @@ Grafana 是运维探索界面；Dashboard Backend 直接查询 Prometheus，不�
 
 ## 8. Rules 与告警
 
-清单中包含 recording/alert rules（历史验证记录显示 6 条规则通过 promtool）。修改任何 PromQL 后：
+清单中包含 recording/alert rules（2026-08-18 实测 9 条规则通过 promtool）。修改任何 PromQL 后：
 
 ```bash
 promtool check config <rendered-prometheus-config>
@@ -112,6 +112,8 @@ promtool check rules <rules-file>
 ```
 
 当前没有 Alertmanager，因此 alert rule 只会在 Prometheus 中 Firing，不会通知。生产必须配置 routing、silence、receiver、runbook URL 和测试告警。
+
+`HelloK8sAISimulatorLeaderMissing` 使用 absent + 容器指标门控：全部模拟器 Pod 消失或全部上报 0 时触发，clean 集群不误报；2026-08-18 演练实测 pending→firing→恢复。
 
 ## 9. 当前能力边界
 

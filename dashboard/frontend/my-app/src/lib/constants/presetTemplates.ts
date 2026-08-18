@@ -165,6 +165,7 @@ export const PRESET_ORCHESTRATOR_TEMPLATES: ConfigTemplate<OrchestratorFormValue
             allowScaleToZero: false,
             minReplicas: 1,
             maxReplicas: 0, // 0 = 无限制（模拟器无网关，接受任意 QPS，扩到容量上限为止）
+            maxScaleUpBatch: 10, // 每轮最多补 10 副本（默认节奏）
         },
     },
     {
@@ -179,6 +180,7 @@ export const PRESET_ORCHESTRATOR_TEMPLATES: ConfigTemplate<OrchestratorFormValue
             allowScaleToZero: true,
             minReplicas: 1,
             maxReplicas: 20,
+            maxScaleUpBatch: 20, // 弹性策略：每轮最多补 20 副本，快速吸收突发流量
         },
     },
     {
@@ -193,6 +195,7 @@ export const PRESET_ORCHESTRATOR_TEMPLATES: ConfigTemplate<OrchestratorFormValue
             allowScaleToZero: false,
             minReplicas: 1,
             maxReplicas: 4,
+            maxScaleUpBatch: 2, // 保守策略：每轮只补 2 副本，扩容更谨慎
         },
     },
 ]

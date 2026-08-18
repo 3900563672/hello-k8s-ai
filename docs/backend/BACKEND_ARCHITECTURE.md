@@ -135,6 +135,8 @@ Overview 对多个 Prometheus 查询和 Jaeger 查询并发 fan-out。可选 pro
 
 通用配置可写 Kind：Model、WorkerNode、Tenant、TenantModelPolicy、TenantNodePolicy、ModelNodePolicy、Orchestrator。
 
+Orchestrator 可写字段与 CRD 一致，含扩容步长 maxScaleUpBatch；白名单外字段会被 Backend 写接口拒绝。
+
 `SimulationClock/default.spec.rate` 通过 `PATCH /clock/rate` 单独处理：只允许 1..20，支持缺失时创建、resourceVersion、dry-run、幂等与审计；不允许第二个 Clock、delete 或 Status 写入。
 
 禁止：SimulatorInstance、TenantPerformance、TenantRuntime、所有 Status、Deployment、Pod、Lease。这些是 Controller/Simulator 派生状态。

@@ -102,7 +102,7 @@ Frontend/Backend 更新 `SimulationClock/default.spec.rate` 后，Clock Controll
 ## 6. 扩容生命周期
 
 1. TenantPerformance 超过任一上阈值或总副本低于 floor。
-2. 检查 scale-up cooldown、maxReplicas、Policy 和 WorkerNode 资源。
+2. 检查 scale-up cooldown、maxReplicas、maxScaleUpBatch（单次扩容步长，0=默认 10）、Policy 和 WorkerNode 资源。
 3. 选择实例/模型并计算 effectiveScore。
 4. 持久化 pending plan 和 replica 变更。
 5. Instance Controller patch Deployment。

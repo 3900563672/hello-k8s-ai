@@ -32,6 +32,15 @@ const columns: ColumnDef<Orchestrator>[] = [
         ),
     },
     {
+        accessorKey: 'maxScaleUpBatch',
+        header: '扩容步长',
+        cell: ({ row }) => (
+            <span className="tabular-nums text-[#B7C2D1]">
+                {row.original.maxScaleUpBatch === 0 ? '默认 10' : `${row.original.maxScaleUpBatch} 副本/轮`}
+            </span>
+        ),
+    },
+    {
         accessorKey: 'scaleUpCooldownSeconds',
         header: '扩容冷却',
         cell: ({ row }) => (

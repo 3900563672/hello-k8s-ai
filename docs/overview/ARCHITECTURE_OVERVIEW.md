@@ -116,7 +116,7 @@ Docker Desktop 本地环境保留两个 Kustomize 边界：
 ## 7. 架构不变量
 
 - Controller 的输出状态只能由约定所有者写。
-- 实例是否允许存在由 TenantModelPolicy 决定；Simulator 时间倍速由 SimulationClock Controller 同步；实例分配流量由 Traffic 决定；副本由 Orchestrator 决定；Deployment 由 SimulatorInstance Controller 决定；性能由 Simulator 决定。
+- 实例是否允许存在由 TenantModelPolicy 决定；Simulator 时间倍速由 SimulationClock Controller 同步；实例分配流量由 Traffic 决定；副本由 Orchestrator 决定（批量扩容步长 maxScaleUpBatch 可配置）；Deployment 由 SimulatorInstance Controller 决定；性能由 Simulator 决定。
 - Kubernetes Scheduler 负责最终 Node 选择；项目 Controller 只生成 required node affinity。
 - Prometheus 通过 Pod discovery 抓取 Simulator；当前没有为每个 SimulatorInstance 创建 Service。
 - 最新查询从 cache 读；旧时间点从 snapshot 读；两者不能静默混用。

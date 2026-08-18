@@ -62,6 +62,7 @@ type DecisionInput struct {
 	// 副本限制
 	MinReplicas      int
 	MaxReplicas      int
+	MaxScaleUpBatch  int
 	AllowScaleToZero bool
 }
 
@@ -190,6 +191,7 @@ func (r *OrchestratorReconciler) gatherDecisionInput(
 		)
 	}
 	input.MaxReplicas = config.Spec.MaxReplicas
+	input.MaxScaleUpBatch = nonNegative(config.Spec.MaxScaleUpBatch)
 	input.AllowScaleToZero = config.Spec.AllowScaleToZero
 
 	// maxReplicas=0 表示不限制，minReplicas 不参与比较
