@@ -30,3 +30,5 @@ Dockerfile.backup.*
 A.sh
 
 .codex-tmp/
+
+/Documents/
