@@ -65,7 +65,7 @@ func freshDial() error {
 	if err != nil {
 		return err
 	}
-	defer ln.Close()
+	defer func() { _ = ln.Close() }()
 	conn, err := net.DialTimeout("tcp4", ln.Addr().String(), 500*time.Millisecond)
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func relayErrorCount() int {
 		return -1
 	}
 	count := 0
-	for _, line := range strings.Split(string(out), "\n") {
+	for line := range strings.SplitSeq(string(out), "\n") {
 		if strings.Contains(line, relayErrorMarker) {
 			count++
 		}
