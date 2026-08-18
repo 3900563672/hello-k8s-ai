@@ -69,6 +69,12 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 			input.AvgTTFT < input.TTFTThresholdDown &&
 			input.AvgQueue < input.QueueThresholdDown)
 
+	// 物理水位保护：任一可调度节点接近物理上限时停止扩容（不增加副本），
+	// 负载由现有副本排队消化；水位恢复后自动解除。缩容与重平衡不改变副本总量，不受影响。
+	if needUp && anyNodeUnderPhysicalPressure(input.AvailableNodes) {
+		return Decision{Action: NoOp, Reason: decisionReasonResourceLimited, RequeueAfter: orchestratorSyncPeriod}
+	}
+
 	if needUp {
 		return scaleUpDecision(input, now, floor, totalReplicas, needBootstrap)
 	}
@@ -119,6 +125,16 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 		}
 	}
 	return Decision{Action: NoOp, Reason: "no_scale_down_candidate"}
+}
+
+// anyNodeUnderPhysicalPressure 返回是否有任意节点物理水位超阈值。
+func anyNodeUnderPhysicalPressure(nodes []NodeInfo) bool {
+	for _, node := range nodes {
+		if node.PhysicalPressure {
+			return true
+		}
+	}
+	return false
 }
 
 func placementUnavailableDecision(models []ModelInfo, instances []InstanceInfo) Decision {

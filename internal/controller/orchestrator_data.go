@@ -12,6 +12,7 @@ import (
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -77,8 +78,9 @@ type ModelInfo struct {
 
 type NodeInfo struct {
 	Name                 string
-	RemainingGPU         int // 还剩多少 GPU
-	RemainingConcurrency int // 还剩多少并发
+	RemainingGPU         int  // 还剩多少 GPU
+	RemainingConcurrency int  // 还剩多少并发
+	PhysicalPressure     bool // 真实节点物理水位超阈值（内存或 CPU）
 }
 
 type nodeLogicalUsage struct {
@@ -445,10 +447,12 @@ func (r *OrchestratorReconciler) collectAvailableNodes(ctx context.Context, tena
 		// 已调度 Pod 和尚未物化的放置计划取较大值，避免控制器状态回写前重复占用同一容量。
 		usedGPU := max(node.Status.UsedGPU, expectedUsage[node.Name].GPU)
 		usedConcurrency := max(node.Status.UsedConcurrency, expectedUsage[node.Name].Concurrency)
+		pressureCondition := meta.FindStatusCondition(node.Status.Conditions, conditionTypePhysicalPressure)
 		nodes = append(nodes, NodeInfo{
 			Name:                 node.Name,
 			RemainingGPU:         nonNegative(node.Spec.GPU - usedGPU),
 			RemainingConcurrency: nonNegative(node.Spec.MaxConcurrency - usedConcurrency),
+			PhysicalPressure:     pressureCondition != nil && pressureCondition.Status == metav1.ConditionTrue,
 		})
 	}
 	return nodes, nil
