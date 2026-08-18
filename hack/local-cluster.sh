@@ -230,6 +230,7 @@ pull_runtime_images() {
     "$BACKEND_IMG"
     "$FRONTEND_IMG"
     "postgres:17-alpine"
+    "busybox"
     "prom/prometheus:v3.13.2"
     "otel/opentelemetry-collector-contrib:0.158.0"
     "cr.jaegertracing.io/jaegertracing/jaeger:2.20.0"
@@ -323,8 +324,20 @@ wait_for_crds() {
 
 restart_and_wait_deployment() {
   local deployment="$1"
-  kube -n "$NAMESPACE" rollout restart "deployment/$deployment" >/dev/null
-  kube -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=360s
+  local procedure
+  procedure="$(kube -n "$NAMESPACE" get "deployment/$deployment" \
+    -o jsonpath='{.metadata.annotations.platform\.study\.com/restart-procedure}' 2>/dev/null || true)"
+  if [[ "$procedure" == "scale-to-zero" ]]; then
+    # 单副本 + RWO PVC（如 Jaeger badger）：滚动更新新旧 Pod 抢目录锁会 CrashLoop，
+    # 必须按清单声明的流程先缩到 0 再扩回 1。
+    kube -n "$NAMESPACE" scale "deployment/$deployment" --replicas=0 >/dev/null
+    kube -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=120s >/dev/null
+    kube -n "$NAMESPACE" scale "deployment/$deployment" --replicas=1 >/dev/null
+    kube -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=360s >/dev/null
+  else
+    kube -n "$NAMESPACE" rollout restart "deployment/$deployment" >/dev/null
+    kube -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=360s
+  fi
 }
 
 ensure_database_secret() {
@@ -504,9 +517,13 @@ verify_data_flow() {
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/health/ready
   wait_for_text "Backend Simulator 倍速能力" '"simulatorAcceleration":true' 30 \
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/clock
-  wait_for_text "SimulationClock 配置收敛" '1|1|True' 30 \
-    kube get simulationclock/default \
-    -o 'jsonpath={.spec.rate}{"|"}{.status.appliedRate}{"|"}{.status.conditions[?(@.type=="Ready")].status}'
+  if kube get simulationclock --no-headers >/dev/null 2>&1; then
+    wait_for_text "SimulationClock 配置收敛" '1|1|True' 30 \
+      kube get simulationclock/default \
+      -o 'jsonpath={.spec.rate}{"|"}{.status.appliedRate}{"|"}{.status.conditions[?(@.type=="Ready")].status}'
+  else
+    log "无 SimulationClock CR，跳过收敛检查（干净环境；创建后自动收敛）"
+  fi
   wait_for_text "Frontend 页面" '<!doctype html>' 20 \
     service_proxy hello-k8s-ai-dashboard-frontend http /
 
