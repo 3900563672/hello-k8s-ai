@@ -61,19 +61,20 @@ kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
 - 处置：`make cluster-up` 已识别 `platform.study.com/restart-procedure: scale-to-zero` 注解并自动“缩 0 → 扩 1”；手动升级 Jaeger 时同样先 `scale --replicas=0` 再扩回。
 
 
-## 3.3 WSL 回环新端口首连被拒（localhost 转发中继降级）
+## 3.3 WSL 回环新端口首连被拒（localhost 转发中继，两级形态）
 
-- 症状：本地 Go/Python 测试连 `127.0.0.1` 上刚 `listen` 的端口，立即连接偶发 `connection refused`（Go）/ `Errno 111`（Python）；CI 正常；`eth0`、IPv6、长存活端口全部正常。
+- 症状：
+  - 严重形态：本地 Go/Python 测试连 `127.0.0.1` 上刚 `listen` 的端口，立即连接间歇性 `connection refused`（Go）/ `Errno 111`（Python）；CI 正常；`eth0`、IPv6、长存活端口全部正常；Windows 侧新端口 curl 超时不可达；dmesg `UtilAcceptVsock` 计数持续增长。
+  - 健康态瞬态：同一进程内连续"listen→连接→关闭"多轮，第 2 轮起新端口注册停滞 >2s（2–5s 自愈，dmesg 计数为 0）——这是正常健康态的可复现瞬态，不是故障。
 - 快速判断：
   ```bash
   go run ./hack/wsl-loopback-probe
   dmesg | grep UtilAcceptVsock | wc -l
   ```
-  `RESULT: FAIL/WARN` 或错误计数持续增长 = 中继降级中。
+  探针默认单轮（测量首次成功时延 + Windows 侧 curl 校验），健康态应为 `PASS`；严重形态下 `FAIL` 且错误计数持续增长。注意：`-attempts >1` 会命中健康态瞬态，其结果不能判定故障。
 - 处置：这是 WSL2 组件问题，不是业务代码问题，不要改代码。根因修复 = `wsl --shutdown` 或整机重启（影响运行中发行版与 Docker Desktop 内置 K8s，需用户同意）；临时规避 = 对首个连接重试 ≥100ms，或先自连一次完成端口注册。
 - 自动接入：`make preflight` 第 9 节与 `make selfcheck` 会自动运行探针，非 WSL 环境自动跳过；探针 `FAIL` 时 preflight 会阻止启动，`WARN` 仅提示。
 - 完整排查案例见 [WSL_LOOPBACK_CASE_STUDY.md](WSL_LOOPBACK_CASE_STUDY.md)。
-
 ## 4. Tenant-Model 没有 SimulatorInstance
 
 按顺序：
