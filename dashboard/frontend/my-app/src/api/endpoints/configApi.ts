@@ -104,6 +104,7 @@ const toOrchestrator = (resource: BackendResource<OrchestratorSpec & Record<stri
     allowScaleToZero: resource.spec.allowScaleToZero ?? false,
     minReplicas: resource.spec.minReplicas ?? 0,
     maxReplicas: resource.spec.maxReplicas ?? 0,
+    maxScaleUpBatch: resource.spec.maxScaleUpBatch ?? 0,
     status: resource.status,
     conditions: resource.conditions,
     derived: resource.derived,
@@ -126,6 +127,7 @@ const orchestratorSpec = (orchestrator: Orchestrator): OrchestratorSpec => ({
     allowScaleToZero: orchestrator.allowScaleToZero,
     minReplicas: orchestrator.minReplicas,
     maxReplicas: orchestrator.maxReplicas,
+    maxScaleUpBatch: orchestrator.maxScaleUpBatch,
 })
 
 type ConfigEntityKind = 'Model' | 'WorkerNode' | 'Tenant' | 'Orchestrator' | 'TenantModelPolicy' | 'TenantNodePolicy' | 'ModelNodePolicy'

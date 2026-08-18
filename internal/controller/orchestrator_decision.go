@@ -69,6 +69,12 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 			input.AvgTTFT < input.TTFTThresholdDown &&
 			input.AvgQueue < input.QueueThresholdDown)
 
+	// 物理水位保护：任一可调度节点接近物理上限时停止扩容（不增加副本），
+	// 负载由现有副本排队消化；水位恢复后自动解除。缩容与重平衡不改变副本总量，不受影响。
+	if needUp && anyNodeUnderPhysicalPressure(input.AvailableNodes) {
+		return Decision{Action: NoOp, Reason: decisionReasonResourceLimited, RequeueAfter: orchestratorSyncPeriod}
+	}
+
 	if needUp {
 		return scaleUpDecision(input, now, floor, totalReplicas, needBootstrap)
 	}
@@ -119,6 +125,16 @@ func DecideAt(input DecisionInput, now time.Time) Decision {
 		}
 	}
 	return Decision{Action: NoOp, Reason: "no_scale_down_candidate"}
+}
+
+// anyNodeUnderPhysicalPressure 返回是否有任意节点物理水位超阈值。
+func anyNodeUnderPhysicalPressure(nodes []NodeInfo) bool {
+	for _, node := range nodes {
+		if node.PhysicalPressure {
+			return true
+		}
+	}
+	return false
 }
 
 func placementUnavailableDecision(models []ModelInfo, instances []InstanceInfo) Decision {
@@ -231,7 +247,7 @@ func scaleUpDecision(input DecisionInput, now time.Time, floor, totalReplicas in
 	// 决定这次补多少副本：引导期一次补到地板，高负载按队列缺口批量补，其余保持 +1。
 	delta := scaleUpDelta(input)
 	if bootstrap {
-		delta = clampInt(floor-totalReplicas, 1, maxScaleUpBatch)
+		delta = clampInt(floor-totalReplicas, 1, scaleUpBatchLimit(input))
 	}
 	// 单节点放不下整批时逐级减半，直到最小 +1；+1 都放不下才按容量不足处理。
 	candidate, found := findBestPlacement(input.AvailableModels, input.AvailableNodes, input.ExistingInstances, delta)
@@ -254,12 +270,20 @@ func scaleUpDecision(input DecisionInput, now time.Time, floor, totalReplicas in
 	}
 }
 
-// maxScaleUpBatch 单次扩容决策最多补的副本数。
+// defaultMaxScaleUpBatch 单次扩容决策默认最多补的副本数（配置为 0 时生效）。
 // 模拟器没有网关，副本可以无限增长；批量扩容配合冷却形成批次节奏，
 // 既避免大并发下“10→100 要等 90 次冷却”，也防止单次决策把副本数冲过头。
-const maxScaleUpBatch = 10
+const defaultMaxScaleUpBatch = 10
 
-// scaleUpDelta 估算一次扩容决策应补的副本数，范围 [1, maxScaleUpBatch]。
+// scaleUpBatchLimit 返回单次扩容步长上限：配置值优先，0 表示使用默认 10。
+func scaleUpBatchLimit(input DecisionInput) int {
+	if input.MaxScaleUpBatch > 0 {
+		return input.MaxScaleUpBatch
+	}
+	return defaultMaxScaleUpBatch
+}
+
+// scaleUpDelta 估算一次扩容决策应补的副本数，范围 [1, scaleUpBatchLimit(input)]。
 // 队列指标能直接换算成副本缺口：缺口 / 单副本并发容量，向上取整。
 // TTFT 超标不参与批量放大，保持原有 +1 节奏，避免按延迟比例盲目扩。
 func scaleUpDelta(input DecisionInput) int {
@@ -269,7 +293,7 @@ func scaleUpDelta(input DecisionInput) int {
 	}
 	if input.HasQueue && input.AvgQueue > input.QueueThresholdUp && input.QueueThresholdUp > 0 {
 		gap := input.AvgQueue - input.QueueThresholdUp
-		return clampInt((gap+perReplica-1)/perReplica, 1, maxScaleUpBatch)
+		return clampInt((gap+perReplica-1)/perReplica, 1, scaleUpBatchLimit(input))
 	}
 	return 1
 }

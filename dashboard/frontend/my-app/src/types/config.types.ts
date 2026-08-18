@@ -41,6 +41,7 @@ export interface OrchestratorSpec {
     allowScaleToZero: boolean
     minReplicas: number
     maxReplicas: number
+    maxScaleUpBatch: number
 }
 
 export interface Model extends ModelSpec {

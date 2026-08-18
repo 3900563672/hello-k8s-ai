@@ -183,7 +183,7 @@ Grafana 健康状态是页面本地 state；`reloadKey` 变化强制 iframe 重�
 
 - 预置模板（`src/lib/constants/presetTemplates.ts`）：模型、节点、租户、编排策略、流量五类，只预填表单，不写入集群。
 - 系统参数速查表（页面内常量 `systemParams`）：与模板、CRD 默认值和 Controller/Simulator 常量保持一致，归属“系统常量”的项不可通过表单修改。
-- 填法指南：容量估算、副本吞吐换算、无限流量与天花板（`maxReplicas=0` 不设上限）、扩容节奏、阈值语义等。
+- 填法指南：容量估算、副本吞吐换算、无限流量与天花板（`maxReplicas=0` 不设上限）、扩容节奏（`maxScaleUpBatch` 步长，默认 10）、阈值语义等。
 
 ### API 来源
 

@@ -1,0 +1,27 @@
+# 开发/演示底座：Kind 多节点集群（节点收敛 5 = 1 control-plane + 4 worker）
+# 持久化：全部节点挂载宿主目录 /var/lib/hello-k8s-ai-pv（docker_data.vhdx 内），
+#         集群删除重建后 PVC 数据自动挂回，不丢历史。
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: hello-k8s-ai-dev
+nodes:
+  - role: control-plane
+    extraMounts:
+      - hostPath: /var/lib/hello-k8s-ai-pv
+        containerPath: /var/lib/hello-k8s-ai-pv
+  - role: worker
+    extraMounts:
+      - hostPath: /var/lib/hello-k8s-ai-pv
+        containerPath: /var/lib/hello-k8s-ai-pv
+  - role: worker
+    extraMounts:
+      - hostPath: /var/lib/hello-k8s-ai-pv
+        containerPath: /var/lib/hello-k8s-ai-pv
+  - role: worker
+    extraMounts:
+      - hostPath: /var/lib/hello-k8s-ai-pv
+        containerPath: /var/lib/hello-k8s-ai-pv
+  - role: worker
+    extraMounts:
+      - hostPath: /var/lib/hello-k8s-ai-pv
+        containerPath: /var/lib/hello-k8s-ai-pv

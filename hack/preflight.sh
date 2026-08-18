@@ -10,7 +10,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-KUBE_CONTEXT="${KUBE_CONTEXT:-docker-desktop}"
+KUBE_CONTEXT="${KUBE_CONTEXT:-kind-hello-k8s-ai-dev}"
 NAMESPACE="${NAMESPACE:-hello-k8s-ai-system}"
 REQUIRE_GUARD="${PREFLIGHT_REQUIRE_GUARD:-0}"
 SKIP_WINDOWS="${PREFLIGHT_SKIP_WINDOWS:-0}"
@@ -50,14 +50,18 @@ else
   ok "节点就绪（$NODES 个）"
 fi
 if (( CORDONED > 0 )); then
-  warn "存在 cordon 节点（$CORDONED 个，已知问题：worker6 CNI 故障保持 cordon）"
+  warn "存在 cordon 节点（$CORDONED 个）"
 fi
 
 # ---------- 3. 系统组件健康 ----------
 COMPONENTS=$(kubectl --context "$KUBE_CONTEXT" get deploy,statefulset -n "$NAMESPACE" \
   -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} {.status.replicas} {.status.availableReplicas}{"\n"}{end}' 2>/dev/null || true)
 if [[ -z "$COMPONENTS" ]]; then
-  bad "命名空间 $NAMESPACE 内没有 Deployment/StatefulSet（尚未部署？先跑 make cluster-up / setup.sh）"
+  if ! kubectl --context "$KUBE_CONTEXT" get crd simulatorinstances.platform.study.com >/dev/null 2>&1; then
+    warn "命名空间 $NAMESPACE 为空且 CRD 未安装（首次部署，跳过组件健康检查）"
+  else
+    bad "命名空间 $NAMESPACE 内没有 Deployment/StatefulSet（CRD 已存在但工作负载缺失）"
+  fi
 else
   while read -r kindname spec avail; do
     [[ -z "$kindname" ]] && continue

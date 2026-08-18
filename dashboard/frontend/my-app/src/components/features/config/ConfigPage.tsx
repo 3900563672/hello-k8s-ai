@@ -191,6 +191,7 @@ const orchestratorFormValues = (orchestrator: Orchestrator): OrchestratorFormVal
     allowScaleToZero: orchestrator.allowScaleToZero,
     minReplicas: orchestrator.minReplicas,
     maxReplicas: orchestrator.maxReplicas,
+    maxScaleUpBatch: orchestrator.maxScaleUpBatch,
 })
 
 const policyFormValues = (policy: Policy): PolicyFormValues => ({
@@ -473,6 +474,7 @@ export function ConfigPage() {
                         allowScaleToZero: template.data.allowScaleToZero,
                         minReplicas: template.data.minReplicas,
                         maxReplicas: template.data.maxReplicas,
+                        maxScaleUpBatch: template.data.maxScaleUpBatch,
                     }
                     : {
                         name,

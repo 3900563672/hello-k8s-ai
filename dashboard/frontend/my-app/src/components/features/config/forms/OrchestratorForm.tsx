@@ -87,6 +87,8 @@ export const OrchestratorForm = memo(function OrchestratorForm({
 
                         <ConfigNumberField control={form.control} name="maxReplicas" label="最大副本数" min="0" description="填 0 表示不限制副本数（模拟器无网关，接受任意 QPS，扩到容量上限为止）" />
 
+                        <ConfigNumberField control={form.control} name="maxScaleUpBatch" label="单次扩容步长" min="0" description="每轮扩容最多补的副本数；填 0 使用默认 10" />
+
                         <FormField
                             control={form.control}
                             name="allowScaleToZero"

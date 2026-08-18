@@ -19,9 +19,11 @@ hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度�
 
 想用 AI 协作开发，人类可先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。参与贡献见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
+项目采用 [Apache-2.0](LICENSE) 许可证。
+
 ## 最省事的部署方式
 
-本仓库只复用 Docker Desktop 已有的 Kubernetes 集群，不创建、不重置、也不删除集群。默认且唯一支持的本地部署目标是当前 Context `docker-desktop`。
+本地开发/演示默认使用独立的 Kind 多节点集群（`hello-k8s-ai-dev`，1 control-plane + 4 worker），由 `make cluster-up` 自动创建并切换 Context；不再依赖 Docker Desktop 内置 Kubernetes。PVC 数据持久化在 `/var/lib/hello-k8s-ai-pv`（Docker 数据盘内），集群删除重建不丢历史。
 
 覆盖旧项目文件后，在项目根目录执行：
 
@@ -47,10 +49,10 @@ bash setup.sh
 
 ## 前置条件
 
-- Docker Desktop 已启动，Kubernetes 已启用。
-- `kubectl config current-context` 输出 `docker-desktop`。
+- Docker Desktop（Docker 引擎）已启动；不再需要 Docker Desktop 内置 Kubernetes。
+- `kubectl config current-context` 输出 `kind-hello-k8s-ai-dev`（`make cluster-up` 自动创建并切换）。
 - Docker CLI 与 `kubectl` 可用。
-- Kubernetes Node 是 Docker Desktop 管理的本地容器。
+- Kubernetes Node 是 Kind 管理的本地容器（镜像由 `make cluster-up` 自动导入）。
 - 存在 `standard` StorageClass。
 
 部署不要求本机安装 Go、Node.js、npm、kind 或独立 Kustomize；编译在 Docker 中完成，清单由 `kubectl` 内置 Kustomize 处理。
@@ -73,7 +75,7 @@ make cluster-down    # 停止工作负载，保留集群、CRD、CR、Secret 与
 DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 ```
 
-`make cluster-down` 不会删除 `docker-desktop`，也不会碰旁边的 `minikserve-demo` Kind 集群。
+`make cluster-down` 只停止工作负载，保留集群、CRD、CR、Secret 与 PVC；`make kind-down` 才删除 Kind 开发集群（PVC 数据保留在 `/var/lib/hello-k8s-ai-pv`，重建自动挂回）。
 
 ## 最近变更
 
@@ -82,9 +84,9 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 
 - 2026-08-18 [变更总览：仓库健康度治理——安全政策、分支保护与依赖扫描](change-history/2026-08-18-repo-hygiene/README.md)
 - 2026-08-18 [变更总览：仓库美化——CONTRIBUTING、主页 README、Wiki 与仓库元数据](change-history/2026-08-18-repo-beautify/README.md)
-- 2026-08-18 [变更总览：宿主工具链恢复——Codex 配置自修复、整机重启恢复顺序与圈复杂度处理](change-history/2026-08-18-host-toolchain-recovery/README.md)
-- 2026-08-18 [变更总览：人类文档补全与远程 AI 手册完善——文档漂移全面对齐](change-history/2026-08-18-docs-human-complete/README.md)
-- 2026-08-18 [变更总览：文档体系重构——机械门禁、内容迁移与入口重写](change-history/2026-08-18-docs-architecture-rework/README.md)
+- 2026-08-18 [白天长时运行收尾 + Kind 迁移数据备份（#50 前置）](change-history/2026-08-18-longrun-and-kind-migration-prep/README.md)
+- 2026-08-18 [变更总览：项目采用 Apache-2.0 许可证](change-history/2026-08-18-license/README.md)
+- 2026-08-18 [Kind 底座迁移完成：部署闭环 + 数据恢复 + 工具链修复（#50）](change-history/2026-08-18-kind-migration-complete/README.md)
 
 <!-- docs-sync:timeline-end -->
 
@@ -129,4 +131,4 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 - [验证指南](docs/getting-started/VERIFICATION.md)
 - [排障](docs/operations/TROUBLESHOOTING.md)
 
-Kind 只保留给隔离的自动化 E2E，测试集群固定为 `hello-k8s-ai-test-e2e`，与日常 `docker-desktop` 部署无关。
+自动化 E2E 使用隔离的 Kind 集群 `hello-k8s-ai-test-e2e`，与日常开发集群 `hello-k8s-ai-dev` 互不影响。
