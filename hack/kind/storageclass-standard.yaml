@@ -1,0 +1,11 @@
+# StorageClass standard（默认）：local-path-provisioner，数据落在 /var/lib/hello-k8s-ai-pv。
+# 命名与既有清单（postgresql.yaml / prometheus.yaml / jaeger.yaml 的 storageClassName: standard）保持一致。
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete

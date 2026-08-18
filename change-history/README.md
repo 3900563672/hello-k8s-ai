@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-18 | 业务层优雅降级闭环：物理水位联动 + 资源受限标记（Fixes #49） | P0 | [查看记录](2026-08-18-issue49-graceful-degradation/README.md) |
 | 2026-08-18 | 人类文档补全与远程 AI 手册完善：文档漂移全面对齐 | P2 | [查看记录](2026-08-18-docs-human-complete/README.md) |
 | 2026-08-18 | 文档体系重构：机械门禁、内容迁移与入口重写（PR #33/#34） | P1 | [查看记录](2026-08-18-docs-architecture-rework/README.md) |
 | 2026-08-18 | 降级演练缺陷修复：告警表达式三修 + 模拟器容器资源限制（Fixes #30） | P1 | [查看记录](2026-08-18-alert-drill-fixes/README.md) |
@@ -54,5 +55,6 @@
 | 2026-08-18 | 仓库美化：CONTRIBUTING、主页 README、Wiki 与仓库元数据 | P3 | [查看记录](2026-08-18-repo-beautify/README.md) |
 | 2026-08-18 | 提交节奏规则：逻辑闭环 ≤2 commit 与 PR squash merge | P3 | [查看记录](2026-08-18-commit-rhythm/README.md) |
 | 2026-08-18 | 仓库健康度治理：安全政策、分支保护与依赖扫描 | P2 | [查看记录](2026-08-18-repo-hygiene/README.md) |
+| 2026-08-18 | 项目采用 Apache-2.0 许可证 | P2 | [查看记录](2026-08-18-license/README.md) |
 
 > 详略规范：大改动保持四件套（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），中小改动单文件多节；UI / 面板视觉改动另附 `screenshots/before-*.png` 与 `after-*.png`（约定见 `docs/agents/UI_VERIFICATION.md`）。

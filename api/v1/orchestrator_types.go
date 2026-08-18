@@ -54,6 +54,14 @@ type OrchestratorSpec struct {
 	// +kubebuilder:validation:Minimum=0
 	// +required
 	MaxReplicas int `json:"maxReplicas"`
+
+	// 单次扩容决策最多补的副本数；0 表示默认 10。
+	// 模拟器无网关，副本可无限增长；批量扩容配合冷却形成批次节奏，
+	// 既避免大并发下“10→100 要等 90 次冷却”，也防止单次决策把副本数冲过头。
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default=10
+	// +optional
+	MaxScaleUpBatch int `json:"maxScaleUpBatch,omitempty"`
 }
 
 // OrchestratorStatus 记录最近一次扩缩操作和标准 Conditions。

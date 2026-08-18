@@ -4,23 +4,23 @@
 
 ## 1. 目标集群
 
-本地部署目标固定为用户已有的 Docker Desktop Kubernetes：
+本地部署目标为 Kind 多节点开发集群 `hello-k8s-ai-dev`（由 `make cluster-up` 自动创建）：
 
 | 项目 | 约束 |
 | --- | --- |
-| kubectl Context | `docker-desktop`，且必须是当前 Context |
+| kubectl Context | `kind-hello-k8s-ai-dev`（`make cluster-up` 自动创建并切换） |
 | Namespace | `hello-k8s-ai-system` |
 | Node | Docker Desktop 本地容器，全部 Ready、架构一致 |
 | StorageClass | `standard` |
-| 集群生命周期 | 部署脚本不创建、不重置、不删除 |
+| 集群生命周期 | `make cluster-up` 自动创建/复用；`make kind-down` 显式删除（PVC 数据保留） |
 
-旁边的 `minikserve-demo` Kind 集群不属于该部署。
+自动化 E2E 使用隔离的 Kind 集群 `hello-k8s-ai-test-e2e`，与开发集群互不影响。
 
 ## 2. 完整拓扑
 
 ```mermaid
 flowchart TB
-  subgraph DD["已有 docker-desktop Kubernetes"]
+  subgraph DD["Kind 开发集群 hello-k8s-ai-dev"]
     C["Controller Manager"] --> S["动态 Simulator Deployment"]
     S --> K["CRD Spec / Status"]
     O["OTel Collector"] --> J["Jaeger"]
@@ -45,13 +45,15 @@ flowchart TB
 旧部署使用 `controller:latest` 并让 Node 从 Docker Hub 拉取，导致明确的 `ImagePullBackOff`。当前流程改为：
 
 1. 在 Docker Desktop Engine 构建四个项目镜像。
-2. 在同一 Engine 拉取五个第三方运行镜像。
+2. 在同一 Engine 拉取第三方运行镜像与工具镜像（含 `busybox`，供备份/恢复辅助 Pod 使用）。
 3. 用 `docker image save` 生成临时镜像包。
 4. 找到与 Kubernetes Node 同名的 Docker 容器。
 5. 使用节点内 `ctr --namespace k8s.io images import` 导入全部镜像。
 6. 导入成功后才 apply 清单。
 
 镜像导入覆盖全部 Node，因此 Controller、Backend、Frontend 和 Simulator 无论被调度到哪个 Node，都不会因项目镜像不存在而回退到 Docker Hub。
+
+Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `imagePullPolicy: IfNotPresent`（镜像已由脚本导入节点）；任何 Always 策略都会在节点上拉取 registry 失败。
 
 ## 4. 部署顺序
 
@@ -80,6 +82,20 @@ flowchart TB
 
 PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续复用 Kubernetes Secret。
 
+## 5.1 数据备份与恢复（Kind 底座）
+
+底座迁移（`#50`）配套提供备份/恢复脚本，操作对象是当前集群（默认 `kind-hello-k8s-ai-dev`，迁移期用 `KUBE_CONTEXT=docker-desktop`）：
+
+- `bash hack/kind/backup-data.sh`：PostgreSQL `pg_dump` + Prometheus TSDB + Jaeger badger 打包到 `/var/tmp/hello-k8s-ai-backup-<时间戳>/`。
+- `BACKUP_DIR=<目录> bash hack/kind/restore-data.sh`：先部署新底座（`make cluster-up`），再恢复三套数据。
+
+注意事项：
+
+- 备份/恢复期间对应 Deployment 会缩到 0（Prometheus / Jaeger），结束后自动恢复。
+- 备份用 `/out/done` 标志轮询后才 cp；恢复先 cp 再由 `kubectl exec` 同步解包，不会复制或解包半成品。
+- 恢复解包前会清空目标目录，避免与新集群初始化数据混合（否则 Prometheus TSDB 报 `segments are not sequential`）。
+- 恢复完成后验证：`make preflight`、Grafana 面板有历史数据、`/api/v1/replay` 可查旧切面。
+
 ## 6. 自动验收门
 
 | 门 | 自动检查 |
@@ -106,7 +122,7 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 
 | 项目 | 声明值 |
 | --- | --- |
-| Context | `docker-desktop` |
+| Context | `kind-hello-k8s-ai-dev` |
 | Namespace | `hello-k8s-ai-system` |
 | StorageClass | `standard` |
 | 镜像交付 | Docker build/save + 每 Node `ctr -n k8s.io images import` |

@@ -182,7 +182,7 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 ### 输入与 Watch
 
 - Primary：WorkerNode。
-- 读取：Pod、Model。
+- 读取：Pod、Model、同名真实 Node（allocatable 与节点上全部非终态 Pod 的 requests）。
 - Watch：Pod 调度/阶段变化、Model generation。
 
 ### 算法
@@ -196,7 +196,7 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 
 ### 输出
 
-写 WorkerNode.status.usedGPU、usedConcurrency、UsageReady Condition，并更新 Prometheus gauges。
+写 WorkerNode.status.usedGPU、usedConcurrency、memoryUsagePercent、cpuUsagePercent 与 UsageReady/PhysicalPressure Conditions，并更新 Prometheus gauges（worker_node_*_usage_percent、orchestrator_resource_limited）。
 
 ### 限制
 
@@ -227,6 +227,8 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 5. TTFT < down **且** Queue < down -> 缩容。
 6. 其余 no-op。
 7. 扩/缩分别检查独立 cooldown。
+8. 扩容决策按 `maxScaleUpBatch` 步长补副本（默认 10，0=默认）：队列缺口大时按缺口换算后截断到步长，配合 cooldown 形成批次节奏。
+9. 物理水位保护：任一可调度 WorkerNode 的 PhysicalPressure=True（内存或 CPU requests 占 allocatable ≥90%）时停止扩容（NoOp/resource_limited），并置 Orchestrator ResourceLimited 条件；水位恢复后自动解除。缩容与重平衡不改变副本总量，不受影响。
 
 ### 放置与分数
 
@@ -262,7 +264,7 @@ Orchestrator 只决定副本，不创建 Deployment；SimulatorInstance Controll
 | SimulatorInstance | Instance/Policies/Nodes | Deployment、TenantRuntime | availableReplicas/phase/Ready | Simulator、Dashboard、Orchestrator |
 | Traffic | Tenant/Instance Score | Instance | spec.traffic.qps | Simulator |
 | Performance | Instance Performance | TenantPerformance | avg metrics/phase | Orchestrator |
-| WorkerUsage | Pod/Model | WorkerNode Status | used GPU/concurrency | Orchestrator |
+| WorkerUsage | Pod/Model/真实 Node | WorkerNode Status | used GPU/concurrency/物理水位/PhysicalPressure | Orchestrator |
 | Orchestrator | TenantPerformance/Policy/Capacity | Instance/Orchestrator Status | replicas/effectiveScore/scaling | Instance Controller/Simulator |
 
 ## 11. 故障原则
