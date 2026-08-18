@@ -45,13 +45,15 @@ flowchart TB
 旧部署使用 `controller:latest` 并让 Node 从 Docker Hub 拉取，导致明确的 `ImagePullBackOff`。当前流程改为：
 
 1. 在 Docker Desktop Engine 构建四个项目镜像。
-2. 在同一 Engine 拉取五个第三方运行镜像。
+2. 在同一 Engine 拉取第三方运行镜像与工具镜像（含 `busybox`，供备份/恢复辅助 Pod 使用）。
 3. 用 `docker image save` 生成临时镜像包。
 4. 找到与 Kubernetes Node 同名的 Docker 容器。
 5. 使用节点内 `ctr --namespace k8s.io images import` 导入全部镜像。
 6. 导入成功后才 apply 清单。
 
 镜像导入覆盖全部 Node，因此 Controller、Backend、Frontend 和 Simulator 无论被调度到哪个 Node，都不会因项目镜像不存在而回退到 Docker Hub。
+
+Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `imagePullPolicy: IfNotPresent`（镜像已由脚本导入节点）；任何 Always 策略都会在节点上拉取 registry 失败。
 
 ## 4. 部署顺序
 
@@ -90,7 +92,8 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 注意事项：
 
 - 备份/恢复期间对应 Deployment 会缩到 0（Prometheus / Jaeger），结束后自动恢复。
-- 脚本会等待打包/解包完成（`/out/done` 或 `/in/done` 标志）后才拷贝，不会复制半成品。
+- 备份用 `/out/done` 标志轮询后才 cp；恢复先 cp 再由 `kubectl exec` 同步解包，不会复制或解包半成品。
+- 恢复解包前会清空目标目录，避免与新集群初始化数据混合（否则 Prometheus TSDB 报 `segments are not sequential`）。
 - 恢复完成后验证：`make preflight`、Grafana 面板有历史数据、`/api/v1/replay` 可查旧切面。
 
 ## 6. 自动验收门

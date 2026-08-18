@@ -57,7 +57,11 @@ fi
 COMPONENTS=$(kubectl --context "$KUBE_CONTEXT" get deploy,statefulset -n "$NAMESPACE" \
   -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} {.status.replicas} {.status.availableReplicas}{"\n"}{end}' 2>/dev/null || true)
 if [[ -z "$COMPONENTS" ]]; then
-  bad "命名空间 $NAMESPACE 内没有 Deployment/StatefulSet（尚未部署？先跑 make cluster-up / setup.sh）"
+  if ! kubectl --context "$KUBE_CONTEXT" get crd simulatorinstances.platform.study.com >/dev/null 2>&1; then
+    warn "命名空间 $NAMESPACE 为空且 CRD 未安装（首次部署，跳过组件健康检查）"
+  else
+    bad "命名空间 $NAMESPACE 内没有 Deployment/StatefulSet（CRD 已存在但工作负载缺失）"
+  fi
 else
   while read -r kindname spec avail; do
     [[ -z "$kindname" ]] && continue

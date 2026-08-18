@@ -44,7 +44,10 @@ spec:
   containers:
   - name: unpack
     image: busybox
-    command: ["sh", "-c", "tar xzf /in/data.tar.gz -C $src_path && touch /in/done && sleep 3600"]
+    imagePullPolicy: IfNotPresent
+    # 保持容器存活：kubectl cp 是流式写入，若容器边等边解包会读到不完整文件。
+    # cp 完成后由脚本 kubectl exec 同步执行解包。
+    command: ["sh", "-c", "sleep 3600"]
     volumeMounts:
     - name: data
       mountPath: $src_path
@@ -54,16 +57,10 @@ spec:
 EOF
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait --for=condition=Ready "pod/restore-$name" --timeout=120s >/dev/null
   kubectl --context "$KUBE_CONTEXT" cp "$in_file" "$NAMESPACE/restore-$name:/in/data.tar.gz"
-  # 解包完成标志：cp 完成后 tar 仍在解包，轮询 /in/done 再验证。
-  for _ in $(seq 1 60); do
-    kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- sh -c 'test -f /in/done' >/dev/null 2>&1 && break
-    sleep 5
-  done
-  kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- sh -c 'test -f /in/done' >/dev/null || {
-    echo "错误：restore-$name 解包超时（300s）" >&2
-    kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod "restore-$name" --wait=false >/dev/null
-    exit 1
-  }
+  # 目标目录必须清空：tar 解包是覆盖式合并，新集群初始化产生的 WAL/block 与
+  # 恢复数据混合会导致 Prometheus TSDB segments 不连续、Jaeger badger 锁/数据错乱。
+  kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- \
+    sh -c "rm -rf $src_path/* $src_path/.[!.]* 2>/dev/null; tar xzf /in/data.tar.gz -C $src_path"
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "restore-$name" -- sh -c "du -sh $src_path"
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod "restore-$name" --wait=false >/dev/null
   kube -n "$NAMESPACE" scale "deployment/$name" --replicas=1 >/dev/null

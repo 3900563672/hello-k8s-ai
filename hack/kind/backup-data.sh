@@ -41,6 +41,7 @@ spec:
   containers:
   - name: pack
     image: busybox
+    imagePullPolicy: IfNotPresent
     command: ["sh", "-c", "tar czf /out/data.tar.gz -C $src_path . && touch /out/done && sleep 3600"]
     volumeMounts:
     - name: data
