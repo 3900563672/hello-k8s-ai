@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"math"
 	"slices"
 
 	platformv1 "github.com/3900563672/hello-k8s-ai/api/v1"
@@ -13,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,6 +39,7 @@ type WorkerNodeUsageReconciler struct {
 // +kubebuilder:rbac:groups=platform.study.com,resources=workernodes,verbs=get;list;watch
 // +kubebuilder:rbac:groups=platform.study.com,resources=workernodes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch
 
 func (r *WorkerNodeUsageReconciler) Reconcile(
 	ctx context.Context,
@@ -64,25 +67,48 @@ func (r *WorkerNodeUsageReconciler) Reconcile(
 	)
 	// 根据当前 Pod 分布计算已用量
 	usedGPU, usedConcurrency, err := r.calculateNodeUsage(usageCtx, node.Name)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	// 物理水位：读同名真实 Node 的 allocatable 与节点全部非终态 Pod 的 requests。
+	// 模拟环境下 WorkerNode 可能与真实 Node 同名（部署脚本按节点名生成）；
+	// 找不到同名 Node 时保持缺省水位，不阻塞逻辑用量更新。
+	memoryPercent, cpuPercent, hasPhysicalNode, err := r.calculateNodePhysicalPressure(usageCtx, node.Name)
 	observability.EndSpan(
 		usageSpan,
 		err,
 		attribute.Int("worker_node.gpu_units_used", usedGPU),
 		attribute.Int("worker_node.concurrency_used", usedConcurrency),
+		attribute.Int("worker_node.memory_usage_percent", memoryPercent),
+		attribute.Int("worker_node.cpu_usage_percent", cpuPercent),
+		attribute.Bool("worker_node.physical_node_found", hasPhysicalNode),
 	)
-	observeOperation("worker-node-usage", "calculate", err)
+	observeOperation("worker-node-usage", "physical-pressure", err)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.updateWorkerNodeStatus(ctx, node.Name, usedGPU, usedConcurrency); err != nil {
+	if err := r.updateWorkerNodeStatus(
+		ctx,
+		node.Name,
+		usedGPU,
+		usedConcurrency,
+		memoryPercent,
+		cpuPercent,
+		hasPhysicalNode,
+	); err != nil {
 		return ctrl.Result{}, err
 	}
 	// 更新 Prometheus 指标
 	workerNodeGPUUnitsUsed.WithLabelValues(node.Name).Set(float64(usedGPU))
 	workerNodeConcurrencyUsed.WithLabelValues(node.Name).Set(float64(usedConcurrency))
+	workerNodeMemoryUsagePercent.WithLabelValues(node.Name).Set(float64(memoryPercent))
+	workerNodeCPUUsagePercent.WithLabelValues(node.Name).Set(float64(cpuPercent))
 	observation.span.SetAttributes(
 		attribute.Int("worker_node.gpu_units_used", usedGPU),
 		attribute.Int("worker_node.concurrency_used", usedConcurrency),
+		attribute.Int("worker_node.memory_usage_percent", memoryPercent),
+		attribute.Int("worker_node.cpu_usage_percent", cpuPercent),
+		attribute.Bool("worker_node.physical_node_found", hasPhysicalNode),
 	)
 	return ctrl.Result{}, nil
 }
@@ -131,19 +157,77 @@ func (r *WorkerNodeUsageReconciler) calculateNodeUsage(ctx context.Context, node
 	return usedGPU, usedConcurrency, nil
 }
 
+// calculateNodePhysicalPressure 计算节点物理水位：同名真实 Node 的 allocatable 与
+// 节点上全部非终态 Pod 的 requests 之比（0-100）。模拟环境下 WorkerNode 与真实
+// Node 同名（部署脚本按节点名生成）；找不到同名 Node 时返回 hasPhysicalNode=false，
+// 调用方保留缺省水位。
+func (r *WorkerNodeUsageReconciler) calculateNodePhysicalPressure(
+	ctx context.Context,
+	nodeName string,
+) (memoryPercent int, cpuPercent int, hasPhysicalNode bool, err error) {
+	var physicalNode corev1.Node
+	if err := r.Get(ctx, client.ObjectKey{Name: nodeName}, &physicalNode); err != nil {
+		if apierrors.IsNotFound(err) {
+			return 0, 0, false, nil
+		}
+		return 0, 0, false, fmt.Errorf("get physical node %q: %w", nodeName, err)
+	}
+	allocatableMemory := physicalNode.Status.Allocatable[corev1.ResourceMemory]
+	allocatableCPU := physicalNode.Status.Allocatable[corev1.ResourceCPU]
+	if allocatableMemory.IsZero() || allocatableCPU.IsZero() {
+		return 0, 0, true, nil
+	}
+
+	var pods corev1.PodList
+	if err := r.List(ctx, &pods, client.MatchingFields{podNodeNameIndex: nodeName}); err != nil {
+		return 0, 0, true, fmt.Errorf("list pods for physical pressure: %w", err)
+	}
+	var requestedMemory, requestedCPU resource.Quantity
+	for i := range pods.Items {
+		pod := &pods.Items[i]
+		if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+			continue
+		}
+		containers := append(pod.Spec.InitContainers, pod.Spec.Containers...)
+		for _, container := range containers {
+			requestedMemory.Add(container.Resources.Requests[corev1.ResourceMemory])
+			requestedCPU.Add(container.Resources.Requests[corev1.ResourceCPU])
+		}
+	}
+	return usagePercent(requestedMemory.Value(), allocatableMemory.Value()),
+		usagePercent(requestedCPU.MilliValue(), allocatableCPU.MilliValue()),
+		true,
+		nil
+}
+
+// usagePercent 计算用量占容量的百分比并截断到 0-100；容量非正时返回 0。
+func usagePercent(used, capacity int64) int {
+	if capacity <= 0 {
+		return 0
+	}
+	return max(0, min(100, int(math.Round(float64(used)*100/float64(capacity)))))
+}
+
 func (r *WorkerNodeUsageReconciler) updateWorkerNodeStatus(
 	ctx context.Context,
 	nodeName string,
 	usedGPU int,
 	usedConcurrency int,
+	memoryPercent int,
+	cpuPercent int,
+	hasPhysicalNode bool,
 ) error {
 	usedGPU = nonNegative(usedGPU)
 	usedConcurrency = nonNegative(usedConcurrency)
+	memoryPercent = nonNegative(memoryPercent)
+	cpuPercent = nonNegative(cpuPercent)
 	return k8sutil.PatchStatusWithRetry(ctx, r.Client, nodeName, true,
 		func() *platformv1.WorkerNode { return &platformv1.WorkerNode{} },
 		func(node *platformv1.WorkerNode) error {
 			node.Status.UsedGPU = usedGPU
 			node.Status.UsedConcurrency = usedConcurrency
+			node.Status.MemoryUsagePercent = memoryPercent
+			node.Status.CPUUsagePercent = cpuPercent
 			meta.SetStatusCondition(&node.Status.Conditions, metav1.Condition{
 				Type:               "UsageReady",
 				Status:             metav1.ConditionTrue,
@@ -151,6 +235,22 @@ func (r *WorkerNodeUsageReconciler) updateWorkerNodeStatus(
 				Reason:             "PodsAccounted",
 				Message:            "scheduled simulator pods have been accounted",
 			})
+			if hasPhysicalNode {
+				pressureStatus := metav1.ConditionFalse
+				pressureReason := "PressureNormal"
+				if memoryPercent >= physicalPressureThresholdPercent ||
+					cpuPercent >= physicalPressureThresholdPercent {
+					pressureStatus = metav1.ConditionTrue
+					pressureReason = "PressureThresholdExceeded"
+				}
+				meta.SetStatusCondition(&node.Status.Conditions, metav1.Condition{
+					Type:               conditionTypePhysicalPressure,
+					Status:             pressureStatus,
+					ObservedGeneration: node.Generation,
+					Reason:             pressureReason,
+					Message:            fmt.Sprintf("memory=%d%% cpu=%d%%", memoryPercent, cpuPercent),
+				})
+			}
 			return nil
 		})
 }
