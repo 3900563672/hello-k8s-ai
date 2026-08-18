@@ -42,6 +42,7 @@ ServiceAccount：`hello-k8s-ai-dashboard-backend`。
 ## 3. Controller 与 Simulator
 
 - Controller Manager RBAC 由 kubebuilder markers 生成，负责 CR Status、Deployment 等控制资源和 leader election。
+- WorkerNodeUsage 控制器额外读取同名真实 Node（allocatable）与该节点全部非终态 Pod（requests），计算物理水位（memoryUsagePercent/cpuUsagePercent）并写 PhysicalPressure 条件；RBAC 为 core/v1 nodes 只读（get/list/watch），见 `config/rbac/role.yaml`。
 - Simulator 独立 ServiceAccount/ClusterRole，只需读取相关 Instance/Model、更新 SimulatorInstance Status、管理本 namespace Lease 等。
 - Prometheus ServiceAccount 可发现 Pods，并访问受保护 metrics nonResourceURL。
 
