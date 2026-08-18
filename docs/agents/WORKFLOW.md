@@ -92,6 +92,10 @@ flowchart TD
 ## 5. 提交
 
 - 提交信息：`feat:` / `fix:` / `docs:` / `chore:` / `refactor:` + 中文描述 +（`Fixes #N`）。
+- **提交节奏（2026-08-18 起，防提交轰炸）**：一个逻辑闭环最多 2 个 commit（代码 1 + 沉淀 1）。
+  - AI 本地可以小步提交当检查点（便于回溯），但交付前用 `git reset --soft` 归拢成最终形态再 push；只在本地未推送时做，零风险。
+  - 需要频繁验证的任务走 PR + squash merge：分支上随意提交，合并进 main 时压成 1 个 commit，保持 main 每天 1~3 个 commit。
+  - 例外：确需拆分的大改动（跨模块重构 / 长时任务分批交付）可超 2 个，但必须在交付说明里写明拆分理由。
 - 中文提交信息用文件方式（`git commit -F`），避免终端编码丢失（见 docs/lessons/process-chinese-commit-file.md）。
 - UI / 面板视觉改动：提交前在条目 `change-history/<条目>/screenshots/` 下补 `before-<page>.png` 与 `after-<page>.png`（见 [UI_VERIFICATION.md](UI_VERIFICATION.md) 快照约定）。
 - 提交前检查 `git status`：不提交 `.env`、`bin/`、`dist/`、`.runtime/`、覆盖率文件；`change-history/` 与文档改动记得一起提交。
@@ -170,7 +174,7 @@ flowchart TD
 - [ ] 能跑的验证都跑过，结果记录在汇报里。
 - [ ] change-history 条目已建；README 索引已登记。
 - [ ] 受影响文档已同步或列入"人类文档待同步清单"。
-- [ ] 提交信息符合仓库风格；单 commit；关联 issue 用 `Fixes #N`。
+- [ ] 提交信息符合仓库风格；一个逻辑闭环 ≤2 commit（代码+沉淀）；关联 issue 用 `Fixes #N`。
 
 ## 9. 同步协议（原 SYNC.md，2026-08-18 并入）
 
