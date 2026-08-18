@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/onsi/ginkgo/v2 v2.32.1
-	github.com/onsi/gomega v1.40.0
+	github.com/onsi/gomega v1.42.1
 	github.com/prometheus/client_golang v1.24.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
 	go.opentelemetry.io/otel v1.45.0
