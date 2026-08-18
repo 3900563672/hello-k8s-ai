@@ -80,6 +80,19 @@ flowchart TB
 
 PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续复用 Kubernetes Secret。
 
+## 5.1 数据备份与恢复（Kind 底座）
+
+底座迁移（`#50`）配套提供备份/恢复脚本，操作对象是当前集群（默认 `kind-hello-k8s-ai-dev`，迁移期用 `KUBE_CONTEXT=docker-desktop`）：
+
+- `bash hack/kind/backup-data.sh`：PostgreSQL `pg_dump` + Prometheus TSDB + Jaeger badger 打包到 `/var/tmp/hello-k8s-ai-backup-<时间戳>/`。
+- `BACKUP_DIR=<目录> bash hack/kind/restore-data.sh`：先部署新底座（`make cluster-up`），再恢复三套数据。
+
+注意事项：
+
+- 备份/恢复期间对应 Deployment 会缩到 0（Prometheus / Jaeger），结束后自动恢复。
+- 脚本会等待打包/解包完成（`/out/done` 或 `/in/done` 标志）后才拷贝，不会复制半成品。
+- 恢复完成后验证：`make preflight`、Grafana 面板有历史数据、`/api/v1/replay` 可查旧切面。
+
 ## 6. 自动验收门
 
 | 门 | 自动检查 |

@@ -202,6 +202,13 @@ curl -sS localhost:8080/api/v1/capabilities
 - Prom/Jaeger retention 是否短于 DB。
 - 当前数据绝不能填入历史空洞。
 
+## 13.1 备份/恢复包不完整（tar 半成品）
+
+- 症状：`backup-data.sh` 产出的 `prometheus.tar.gz` / `jaeger.tar.gz` 只有几 MB，`tar tzf` 报 `Unexpected EOF`。
+- 原因：早期版本 `kubectl wait Ready` 只等容器启动，不等 tar 完成就 `kubectl cp`，复制了未写完的文件。
+- 处置：脚本已加 `/out/done`（打包）与 `/in/done`（解包）完成标志并轮询；升级脚本后重新执行备份，`tar tzf` 能完整列出即正常。
+- 备份目录在 `/var/tmp/`（不入库），迁移前确认三件套齐全：`dashboard.sql` / `prometheus.tar.gz` / `jaeger.tar.gz`。
+
 ## 14. Prometheus/Jaeger
 
 Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId。Jaeger：先 Collector accepted/exported metrics，再 Jaeger services/API，再 Backend filters。详见各观察性专题。
