@@ -1,6 +1,6 @@
 # Agent 工作流
 
-> 维护层：agent | last-reviewed：2026-08-18 | 事实源：源码与 docs/agents/
+> 维护层：agent | last-reviewed：2026-08-19 | 事实源：源码与 docs/agents/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/README.md](../remote-ai/README.md)。
 
@@ -98,6 +98,7 @@ flowchart TD
   - 例外：确需拆分的大改动（跨模块重构 / 长时任务分批交付）可超 2 个，但必须在交付说明里写明拆分理由。
 - 中文提交信息用文件方式（`git commit -F`），避免终端编码丢失（见 docs/lessons/process-chinese-commit-file.md）。
 - UI / 面板视觉改动：提交前在条目 `change-history/<条目>/screenshots/` 下补 `before-<page>.png` 与 `after-<page>.png`（见 [UI_VERIFICATION.md](UI_VERIFICATION.md) 快照约定）。
+- **外部编号禁令（2026-08-19 起，防 GitHub 交叉引用泄露）**：提交信息、PR 标题/正文、issue 标题/正文/评论、提交 diff 中禁止出现外部 issue 的完整编号（`#<数字>` 形式）——GitHub 会自动在对方 issue 时间线登记 cross-reference，第三方可见，且 close 无法移除，只有删除源才能消失。引用外部 issue 一律用描述语或 URL。提交前检查 `git diff` 与提交信息（详见 [docs/journal/2026-08-19-github-crossref-external-issue-number.md](../journal/2026-08-19-github-crossref-external-issue-number.md)）。
 - 提交前检查 `git status`：不提交 `.env`、`bin/`、`dist/`、`.runtime/`、覆盖率文件；`change-history/` 与文档改动记得一起提交。
 
 ## 6. 归档与同步
