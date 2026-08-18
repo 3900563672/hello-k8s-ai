@@ -41,7 +41,7 @@ spec:
   containers:
   - name: pack
     image: busybox
-    command: ["sh", "-c", "tar czf /out/data.tar.gz -C $src_path . && sleep 3600"]
+    command: ["sh", "-c", "tar czf /out/data.tar.gz -C $src_path . && touch /out/done && sleep 3600"]
     volumeMounts:
     - name: data
       mountPath: $src_path
@@ -50,6 +50,16 @@ spec:
   restartPolicy: Never
 EOF
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait --for=condition=Ready "pod/backup-$name" --timeout=120s >/dev/null
+  # tar 完成标志：wait Ready 只保证容器启动，不代表打包结束；轮询 /out/done 再 cp。
+  for _ in $(seq 1 60); do
+    kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "backup-$name" -- sh -c 'test -f /out/done' >/dev/null 2>&1 && break
+    sleep 5
+  done
+  kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "backup-$name" -- sh -c 'test -f /out/done' >/dev/null || {
+    echo "错误：backup-$name 打包超时（300s）" >&2
+    kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod "backup-$name" --wait=false >/dev/null
+    exit 1
+  }
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "backup-$name" -- sh -c 'ls -la /out/data.tar.gz'
   kubectl --context "$KUBE_CONTEXT" cp "$NAMESPACE/backup-$name:/out/data.tar.gz" "$out_file"
   kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod "backup-$name" --wait=false >/dev/null
