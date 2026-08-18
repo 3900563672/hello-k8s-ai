@@ -84,6 +84,12 @@ go run /tmp/nd_addr.go 127.0.0.1:0 127.0.0.1 10
 
 ## 六、附录
 
+
+### 探针参数与自动接入
+
+- 运行：`go run ./hack/wsl-loopback-probe`，默认新建端口立即拨号 10 次并统计失败率；`-attempts N` 可调整次数。
+- 结果分级：`PASS`（首连正常）/ `WARN`（间歇失败或 dmesg 存在历史错误）/ `FAIL`（全部失败）/ `SKIP`（非 WSL 环境）。
+- 自动接入：`make preflight` 第 9 节与 `make selfcheck` 会自动运行探针；探针只输出结果、不设置退出码，由调用方决定门禁（preflight 中 FAIL 阻止启动，WARN 仅提示）。
 ### 官方依据
 
 - WSL 官方技术文档 [localhost 转发说明](https://wsl.dev/technical-documentation/localhost/)：NAT 模式下 WSL 会监听绑定的 TCP 端口并通过 `wslrelay.exe` 转发到 Windows；guest 侧对应 `localhost.cpp` 实现的 `Relay` 进程。
