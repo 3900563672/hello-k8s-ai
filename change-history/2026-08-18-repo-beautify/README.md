@@ -19,10 +19,11 @@
 3. **仓库元数据（GitHub 侧）**
    - hello-k8s-ai：description 更新为「11 个 CRD、7 个 Controller、Simulator 与全链路可观测，Docker Desktop 一键部署」；topics 从 8 个补充到 18 个（go/typescript/kubebuilder/prometheus/jaeger/grafana/opentelemetry/postgresql/docker/dashboard）。
    - AI-JSON-Repair-Tool：补充 description 与 5 个 topics（此前为空）。
-4. **Wiki（内容已备好，待初始化）**
+4. **Wiki（已完成初始化）**
    - 已编写 7 个页面（Home/Quick-Start/Architecture/Deployment/Documentation/Roadmap/FAQ），面向人类、链接回仓库 docs/ 避免漂移。
-   - 阻塞：GitHub Wiki 仓库必须先在网页创建第一页才会初始化（`git push` 与 API 均不能自动创建），需要用户登录 GitHub 访问 `https://github.com/3900563672/hello-k8s-ai/wiki` 点一次「Create the first page」；初始化后推送页面即可。
-   - 待办：profile name/bio 需 `gh auth refresh -h github.com -s user`（当前 token 无 user scope）后设置。
+   - 初始化：GitHub Wiki 必须先由用户在网页创建第一页（git push 与 API 均不能自动创建）；用户创建占位 Home 后已 rebase 并推送全部页面，Home 替换为完整版。
+5. **主页身份（已完成）**
+   - 用户完成 `gh auth refresh -h github.com -s user` 授权后，已设置 profile name=hh、bio=「Kubernetes / AI 推理调度仿真平台开发者；hello-k8s-ai 作者」。
 
 ## 关键行为
 
@@ -32,8 +33,14 @@
 ## 验证
 
 - `make docs-check`：全绿（含新增 CONTRIBUTING.md 的链接与白名单检查）。
-- 主页 README、仓库 description/topics 已通过 `gh api` 核对。
-- Wiki 页面未推送（等待初始化，见上）。
+- 主页 README、仓库 description/topics 与 profile name/bio 已通过 `gh api` 核对。
+- Wiki 7 页已推送并核对（远端 git ls-tree 确认 Home/Quick-Start/Architecture/Deployment/Documentation/Roadmap/FAQ）。
+
+## 踩坑记录
+
+- GitHub Wiki 必须先由用户在网页创建第一页，git push 与 API 均不能自动初始化；初始化后远端会带一个占位 Home 提交，本地 rebase 时与该提交冲突属正常现象。
+- 本机环境经 PowerShell→WSL 嵌套传命令时，heredoc 与嵌套引号会被损坏（反引号丢失、语句截断）；写脚本文件后执行（UTF-8 无 BOM）可避免。
+- 本次曾出现 git push origin master 被拒（non-fast-forward）但 git push origin HEAD:master 成功的情况；commit 前先核对本地 ref 与远端对象关系。
 
 ## 回滚
 
