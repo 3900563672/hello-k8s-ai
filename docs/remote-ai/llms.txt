@@ -30,7 +30,7 @@
 - [docs/operations/PRODUCTION_READINESS.md](docs/operations/PRODUCTION_READINESS.md): 生产就绪度
 - [docs/operations/SECURITY_AND_RBAC.md](docs/operations/SECURITY_AND_RBAC.md): 安全与 RBAC
 - [docs/operations/TROUBLESHOOTING.md](docs/operations/TROUBLESHOOTING.md): 排障
-- [docs/operations/WSL_LOOPBACK_CASE_STUDY.md](docs/operations/WSL_LOOPBACK_CASE_STUDY.md): 一次真实环境故障排查：WSL 回环新端口首连被拒
+- [docs/operations/WSL_LOOPBACK_CASE_STUDY.md](docs/operations/WSL_LOOPBACK_CASE_STUDY.md): 一次真实环境故障排查：WSL 回环新端口首连被拒（完整研究链）
 - [docs/overview/ARCHITECTURE_OVERVIEW.md](docs/overview/ARCHITECTURE_OVERVIEW.md): 架构总览
 - [docs/overview/DESIGN_PHILOSOPHY.md](docs/overview/DESIGN_PHILOSOPHY.md): 设计哲学
 - [docs/overview/IMPLEMENTATION_RETROSPECTIVE.md](docs/overview/IMPLEMENTATION_RETROSPECTIVE.md): 实现复盘与工程评价
