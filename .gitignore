@@ -25,16 +25,7 @@
 # Backup files
 *.bak
 *.backup.*
-# Archives
-*.tar.gz
-
-# Backup files
-*.bak
-*.backup.*
 Dockerfile.backup.*
-
-# Logs
-*.log
 
 A.sh
 

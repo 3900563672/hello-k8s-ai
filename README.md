@@ -1,5 +1,9 @@
 # hello-k8s-ai
 
+[![代码检查](https://github.com/3900563672/hello-k8s-ai/actions/workflows/lint.yml/badge.svg)](https://github.com/3900563672/hello-k8s-ai/actions/workflows/lint.yml)
+[![源码与部署验证](https://github.com/3900563672/hello-k8s-ai/actions/workflows/test.yml/badge.svg)](https://github.com/3900563672/hello-k8s-ai/actions/workflows/test.yml)
+[![文档检查](https://github.com/3900563672/hello-k8s-ai/actions/workflows/docs.yml/badge.svg)](https://github.com/3900563672/hello-k8s-ai/actions/workflows/docs.yml)
+
 hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度与仿真平台。React Frontend 通过 Dashboard Backend 管理租户、模型、逻辑 WorkerNode 和 Simulator 时间倍速；七个 Controller 将配置与策略收敛为 Simulator 工作负载；Simulator 产生状态、Prometheus 指标和 OpenTelemetry Trace；Backend 再聚合 Kubernetes、PostgreSQL、Prometheus 与 Jaeger 数据供页面展示。
 
 ## 文档入口
@@ -76,11 +80,11 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 <!-- docs-sync:timeline-start -->
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
+- 2026-08-18 [变更总览：仓库健康度治理——安全政策、分支保护与依赖扫描](change-history/2026-08-18-repo-hygiene/README.md)
 - 2026-08-18 [变更总览：仓库美化——CONTRIBUTING、主页 README、Wiki 与仓库元数据](change-history/2026-08-18-repo-beautify/README.md)
 - 2026-08-18 [变更总览：宿主工具链恢复——Codex 配置自修复、整机重启恢复顺序与圈复杂度处理](change-history/2026-08-18-host-toolchain-recovery/README.md)
 - 2026-08-18 [变更总览：人类文档补全与远程 AI 手册完善——文档漂移全面对齐](change-history/2026-08-18-docs-human-complete/README.md)
 - 2026-08-18 [变更总览：文档体系重构——机械门禁、内容迁移与入口重写](change-history/2026-08-18-docs-architecture-rework/README.md)
-- 2026-08-18 [变更总览：提交节奏规则——逻辑闭环 ≤2 commit 与 PR squash merge](change-history/2026-08-18-commit-rhythm/README.md)
 
 <!-- docs-sync:timeline-end -->
 

@@ -53,5 +53,6 @@
 | 2026-08-16 | UI 视觉验证链路沉淀：CDP 截图 + DOM 读取 + 监控面板现状 | P2 | [查看记录](2026-08-16-ui-visual-verification/README.md) |
 | 2026-08-18 | 仓库美化：CONTRIBUTING、主页 README、Wiki 与仓库元数据 | P3 | [查看记录](2026-08-18-repo-beautify/README.md) |
 | 2026-08-18 | 提交节奏规则：逻辑闭环 ≤2 commit 与 PR squash merge | P3 | [查看记录](2026-08-18-commit-rhythm/README.md) |
+| 2026-08-18 | 仓库健康度治理：安全政策、分支保护与依赖扫描 | P2 | [查看记录](2026-08-18-repo-hygiene/README.md) |
 
 > 详略规范：大改动保持四件套（README 精简总览 + IMPLEMENTATION_DETAILS / TEST_REPORT / MIGRATION_AND_ROLLBACK 完整细节），中小改动单文件多节；UI / 面板视觉改动另附 `screenshots/before-*.png` 与 `after-*.png`（约定见 `docs/agents/UI_VERIFICATION.md`）。
