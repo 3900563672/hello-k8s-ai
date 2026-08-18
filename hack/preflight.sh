@@ -164,6 +164,31 @@ else
   warn "sleep-guard.sh 不存在，跳过"
 fi
 
+
+# ---------- 9. WSL 回环中继（新端口首连被拒） ----------
+if ! command -v go >/dev/null 2>&1; then
+  warn "go 不存在，跳过 WSL 回环探针（hack/wsl-loopback-probe）"
+else
+  PROBE_OUT=$(go run ./hack/wsl-loopback-probe 2>/dev/null || true)
+  case "$PROBE_OUT" in
+    *"RESULT: FAIL"*)
+      bad "WSL 回环中继降级（新端口首连全失败）：整机重启或 wsl --shutdown 后复测（影响运行中发行版与 Docker Desktop K8s，需用户同意）"
+      ;;
+    *"RESULT: WARN"*)
+      warn "WSL 回环中继疑似降级（间歇性首连失败）；本地测试可先自连一次完成端口注册"
+      ;;
+    *"RESULT: PASS"*)
+      ok "WSL 回环中继正常（新端口首连通过）"
+      ;;
+    *"RESULT: SKIP"*)
+      ok "非 WSL 环境，跳过回环中继检查"
+      ;;
+    *)
+      warn "WSL 回环探针输出异常：$PROBE_OUT"
+      ;;
+  esac
+fi
+
 echo "----------------------------------------"
 echo "[preflight] 结果：$PASS 通过 / $FAIL 失败 / $WARN 警告"
 if (( FAIL > 0 )); then

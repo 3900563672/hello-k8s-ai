@@ -109,6 +109,8 @@ selfcheck: ## 工具链自检：全部脚本语法 + Node 脚本语法 + 清单�
 	set -e; for f in $$(find hack -name '*.mjs'); do node --check "$$f" || exit 1; done; echo OK
 	@echo "== Node 单测 =="; \
 	set -e; node --test hack/night-run/day-watch.test.mjs >/dev/null || exit 1; echo OK
+	@echo "== WSL 回环探针 =="; \
+	go run ./hack/wsl-loopback-probe
 	@echo "== 清单渲染 =="; \
 	"$(KUSTOMIZE)" build config/dev >/dev/null && echo OK
 	"$(KUSTOMIZE)" build config/demo >/dev/null && echo OK
