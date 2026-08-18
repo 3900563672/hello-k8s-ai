@@ -196,6 +196,19 @@ curl -sS "$API/overview"
 curl -sS "$API/overview?at=2026-08-12T14:00:00Z&tenant=tenant-demo"
 # 时间段切面：起点/终点快照 + [start,end] 区间指标与 Trace（窗口 ≤ 24h）
 curl -sS "$API/segment?start=2026-08-12T13:00:00Z&end=2026-08-12T14:00:00Z"
+
+# 实验切面生命周期（issue #51）：创建 → 开始 → 运行中由采样器沉淀 → 完成
+curl -sS -X POST "$API/experiments" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: experiment-1" \
+  -d '{"tenant":"tenant-demo","name":"扩容验证-20x"}'
+curl -sS -X POST "$API/experiments/<segmentId>/start" -H "Idempotency-Key: experiment-1-start"
+curl -sS "$API/experiments?status=running"
+curl -sS -X POST "$API/experiments/<segmentId>/complete" -H "Idempotency-Key: experiment-1-complete"
+curl -sS "$API/experiments/<segmentId>"
+# 失败路径带原因
+curl -sS -X POST "$API/experiments/<segmentId>/fail" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: experiment-1-fail" \
+  -d '{"reason":"指标异常"}'
 ```
 
 ## 10. Metrics

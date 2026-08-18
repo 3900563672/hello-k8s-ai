@@ -159,6 +159,10 @@ Orchestrator 可写字段与 CRD 一致，含扩容步长 maxScaleUpBatch；白�
 
 DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 仍应禁用，因为无法完成幂等和审计保证。详见 [DATABASE_DESIGN.md](DATABASE_DESIGN.md)。
 
+### Segment Sampler（issue #51）
+
+`internal/segment.Sampler` 是独立后台 goroutine：轮询 `running` 切面，做事件分类（Orchestrator 扩缩决策 / SimulatorInstance spec / TimelineGap / 副本曲线 / 指标阈值）、Prometheus 指标分桶（1min min/avg/max/p95）、关键事件触发高保真窗口（5s，默认）并平静 60s 回基线（30s）。生命周期由 `/api/v1/experiments` API 推进；采样器自动发现与自愈（后端重启后恢复对残留 running 切面的采样），终态自动冲刷内存分桶。
+
 ## 11. 错误处理
 
 - 所有响应有 requestId；日志使用结构化 JSON 并携带 request ID。

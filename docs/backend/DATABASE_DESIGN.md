@@ -52,11 +52,23 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 
 保存 Backend 查询/观察到的 Trace 元数据，便于和资源/时间关联。它不是 Span 存储；Trace 详情仍来自 Jaeger。Jaeger 数据丢失后索引可能只剩元数据。
 
+`segment_id`（可空，幂等加列）把切面窗口内观察到的 Trace 关联到实验归档；实验结束时 Backend 检索一次 Jaeger 并回填关联，历史 Trace 不重复回填（`segment_id IS NULL` 时才更新）。
+
 ### `clock_state`
 
 为未来权威逻辑时钟预留。当前运行时没有以该表驱动 pause/rate/seek；Simulator 倍速来自 Kubernetes `SimulationClock`，不从数据库读取。不要因表存在就宣称全系统逻辑时间已实现。
 
-### `command_idempotency`
+### `segments`
+
+切面生命周期主表（issue #51）：一次调度实验的不可变归档单元。`status` 取值 `pending`（配置快照已记录）→ `running`（混合采样进行中）→ `completed` / `failed`（终点快照 + 摘要）→ 封存只读。`config_snapshot` 在创建时定格；`start_snapshot` / `end_snapshot` 是实验开始/结束时刻的完整全局快照；`summary` 汇总时长、事件计数与分桶数。生命周期只由 API 层推进，采样器只读 `running` 状态。
+
+### `segment_events`
+
+切面内事件（六类：`decision` / `alert` / `error` / `gap` / `burst` / `phase_change`），每条带事件时间、实体与精简 payload。Pod 个体事件不进切面——切面记录群体演化，防止 0→几百 Pod 的事件风暴。数据来源：Orchestrator `lastScaling`（扩缩决策，按指纹去重）、SimulatorInstance spec 变化、TimelineGap 记录、副本数曲线差异、指标阈值（错误率 / TTFT）。
+
+### `segment_metrics`
+
+切面内指标聚合：1 分钟桶的 `min/max/avg/p95`，按 `(segment_id, metric_name, bucket_start)` 幂等 upsert。混合采样器在基线模式（默认 30s）与高保真窗口（默认 5s）下持续拉取 Prometheus 并累积分桶；重叠查询按秒去重，防止同一采样点重复计入。
 
 记录 idempotency key、请求指纹、pending/completed 状态和序列化响应。默认约 24h 保留：
 
@@ -65,6 +77,10 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 - pending 的崩溃恢复语义需结合实现与测试继续加强。
 
 ## 4. 写入路径
+
+### Segment Sampler
+
+`internal/segment.Sampler` 是唯一向 `segments` 三张子表写入的运行时组件（生命周期状态由 API 层写）。它以最小节拍轮询 `running` 切面：事件分类、快照副本数差异、Prometheus 指标分桶；检测到关键事件（决策/告警/错误/gap/突变）后进入高保真窗口，平静后回基线。后端重启会自动恢复对残留 `running` 切面的采样（自愈），终态切面由采样器冲刷内存分桶后停止跟踪。
 
 ### Resource Recorder
 

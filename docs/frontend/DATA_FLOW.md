@@ -46,7 +46,33 @@ sequenceDiagram
 
 HTTP mutation 成功只表示意图被 API Server 接受。页面应继续显示收敛中的 Pending/Condition，直到 Controller 反馈。
 
-## 3. 页面与 Endpoint 对应
+## 3. 实验切面写入链路（issue #51）
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant P as ExperimentPanel
+  participant B as Backend
+  participant S as Segment Sampler
+  participant D as PostgreSQL
+  U->>P: 填写租户与名称，点创建
+  P->>B: POST /experiments（幂等 + 写认证）
+  B->>D: segments(pending) + config_snapshot
+  U->>P: 点开始
+  P->>B: POST /experiments/{id}/start
+  B->>D: segments(running) + start_snapshot
+  loop 采样循环（基线 30s / 高保真 5s）
+    S->>D: 事件分类 + 指标分桶 + 副本曲线
+  end
+  U->>P: 点完成 / 失败
+  P->>B: POST /experiments/{id}/complete|fail
+  B->>D: end_snapshot + summary + trace 关联
+  P->>B: GET /experiments/{id} 刷新详情
+```
+
+写接口复用既有幂等与认证链路；列表只读、10s 自动刷新（运行中的实验可见状态推进）。
+
+## 4. 页面与 Endpoint 对应
 
 | 页面/组件 | 读 API | 写 API | 刷新策略 |
 | --- | --- | --- | --- |
@@ -55,6 +81,7 @@ HTTP mutation 成功只表示意图被 API Server 接受。页面应继续显示
 | Config | `/configuration[?at]` | `/configuration:apply`、DELETE configuration | mutation 后 invalidate；历史不刷新为 latest |
 | Traffic baseline | `/traffic[?at&tenant]` | Backend 有 PATCH tenant traffic；UI 当前未接 Overlay | SSE + query invalidate；草稿不触发远端 |
 | Data Overview | `/overview[?at&filters]` | 无 | latest 约 15s；historical 固定 |
+| Experiment 面板 | `/experiments[?status]`、`/experiments/{id}` | `POST /experiments`、`/experiments/{id}/start|complete|fail` | 列表 10s 轮询；详情创建/结束后失效重取 |
 | Metrics detail | `/metrics/query` | 无 | 查询窗口/step 决定缓存 |
 | Trace list/detail | `/traces`、`/traces/{id}` | 无 | latest 可刷新；detail 按 traceId 缓存 |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
