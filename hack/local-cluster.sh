@@ -5,7 +5,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-KUBE_CONTEXT="${KUBE_CONTEXT:-docker-desktop}"
+KUBE_CONTEXT="${KUBE_CONTEXT:-kind-hello-k8s-ai-dev}"
 NAMESPACE="${NAMESPACE:-hello-k8s-ai-system}"
 CONTAINER_TOOL="${CONTAINER_TOOL:-docker}"
 KUBECTL="${KUBECTL:-kubectl}"
@@ -160,8 +160,11 @@ check_context_and_cluster() {
   current_context="$($KUBECTL config current-context)"
   [[ "$current_context" == "$KUBE_CONTEXT" ]] || fail \
     "当前 kubectl Context 是 $current_context，期望 $KUBE_CONTEXT。为避免部署到错误集群，已停止。"
-  [[ "$KUBE_CONTEXT" == "docker-desktop" ]] || fail \
-    "这套本地部署只允许使用 docker-desktop Context，实际为 $KUBE_CONTEXT。"
+  case "$KUBE_CONTEXT" in
+    docker-desktop|kind-hello-k8s-ai-dev) ;;
+    *) fail \
+      "这套本地部署只允许 docker-desktop 或 kind-hello-k8s-ai-dev Context，实际为 $KUBE_CONTEXT。" ;;
+  esac
 
   kube get --raw=/readyz >/dev/null
   kube get storageclass standard >/dev/null || fail \
@@ -371,7 +374,7 @@ metadata:
     app.kubernetes.io/part-of: hello-k8s-ai
     app.kubernetes.io/managed-by: local-deployer
 spec:
-  displayName: Docker Desktop 节点 $node
+  displayName: 节点 $node
   gpu: 8000
   maxConcurrency: 160
 ---

@@ -10,7 +10,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-KUBE_CONTEXT="${KUBE_CONTEXT:-docker-desktop}"
+KUBE_CONTEXT="${KUBE_CONTEXT:-kind-hello-k8s-ai-dev}"
 NAMESPACE="${NAMESPACE:-hello-k8s-ai-system}"
 REQUIRE_GUARD="${PREFLIGHT_REQUIRE_GUARD:-0}"
 SKIP_WINDOWS="${PREFLIGHT_SKIP_WINDOWS:-0}"
@@ -50,7 +50,7 @@ else
   ok "节点就绪（$NODES 个）"
 fi
 if (( CORDONED > 0 )); then
-  warn "存在 cordon 节点（$CORDONED 个，已知问题：worker6 CNI 故障保持 cordon）"
+  warn "存在 cordon 节点（$CORDONED 个）"
 fi
 
 # ---------- 3. 系统组件健康 ----------
