@@ -113,8 +113,16 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | GET | `/replay/frame` | `at` 和 filters；与历史 Overview 兼容入口。 |
 | GET | `/overview` | `at` 和 tenant/model/instance/node 等过滤；聚合资源、指标、Trace。 |
 | GET | `/segment` | `start,end` 必填（RFC3339）、窗口 ≤ 24h、tenant/model/instance/node 过滤；返回起点/终点快照 + 区间指标与 Trace。 |
+| POST | `/experiments` | 创建实验切面（pending）：`tenant,name` 必填、≤63 字符、无控制字符；写入配置快照。 |
+| POST | `/experiments/{id}/start` | 开始实验：pending→running，写入起点全局快照，混合采样器开始跟踪。 |
+| POST | `/experiments/{id}/complete` | 结束实验：running→completed，写入终点快照、摘要并关联窗口内 Trace。 |
+| POST | `/experiments/{id}/fail` | 标记失败：running→failed，body `reason`，同样写入终点快照并关联 Trace。 |
+| GET | `/experiments` | 实验列表；`status` 过滤（pending/running/completed/failed）、`limit` 1..200。 |
+| GET | `/experiments/{id}` | 实验详情：segments 一行 + 事件/指标分桶/关联 Trace。 |
 
 `replay` 名称表示历史浏览，不代表事件重新执行。无 `at` 时读 live；旧 `at` 仅使用最后一个不晚于该时间的 snapshot。`/segment` 是时间段切面（起点/终点快照 + 区间数据），与点查询互补；任一端无快照返回 `unavailable` + 告警，不伪造数据。
+
+`/experiments` 是切面的生命周期入口（issue #51）：实验创建后为 `pending`（配置快照已定格），开始后进入 `running` 由后台混合采样器持续写入 `segment_events` / `segment_metrics` / `trace_index.segment_id`，完成后封存为不可变归档。写接口走既有写认证与幂等链路；详情接口在存储不可用时返回 503，不降级为假数据。
 
 ### Stream
 

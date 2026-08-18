@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-18 | 切面为第一公民：生命周期 API + 混合采样器 + 分层存储（Fixes #51） | P0 | [查看记录](2026-08-18-issue51-segment-lifecycle/README.md) |
 | 2026-08-18 | 业务层优雅降级闭环：物理水位联动 + 资源受限标记（Fixes #49） | P0 | [查看记录](2026-08-18-issue49-graceful-degradation/README.md) |
 | 2026-08-18 | 人类文档补全与远程 AI 手册完善：文档漂移全面对齐 | P2 | [查看记录](2026-08-18-docs-human-complete/README.md) |
 | 2026-08-18 | 文档体系重构：机械门禁、内容迁移与入口重写（PR #33/#34） | P1 | [查看记录](2026-08-18-docs-architecture-rework/README.md) |

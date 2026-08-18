@@ -123,6 +123,10 @@ Traffic 页面上的“应用 Overlay”目前只是应用到本地预览，不�
 
 Trace list/detail 是 TanStack Query 状态；选中 traceId 是页面 UI 状态。Latest 可定期刷新；Historical 查询固定时间窗，不自动跳到现在。
 
+### 实验切面面板（ExperimentPanel，issue #51）
+
+DataOverview 页在时间段切面下方新增实验切面面板：左侧创建/开始/完成/失败实验并展示列表（10s 轮询），右侧展示选中实验的事件序列、1 分钟指标分桶与关联 Trace。写接口复用幂等与写认证；列表与详情读接口在存储不可用时明确报错，不显示假数据。
+
 ### 局限
 
 Jaeger 是可选 provider，失败时页面应显示 warning 并继续展示 Kubernetes/Prometheus 数据。开发 Jaeger 没有持久存储保证，重启后旧 Trace 可能消失。
