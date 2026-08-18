@@ -95,6 +95,7 @@
 | data-flow | [EVENT_FLOW](data-flow/EVENT_FLOW.md) | Watch、SSE、事件、审计如何传播？ |
 | data-flow | [TIME_AND_REPLAY](data-flow/TIME_AND_REPLAY.md) | 当前态、历史快照、逻辑时间分别是什么？ |
 | operations | [TROUBLESHOOTING](operations/TROUBLESHOOTING.md) | 如何定位常见故障？ |
+| operations | [WSL 回环排查案例](operations/WSL_LOOPBACK_CASE_STUDY.md) | 一次真实环境故障如何定位与规避？ |
 | operations | [SECURITY_AND_RBAC](operations/SECURITY_AND_RBAC.md) | 权限和安全边界是什么？ |
 | operations | [PRODUCTION_READINESS](operations/PRODUCTION_READINESS.md) | 离生产还有哪些差距？ |
 | reference | [CONFIGURATION_REFERENCE](reference/CONFIGURATION_REFERENCE.md) | 关键参数和默认值是什么？ |

@@ -82,11 +82,11 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 <!-- docs-sync:timeline-start -->
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
+- 2026-08-18 [WSL 回环中继降级：完整排查案例 + 可复现探针（preflight/selfcheck）](change-history/2026-08-18-wsl-loopback-case-study/README.md)
 - 2026-08-18 [变更总览：仓库健康度治理——安全政策、分支保护与依赖扫描](change-history/2026-08-18-repo-hygiene/README.md)
 - 2026-08-18 [变更总览：仓库美化——CONTRIBUTING、主页 README、Wiki 与仓库元数据](change-history/2026-08-18-repo-beautify/README.md)
 - 2026-08-18 [白天长时运行收尾 + Kind 迁移数据备份（#50 前置）](change-history/2026-08-18-longrun-and-kind-migration-prep/README.md)
 - 2026-08-18 [变更总览：项目采用 Apache-2.0 许可证](change-history/2026-08-18-license/README.md)
-- 2026-08-18 [Kind 底座迁移完成：部署闭环 + 数据恢复 + 工具链修复（#50）](change-history/2026-08-18-kind-migration-complete/README.md)
 
 <!-- docs-sync:timeline-end -->
 

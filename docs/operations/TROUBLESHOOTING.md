@@ -60,6 +60,19 @@ kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
 - 原因：Jaeger badger 单副本 + RWO PVC，滚动更新会新旧 Pod 同时挂载同一卷抢锁。
 - 处置：`make cluster-up` 已识别 `platform.study.com/restart-procedure: scale-to-zero` 注解并自动“缩 0 → 扩 1”；手动升级 Jaeger 时同样先 `scale --replicas=0` 再扩回。
 
+
+## 3.3 WSL 回环新端口首连被拒（localhost 转发中继降级）
+
+- 症状：本地 Go/Python 测试连 `127.0.0.1` 上刚 `listen` 的端口，立即连接偶发 `connection refused`（Go）/ `Errno 111`（Python）；CI 正常；`eth0`、IPv6、长存活端口全部正常。
+- 快速判断：
+  ```bash
+  go run ./hack/wsl-loopback-probe
+  dmesg | grep UtilAcceptVsock | wc -l
+  ```
+  `RESULT: FAIL/WARN` 或错误计数持续增长 = 中继降级中。
+- 处置：这是 WSL2 组件问题，不是业务代码问题，不要改代码。根因修复 = `wsl --shutdown` 或整机重启（影响运行中发行版与 Docker Desktop 内置 K8s，需用户同意）；临时规避 = 对首个连接重试 ≥100ms，或先自连一次完成端口注册。
+- 完整排查案例见 [WSL_LOOPBACK_CASE_STUDY.md](WSL_LOOPBACK_CASE_STUDY.md)。
+
 ## 4. Tenant-Model 没有 SimulatorInstance
 
 按顺序：
