@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { useOverview, useTraceDetail } from '@/api/queries/traceQueries'
 import { useReplayTimeContext, useTimeStore } from '@/stores/timeSlice'
 import { SegmentPanel } from '@/components/features/trace/SegmentPanel'
+import { ExperimentPanel } from '@/components/features/trace/ExperimentPanel'
 import type {
     BackendDeployment,
     BackendEvent,
@@ -178,6 +179,7 @@ export function DataOverviewPage() {
                 </header>
 
                 <SegmentPanel />
+                <ExperimentPanel />
 
                 {query.isPending && <LoadingState />}
                 {query.isError && <ErrorState message={query.error.message} retry={() => void query.refetch()} />}

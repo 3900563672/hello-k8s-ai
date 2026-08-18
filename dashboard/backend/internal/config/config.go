@@ -70,6 +70,15 @@ type PersistenceConfig struct {
 	EventBuffer       int
 	SnapshotInterval  time.Duration
 	SnapshotRetention time.Duration
+	// Segment 混合采样：基线间隔（平静期）/ 高保真间隔（事件窗口）/ 平静退出窗口。
+	SegmentBaselineInterval time.Duration
+	SegmentBurstInterval    time.Duration
+	SegmentQuiescenceWindow time.Duration
+	// SegmentBurstReplicaDelta 副本数突变阈值；SegmentErrorRateThreshold 错误率均值阈值；
+	// SegmentTTFTThresholdMS TTFT p95 阈值（ms）。
+	SegmentBurstReplicaDelta  int
+	SegmentErrorRateThreshold float64
+	SegmentTTFTThresholdMS    float64
 }
 
 func Load() (Config, error) {
@@ -131,9 +140,15 @@ func Load() (Config, error) {
 			Enabled: boolean("GRAFANA_ENABLED", true),
 		},
 		Persistence: PersistenceConfig{
-			EventBuffer:       integer("PERSISTENCE_EVENT_BUFFER", 4096),
-			SnapshotInterval:  duration("SNAPSHOT_INTERVAL", 30*time.Second),
-			SnapshotRetention: duration("SNAPSHOT_RETENTION", 30*24*time.Hour),
+			EventBuffer:               integer("PERSISTENCE_EVENT_BUFFER", 4096),
+			SnapshotInterval:          duration("SNAPSHOT_INTERVAL", 30*time.Second),
+			SnapshotRetention:         duration("SNAPSHOT_RETENTION", 30*24*time.Hour),
+			SegmentBaselineInterval:   duration("SEGMENT_BASELINE_INTERVAL", 30*time.Second),
+			SegmentBurstInterval:      duration("SEGMENT_BURST_INTERVAL", 5*time.Second),
+			SegmentQuiescenceWindow:   duration("SEGMENT_QUIESCENCE_WINDOW", 60*time.Second),
+			SegmentBurstReplicaDelta:  integer("SEGMENT_BURST_REPLICA_DELTA", 5),
+			SegmentErrorRateThreshold: decimal("SEGMENT_ERROR_RATE_THRESHOLD", 0.05),
+			SegmentTTFTThresholdMS:    decimal("SEGMENT_TTFT_THRESHOLD_MS", 2000),
 		},
 		LogLevel:    *logLevel,
 		ClusterName: env("K8S_CLUSTER_NAME", "default"),
@@ -165,6 +180,15 @@ func (cfg Config) validate() error {
 	}
 	if cfg.Persistence.EventBuffer < 128 {
 		failures = append(failures, errors.New("PERSISTENCE_EVENT_BUFFER must be at least 128"))
+	}
+	if cfg.Persistence.SegmentBurstReplicaDelta <= 0 {
+		failures = append(failures, errors.New("SEGMENT_BURST_REPLICA_DELTA must be positive"))
+	}
+	if cfg.Persistence.SegmentErrorRateThreshold <= 0 {
+		failures = append(failures, errors.New("SEGMENT_ERROR_RATE_THRESHOLD must be positive"))
+	}
+	if cfg.Persistence.SegmentTTFTThresholdMS <= 0 {
+		failures = append(failures, errors.New("SEGMENT_TTFT_THRESHOLD_MS must be positive"))
 	}
 	return errors.Join(failures...)
 }
