@@ -29,7 +29,7 @@
 - `make lint`：0 issues。
 - 前端 `npm run check`（eslint + tsc + vite build + SSR state-check）通过。
 - `make docs-check` 通过；`make docs-sync` 已重新生成派生文档。
-- 本机环境遗留（与本次改动无关）：WSL 回环 TCP 当前整体不可用（同进程 listen→dial 被拒），`TestGrafanaProxyPreservesSubPathAndForwards` / `TestGrafanaProxyRootPath` 两个纯环境性测试本地失败；CI（GitHub Actions）无此问题。原因待查（疑似 Docker/WSL 磁盘迁移后网络栈残留），不影响本次交付。
+- 本机环境遗留（与本次改动无关，2026-08-18 已排查定因）：WSL2 localhost 转发中继（guest 侧 `Relay`）降级，导致 **IPv4 回环新监听端口首连被间歇性拒绝**（Go/Python 一致，语言无关）；`TestGrafanaProxyPreservesSubPathAndForwards` / `TestGrafanaProxyRootPath` 两个纯环境性测试本地失败，CI（GitHub Actions）无此问题。修复 = 整机重启或 `wsl --shutdown`（需用户同意）；证据链见 docs/journal/2026-08-18-wsl-loopback-relay.md 与 docs/lessons/process-wsl-loopback-fresh-listen-refused.md。
 - 未验证：真实集群上的长时间实验归档（≥2h）与 AI OPS 查询切面全貌，属后续长跑轮次。
 
 ## 回滚
