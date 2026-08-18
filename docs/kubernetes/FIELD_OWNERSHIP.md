@@ -41,7 +41,7 @@
 | TenantPerformance | `spec.tenantRef` | PerformanceCollector | Orchestrator/Backend | 用户/Backend禁写 |
 | TenantPerformance | `status.*` | PerformanceCollector | Orchestrator/Backend | - |
 | TenantRuntime | `spec/status.*` | Instance Controller | Backend | instanceCount=可用副本合计 |
-| Orchestrator | `spec.*` | 用户/Backend | Orchestrator Controller | - |
+| Orchestrator | `spec.*` | 用户/Backend | Orchestrator Controller | `maxScaleUpBatch` 为扩容步长（0=默认 10） |
 | Orchestrator | `status.*` | Orchestrator Controller | Backend | - |
 
 ## 3. 原生资源所有权

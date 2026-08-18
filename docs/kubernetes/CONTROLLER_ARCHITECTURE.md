@@ -227,6 +227,7 @@ Orchestrator 只对 Running TenantPerformance 做决策。该层把多实例噪�
 5. TTFT < down **且** Queue < down -> 缩容。
 6. 其余 no-op。
 7. 扩/缩分别检查独立 cooldown。
+8. 扩容决策按 `maxScaleUpBatch` 步长补副本（默认 10，0=默认）：队列缺口大时按缺口换算后截断到步长，配合 cooldown 形成批次节奏。
 
 ### 放置与分数
 

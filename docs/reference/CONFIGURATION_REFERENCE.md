@@ -133,6 +133,7 @@ Nginx listen 8080，`/api/` proxy Backend service，read timeout 1h、buffering/
 | Tenant.queueThreshold / down | 必填，无默认 |
 | Orchestrator scaleUp/down cooldown | 60 / 120 s |
 | Orchestrator min / max replicas | 1 / 必填 |
+| Orchestrator maxScaleUpBatch | 10 副本/轮（0 = 默认 10） |
 
 ## 10. 配置解析注意
 

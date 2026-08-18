@@ -250,7 +250,7 @@ var writableSpecFields = map[string]map[string]struct{}{
 	"TenantNodePolicy":  fields("tenantRef", "nodeRef", "effect"),
 	"ModelNodePolicy":   fields("modelRef", "nodeRef", "effect"),
 	"Orchestrator": fields(
-		"tenantRef", "scaleUpCooldownSeconds", "scaleDownCooldownSeconds",
+		"tenantRef", "scaleUpCooldownSeconds", "scaleDownCooldownSeconds", "maxScaleUpBatch",
 		"allowScaleToZero", "minReplicas", "maxReplicas",
 	),
 }

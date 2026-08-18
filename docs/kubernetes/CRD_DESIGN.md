@@ -251,6 +251,7 @@ Dashboard：Traffic/Data View；Backend只读。
 | `allowScaleToZero` | 无流量时可越过 min 到 0 | false |
 | `minReplicas` | >=0，且 <= max | 1 |
 | `maxReplicas` | 0 或正整数，0 = 不限制（扩到容量上限为止），必填 | - |
+| `maxScaleUpBatch` | 0 或正整数，0 = 使用默认 10；单次扩容决策最多补的副本数，可选 | 10 |
 
 ### Status
 

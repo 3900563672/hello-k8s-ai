@@ -111,6 +111,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - 默认 base URL `/api/v1`，可由 `VITE_API_BASE_URL` 覆盖。
 - 解析统一 `{data, meta}` envelope；错误解析 `{error, meta}` problem。
 - mutation 生成 `Idempotency-Key`，配置更新带 resourceVersion/If-Match 语义。
+- Orchestrator 配置含单次扩容步长 maxScaleUpBatch（0=默认 10），表单/表格/预置模板与 Guide 页同步展示。
 - 历史模式禁用写按钮，而不只依赖 Backend 拒绝。
 - 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
 

@@ -89,7 +89,7 @@ Span 的性能属性来自单次 Tick；Prometheus 更适合趋势，Trace 更�
 - queue size/capacity。
 - Collector memory/restarts。
 
-遥测丢失不能阻断业务，但必须告警；否则故障时恰好没有证据。
+遥测丢失不能阻断业务，但必须告警；否则故障时恰好没有证据。告警规则集中在 config/observability/prometheus.yaml，2026-08-18 已实测触发链路（内存 / Leader 缺失）。
 
 ## 10. 变更检查
 
