@@ -1,6 +1,6 @@
 # 2026-08-18 WSL 回环 TCP：新监听端口首连被拒（localhost 转发中继降级）
 
-> promoted: lessons/process-wsl-loopback-fresh-listen-refused.md
+> 日期：2026-08-18 ｜ 触发者：本地 Agent（用户要求核实环境遗留断言）｜ 相关：change-history/2026-08-18-issue51-segment-lifecycle/（遗留项定因）｜ promoted: lessons/process-wsl-loopback-fresh-listen-refused.md
 
 ## 触发
 
