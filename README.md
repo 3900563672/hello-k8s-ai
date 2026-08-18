@@ -19,6 +19,8 @@ hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度�
 
 想用 AI 协作开发，人类可先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。参与贡献见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
+项目采用 [Apache-2.0](LICENSE) 许可证。
+
 ## 最省事的部署方式
 
 本仓库只复用 Docker Desktop 已有的 Kubernetes 集群，不创建、不重置、也不删除集群。默认且唯一支持的本地部署目标是当前 Context `docker-desktop`。
@@ -82,9 +84,9 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 
 - 2026-08-18 [变更总览：仓库健康度治理——安全政策、分支保护与依赖扫描](change-history/2026-08-18-repo-hygiene/README.md)
 - 2026-08-18 [变更总览：仓库美化——CONTRIBUTING、主页 README、Wiki 与仓库元数据](change-history/2026-08-18-repo-beautify/README.md)
+- 2026-08-18 [变更总览：项目采用 Apache-2.0 许可证](change-history/2026-08-18-license/README.md)
 - 2026-08-18 [变更总览：宿主工具链恢复——Codex 配置自修复、整机重启恢复顺序与圈复杂度处理](change-history/2026-08-18-host-toolchain-recovery/README.md)
 - 2026-08-18 [变更总览：人类文档补全与远程 AI 手册完善——文档漂移全面对齐](change-history/2026-08-18-docs-human-complete/README.md)
-- 2026-08-18 [变更总览：文档体系重构——机械门禁、内容迁移与入口重写](change-history/2026-08-18-docs-architecture-rework/README.md)
 
 <!-- docs-sync:timeline-end -->
 
