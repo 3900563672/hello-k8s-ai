@@ -28,7 +28,7 @@ EXCLUDE_DIRS = {
     ".git", "node_modules", "bin", "dist", ".runtime", ".idea", ".verify",
     "output", "tmp", "project-review", ".devcontainer",
 }
-ROOT_MD_WHITELIST = {"README.md", "AGENTS.md", "PROJECT_OVERVIEW_NEW.md"}
+ROOT_MD_WHITELIST = {"README.md", "AGENTS.md", "PROJECT_OVERVIEW_NEW.md", "CONTRIBUTING.md"}
 LINE_LIMITS = {
     "README.md": 150,
     "AGENTS.md": 200,
