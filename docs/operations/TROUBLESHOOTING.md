@@ -20,7 +20,7 @@ flowchart TD
 ## 2. 快速信息包
 
 ```bash
-CTX=docker-desktop
+CTX=kind-hello-k8s-ai-dev
 NS=hello-k8s-ai-system
 
 kubectl --context "$CTX" get nodes -o wide
@@ -38,11 +38,11 @@ kubectl --context "$CTX" -n "$NS" get events --sort-by=.lastTimestamp
 检查：
 
 ```bash
-kubectl --context docker-desktop -n hello-k8s-ai-system \
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system \
   describe deployment hello-k8s-ai-controller-manager
-kubectl --context docker-desktop -n hello-k8s-ai-system \
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system \
   logs deployment/hello-k8s-ai-controller-manager --all-containers --tail=300
-kubectl --context docker-desktop -n hello-k8s-ai-system get lease
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
 ```
 
 常见原因：CRD 未 Established、RBAC forbidden、镜像未导入 Node、leader Lease 权限、metrics cert/volume、启动参数/环境变量。完整部署失败时先看 `.runtime/last-failure.log`；OTel endpoint 失败不应使 Manager 退出，若退出则检查其他初始化错误。
