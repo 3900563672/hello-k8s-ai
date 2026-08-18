@@ -46,3 +46,9 @@
 - **#60 实验复现手册（完成）**：12 项实验 → 命令/预期/耗时/依赖态矩阵 + 7 条常见误判清单；退化态标注"不可一键复现"（`Documents/18_实验复现手册.md`）。
 - **回滚指南（完成，用户强调）**：权限矩阵、WSL 恢复/版本更新回滚、Docker/K8s/数据盘 Junction、C 盘防护（WPR 成对）、实验回滚清单、#62 恢复序列（`Documents/19_回滚与恢复指南.md`）。
 - issue：#61/#60 已评论并关闭；#62/#63 待用户明天决定。
+
+## 后续进展（2026-08-19：外部引用泄露清洗 + 规矩沉淀）
+
+- **事件**：本仓库 PR #59 与演练 issue 标题含"微软 WSL 回环 issue 完整编号"，触发 GitHub 自动交叉引用，对方 issue 时间线出现指向本仓库的事件（第三方可见）。演练 issue 删除后事件消失；PR 只能 close 不能删除，close 不移除事件（API 复核无残留）。
+- **清洗**：PR #59 改名、正文去编号、分支重写为单提交（diff 与提交信息零外部编号）；演练 issue 删除；issue #60 标题去编号；全仓 main 零残留；本地备份分支 backup/pre-cleanup 禁止推送。
+- **沉淀**：规矩写入 docs/agents/WORKFLOW.md 第 5 节（提交前检查项）+ journal 条目 docs/journal/2026-08-19-github-crossref-external-issue-number.md；此后公开仓库内容（标题/正文/评论/提交信息/提交 diff）禁止外部 issue 完整编号。
