@@ -109,6 +109,7 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
 | Backend | `/configuration` 返回 `tenant-sample` |
 | Frontend | Service 代理返回页面 HTML |
+| 环境 | `make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`，非 WSL 自动跳过） |
 
 这些检查通过后，脚本才输出“完整系统部署并验收通过”。
 
