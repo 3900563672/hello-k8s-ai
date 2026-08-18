@@ -4,23 +4,23 @@
 
 ## 1. 目标集群
 
-本地部署目标固定为用户已有的 Docker Desktop Kubernetes：
+本地部署目标为 Kind 多节点开发集群 `hello-k8s-ai-dev`（由 `make cluster-up` 自动创建）：
 
 | 项目 | 约束 |
 | --- | --- |
-| kubectl Context | `docker-desktop`，且必须是当前 Context |
+| kubectl Context | `kind-hello-k8s-ai-dev`（`make cluster-up` 自动创建并切换） |
 | Namespace | `hello-k8s-ai-system` |
 | Node | Docker Desktop 本地容器，全部 Ready、架构一致 |
 | StorageClass | `standard` |
-| 集群生命周期 | 部署脚本不创建、不重置、不删除 |
+| 集群生命周期 | `make cluster-up` 自动创建/复用；`make kind-down` 显式删除（PVC 数据保留） |
 
-旁边的 `minikserve-demo` Kind 集群不属于该部署。
+自动化 E2E 使用隔离的 Kind 集群 `hello-k8s-ai-test-e2e`，与开发集群互不影响。
 
 ## 2. 完整拓扑
 
 ```mermaid
 flowchart TB
-  subgraph DD["已有 docker-desktop Kubernetes"]
+  subgraph DD["Kind 开发集群 hello-k8s-ai-dev"]
     C["Controller Manager"] --> S["动态 Simulator Deployment"]
     S --> K["CRD Spec / Status"]
     O["OTel Collector"] --> J["Jaeger"]
@@ -106,7 +106,7 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 
 | 项目 | 声明值 |
 | --- | --- |
-| Context | `docker-desktop` |
+| Context | `kind-hello-k8s-ai-dev` |
 | Namespace | `hello-k8s-ai-system` |
 | StorageClass | `standard` |
 | 镜像交付 | Docker build/save + 每 Node `ctr -n k8s.io images import` |
