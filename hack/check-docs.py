@@ -28,7 +28,7 @@ EXCLUDE_DIRS = {
     ".git", "node_modules", "bin", "dist", ".runtime", ".idea", ".verify",
     "output", "tmp", "project-review", ".devcontainer",
 }
-ROOT_MD_WHITELIST = {"README.md", "AGENTS.md", "PROJECT_OVERVIEW_NEW.md", "CONTRIBUTING.md"}
+ROOT_MD_WHITELIST = {"README.md", "AGENTS.md", "PROJECT_OVERVIEW_NEW.md", "CONTRIBUTING.md", "SECURITY.md"}
 LINE_LIMITS = {
     "README.md": 150,
     "AGENTS.md": 200,
@@ -94,7 +94,7 @@ def check_root_whitelist():
     errors = 0
     for name in os.listdir(ROOT):
         if name.endswith(".md") and name not in ROOT_MD_WHITELIST:
-            print(f"根目录 markdown 白名单违规：{name}（只允许 README.md / AGENTS.md / PROJECT_OVERVIEW_NEW.md）")
+            print(f"根目录 markdown 白名单违规：{name}（只允许 README.md / AGENTS.md / PROJECT_OVERVIEW_NEW.md / CONTRIBUTING.md / SECURITY.md）")
             errors += 1
     return errors
 
