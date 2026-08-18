@@ -33,6 +33,7 @@ const SNAPSHOT_EVERY = Number(get('--snapshot-every', '2')); // 每 N 轮抓一�
 const UNTIL = get('--until', '');                            // 本地时区 HH:MM，到点自动停止
 const HOURS = Number(get('--hours', '0'));                   // 运行 N 小时后停止（--until 优先）
 const FINAL_QPS = Number(get('--final-qps', String(BASELINE_QPS))); // 结束时恢复的流量档位
+const STRICT_PHASE = args().includes('--strict-phase'); // #48：相位错位时拒绝启动（默认只告警）
 const RESUMMARIZE = get('--resummarize', '');                // 只重生成指定目录的 summary.md
 
 const START_MS = Date.now();
@@ -111,6 +112,18 @@ function httpJson(method, urlPath, body, attempts = 3) {
     }
     return { ...last, attempt: attempts };
   })();
+}
+
+// #48 相位校验：轮次间隔（分钟）与周期/峰值窗口错位时，峰值永远不会生效。
+// 轮次落在 k*interval mod cycle；集合 = gcd(interval, cycle) 的倍数，检查是否命中 [cycle-peak, cycle)。
+export function phaseHitsPeak(intervalMin, cycleMin, peakMin) {
+  if (intervalMin <= 0 || cycleMin <= 0 || peakMin <= 0 || peakMin >= cycleMin) return false;
+  const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+  const step = gcd(intervalMin, cycleMin);
+  for (let t = 0; t < cycleMin; t += step) {
+    if (t >= cycleMin - peakMin) return true;
+  }
+  return false;
 }
 
 // 周期相位从进程启动时刻起算：启动后先跑基线，再跑峰值，循环。
@@ -487,6 +500,18 @@ async function main() {
   for (const check of preflightChecks) {
     process.stderr.write(`${utcNow()} preflight ${check.name}: ${check.ok ? 'ok' : 'WARN ' + (check.detail || '')}\n`);
   }
+  // #48：轮次相位校验——峰值剧本必须能命中峰值窗口，否则整窗静默平峰。
+  if (PEAK_QPS !== BASELINE_QPS && !phaseHitsPeak(INTERVAL / 60, CYCLE_MINUTES, PEAK_MINUTES)) {
+    const phaseMsg = `轮次间隔(${INTERVAL}s) 与 cycle=${CYCLE_MINUTES}min/peak=${PEAK_MINUTES}min 相位错位，峰值不会生效（#48）。`
+      + `建议 --interval 600（每 10 分钟一轮，可命中 30 分钟周期的 10 分钟峰值窗口）`
+      + `或保持 --interval 900 + --cycle-minutes 60 --peak-minutes 15。`;
+    process.stderr.write(`${utcNow()} WARN: ${phaseMsg}\n`);
+    if (STRICT_PHASE) {
+      process.stderr.write(`${utcNow()} --strict-phase 已设置，拒绝启动（#48）。\n`);
+      process.exit(1);
+    }
+  }
+
   // 启动元数据：summary 只统计本次 run（[startIso, endIso] 窗口）
   try {
     mkdirSync(RUN_DIR, { recursive: true });
@@ -519,7 +544,9 @@ function metaExists(dir) {
   try { return readFileSync(path.join(dir, 'meta.json'), 'utf8').length > 0; } catch { return false; }
 }
 
-main().catch((error) => {
-  process.stderr.write(`${utcNow()} day-watch fatal: ${String(error.stack || error)}\n`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === new URL(process.argv[1], 'file:').href) {
+  main().catch((error) => {
+    process.stderr.write(`${utcNow()} day-watch fatal: ${String(error.stack || error)}\n`);
+    process.exit(1);
+  });
+}
