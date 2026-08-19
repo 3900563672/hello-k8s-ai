@@ -130,7 +130,7 @@ promtool check rules <rules-file>
 完整部署已自动检查 Simulator 指标；如需手工查看：
 
 ```bash
-kubectl --context docker-desktop -n hello-k8s-ai-system \
+kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system \
   port-forward svc/hello-k8s-ai-prometheus 9090:9090
 ```
 

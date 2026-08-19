@@ -1,6 +1,6 @@
 # 设计与修改原则（PRINCIPLES）
 
-> 维护层：agent | last-reviewed：2026-08-18 | 事实源：源码与 docs/agents/
+> 维护层：agent | last-reviewed：2026-08-19 | 事实源：源码与 docs/agents/
 > 本文件汇总"不允许破坏的架构约束"与"修改规范"，原为 `docs/AI_CONTEXT.md` 第 3–7 节，2026-08-16 迁移至此。
 > 字段所有权完整版见 [docs/kubernetes/FIELD_OWNERSHIP.md](../kubernetes/FIELD_OWNERSHIP.md)。
 
@@ -16,6 +16,7 @@
 8. **命令必须可审计、可幂等。** 修改 API 需要 `Idempotency-Key`；资源版本冲突必须显式返回。
 9. **不编辑生成文件。** `config/crd/bases/*.yaml`、`config/rbac/role.yaml`、`**/zz_generated.*.go` 由生成器维护。
 10. **不宣称未验证的运行状态。** 清单里有资源不代表集群里 Ready。
+11. **工具结论必须带地面真值。** 探针/脚本自身也要做健康对照：先证明工具在健康态会正确通过，再谈故障态读数；工具缺陷（如输出路径在目标平台不可写、只 Listen 不 Accept）导致的读数一律作废，不作环境证据（32 号 WSL 探针 wincheck 教训）。
 
 ## 2. 字段所有权速查
 
