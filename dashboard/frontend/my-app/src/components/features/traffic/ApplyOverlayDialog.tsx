@@ -20,7 +20,13 @@ import {
 import { useTrafficStore } from '@/stores/trafficSlice'
 import type { TenantInfo, TrafficTemplate } from '@/types/traffic.types'
 import { PreviewCanvas } from './PreviewCanvas'
-import { formatLogicalTime, formatQps, getTemplateDuration, getTemplatePeakQps } from './trafficMath'
+import {
+    formatLogicalTime,
+    formatQps,
+    getTemplateDuration,
+    getTemplatePeakQps,
+    getTemplateValueAtTime,
+} from './trafficMath'
 import { useReplayTimeContext } from '@/stores/timeSlice'
 import { formatUtcTimestamp } from '@/lib/formatters/timeFormatter'
 
@@ -29,6 +35,7 @@ interface ApplyOverlayDialogProps {
     onOpenChange: (open: boolean) => void
     template: TrafficTemplate | null
     tenants: TenantInfo[]
+    pending?: boolean
     onApply: (data: {
         templateId: string
         tenantId: string
@@ -41,6 +48,7 @@ export function ApplyOverlayDialog({
     onOpenChange,
     template,
     tenants,
+    pending = false,
     onApply,
 }: ApplyOverlayDialogProps) {
     const replay = useReplayTimeContext()
@@ -67,6 +75,12 @@ export function ApplyOverlayDialog({
         (overlay) => overlay.tenantId === tenantId && overlay.enabled,
     ).length
     const canSubmit = Boolean(template && selectedTenant && offsetSeconds !== null)
+    const historical = replay.mode === 'historical'
+    const templateStartQps = template ? getTemplateValueAtTime(template, 0) : 0
+    const targetQps = Math.max(
+        0,
+        Math.round((selectedTenant?.requestedQPS ?? 0) + templateStartQps),
+    )
 
     const handleSubmit = () => {
         setAttempted(true)
@@ -180,6 +194,17 @@ export function ApplyOverlayDialog({
                                 <MoveRight className="h-3 w-3" />
                                 <span className="text-[#8BBCFF]">原流量 + 模板增量</span>
                             </div>
+                            {selectedTenant && (
+                                <div className="mt-3 border-t border-white/[0.06] pt-3 text-[10px] leading-4 text-[#7D899B]">
+                                    <div className="flex items-center justify-between">
+                                        <span>应用后租户目标 QPS</span>
+                                        <span className="font-mono text-[#8BBCFF]">{formatQps(targetQps)}</span>
+                                    </div>
+                                    <p className="mt-1.5 text-[9px] text-[#55617A]">
+                                        控制面为常量目标 QPS；叠加曲线仅作场景预览，实际按起始增量写入
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -206,6 +231,11 @@ export function ApplyOverlayDialog({
                 </div>
 
                 <DialogFooter className="border-t border-white/[0.06] px-6 py-4">
+                    {historical && (
+                        <p className="mr-auto text-[10px] text-amber-300">
+                            历史模式只读，不能应用流量
+                        </p>
+                    )}
                     <Button
                         variant="ghost"
                         onClick={() => onOpenChange(false)}
@@ -215,7 +245,8 @@ export function ApplyOverlayDialog({
                     </Button>
                     <Button
                         onClick={handleSubmit}
-                        aria-disabled={!canSubmit}
+                        disabled={pending || !canSubmit || historical}
+                        aria-disabled={pending || !canSubmit || historical}
                         className="bg-[#5B8CFF] px-5 text-white hover:bg-[#70A0FF] aria-disabled:opacity-50"
                     >
                         确认叠加

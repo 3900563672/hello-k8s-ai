@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { trafficApi } from '@/api/endpoints/trafficApi'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { setTenantTraffic, trafficApi } from '@/api/endpoints/trafficApi'
 import { useReplayTimeContext } from '@/stores/timeSlice'
 
 export const trafficKeys = {
@@ -48,5 +48,24 @@ export const useTotalQPS = () => {
     return useQuery({
         queryKey: [...trafficKeys.totalQPS(), timestamp],
         queryFn: () => trafficApi.getTotalQPS(timestamp),
+    })
+}
+
+// ===== 应用流量叠加：把目标 QPS 写入租户 =====
+export const useSetTenantTraffic = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({
+            tenantId,
+            qps,
+            resourceVersion,
+        }: {
+            tenantId: string
+            qps: number
+            resourceVersion?: string
+        }) => setTenantTraffic(tenantId, qps, resourceVersion),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: trafficKeys.all })
+        },
     })
 }
