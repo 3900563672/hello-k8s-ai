@@ -82,6 +82,16 @@ kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
 - 处置：这是 WSL2 组件问题，不是业务代码问题，不要改代码。严重形态修复 = `wsl --shutdown` 或整机重启（只对严重形态成立；影响运行中发行版与 Docker Desktop 内置 K8s，需用户同意）；健康态端口 0 注册失败窗口不因重启消除（32 号，Docker 已排除），修复方向 = 升级 WSL 2.9.5+（含 #41051/#41125）；临时规避 = 对首个连接重试 ≥100ms，或先自连一次完成端口注册。
 - 自动接入：`make preflight` 第 9 节与 `make selfcheck` 会自动运行探针，非 WSL 环境自动跳过；探针 `FAIL` 时 preflight 会阻止启动，`WARN` 仅提示。
 - 完整排查案例见 [WSL_LOOPBACK_CASE_STUDY.md](WSL_LOOPBACK_CASE_STUDY.md)。
+## 3.5 WSL 内访问 GitHub 慢/断连（clone/push/PR）
+
+- 症状：WSL 内 `git clone`/`push` 直连 GitHub 报 `Connection reset by peer`、SSH 克隆中途 `fetch-pack: unexpected disconnect`、codeload 下载约几十 KB/s；但 `gh api`（REST API）一直秒回——API 快不等于 git 通道快。
+- 快速判断：
+  ```bash
+  bash hack/wsl-github-proxy.sh --check
+  ```
+- 处置：WSL 流量默认不经过 Windows 代理软件；本机 WSL2.7 支持直连 Windows localhost 代理（FlClash 混合端口 7890）。运行 `bash hack/wsl-github-proxy.sh` 自动检测端口并配置 git 全局代理（仅 github.com），GitHub 操作统一走 https；SSH（22 端口）不经过 http 代理，不要用 SSH clone/push。
+- 完整案例见 [../lessons/process-wsl-github-proxy.md](../lessons/process-wsl-github-proxy.md)。
+
 ## 4. Tenant-Model 没有 SimulatorInstance
 
 按顺序：

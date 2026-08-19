@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-19 | WSL GitHub 代理配置沉淀：检测脚本 + 蒸馏规则 | P1 | [查看记录](2026-08-19-wsl-github-proxy/README.md) |
 | 2026-08-19 | Traffic 叠加应用写入租户目标 QPS（Fixes #89） | P2 | [查看记录](2026-08-19-traffic-apply-control-plane/README.md) |
 | 2026-08-19 | Kind 集群移除 extraMounts：PVC 数据改存节点 /var 数据卷（Fixes #54） | P0 | [查看记录](2026-08-19-kind-extra-mounts-removed/README.md) |
 | 2026-08-19 | Agent 对外协作规则落地：AI 产出自查 + 披露 trailer + lessons 触发式升级 | P2 | [查看记录](2026-08-19-ai-collab-rulebook/README.md) |
