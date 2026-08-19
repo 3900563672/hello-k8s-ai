@@ -30,7 +30,7 @@ flowchart TD
 
 - 读 `AGENTS.md` 与 [docs/agents/README.md](README.md)。
 - 按本文第 8 节解析任务五要素，缺项用默认假设补齐并在开工陈述中复述。
-- 扫 [docs/journal/README.md](../journal/README.md) 与 [docs/lessons/README.md](../lessons/README.md)，确认没有已知坑影响本次任务。
+- 扫 [docs/journal/README.md](../journal/README.md) 与 [docs/lessons/README.md](../lessons/README.md)：按任务类型 / 涉及路径匹配各条 lesson 的 **Use when 触发条件**（索引见 lessons/README.md），命中先读正文再动手。
 - 扫 [FAILURE_REGISTRY.md](FAILURE_REGISTRY.md) **末尾 3 条**，确认本次任务未命中已登记失败模式；命中先读证据链再动手。
 - 记录任务目标与成功标准，避免做一半跑偏。
 
@@ -100,6 +100,7 @@ flowchart TD
 ## 5. 提交
 
 - 提交信息：`feat:` / `fix:` / `docs:` / `chore:` / `refactor:` + 中文描述 +（`Fixes #N`）。
+- **提交信息措辞（2026-08-19 起，防 AI 腔）**：用自然中文写"做了什么"，像给同事看的短句；直接写动作与对象（如 `docs: 清理仓库，删除内部材料`），不用"落地 / 赋能 / 纯粹化 / 触发式 / 对齐"这类包装词。类型前缀 + 一句人话即可，不堆术语。
 - **提交节奏（2026-08-18 起，防提交轰炸）**：一个逻辑闭环最多 2 个 commit（代码 1 + 沉淀 1）。
   - AI 本地可以小步提交当检查点（便于回溯），但交付前用 `git reset --soft` 归拢成最终形态再 push；只在本地未推送时做，零风险。
   - 需要频繁验证的任务走 PR + squash merge：分支上随意提交，合并进 main 时压成 1 个 commit，保持 main 每天 1~3 个 commit。
@@ -109,6 +110,8 @@ flowchart TD
 - **文件写入卫生（2026-08-19 起，防跨平台污染）**：仓库内文件写入一律在 WSL 侧用 Python `io.open(..., encoding='utf-8')`（无 BOM）；禁止 PowerShell `Set-Content` / `Out-File` 直接改写仓库文件（会引入 UTF-8 BOM 或 CRLF，破坏 `gen-docs.py` 解析与 `docs-sync-check`）。Windows Git 操作本仓库前确认 `core.fileMode false`；出现整批 `100755→100644` 差异时按 docs/lessons/process-cross-platform-file-hygiene.md 处理。
 - **外部编号禁令（2026-08-19 起，防 GitHub 交叉引用泄露）**：提交信息、PR 标题/正文、issue 标题/正文/评论、提交 diff 中禁止出现外部 issue 的完整编号（`#<数字>` 形式）——GitHub 会自动在对方 issue 时间线登记 cross-reference，第三方可见，且 close 无法移除，只有删除源才能消失。引用外部 issue 一律用描述语或 URL。提交前检查 `git diff` 与提交信息（详见 [docs/journal/2026-08-19-github-crossref-external-issue-number.md](../journal/2026-08-19-github-crossref-external-issue-number.md)）。
 - 提交前检查 `git status`：不提交 `.env`、`bin/`、`dist/`、`.runtime/`、覆盖率文件；`change-history/` 与文档改动记得一起提交。
+- **AI 产出自查（curl 黄金标准，2026-08-19 起）**：所有对外产物（commit / PR / issue / 评论 / 文档）交付前重读自查——**别人看得出这是 AI 写的，就要再打磨**。AI 发现的安全 / 关键问题必须先人工复核并附验证证据才提交；禁止直接粘贴 AI 生成的报告、禁止提交未验证或虚假的 AI 结论（curl 政策：提交虚假报告直接封号）。完整规则见 docs/lessons/process-ai-collaboration-disclosure.md。
+- **AI 披露 trailer（GitLab 式，2026-08-19 起）**：给有 AI 披露政策的开源项目（如 curl、GitLab）贡献前，先查对方贡献指南 / AGENTS.md 确认政策；要求披露则在提交信息末尾加机器可读 trailer：`AI-Assisted: yes` + `AI-Tools: <工具名>`（GitLab Public Sector 规范，`git interpret-trailers` 可枚举）。本仓库内部提交无需 trailer；外部贡献必须查证后执行。
 
 ## 6. 归档与同步
 
@@ -182,6 +185,7 @@ flowchart TD
 - [ ] 生成文件未手改；需要时通过 `make manifests generate YEAR=2026` 更新并核对差异。
 - [ ] 派生文件一致：提交前 `make docs-sync && make docs-sync-check` 全绿（README 时间线段 / docs/status.md / llms.txt 等生成物随提交一起）。
 - [ ] done-check 三问：实跑命令？输出证据？未验证范围？无运行证据不得写"已通过"。
+- [ ] AI 产出自查：对外内容重读一遍，"看得出是 AI 写的"则继续打磨；安全结论已人工复核并附证据。
 - [ ] 能跑的验证都跑过，结果记录在汇报里。
 - [ ] change-history 条目已建；README 索引已登记。
 - [ ] 受影响文档已同步或列入"人类文档待同步清单"。

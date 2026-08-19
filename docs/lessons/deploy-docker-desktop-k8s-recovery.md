@@ -1,6 +1,7 @@
 # 强杀 Docker Desktop 后内置 K8s 不自动恢复，恢复顺序固定
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-command-and-terminal.md 与 2026-08-18-host-toolchain.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：Docker Desktop 或整机重启后恢复内置 K8s；kubectl 报 nodes is forbidden / i/o timeout / 8080 无监听时
 
 ## 现象
 

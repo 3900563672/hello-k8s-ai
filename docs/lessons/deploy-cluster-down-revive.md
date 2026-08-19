@@ -1,6 +1,7 @@
 # cluster-down 后 kubectl apply 会复活负载；replicas=0 不是停止态
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-17-host-memory-governance.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：长时运行结束 / 停止负载 / 执行 make cluster-down 或删 TenantModelPolicy 时
 
 ## 现象
 

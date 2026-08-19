@@ -1,6 +1,7 @@
 # 中文提交信息必须用 git commit -F 文件方式
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-command-and-terminal.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：写中文 commit 或 issue 正文时
 
 ## 现象
 

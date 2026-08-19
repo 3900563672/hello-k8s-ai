@@ -1,6 +1,7 @@
 # gh api 传文件正文必须用 --input + jq，不要用 -f body=@file
 
 > 提升日期：2026-08-19 ｜ 来源：WSL 回环评论修订过程 ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：用 gh api 传文件正文（POST / PATCH body）或 GitHub 写操作后回读校验时
 
 ## 现象
 

@@ -1,6 +1,7 @@
 # 禁止 wsl --shutdown：会关闭所有发行版
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-command-and-terminal.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：任何涉及 WSL 整体重启 / 网络重置的操作前
 
 ## 现象
 

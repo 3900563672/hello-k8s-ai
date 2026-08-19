@@ -1,6 +1,7 @@
 # 扩容停在"节点容量上限"不是 maxReplicas 问题
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-cluster-and-deploy.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：高 QPS 下副本数停止增长 / 排查扩容上限时
 
 ## 现象
 

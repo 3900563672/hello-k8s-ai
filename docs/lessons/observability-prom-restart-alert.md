@@ -1,6 +1,7 @@
 # 容器重启告警三坑：container_id label、聚合键、扩容噪音
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-18-prometheus-alert-three-pitfalls.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：修改重启 / 存活告警；模拟器扩缩容导致误报时
 
 ## 现象
 

@@ -1,6 +1,7 @@
 # Prometheus 内存告警对无 limit 容器假阳性：分子必须过滤
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-17-observability-and-storage.md 与 2026-08-18-prometheus-alert-three-pitfalls.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：修改 Prometheus 内存告警或新增容器资源 limit 时
 
 ## 现象
 

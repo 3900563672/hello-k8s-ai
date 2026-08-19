@@ -1,6 +1,7 @@
 # 跨平台文件写入卫生：UTF-8 BOM 与 Git 执行位噪音（Windows ↔ WSL）
 
 > 提升日期：2026-08-19 ｜ 来源：2026-08-19 仓库体检 CI 修复与直方图运行期间排障 ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：从 Windows 侧写仓库文件 / git 出现整批 mode change / docs-sync-check 失败时
 
 ## 现象
 

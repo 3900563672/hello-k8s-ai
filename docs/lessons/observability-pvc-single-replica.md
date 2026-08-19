@@ -1,6 +1,7 @@
 # 单副本 + RWO PVC 的状态型组件：升级必须先 scale 0 再扩 1
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-cluster-and-deploy.md 与 2026-08-17-observability-and-storage.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：升级 Prometheus / Jaeger 等单副本 + RWO PVC 组件时
 
 ## 现象
 
