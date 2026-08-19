@@ -1,6 +1,6 @@
 # WSL 回环案例整体迁移至独立仓库 wsl-loopback-stall
 
-> 日期：2026-08-19 ｜ 决策：WSL 研究内容从 hello-k8s-ai 分离，独立成库（对外展示面）｜ 新仓库：https://github.com/3900563672/wsl-loopback-stall（private）
+> 日期：2026-08-19 ｜ 决策：WSL 研究内容从 hello-k8s-ai 分离，独立成库（对外展示面）｜ 新仓库：[wsl-loopback-stall](https://github.com/3900563672/wsl-loopback-stall)（private）
 
 ## 背景
 
