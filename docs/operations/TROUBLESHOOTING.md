@@ -1,6 +1,6 @@
 # 排障
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：hack/
+> 维护层：human | last-reviewed：2026-08-19 | 事实源：hack/
 
 ## 1. 总体排障顺序
 
@@ -16,6 +16,8 @@ flowchart TD
 ```
 
 先确认页面是 Latest 还是 Historical。历史快照里的 Pending 不会因为当前集群已恢复而变化。
+
+任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg 共 11 项环境自检）。环境层问题（磁盘满、回环不可用、端口冲突）会伪装成业务故障，先排除环境再查链路。
 
 ## 2. 快速信息包
 
