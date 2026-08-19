@@ -11,6 +11,7 @@
 1. 新增测试 helper `waitBackendReady`：轮询拨号直到后端可达（8s 上限），再进入断言。
 2. WSL 退化窗口内超时 → `t.Skipf`（带案例文档与升级指引），不再误报；CI 原生 Linux 无 WSL 竞态，仍严格失败，不弱化回归防护。
 3. 新增 `onWSL()`：`/proc/version` 含 microsoft 内核标识即判定为 WSL。
+4. 修复 MAP 门禁误报：`hack/check-docs.py` 豁免纯测试文件（`*_test.go`、`*.test.ts(x)`、`*.spec.ts(x)`），并给 `hack/check-docs.py` 增加 MAP.yaml 精确映射（仅要求 TROUBLESHOOTING.md）。
 
 ## 关键行为
 
