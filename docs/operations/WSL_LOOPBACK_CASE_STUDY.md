@@ -1,6 +1,6 @@
 # 一次真实环境故障排查：WSL 回环新端口首连被拒（完整研究链）
 
-> 维护层：human | last-reviewed：2026-08-18（晚修正：恢复验证 + 旧探针推翻 + 健康态瞬态发现）| 事实源：docs/journal/2026-08-18-wsl-loopback-relay.md、docs/lessons/process-wsl-loopback-fresh-listen-refused.md
+> 维护层：human | last-reviewed：2026-08-19（32 号：Docker 排除、探针 wincheck 缺陷、Grafana 竞态机制精确化）| 事实源：docs/journal/2026-08-18-wsl-loopback-relay.md、docs/lessons/process-wsl-loopback-fresh-listen-refused.md
 
 ## 一、背景与影响
 
@@ -69,8 +69,8 @@ CI（干净 Linux 容器）全绿 → 不是业务代码；业务长存活端口
 ## 四、结论与修复
 
 - **根因**：WSL2 内部 localhost 转发中继（guest 侧 `Relay`，`/init` 子进程）存在两级形态：**严重形态**（中继降级：dmesg 持续报错、Windows 侧新端口不可达、小时级）与**健康态瞬态**（进程内会话拆除竞争：第 2 轮起注册停滞 2–5s 自愈、无 dmesg 错误）。
-- **修复**：重置 WSL 网络栈（`wsl --shutdown` 或整机重启），须用户同意。本次完成的是**定位 + 规避 + 可复现探针**；业务侧无法"修好"微软组件。
-- **对项目的影响**：两个 Grafana 测试按环境性跳过；变更归档中"整体不可用"的断言已修正为精确结论。
+- **修复（32 号修正边界）**：`wsl --shutdown` 或整机重启只对**严重形态**成立（08-18 已验证恢复）；**健康态端口 0 注册失败窗口不因重启消除**（32 号：重启后探针 1/8~3/8 成功），修复方向 = 升级 WSL 2.9.5+（含 #41051/#41125）；Docker 已通过 ON/OFF 三轮对照排除。均须用户同意。本次完成的是**定位 + 规避 + 可复现探针**；业务侧无法"修好"微软组件。
+- **对项目的影响**：两个 Grafana 测试按环境性跳过；本地失败机制 = 注册时序竞态（bind 返回先于 Windows listener 就绪 ~200ms，t+0 拨号必 refused），CI 无此竞态所以全绿；变更归档中"整体不可用""网络栈残留"的断言已修正为精确结论。
 
 ## 五、规避与工程经验
 
@@ -78,6 +78,7 @@ CI（干净 Linux 容器）全绿 → 不是业务代码；业务长存活端口
 - 遇到"刚 listen 就 refused"先按环境问题排查，**不要改业务代码、不要误判为 Go/Python 差异**。
 - 探针语义：单轮 + 时延测量 + Windows 侧 curl 校验（`hack/wsl-loopback-probe`，健康态 PASS）；多轮模式仅作诊断，**其结果不能判定环境故障**。
 - 环境断言必须可复现，且**必须带健康对照**：先证明"健康态下探针会通过"，再谈"故障态探针失败"。
+- **探针工具本身也要验证（32 号）**：wincheck 曾因只 Listen 不 Accept + `-o /dev/null`（Windows 侧 rc=23）从未真正工作，历史 `win=UNREACHABLE` 读数作废；工具结论必须带地面真值（真实服务 + Windows netstat/curl）对照。
 
 ## 六、附录
 

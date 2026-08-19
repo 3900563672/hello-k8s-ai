@@ -27,12 +27,14 @@
 - **"listen 后立即拨号 ×10"的探针在健康态也必然 FAIL**：健康态新端口注册本身需 50–100ms，t=0 立即拨号 10/10 必失败 → 旧探针的客侧读数（0/10 等）全部作废。**探针必须先做健康对照（H1），再下故障结论**。
 - **vsock 连通性探针无效**：对未监听端口 vsock connect 超时是正常行为，不能当作"vsock 失效"证据；正确做法是连已知存活端口（如 50000/50001/50002/50005）。
 - **可复现的瞬态不等于持久故障**：区分"进程内连续 churn 的瞬态"与"跨进程、小时级的严重故障"，两者证据集不同（前者看进程内时序，后者看 dmesg + Windows 侧 netstat/curl）。
+- **探针自身的 wincheck 也会撒谎（32 号）**：只 Listen 不 Accept → curl 永远无响应；`curl.exe -o /dev/null` 在 Windows 侧 rc=23（写错误）→ `cerr==nil` 恒假 → 历史 `win=UNREACHABLE` 读数全部作废。修复 = Accept + `-o NUL`；工具结论必须带地面真值（真实服务 + Windows netstat/curl）对照。
+- **Grafana 测试失败的精确机制（32 号）**：httptest ephemeral listener 的注册时序竞态（bind 返回先于 Windows 侧 listener 就绪 ~200ms，t+0 拨号必 refused），不是"网络栈残留"；本地重跑前等待 ~200ms 或加重试。
 
 ## 可复用规则
 
 - 本地脚本/测试连 `127.0.0.1` 新端口时，对首个连接做 ≥100ms 的重试（或先自连一次完成"注册"）；连长存活端口（kubectl port-forward 等）无需处理。
 - 遇到"刚 listen 就 refused"先按本环境问题排查，不要改业务代码、不要误判为 Go/Python 差异。
-- 根因修复 = `wsl --shutdown` 或整机重启；执行前必须征得用户同意（会中断所有发行版与 Docker Desktop K8s，需重新启用内置 K8s）。
+- 严重形态修复 = `wsl --shutdown` 或整机重启（只对严重形态成立，健康态端口 0 窗口不消除）；执行前必须征得用户同意（会中断所有发行版与 Docker Desktop K8s，需重新启用内置 K8s）。
 - 探针语义：`hack/wsl-loopback-probe` 默认单轮（测量首次成功时延 + Windows 侧 curl 校验 + dmesg 计数），健康态应 PASS；`-attempts 3 -delay 0` 仅作诊断/压力复现（稳定触发 WARN 1/3），**不要用多轮结果判定环境故障**。
 
 ## 验证方法（2026-08-18 晚更新）
