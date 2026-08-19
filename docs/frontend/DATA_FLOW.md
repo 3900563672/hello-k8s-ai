@@ -79,7 +79,7 @@ sequenceDiagram
 | App shell / ClusterStatus | `/bootstrap`、`/capabilities`、`/clock`、`/replay` | 无 | 首次 + SSE 失效 + 30s poll |
 | ExecutionControls | `/bootstrap`、`/clock` | `PATCH /clock/rate` | 提交后等待 resource.changed，REST 刷新 desired/applied/converged |
 | Config | `/configuration[?at]` | `/configuration:apply`、DELETE configuration | mutation 后 invalidate；历史不刷新为 latest |
-| Traffic baseline | `/traffic[?at&tenant]` | Backend 有 PATCH tenant traffic；UI 当前未接 Overlay | SSE + query invalidate；草稿不触发远端 |
+| Traffic baseline | `/traffic[?at&tenant]` | `PATCH /tenants/{name}/traffic`（应用叠加时写入目标 QPS） | SSE + query invalidate；未应用的本地草稿不触发远端 |
 | Data Overview | `/overview[?at&filters]` | 无 | latest 约 15s；historical 固定 |
 | Experiment 面板 | `/experiments[?status]`、`/experiments/{id}` | `POST /experiments`、`/experiments/{id}/start|complete|fail` | 列表 10s 轮询；详情创建/结束后失效重取 |
 | Metrics detail | `/metrics/query` | 无 | 查询窗口/step 决定缓存 |
@@ -121,24 +121,18 @@ Backend 的 SSE channel 每客户端有有限缓冲，慢客户端可能错过�
 | idempotent replay | 接受 Backend 已缓存响应，可提示命令未重复执行。 |
 | SSE 断开 | 显示连接退化，依靠轮询并自动重连。 |
 
-## 7. Traffic 草稿到真实命令的未来设计
+## 7. Traffic 叠加应用到真实命令
 
-当前草稿链路：
-
-```mermaid
-flowchart LR
-  B["真实 Traffic 基线"] --> D["本地 Template/Overlay"] --> P["本地预览"]
-```
-
-建议目标链路：
+当前链路：
 
 ```mermaid
 flowchart LR
-  P["预览差异"] --> C["用户确认"] --> API["PATCH Tenant QPS"]
+  D["本地 Template/Overlay"] --> C["用户确认叠加"] --> API["PATCH Tenant QPS"]
   API --> TC["Traffic Controller"] --> R["实例分配回显"]
+  API --> Q["query invalidate 刷新基线"]
 ```
 
-实现时必须：把 Overlay 解析为明确的 Tenant QPS 或未来 TrafficPlan CR；显示影响对象与时间；带幂等键；审计；等待资源回显；失败时保留草稿而不是假装应用成功。
+应用时把 Overlay 解析为明确的租户目标 QPS（当前 QPS + 模板起始增量，控制面为常量值），带幂等键并显示影响对象与目标值；失败时提示具体错误且不加入本地 overlay，不假装应用成功。历史模式只读，禁止应用。控制面暂不支持时段曲线（TrafficPlan CR 级别能力），曲线仅作场景预览。
 
 ## 8. 防止 Mock 回归
 

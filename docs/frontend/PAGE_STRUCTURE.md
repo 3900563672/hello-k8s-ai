@@ -97,15 +97,15 @@ TanStack Query 拥有配置数据和 mutations；表单由 react-hook-form/Zod�
 | 最新基线 | `GET /traffic` | 真实 Backend/Kubernetes 数据。 |
 | Tenant 过滤 | `GET /traffic?tenant=...` | 服务端过滤。 |
 | 历史基线 | `GET /traffic?at=...` | snapshot 只读。 |
-| 真实 QPS 写入 | `PATCH /tenants/{name}/traffic` | Backend 已实现，但当前 Overlay 工作流未调用。 |
+| 真实 QPS 写入 | `PATCH /tenants/{name}/traffic` | 应用叠加时调用：目标 QPS = 当前值 + 模板起始增量，成功后才加入本地 overlay。 |
 
 ### 状态管理
 
-真实基线由 TanStack Query 管理；模板/Overlay 在 `trafficSlice` 内存中。刷新页面会丢失草稿，这是当前明确行为，不是 Bug 隐藏。
+真实基线由 TanStack Query 管理；模板/Overlay 在 `trafficSlice` 内存中，未应用的草稿刷新会丢失，这是当前明确行为，不是 Bug 隐藏。
 
 ### 重要语义
 
-Traffic 页面上的“应用 Overlay”目前只是应用到本地预览，不能解释为 Controller 已收到流量。未来完成命令闭环时，建议明确三步：Preview Diff -> Confirm -> PATCH Tenant QPS -> Watch 收敛结果。
+Traffic 页面上的“应用 Overlay”会通过 `PATCH /tenants/{name}/traffic` 写入租户目标 QPS（当前 QPS + 模板起始增量），成功后 overlay 才加入本地列表；失败提示具体错误。控制面当前只支持常量目标 QPS，曲线仅作场景预览；历史模式只读，禁止应用。
 
 ## 5. Trace 区域
 

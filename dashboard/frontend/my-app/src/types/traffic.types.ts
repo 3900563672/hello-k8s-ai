@@ -17,15 +17,20 @@ export interface TenantInfo {
     runtimePhase?: string
 }
 
-/**
- * 保留给本地查询层的兼容结构。流量工作区从模板与 Overlay 计算展示值，
- * 此结构中的数值保持为 0。
- */
+/** 读取模式下的租户目标 QPS 序列（当前控制面为常量，故为单点）。 */
 export interface FutureTrafficData {
     tenantId: string
     tenantName: string
     timeSeconds: number[]
     values: number[]
+}
+
+/** 应用流量叠加后 Backend 返回的写入回执。 */
+export interface TrafficApplyReceipt {
+    tenantId: string
+    qps: number
+    resourceVersion?: string
+    convergence: string
 }
 
 export type TrafficTemplateShape =

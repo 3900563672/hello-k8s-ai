@@ -7,6 +7,7 @@ import {
 } from '@dnd-kit/core'
 import {
     Activity,
+    AlertCircle,
     CheckCircle2,
     Clock3,
     GitCompareArrows,
@@ -23,7 +24,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useTenants } from '@/api/queries/trafficQueries'
+import { useSetTenantTraffic, useTenants } from '@/api/queries/trafficQueries'
 import { useTrafficStore } from '@/stores/trafficSlice'
 import { cn } from '@/lib/utils'
 import type { TrafficTemplate, TrafficViewMode } from '@/types/traffic.types'
@@ -32,7 +33,11 @@ import { CanvasDropZone } from './CanvasDropZone'
 import { DrawCanvas } from './DrawCanvas'
 import { OverlayList } from './OverlayList'
 import { TemplateLibrary } from './TemplateLibrary'
-import { formatLogicalTime, getScenarioHorizon } from './trafficMath'
+import {
+    formatLogicalTime,
+    getScenarioHorizon,
+    getTemplateValueAtTime,
+} from './trafficMath'
 import { useReplayTimeContext } from '@/stores/timeSlice'
 import { formatUtcTimestamp } from '@/lib/formatters/timeFormatter'
 
@@ -53,9 +58,10 @@ export function TrafficPage() {
         setMode,
     } = useTrafficStore()
     const { data: tenants = [] } = useTenants()
+    const applyTraffic = useSetTenantTraffic()
     const [draggedTemplate, setDraggedTemplate] = useState<TrafficTemplate | null>(null)
     const [applyTemplate, setApplyTemplate] = useState<TrafficTemplate | null>(null)
-    const [notice, setNotice] = useState<string | null>(null)
+    const [notice, setNotice] = useState<{ message: string; kind: 'success' | 'error' } | null>(null)
     const noticeTimer = useRef<number | null>(null)
 
     useEffect(() => () => {
@@ -77,8 +83,8 @@ export function TrafficPage() {
         [activeOverlays, templates],
     )
 
-    const showNotice = (message: string) => {
-        setNotice(message)
+    const showNotice = (message: string, kind: 'success' | 'error' = 'success') => {
+        setNotice({ message, kind })
         if (noticeTimer.current !== null) window.clearTimeout(noticeTimer.current)
         noticeTimer.current = window.setTimeout(() => setNotice(null), 2800)
     }
@@ -105,18 +111,37 @@ export function TrafficPage() {
         const template = templates.find((item) => item.id === data.templateId)
         const tenant = tenants.find((item) => item.id === data.tenantId)
         if (!template || !tenant) return
-        addOverlay({
-            templateId: template.id,
-            templateName: template.name,
-            tenantId: tenant.id,
-            tenantName: tenant.name,
-            startOffsetSeconds: data.startOffsetSeconds,
-            effectiveAt: replay.effectiveAt,
-            snapshotId: replay.snapshotId,
-            enabled: true,
-        })
-        setApplyTemplate(null)
-        showNotice(`已将“${template.name}”叠加到 ${tenant.name}`)
+        if (replay.mode === 'historical') {
+            showNotice('历史模式只读，不能应用流量', 'error')
+            return
+        }
+        const increment = getTemplateValueAtTime(template, 0)
+        const targetQps = Math.max(0, Math.round((tenant.requestedQPS ?? 0) + increment))
+        applyTraffic.mutate(
+            { tenantId: tenant.id, qps: targetQps },
+            {
+                onSuccess: () => {
+                    addOverlay({
+                        templateId: template.id,
+                        templateName: template.name,
+                        tenantId: tenant.id,
+                        tenantName: tenant.name,
+                        startOffsetSeconds: data.startOffsetSeconds,
+                        effectiveAt: replay.effectiveAt,
+                        snapshotId: replay.snapshotId,
+                        enabled: true,
+                    })
+                    setApplyTemplate(null)
+                    showNotice(
+                        `已将“${template.name}”叠加到 ${tenant.name}，目标 QPS 已写入（${targetQps}）`,
+                    )
+                },
+                onError: (error) => {
+                    const message = error instanceof Error ? error.message : '应用流量失败'
+                    showNotice(`应用失败：${message}`, 'error')
+                },
+            },
+        )
     }
 
     if (mode === 'draw') {
@@ -265,13 +290,20 @@ export function TrafficPage() {
                 onOpenChange={(open: boolean) => !open && setApplyTemplate(null)}
                 template={applyTemplate}
                 tenants={tenants}
+                pending={applyTraffic.isPending}
                 onApply={handleApply}
             />
 
             {notice && (
-                <div className="fixed bottom-5 right-5 z-[100] flex items-center gap-2.5 rounded-xl border border-emerald-400/20 bg-[#0A1713]/95 px-4 py-3 text-xs text-emerald-100 shadow-2xl backdrop-blur-xl">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                    {notice}
+                <div className={`fixed bottom-5 right-5 z-[100] flex items-center gap-2.5 rounded-xl border px-4 py-3 text-xs shadow-2xl backdrop-blur-xl ${
+                    notice.kind === 'error'
+                        ? 'border-red-400/25 bg-[#1A0D10]/95 text-red-100'
+                        : 'border-emerald-400/20 bg-[#0A1713]/95 text-emerald-100'
+                }`}>
+                    {notice.kind === 'error'
+                        ? <AlertCircle className="h-4 w-4 text-red-400" />
+                        : <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                    {notice.message}
                 </div>
             )}
         </DndContext>

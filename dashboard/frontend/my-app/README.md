@@ -27,7 +27,7 @@ npm run check
 - Zustand 仅保存跨页面 UI、时间游标和未提交草稿。
 - Config 修改通过 Backend 写入 Kubernetes，不使用 localStorage 保存生产数据。
 - 历史模式只读。
-- Traffic 模板与 Overlay 当前仍是内存草稿，不会静默写入控制面。
+- Traffic 模板与 Overlay 是场景设计稿（内存态，不落盘）；点击“确认叠加”会把该叠加的起始增量与租户当前目标 QPS 相加，通过 `PATCH /api/v1/tenants/{name}/traffic` 写入 `Tenant.spec.qps`，成功后 overlay 才加入本地列表。控制面当前只支持常量目标 QPS，曲线仅作场景预览；历史模式只读，不能应用。
 - SSE 只负责失效通知；重连或丢事件后由 REST 重新同步。
 
 ## 生产入口

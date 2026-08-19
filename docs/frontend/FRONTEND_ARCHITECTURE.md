@@ -63,7 +63,7 @@ flowchart TB
 | Configuration/Traffic/Overview/Trace | TanStack Query | 内存缓存，可 refetch | 远端服务状态，不能由 Zustand 复制。 |
 | Cluster/provider/clock 能力与倍速提交状态 | `controlPlaneSlice` + Backend sync | 内存 | 跨页面连接、收敛与能力提示。 |
 | latest/historical、selected snapshot、viewport | `timeSlice` | 内存 | 全局浏览上下文，不是服务事实。 |
-| Traffic templates/overlays | `trafficSlice` | 内存草稿 | 尚未提交控制面，刷新会丢失。 |
+| Traffic templates/overlays | `trafficSlice` | 设计草稿（内存） | 应用时经 `PATCH /tenants/{name}/traffic` 写入控制面；未应用的本地草稿刷新会丢失。 |
 | 表单临时值/对话框 | React local/form state | 组件生命周期 | 不需要全局共享。 |
 | Monitor 健康状态 | 页面本地 state | 组件生命周期 | Grafana 探活只服务于页面外壳，不进入 Backend 状态。 |
 | Guide 模板/参数 | 静态常量 | 不持久化 | 指南只展示，不产生请求；模板只预填表单。 |
@@ -125,7 +125,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 
 ## 9. 已知前端技术债
 
-- Traffic Overlay 未提交 Backend，且刷新会丢失；页面需明确标记 Draft。
+- Traffic Overlay 应用后已写 Backend（常量目标 QPS）；未应用的模板/Overlay 仍是内存草稿，刷新会丢失，页面保留 Draft 标识。
 - Traffic QPS 当前趋势更接近单点/本地曲线，尚未完整使用 Prometheus 历史曲线。
 - 缺少组件与浏览器 E2E 测试；`npm run check` 主要验证 lint、build 和状态契约。
 - Route 名 `/trace` 已承载 Data View，多年后可能与产品信息架构冲突，应在稳定 API 前统一命名。
