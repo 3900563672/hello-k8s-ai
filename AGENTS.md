@@ -8,7 +8,7 @@ make docs-check && make docs-sync-check          # 文档一致性与生成物�
 make docs-sync && make context-pack              # 重生成派生文件 / 远程 AI 上下文包
 make cluster-status / cluster-open / cluster-urls  # 集群状态 / 端口转发 / 访问地址
 make cluster-down                                # 停止工作负载，保留集群、CRD、CR、Secret 与 PVC
-bash setup.sh                                    # 完整开发栈部署（只复用 docker-desktop）
+bash setup.sh                                    # 完整开发栈部署（Kind 开发集群 hello-k8s-ai-dev）
 ```
 
 ## 三层行为准则
@@ -33,7 +33,7 @@ bash setup.sh                                    # 完整开发栈部署（只�
 
 1. 不手工修改生成文件：`config/crd/bases/*.yaml`、`config/rbac/role.yaml`、`api/v1/zz_generated.deepcopy.go`、`PROJECT`；不删除 `+kubebuilder:scaffold:*`、`+kubebuilder:rbac:*` 与 CRD 校验标记。
 2. 不执行 `wsl --shutdown`、不强杀 Docker Desktop、不动代理配置（除非用户明确同意）。
-3. 部署脚本不得创建、重置或删除 Kubernetes 集群，也不得调用旁边的 `minikserve-demo`；自动化 E2E 只使用独立 Kind 集群 `hello-k8s-ai-test-e2e`，不复用日常开发或共享集群。
+3. 部署脚本不得重置、删除或切换日常开发集群（`hello-k8s-ai-dev`），也不得调用旁边的 `minikserve-demo`；`make cluster-up` 只允许创建/复用固定 Kind 集群 `hello-k8s-ai-dev`（幂等），不得操作 docker-desktop 内置 K8s；自动化 E2E 只使用独立 Kind 集群 `hello-k8s-ai-test-e2e`，不复用日常开发或共享集群。
 4. 遥测失败不能阻止控制面或 Simulator 启动；不把 Frontend 的 pause/seek 或确定性回放扩展进 `SimulationClock`。
 5. 不提交 `.env`、`node_modules/`、`bin/`、`dist/`、覆盖率文件、IDE 配置或下载附加文件；Frontend 只保留 `package-lock.json`（npm）。
 
@@ -48,7 +48,7 @@ simulator/                    Simulator、Lease 选主、Metrics 与 Trace
 dashboard/backend/            Backend API、Kubernetes cache、数据库与 Provider
 dashboard/frontend/my-app/    React 控制台
 dashboard/deploy/             Dashboard 与 PostgreSQL 清单
-config/                       CRD、RBAC、Docker Desktop 开发栈、样例和可观测性清单
+config/                       CRD、RBAC、Kind 开发栈（兼容 docker-desktop 旧 Context）、样例和可观测性清单
 docs/                         人类文档（Agent 默认不读、不改）
 docs/agents/                  本地 Agent 手册与工作流
 docs/remote-ai/               远程 AI 唯一入口（收打包内容）
@@ -135,15 +135,15 @@ kubectl kustomize dashboard/deploy >/tmp/hello-k8s-ai-dashboard.yaml
 
 ## 本地部署与 E2E
 
-完整开发栈只复用当前 `docker-desktop` Context：
+完整开发栈使用 Kind 开发集群 `hello-k8s-ai-dev`（默认 context `kind-hello-k8s-ai-dev`，`make cluster-up` 幂等创建/复用；兼容 docker-desktop 旧 Context）：
 
 ```bash
-bash setup.sh
+bash setup.sh        # = ./hack/cleanup-obsolete.sh + make cluster-up
 ```
 
-部署脚本不得创建、重置或删除 Kubernetes 集群，也不得调用旁边的 `minikserve-demo`。停止本项目使用 `make cluster-down`，它只把工作负载缩到 0，并保留 CRD、CR、Secret 和 PVC。
+`make cluster-up` 只允许创建/复用固定 Kind 集群 `hello-k8s-ai-dev`，不得重置、删除或切换集群，也不得调用旁边的 `minikserve-demo`。停止本项目使用 `make cluster-down`，它只把工作负载缩到 0，并保留集群、CRD、CR、Secret 与 PVC；删除开发集群用 `make kind-down`（PVC 数据保留在 /var/lib/hello-k8s-ai-pv，重建自动挂回）。
 
-自动化 E2E 仍必须使用独立 Kind 集群 `hello-k8s-ai-test-e2e`，不能复用日常开发或共享集群。E2E 清理会删除该测试集群，执行前核对固定名称。
+自动化 E2E 必须使用独立 Kind 集群 `hello-k8s-ai-test-e2e`，不能复用日常开发集群（`hello-k8s-ai-dev`）或共享集群。E2E 清理会删除该测试集群，执行前核对固定名称。
 
 ## 交付检查
 

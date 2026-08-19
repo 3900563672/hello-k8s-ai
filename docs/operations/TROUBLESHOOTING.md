@@ -1,4 +1,4 @@
-# 排障
+﻿# 排障
 
 > 维护层：human | last-reviewed：2026-08-18 | 事实源：hack/
 
@@ -72,7 +72,7 @@ kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
   dmesg | grep UtilAcceptVsock | wc -l
   ```
   探针默认单轮（测量首次成功时延 + Windows 侧 curl 校验），健康态应为 `PASS`；严重形态下 `FAIL` 且错误计数持续增长。注意：`-attempts >1` 会命中健康态瞬态，其结果不能判定故障。
-- 处置：这是 WSL2 组件问题，不是业务代码问题，不要改代码。根因修复 = `wsl --shutdown` 或整机重启（影响运行中发行版与 Docker Desktop 内置 K8s，需用户同意）；临时规避 = 对首个连接重试 ≥100ms，或先自连一次完成端口注册。
+- 处置：这是 WSL2 组件问题，不是业务代码问题，不要改代码。严重形态修复 = `wsl --shutdown` 或整机重启（只对严重形态成立；影响运行中发行版与 Docker Desktop 内置 K8s，需用户同意）；健康态端口 0 注册失败窗口不因重启消除（32 号，Docker 已排除），修复方向 = 升级 WSL 2.9.5+（含 #41051/#41125）；临时规避 = 对首个连接重试 ≥100ms，或先自连一次完成端口注册。
 - 自动接入：`make preflight` 第 9 节与 `make selfcheck` 会自动运行探针，非 WSL 环境自动跳过；探针 `FAIL` 时 preflight 会阻止启动，`WARN` 仅提示。
 - 完整排查案例见 [WSL_LOOPBACK_CASE_STUDY.md](WSL_LOOPBACK_CASE_STUDY.md)。
 ## 4. Tenant-Model 没有 SimulatorInstance
