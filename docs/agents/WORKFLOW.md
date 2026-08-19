@@ -89,6 +89,13 @@ flowchart TD
 - 大负载/长时运行结束（无论成败）必须执行：① `make cluster-down`；② **删除长跑 `TenantModelPolicy`**（`kubectl delete tenantmodelpolicy <name>`，会自动删除 SimulatorInstance 与模拟器 Deployment；`replicas=0` 不是停止态，Orchestrator 会按流量把实例重新扩起来，见 docs/lessons/deploy-cluster-down-revive.md）；③ 验证 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件；④ 确认 Windows 空闲内存 ≥ 5GB、C 盘不被 pagefile 继续增长。
 - `cluster-down` 只缩 Deployment 不删 CR：之后再 `kubectl apply` 全量清单会复活 controller 并按 CR spec 重建负载（见 docs/lessons/deploy-cluster-down-revive.md），必须先处理 CR。
 - 任何一次因内存/环境问题的干预后，先读 docs/journal/2026-08-17-host-memory-governance.md 主题再动手。
+### 4.3 一切皆异步（2026-08-19 硬规则）
+
+- **禁止空转等待**：任何预计超过 ~30s 的阻塞（CI、集群就绪、构建、下载、抓包、重启恢复等），等待期间必须并行推进至少一件有用工作：查历史文档/issue/源码、查网上资料校准预期时长、沉淀（journal/lessons/change-history）、维护 issue 看板、检查监控、清理临时文件。
+- **先查证再等**：开始等待前，先从历史记录/文档/网络确认“这件事大概要多久”（例：kind API 恢复 1-3 分钟、CI E2E 5-6 分钟、Docker Desktop 引擎 1-3 分钟），用查证结果决定轮询节奏与并行任务清单，不盲等。
+- **长等待一律后台化**：能后台跑（脚本、轮询、监控）的用 `setsid nohup ... > 日志 2>&1 &`，前台继续做不依赖其结果的事；等待开始与结束时向用户汇报“等什么/预计多久/期间在做什么/结果”。
+- 故障排查用“分侧二分”：Windows curl / WSL curl / 容器内 curl 一次测完定位故障层，不逐个串行空等。
+
 ## 5. 提交
 
 - 提交信息：`feat:` / `fix:` / `docs:` / `chore:` / `refactor:` + 中文描述 +（`Fixes #N`）。
