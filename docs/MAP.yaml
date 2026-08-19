@@ -94,6 +94,8 @@ setup.sh:
   - docs/getting-started/DEPLOYMENT.md
 hack/context-pack-template.md:
   - docs/remote-ai/README.md
+hack/check-docs.py:
+  - docs/operations/TROUBLESHOOTING.md
 hack/:
   - docs/getting-started/DEPLOYMENT.md
   - docs/operations/TROUBLESHOOTING.md

@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-19 | Grafana 代理测试 WSL 注册竞态修复（Fixes #73） | P2 | [查看记录](2026-08-19-grafana-test-wsl-race/README.md) |
 | 2026-08-19 | 跨平台文件卫生沉淀：UTF-8 BOM / Git 执行位噪音 规则与修复 | P3 | [查看记录](2026-08-19-cross-platform-file-hygiene/README.md) |
 | 2026-08-19 | WSL 重启后排除测试 + 探针工具缺陷修复（32 号文档） | P1 | [查看记录](2026-08-19-wsl-reboot-exclusion-test/README.md) |
 | 2026-08-19 | WSL 回环研究 openvmm/WSL 溯源 + 版本缺陷区间勘误（31 号文档） | P1 | [查看记录](2026-08-19-wsl-history-trace/README.md) |
