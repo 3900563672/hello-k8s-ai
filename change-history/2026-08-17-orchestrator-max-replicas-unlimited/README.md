@@ -38,7 +38,6 @@
 
 ## 4. 未验证 / 风险
 
-
 - 未对运行集群做“扩容超过 10 副本”的真实压测；真实上限由节点并发容量决定（model-lite 每副本 16 并发，2 个 desktop-worker 节点）。
 - 集群内已有 `orch-core` 仍是 `maxReplicas: 10`，需手动改为 0 才生效（见 MIGRATION_AND_ROLLBACK.md）。
 - 无背压设计保留：队列只积压不拒绝，属已知设计缺口，本次不处理。

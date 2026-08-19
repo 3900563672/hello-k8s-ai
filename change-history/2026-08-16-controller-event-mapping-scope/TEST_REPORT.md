@@ -6,7 +6,7 @@
 | --- | --- |
 | `gofmt -w`（3 个文件） | 通过 |
 | `go vet ./internal/controller/` | 通过 |
-| `go test ./internal/controller/ -run "TestWorkerNode|TestCalculateNodeUsage|TestWorkerNodePodEvent"` | ok |
+| `go test ./internal/controller/ -run "TestWorkerNode\|TestCalculateNodeUsage\|TestWorkerNodePodEvent"` | ok |
 | `go test ./internal/controller/ -count=1` | ok（0.109s） |
 
 ## 2. 未验证项

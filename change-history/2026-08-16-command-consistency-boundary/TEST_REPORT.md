@@ -6,7 +6,7 @@
 | --- | --- |
 | `gofmt -w` 涉及文件 | 通过 |
 | `go vet ./...`（dashboard/backend） | 通过 |
-| `go test ./internal/api/ -run "Idempotency|ApplyConfigurationBatch" -v` | 6 个用例全部通过 |
+| `go test ./internal/api/ -run "Idempotency\|ApplyConfigurationBatch" -v` | 6 个用例全部通过 |
 | `go test ./... -skip "Grafana"`（dashboard/backend） | 全部 ok |
 
 新增用例：

@@ -85,6 +85,7 @@ on_error() {
   local exit_code=$?
   local line_number="${1:-unknown}"
   trap - ERR
+  # shellcheck disable=SC1111  # 中文全角引号为有意使用
   warn "步骤“$CURRENT_STEP”失败（脚本第 $line_number 行，退出码 $exit_code）。"
   if command -v "$KUBECTL" >/dev/null 2>&1; then
     collect_diagnostics
@@ -435,8 +436,11 @@ wait_for_demo_runtime() {
     fi
     sleep 2
   done
-  [[ "${replicas:-0}" =~ ^[0-9]+$ ]] && (( replicas >= 1 )) || fail \
-    "演示 SimulatorInstance 没有扩到至少 1 个副本。"
+  if [[ "${replicas:-0}" =~ ^[0-9]+$ ]] && (( replicas >= 1 )); then
+    :
+  else
+    fail "演示 SimulatorInstance 没有扩到至少 1 个副本。"
+  fi
 
   kube -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=360s
 

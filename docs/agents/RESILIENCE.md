@@ -63,7 +63,6 @@
 4. 缩容滞回（观察，未改策略）：model-lite TTFT 基线 320ms > 缩容下阈值 300ms，队列排空后 `needDown` 被 TTFT 挡住 → 峰值副本数保持不回落。长跑结束后副本保持峰值规模属预期，不是故障。
 5. 延迟舒适区：吞吐 break-even ≠ 延迟目标。650 QPS @ 200 副本（ρ≈0.88）queue 保持 0-20 但 TTFT 升到 ~1s（偶发 3-4.5s），而 300 QPS @ 141 副本（ρ≈0.57）TTFT=320ms。要维持基线延迟，峰值副本按 `QPS × 服务时长 ÷ (maxConcurrency × 0.6)` 预留余量（650 QPS ≈ 350 副本），否则需接受延迟升高。
 
-
 ## 3.5 宿主内存预算与治理（31.4GB 机器，2026-08-17 实测）
 
 - **总预算**：物理 31.4GB。WSL2 VM 上限 12GB（`.wslconfig`，见 docs/lessons/process-host-sleep-freeze.md），Windows 侧进程约 17-20GB。

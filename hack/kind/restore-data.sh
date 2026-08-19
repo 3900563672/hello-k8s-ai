@@ -10,7 +10,7 @@ cd "$ROOT_DIR"
 
 KUBE_CONTEXT="${KUBE_CONTEXT:-kind-hello-k8s-ai-dev}"
 NAMESPACE="${NAMESPACE:-hello-k8s-ai-system}"
-BACKUP_DIR="${BACKUP_DIR:-$(ls -dt /var/tmp/hello-k8s-ai-backup-* 2>/dev/null | head -1)}"
+BACKUP_DIR="${BACKUP_DIR:-$(find /var/tmp -maxdepth 1 -type d -name 'hello-k8s-ai-backup-*' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)}"
 [[ -d "$BACKUP_DIR" && -f "$BACKUP_DIR/dashboard.sql" ]] || {
   echo "错误：找不到备份目录（需含 dashboard.sql）。BACKUP_DIR=$BACKUP_DIR" >&2
   exit 1

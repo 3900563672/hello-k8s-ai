@@ -6,7 +6,7 @@
 | --- | --- |
 | `gofmt -w` 两个文件 | 通过 |
 | `go vet ./internal/controller/` | 通过 |
-| `go test ./internal/controller/ -run "TestZeroStaleTrafficQPSOnScaledToZeroInstances|TestAllocateTraffic|TestMetricIsFresh"` | ok |
+| `go test ./internal/controller/ -run "TestZeroStaleTrafficQPSOnScaledToZeroInstances\|TestAllocateTraffic\|TestMetricIsFresh"` | ok |
 | `go test ./internal/controller/ -count=1` | ok（0.101s） |
 
 ## 2. 未验证项

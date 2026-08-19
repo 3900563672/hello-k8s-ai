@@ -1,6 +1,6 @@
 # 部署架构
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/deploy/、config/default/ 等
+> 维护层：human | last-reviewed：2026-08-19 | 事实源：dashboard/backend/deploy/、config/default/ 等
 
 ## 1. 目标集群
 
@@ -109,7 +109,7 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
 | Backend | `/configuration` 返回 `tenant-sample` |
 | Frontend | Service 代理返回页面 HTML |
-| 环境 | `make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
+| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg 共 11 项）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
 
 这些检查通过后，脚本才输出“完整系统部署并验收通过”。
 
