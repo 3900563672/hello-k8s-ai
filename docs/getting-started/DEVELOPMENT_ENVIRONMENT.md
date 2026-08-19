@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | Docker Desktop | Linux 容器与 Kubernetes 已启用 | 构建镜像、承载现有多节点集群 |
 | Docker CLI | 能连接 Docker Desktop Engine | 拉取、构建、保存并导入镜像 |
-| kubectl | 当前 Context 为 `docker-desktop` | Kustomize、部署、等待与 API 代理验收 |
+| kubectl | 当前 Context 为 `kind-hello-k8s-ai-dev` | Kustomize、部署、等待与 API 代理验收 |
 | Bash/Make | WSL 环境自带版本即可 | 执行一键脚本 |
 | StorageClass | `standard` | PostgreSQL 10Gi PVC |
 
