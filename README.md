@@ -82,11 +82,11 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 <!-- docs-sync:timeline-start -->
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
+- 2026-08-19 [WSL 重启后排除测试 + 探针工具缺陷修复（32 号文档）](change-history/2026-08-19-wsl-reboot-exclusion-test/README.md)
 - 2026-08-19 [WSL 回环研究三 issue 闭环（#66 查重 / #65 指纹 / #64 参数实验）](change-history/2026-08-19-wsl-issue-64-65-66/README.md)
+- 2026-08-19 [WSL 回环研究：openvmm/WSL “为什么这么写”git 溯源 + 版本缺陷区间勘误（31 号文档）](change-history/2026-08-19-wsl-history-trace/README.md)
 - 2026-08-19 [WSL 评论修订记录](change-history/2026-08-19-wsl-comment-v4-sent/README.md)
-- 2026-08-18 [WSL 回环中继：完整研究链 + 可复现探针（结论已修正）](change-history/2026-08-18-wsl-loopback-case-study/README.md)
-- 2026-08-18 [变更总览：仓库健康度治理——安全政策、分支保护与依赖扫描](change-history/2026-08-18-repo-hygiene/README.md)
-- 2026-08-18 [变更总览：仓库美化——CONTRIBUTING、主页 README、Wiki 与仓库元数据](change-history/2026-08-18-repo-beautify/README.md)
+- 2026-08-19 [重启后环境恢复 + Codex 卡死排查 + WSL 协作模式评估](change-history/2026-08-19-environment-revive-after-reboot/README.md)
 
 <!-- docs-sync:timeline-end -->
 
