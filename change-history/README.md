@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-19 | WSL 源码级验证：2.9.5+ 修复已确认存在（#71 最后证明项，36 号文档） | P1 | [查看记录](2026-08-19-wsl-source-fix-verified/README.md) |
 | 2026-08-19 | Agent 进化：静态检查三件套 + 失败模式注册表 + make doctor（文本沉淀→机器强制） | P0 | [查看记录](2026-08-19-agent-evolution-force-layer/README.md) |
 | 2026-08-19 | 一切皆异步：工作流硬规则沉淀（WORKFLOW 4.3 + AGENTS 第 7 条） | P0 | [查看记录](2026-08-19-async-workflow-principle/README.md) |
 | 2026-08-19 | WSL 升级验证实验：2.9.4 预览线仍复现，环境已回滚（#71/#63） | P1 | [查看记录](2026-08-19-wsl-upgrade-validation/README.md) |
