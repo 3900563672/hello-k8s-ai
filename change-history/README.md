@@ -1,4 +1,4 @@
-﻿# 变更归档
+# 变更归档
 
 > 维护层：human | last-reviewed：2026-08-18 | 事实源：change-history/ 目录本身
 

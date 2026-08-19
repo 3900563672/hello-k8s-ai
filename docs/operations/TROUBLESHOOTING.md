@@ -1,4 +1,4 @@
-﻿# 排障
+# 排障
 
 > 维护层：human | last-reviewed：2026-08-18 | 事实源：hack/
 
