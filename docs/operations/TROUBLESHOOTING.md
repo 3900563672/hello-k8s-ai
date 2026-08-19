@@ -62,8 +62,13 @@ kubectl --context kind-hello-k8s-ai-dev -n hello-k8s-ai-system get lease
 - 原因：Jaeger badger 单副本 + RWO PVC，滚动更新会新旧 Pod 同时挂载同一卷抢锁。
 - 处置：`make cluster-up` 已识别 `platform.study.com/restart-procedure: scale-to-zero` 注解并自动“缩 0 → 扩 1”；手动升级 Jaeger 时同样先 `scale --replicas=0` 再扩回。
 
+## 3.3 Kind PVC 数据面故障（重启后 CrashLoopBackOff + Permission denied）
 
-## 3.3 WSL 回环新端口首连被拒（localhost 转发中继，两级形态）
+- 症状：WSL/Docker Desktop 重启后 postgres / jaeger / prometheus `CrashLoopBackOff`，日志 `Permission denied`；节点容器内 `/var/lib/hello-k8s-ai-pv` 挂载变成 tmpfs。
+- 原因（旧集群）：`kind-5node.yaml` 曾用 extraMounts 把宿主 `/var/lib/hello-k8s-ai-pv` bind 进节点容器，该 hostPath 位于 Docker Desktop VM 根文件系统（非持久），bind 失效后 fallback tmpfs 覆盖 PVC 目录。**已根治（2026-08-19）**：新集群不再带 extraMounts，数据落节点 `/var` 数据卷，任何重启不再复现。
+- 处置（旧集群仍复现时）：按 `docs/lessons/kind-hostpath-docker-desktop-rootfs.md` 恢复路径执行（5 节点 umount + 目录所有权修复 + 重建 Pod），不要当普通 bug 反复重启。
+
+## 3.4 WSL 回环新端口首连被拒（localhost 转发中继，两级形态）
 
 - 症状：
   - 严重形态：本地 Go/Python 测试连 `127.0.0.1` 上刚 `listen` 的端口，立即连接间歇性 `connection refused`（Go）/ `Errno 111`（Python）；CI 正常；`eth0`、IPv6、长存活端口全部正常；Windows 侧新端口 curl 超时不可达；dmesg `UtilAcceptVsock` 计数持续增长。

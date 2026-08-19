@@ -290,7 +290,7 @@ undeploy: kustomize ## 卸载 controller
 kind-up: ## 创建/复用 Kind 开发集群并安装持久化存储（幂等）
 	@DEV_KIND_CLUSTER="$(DEV_KIND_CLUSTER)" KIND_NODE_IMAGE="$(KIND_NODE_IMAGE)" ./hack/kind/cluster-up.sh
 
-kind-down: ## 删除 Kind 开发集群（PVC 数据保留在 /var/lib/hello-k8s-ai-pv，重建自动挂回）
+kind-down: ## 删除 Kind 开发集群（PVC 数据保留在节点 /var 数据卷，重建后需 restore-data.sh 显式恢复）
 	@DEV_KIND_CLUSTER="$(DEV_KIND_CLUSTER)" ./hack/kind/cluster-down.sh
 
 cluster-up: kind-up ## 一键：Kind 集群（没有才建）→ 构建部署 → 验收 → 本地端口
