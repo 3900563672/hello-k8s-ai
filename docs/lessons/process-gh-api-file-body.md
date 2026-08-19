@@ -1,6 +1,6 @@
 # gh api 传文件正文必须用 --input + jq，不要用 -f body=@file
 
-> 提升日期：2026-08-19 ｜ 来源：journal/2026-08-19-wsl-comment-v4-sent.md ｜ 适用对象：本地 Agent
+> 提升日期：2026-08-19 ｜ 来源：WSL 回环评论修订过程 ｜ 适用对象：本地 Agent
 
 ## 现象
 

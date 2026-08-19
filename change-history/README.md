@@ -28,7 +28,6 @@
 | 2026-08-19 | WSL 回环研究 openvmm/WSL 溯源 + 版本缺陷区间勘误（31 号文档） | P1 | [查看记录](2026-08-19-wsl-history-trace/README.md) |
 | 2026-08-19 | 重启后环境恢复 + Codex 卡死排查 + WSL 协作模式评估 | P2 | [查看记录](2026-08-19-environment-revive-after-reboot/README.md) |
 | 2026-08-19 | WSL 回环研究三 issue 闭环（#66 查重 / #65 指纹 / #64 参数实验） | P1 | [查看记录](2026-08-19-wsl-issue-64-65-66/README.md) |
-| 2026-08-19 | WSL 评论修订记录 | P1 | [查看记录](2026-08-19-wsl-comment-v4-sent/README.md) |
 | 2026-08-18 | WSL 回环中继：完整研究链 + 可复现探针（结论已修正） | P1 | [查看记录](2026-08-18-wsl-loopback-case-study/README.md) |
 | 2026-08-18 | 仓库健康度治理：安全政策、分支保护与依赖扫描 | P2 | [查看记录](2026-08-18-repo-hygiene/README.md) |
 | 2026-08-18 | 仓库美化：CONTRIBUTING、主页 README、Wiki 与仓库元数据 | P3 | [查看记录](2026-08-18-repo-beautify/README.md) |
