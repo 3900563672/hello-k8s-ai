@@ -4,9 +4,9 @@
 
 | 文件 | 页面 | 说明 |
 | --- | --- | --- |
-| before-monitor.png | http://localhost:8080/monitor | 监控面板（Grafana 12 面板）现状 |
-| before-config.png | http://localhost:8080/config | 配置页现状 |
-| before-traffic.png | http://localhost:8080/traffic | 流量页现状 |
+| before-monitor.png | <http://localhost:8080/monitor> | 监控面板（Grafana 12 面板）现状 |
+| before-config.png | <http://localhost:8080/config> | 配置页现状 |
+| before-traffic.png | <http://localhost:8080/traffic> | 流量页现状 |
 
 拍摄命令（可复现）：
 

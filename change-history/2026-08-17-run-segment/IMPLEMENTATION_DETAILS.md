@@ -33,4 +33,3 @@
 - 不改变 `/overview` 点查询语义；`/replay` / `/replay/frame` 不动。
 - 不引入数据库表；段只是对既有快照流、Prometheus 区间与 Jaeger 区间的只读组合。
 - 段查询不做"按事件重新执行"或"确定性回放"，与 AGENTS.md 中 SimulationClock 边界一致。
-

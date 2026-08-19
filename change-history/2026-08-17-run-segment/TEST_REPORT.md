@@ -24,7 +24,7 @@
 - 缺参 / start>end → 400；2026-08-01 无快照窗口 → unavailable + "起点之前没有持久化快照"告警。
 - 经前端 nginx 反代（port-forward 28080）同样可用。
 
-页面（CDP 无头 Chrome，http://localhost:28080/trace）：
+页面（CDP 无头 Chrome，<http://localhost:28080/trace>）：
 - 段面板渲染：`时间段切面（Run Segment）` 标题、起点/终点下拉（各 1000+ 快照选项）、"分析时间段"按钮；无 console error。
 - 交互：脚本设置起点（19:42:34 事件）与终点（19:43:19 事件）→ 点击"分析时间段" → 6 秒后页面出现"起点状态 / 终点状态 / 区间指标 / 区间 Trace / 时长"，无 "Segment API 请求失败"。
 - 快照：`change-history/2026-08-17-run-segment/screenshots/after-trace.png`（1600×1000，175KB）。
@@ -33,4 +33,3 @@
 
 - Prometheus 06:00Z-10:00Z 原始指标因 11:41Z 重启（emptyDir）丢失，段接口如实返回空区间——"长跑全时段指标曲线"需 Prometheus 未重启窗口复核。
 - 前端下拉在 1000+ 选项下的真实用户操作手感（下一步 UI 阶段优化为时间轴标记）。
-

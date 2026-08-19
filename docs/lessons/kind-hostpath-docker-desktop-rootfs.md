@@ -16,9 +16,11 @@
 
 1. **确认持久层**：节点容器 `/var` 是 named volume（`docker inspect <node> --format '{{range .Mounts}}{{if eq .Destination "/var"}}{{.Name}}{{end}}{{end}}'`，`/dev/sde` 1007G，vhdx 上）。每节点独立 volume。
 2. **umount tmpfs**（5 节点逐个）：
+
    ```bash
    docker exec <node> umount /var/lib/hello-k8s-ai-pv
    ```
+
    umount 后该路径露出 `/var` volume 底层目录（空但可写、持久）。
 3. **修目录所有权**（按容器 uid，local-path 目录名 `pvc-<uuid>_<ns>_<pvc>`）：
    - postgres（postgres:17-alpine，fsGroup=70）：`chown -R 70:70 <dir> && chmod 700`

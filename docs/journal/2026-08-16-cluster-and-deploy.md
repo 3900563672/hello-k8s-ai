@@ -9,14 +9,12 @@
 - 验证：18080 连续 4 次 200；PATCH 50→35 全链路成功；Windows 8080 保持 200。
 - 备注：kubectl port-forward 日志“Handling connection”增加但连接仍失败 = 端口冲突特征；先查 Windows `netstat -ano | findstr 8080`。
 
-
 ### 2026-08-17 kubectl 输出超过 1MB 时 spawnSync/execFileSync 报 ENOBUFS（Pod 多时 keepalive pods 检查必现）
 - 现象：副本扩到 141 后 `keepalive.mjs --once` 的 pods 检查失败 `spawnSync kubectl ENOBUFS`，其余检查全绿（假阴性）。
 - 原因：`execFileSync`/`spawnSync` 默认 maxBuffer=1MB；`kubectl get pods -o json` 在 100+ 模拟器 Pod 时 JSON 远超 1MB。
 - 解决：所有 kubectl 子进程调用加 `maxBuffer: 32 * 1024 * 1024`（keepalive.mjs runKubectl、day-watch.mjs kubeSnapshot）。
 - 验证：141 Pod 时 keepalive 全绿（simulatorPods=141 running=141 ready=141）。
 - 备注：副本少时不会触发，容易被漏测；长时测试扩到 100+ 副本后首次暴露。
-
 
 ### 2026-08-17 批量扩容已上线：扩容会停在"节点容量上限"，不是 maxReplicas 的问题
 - 现象：400 QPS 压测下副本 16→18→20 后停止，队列 2 分钟冲到 7 万、TTFT 小时级；Orchestrator Ready=True 但不再扩。
@@ -30,7 +28,6 @@
 - 原因：Backend 写接口要求命令幂等键。
 - 解决：加 `-H 'Idempotency-Key: <任意唯一值>'`；day-watch.mjs 内部已处理，手工压测脚本要带上。
 - 验证：带键后返回 `state: accepted`，Tenant.spec.qps 已更新。
-
 
 ### 2026-08-17 更新 Controller 必须用 config/dev 部署，make deploy(config/default) 会丢掉 SIMULATOR_IMAGE env
 - 现象：`make deploy`（kustomize config/default）更新 controller 后，SimulatorInstance Controller 重建模拟器 Deployment，新 Pod 用 `simulator:latest`（本地很老、无 9090 端点的镜像）→ readiness/liveness 探针 connection refused → 29s 优雅退出循环（Exit 0 + Completed，易误判为正常退出）。
@@ -64,8 +61,6 @@
 - 解决（2026-08-17 同日）：Prometheus 数据卷改 PVC（`hello-k8s-ai-prometheus-data` 20Gi），retention 24h→168h；Jaeger 同步改 badger + PVC。旧 emptyDir 数据不迁移，切换时从空开始属预期。查询"区间无数据"时仍先核对"窗口是否早于组件首次建库时间"与"是否超出 168h 保留窗口"。
 - 验证：PVC 化后 scale 0→1 重启，`count(up)` 205 不变、重启前 30 分钟采样仍在（见 change-history/2026-08-17-observability-persistence/TEST_REPORT.md）。
 - 备注：历史窗口早于 12:54Z（本次切 PVC 时间）的指标仍缺失，是历史数据损失，不是新问题。
-
-
 
 ### 2026-08-17 Jaeger badger 单副本 + RWO PVC：重启/升级必须先 scale 到 0 再扩回 1
 - 现象：Deployment 滚动更新（rollout restart）时新 Pod CrashLoopBackOff，日志 `Cannot acquire directory lock on "/tmp/jaeger/". Another process is using this Badger database`；旧 Pod 一直 Terminating，rollout 卡死。

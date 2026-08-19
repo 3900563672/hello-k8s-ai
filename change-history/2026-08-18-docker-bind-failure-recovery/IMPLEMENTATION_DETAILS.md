@@ -10,11 +10,13 @@
 
 1. **确认持久层**：`docker inspect <node> --format '{{range .Mounts}}{{if eq .Destination "/var"}}{{.Name}}{{end}}{{end}}'` → 5 个节点 5 个独立 named volume；`df -h /var` 显示 /dev/sde。
 2. **umount tmpfs**（4 个剩余节点；worker3 已在实验中完成）：
+
    ```bash
    for n in hello-k8s-ai-dev-control-plane hello-k8s-ai-dev-worker hello-k8s-ai-dev-worker2 hello-k8s-ai-dev-worker4; do
      docker exec "$n" umount /var/lib/hello-k8s-ai-pv
    done
    ```
+
    验证：`docker exec <node> mount | grep hello-k8s-ai-pv` → NO_MOUNT。
 3. **目录所有权**（local-path 目录名 `pvc-<uuid>_<ns>_<pvc>`）：
    - worker3 postgres：`chown -R 70:70 <dir> && chmod 700`（postgres:17-alpine uid 70，fsGroup=70）

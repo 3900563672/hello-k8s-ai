@@ -141,7 +141,7 @@ Frontend 的 100 只是当前 Config 创建流程使用的表单初始值，不�
 
 `deploy_demo` 保留 `DEMO_MODEL_ABSOLUTE_SCORE` 可配置能力，但目标改为 `spec.absoluteScore`，不再使用 Status subresource。
 
-### `Makefile`
+### `Makefile`（本次改动）
 
 只修正变量注释以匹配当前字段所有权；变量名保持兼容。
 
@@ -175,7 +175,7 @@ Frontend 的 100 只是当前 Config 创建流程使用的表单初始值，不�
 
 本次从删除前版本逐字节恢复原文件。恢复内容仅包含项目原有常量，没有新增业务分支、CRD 字段或运行时行为。
 
-### `Makefile`
+### Makefile（提交前验证入口）
 
 - 新增不改写文件的 Go 格式检查；
 - 增加 Backend、Frontend、E2E 编译和部署渲染的独立 target；
