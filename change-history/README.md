@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-19 | Traffic 叠加应用写入租户目标 QPS（Fixes #89） | P2 | [查看记录](2026-08-19-traffic-apply-control-plane/README.md) |
 | 2026-08-19 | Kind 集群移除 extraMounts：PVC 数据改存节点 /var 数据卷（Fixes #54） | P0 | [查看记录](2026-08-19-kind-extra-mounts-removed/README.md) |
 | 2026-08-19 | Agent 对外协作规则落地：AI 产出自查 + 披露 trailer + lessons 触发式升级 | P2 | [查看记录](2026-08-19-ai-collab-rulebook/README.md) |
 | 2026-08-19 | WSL 源码级验证：2.9.5+ 修复已确认存在（#71 最后证明项） | P1 | [查看记录](2026-08-19-wsl-source-fix-verified/README.md) |
