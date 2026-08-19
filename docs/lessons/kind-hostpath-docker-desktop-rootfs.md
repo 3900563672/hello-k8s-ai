@@ -1,6 +1,7 @@
 # Kind hostPath 放 Docker Desktop 根文件系统：WSL 重启后 bind 失效 → tmpfs 覆盖 → PVC "丢数据"
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-18-docker-bind-pvc-loss.md ｜ 适用对象：本地 Agent / 远程 AI
+> 状态：已根治（2026-08-19 移除 extraMounts，见 change-history/2026-08-19-kind-extra-mounts-removed/）；下方恢复路径仅用于旧集群历史故障。
 > 触发条件（Use when）：kind 集群 PVC 异常 / CrashLoopBackOff + Permission denied / 节点挂载变 tmpfs / 数据恢复时
 
 ## 现象
@@ -32,8 +33,8 @@
 
 ## 可复用规则
 
-- **Docker Desktop 下，kind extraMounts 的 hostPath 一律视为临时**；要持久数据，让路径自然落在节点容器 `/var` named volume 上（删掉 extraMounts）或挂真 volume。
+- **Docker Desktop 下，kind extraMounts 的 hostPath 一律视为临时**；要持久数据，让路径自然落在节点容器 `/var` named volume 上（已实施：2026-08-19 起 kind-5node.yaml 不再带 extraMounts）或挂真 volume。
 - **bind 失效 ≠ 数据丢失**：先看节点容器挂载表（tmpfs？），umount 露出底层；备份目录 `/var/tmp/hello-k8s-ai-backup-*/` 是兜底。
 - **恢复前先备份**：数据还在容器视图里时先导出（pg_dump + tar），再动挂载。
-- **节点容器重启后 tmpfs 会回来**：需要重新 umount；长期方案 = 改 kind-5node.yaml（删 extraMounts）+ cluster-up 检测。
+- **节点容器重启后 tmpfs 会回来**（旧集群）：需要重新 umount；新集群已无 extraMounts，不再出现该问题。
 - Docker Desktop 恢复路径：杀光 Docker 进程 + `wsl --shutdown` + 重启 Docker Desktop（IPC 超时/E_UNEXPECTED 时有效）；不要反复只点重启按钮。

@@ -23,7 +23,7 @@ hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度�
 
 ## 最省事的部署方式
 
-本地开发/演示默认使用独立的 Kind 多节点集群（`hello-k8s-ai-dev`，1 control-plane + 4 worker），由 `make cluster-up` 自动创建并切换 Context；不再依赖 Docker Desktop 内置 Kubernetes。PVC 数据持久化在 `/var/lib/hello-k8s-ai-pv`（Docker 数据盘内），集群删除重建不丢历史。
+本地开发/演示默认使用独立的 Kind 多节点集群（`hello-k8s-ai-dev`，1 control-plane + 4 worker），由 `make cluster-up` 自动创建并切换 Context；不再依赖 Docker Desktop 内置 Kubernetes。PVC 数据持久化在节点 `/var/lib/hello-k8s-ai-pv`（Docker 数据盘 vhdx，WSL/Docker 重启不丢）；删除集群重建后需按 `hack/kind/restore-data.sh` 从备份显式恢复。
 
 覆盖旧项目文件后，在项目根目录执行：
 
@@ -75,7 +75,7 @@ make cluster-down    # 停止工作负载，保留集群、CRD、CR、Secret 与
 DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 ```
 
-`make cluster-down` 只停止工作负载，保留集群、CRD、CR、Secret 与 PVC；`make kind-down` 才删除 Kind 开发集群（PVC 数据保留在 `/var/lib/hello-k8s-ai-pv`，重建自动挂回）。
+`make cluster-down` 只停止工作负载，保留集群、CRD、CR、Secret 与 PVC；`make kind-down` 才删除 Kind 开发集群（PVC 数据保留在节点 `/var` 数据卷，重建后按 `hack/kind/restore-data.sh` 恢复）。
 
 ## 最近变更
 

@@ -146,7 +146,7 @@ kubectl kustomize dashboard/deploy >/tmp/hello-k8s-ai-dashboard.yaml
 bash setup.sh        # = ./hack/cleanup-obsolete.sh + make cluster-up
 ```
 
-`make cluster-up` 只允许创建/复用固定 Kind 集群 `hello-k8s-ai-dev`，不得重置、删除或切换集群，也不得调用旁边的 `minikserve-demo`。停止本项目使用 `make cluster-down`，它只把工作负载缩到 0，并保留集群、CRD、CR、Secret 与 PVC；删除开发集群用 `make kind-down`（PVC 数据保留在 /var/lib/hello-k8s-ai-pv，重建自动挂回）。
+`make cluster-up` 只允许创建/复用固定 Kind 集群 `hello-k8s-ai-dev`，不得重置、删除或切换集群，也不得调用旁边的 `minikserve-demo`。停止本项目使用 `make cluster-down`，它只把工作负载缩到 0，并保留集群、CRD、CR、Secret 与 PVC；删除开发集群用 `make kind-down`（PVC 数据保留在节点 /var 数据卷，重建后按 hack/kind/restore-data.sh 显式恢复）。
 
 自动化 E2E 必须使用独立 Kind 集群 `hello-k8s-ai-test-e2e`，不能复用日常开发集群（`hello-k8s-ai-dev`）或共享集群。E2E 清理会删除该测试集群，执行前核对固定名称。
 

@@ -89,6 +89,8 @@ PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续�
 - `bash hack/kind/backup-data.sh`：PostgreSQL `pg_dump` + Prometheus TSDB + Jaeger badger 打包到 `/var/tmp/hello-k8s-ai-backup-<时间戳>/`。
 - `BACKUP_DIR=<目录> bash hack/kind/restore-data.sh`：先部署新底座（`make cluster-up`），再恢复三套数据。
 
+PVC 数据落在节点容器 `/var` named volume（Docker 数据盘 vhdx，WSL/Docker 重启不丢）；`kind-5node.yaml` 不使用宿主 hostPath（Docker Desktop 下位于 VM 根文件系统、非持久，历史上曾导致重启后 PVC 数据面故障，见 `docs/lessons/kind-hostpath-docker-desktop-rootfs.md`）。**删除集群重建后旧数据不会自动挂回**：先备份再重建，最后用 `restore-data.sh` 显式恢复。
+
 注意事项：
 
 - 备份/恢复期间对应 Deployment 会缩到 0（Prometheus / Jaeger），结束后自动恢复。
