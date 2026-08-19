@@ -113,5 +113,5 @@
 - 触发条件：WSL 重启/Docker Desktop 重启/宿主机睡眠后；本地跑依赖 localhost 的测试。
 - 根因：回环中继（dllhost/wsldevicehost）状态不稳定，无主动探测。
 - 必须动作：`make doctor` / preflight 内置 `hack/wsl-loopback-probe`；环境性失败先自连一次完成端口注册再判。
-- 证据链：docs/lessons/process-wsl-loopback-fresh-listen-refused.md、docs/journal/2026-08-18-wsl-loopback-relay.md
+- 证据链：docs/lessons/process-wsl-loopback-fresh-listen-refused.md、docs/operations/WSL_LOOPBACK_CASE_STUDY.md
 - 状态：guarded（probe 已接入 doctor/preflight/selfcheck）

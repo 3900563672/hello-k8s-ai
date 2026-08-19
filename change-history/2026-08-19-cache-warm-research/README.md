@@ -1,10 +1,10 @@
 # WSL 缓存预热对照实验：瓶颈定位到 seccomp 通知链（#72）
 
-> 日期：2026-08-19 ｜ 关联：Documents/26_churn_744_6400_analysis.md、23/26 号文档
+> 日期：2026-08-19 ｜ 关联：Documents/26_churn_744_6400_analysis.md、本地研究文档
 
 ## 为什么做
 
-- 26 号文档提出待验证假设：128 并发下积压串行点究竟是 guest 侧 seccomp 通知处理链（GnsPortTracker::Run 单线程队列），还是 Windows 侧 ConsommeNetworking 排他锁。
+- 本地研究文档提出待验证假设：128 并发下积压串行点究竟是 guest 侧 seccomp 通知处理链（GnsPortTracker::Run 单线程队列），还是 Windows 侧 ConsommeNetworking 排他锁。
 - 通过"预热固定端口到缓存（100% 命中，不经 Windows 锁）"与"全新端口（走完整 Windows 路径）"对照，可判定主瓶颈所在。
 
 ## 改成什么
@@ -25,8 +25,8 @@
 ## 验证
 
 - 健康态（200 轮直方图归档后）执行，固定端口不受 fresh-port 退化窗口影响。
-- 原始日志：Desktop/WSL/logs/cache-warm-072.txt；结果已回写 26 号文档（Desktop 与仓库 Documents 镜像同步）。
+- 原始日志：本地研究日志 cache-warm-072.txt；结果已回写本地研究文档（Desktop 与仓库 Documents 镜像同步）。
 
 ## 回滚
 
-- 纯研究探针与文档，无运行时影响；删除 `research/exp/cache_warm.go` 及 26 号文档"验证结果"小节即可。
+- 纯研究探针与文档，无运行时影响；删除 `research/exp/cache_warm.go` 及对应研究文档"验证结果"小节即可。

@@ -17,18 +17,17 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
-| 2026-08-19 | WSL 源码级验证：2.9.5+ 修复已确认存在（#71 最后证明项，36 号文档） | P1 | [查看记录](2026-08-19-wsl-source-fix-verified/README.md) |
+| 2026-08-19 | WSL 源码级验证：2.9.5+ 修复已确认存在（#71 最后证明项） | P1 | [查看记录](2026-08-19-wsl-source-fix-verified/README.md) |
 | 2026-08-19 | Agent 进化：静态检查三件套 + 失败模式注册表 + make doctor（文本沉淀→机器强制） | P0 | [查看记录](2026-08-19-agent-evolution-force-layer/README.md) |
 | 2026-08-19 | 一切皆异步：工作流硬规则沉淀（WORKFLOW 4.3 + AGENTS 第 7 条） | P0 | [查看记录](2026-08-19-async-workflow-principle/README.md) |
 | 2026-08-19 | WSL 升级验证实验：2.9.4 预览线仍复现，环境已回滚（#71/#63） | P1 | [查看记录](2026-08-19-wsl-upgrade-validation/README.md) |
 | 2026-08-19 | WSL 缓存预热对照实验：瓶颈定位到 seccomp 通知链（#72） | P2 | [查看记录](2026-08-19-cache-warm-research/README.md) |
 | 2026-08-19 | Grafana 代理测试 WSL 注册竞态修复（Fixes #73） | P2 | [查看记录](2026-08-19-grafana-test-wsl-race/README.md) |
 | 2026-08-19 | 跨平台文件卫生沉淀：UTF-8 BOM / Git 执行位噪音 规则与修复 | P3 | [查看记录](2026-08-19-cross-platform-file-hygiene/README.md) |
-| 2026-08-19 | WSL 重启后排除测试 + 探针工具缺陷修复（32 号文档） | P1 | [查看记录](2026-08-19-wsl-reboot-exclusion-test/README.md) |
-| 2026-08-19 | WSL 回环研究 openvmm/WSL 溯源 + 版本缺陷区间勘误（31 号文档） | P1 | [查看记录](2026-08-19-wsl-history-trace/README.md) |
+| 2026-08-19 | WSL 重启后排除测试 + 探针工具缺陷修复 | P1 | [查看记录](2026-08-19-wsl-reboot-exclusion-test/README.md) |
+| 2026-08-19 | WSL 回环研究 openvmm/WSL 溯源 + 版本缺陷区间勘误 | P1 | [查看记录](2026-08-19-wsl-history-trace/README.md) |
 | 2026-08-19 | 重启后环境恢复 + Codex 卡死排查 + WSL 协作模式评估 | P2 | [查看记录](2026-08-19-environment-revive-after-reboot/README.md) |
 | 2026-08-19 | WSL 回环研究三 issue 闭环（#66 查重 / #65 指纹 / #64 参数实验） | P1 | [查看记录](2026-08-19-wsl-issue-64-65-66/README.md) |
-| 2026-08-18 | WSL 回环中继：完整研究链 + 可复现探针（结论已修正） | P1 | [查看记录](2026-08-18-wsl-loopback-case-study/README.md) |
 | 2026-08-18 | 仓库健康度治理：安全政策、分支保护与依赖扫描 | P2 | [查看记录](2026-08-18-repo-hygiene/README.md) |
 | 2026-08-18 | 仓库美化：CONTRIBUTING、主页 README、Wiki 与仓库元数据 | P3 | [查看记录](2026-08-18-repo-beautify/README.md) |
 | 2026-08-18 | 白天长时运行收尾 + Kind 迁移数据备份（#50 前置） | P1 | [查看记录](2026-08-18-longrun-and-kind-migration-prep/README.md) |

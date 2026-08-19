@@ -3,11 +3,11 @@
 
 ## 背景
 
-延续阶段五至九：源码机制链（20 号文档）已定，缺参数级实测。#66 查重、#65 指纹、#64 参数实验三个本仓库 issue 于本日凌晨全部完成并关闭。
+延续阶段五至九：源码机制链已定，缺参数级实测。#66 查重、#65 指纹、#64 参数实验三个本仓库 issue 于本日凌晨全部完成并关闭。
 
 ## 关键结果
 
-1. **查重**：本组合（Consomme + TCP 回环 churn 同步注册链）无人以源码层报告；官方 backlog 自认 TCP retry/timeout 未实现。投稿聚焦机制链增量。
+1. **查重**：本组合（Consomme + TCP 回环 churn 同步注册链）无人以源码层报告；官方 backlog 自认 TCP retry/timeout 未实现。报告聚焦机制链增量。
 2. **指纹**：DLL 精确锚定 openvmm commit 0bb5cf75（tcp/udp/dns_tcp 行号全中）——"分析的版本不对"质疑消除。
 3. **参数实验**：
    - bind 固定 10.4ms 同步链；128 并发 p50=1.32s、>1s 占 99.27%（秒级停滞定量复现，吞吐恒定 96/s）。
@@ -23,4 +23,4 @@
 
 ## 证据
 
-- Desktop\WSL\ 20~23 号文档（仓库 Documents/ 同步副本 gitignore 不入库）；logs/ 下 ETL 与解析日志；/root/research/exp/ 实验源码（仓库 research/exp/ 同步副本已入库）。
+- 本地研究文档（仓库 Documents/ 同步副本 gitignore 不入库）；logs/ 下 ETL 与解析日志；实验源码见仓库 research/exp/。

@@ -1,6 +1,6 @@
 # Grafana 代理测试 WSL 注册竞态修复（Fixes #73）
 
-> 日期：2026-08-19 ｜ 关联：docs/operations/WSL_LOOPBACK_CASE_STUDY.md、32 号文档
+> 日期：2026-08-19 ｜ 关联：docs/operations/WSL_LOOPBACK_CASE_STUDY.md、本地研究文档
 
 ## 为什么做
 

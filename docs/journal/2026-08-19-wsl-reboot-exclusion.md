@@ -24,13 +24,13 @@
 
 ## 遗留
 
-- 200 轮直方图归档（跑完后更新 32 号文档与本文）。
+- 200 轮直方图归档（跑完后更新对应研究文档与本文）。
 - 退化态黑洞复现 + 同步抓包（需用户睡前授权，夜间执行）。
 - #63 WSL Preview 复现、2.9.5+ 升级验证（需用户拍板）。
 - 26 号缓存预热对照实验（会产生 churn，必须等直方图完成后执行）。
 
 ## 证据
 
-- Desktop\WSL\logs\reboot-exclusion/（roundA/B/C 全部日志 + histogram200_dockerON.txt）
-- Desktop\WSL\research\probe_repro.go（修复后探针源码）
+- 本地研究日志目录 reboot-exclusion/（roundA/B/C 全部日志 + histogram200_dockerON.txt）
+- 本地研究目录 probe_repro.go（修复后探针源码）
 - change-history/2026-08-19-wsl-reboot-exclusion-test/README.md（32 号归档）

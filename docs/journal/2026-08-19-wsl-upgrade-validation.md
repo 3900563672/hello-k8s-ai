@@ -1,4 +1,4 @@
-> 日期：2026-08-19 ｜ 触发者：本地 Agent ｜ 相关：change-history/2026-08-19-wsl-upgrade-validation/、Desktop/WSL 34 号文档
+> 日期：2026-08-19 ｜ 触发者：本地 Agent ｜ 相关：change-history/2026-08-19-wsl-upgrade-validation/
 
 ## 现象
 
@@ -9,5 +9,5 @@
 ## 处理
 
 - 环境已回滚至 2.7.8.0（wsl.exe/DLL/内核指纹与升级前完全一致）；集群恢复后台执行中（cluster-restore.log）。
-- 2.9.5 可用性每日只读监控已挂入 本地计划任务（watch-wsl295.sh）。
+- 2.9.5 可用性由每日只读监控跟踪（watch-wsl295.sh）。
 - #71/#63 保持 open，等 2.9.5 推送后闭环。

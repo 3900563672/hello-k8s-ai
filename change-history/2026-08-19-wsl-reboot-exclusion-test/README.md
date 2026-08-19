@@ -1,6 +1,6 @@
-# WSL 重启后排除测试 + 探针工具缺陷修复（32 号文档）
+# WSL 重启后排除测试 + 探针工具缺陷修复
 
-> 日期：2026-08-19 ｜ 关联：issue #62、31 号文档（版本缺陷区间）、15/19 号恢复 SOP、Desktop\WSL\32_重启后排除测试与探针修复.md（仓库 Documents/ 同步副本，gitignore 不入库）
+> 日期：2026-08-19 ｜ 关联：issue #62、恢复 SOP、本地研究文档（仓库 Documents/ 同步副本，gitignore 不入库）
 
 ## 为什么做
 
@@ -14,12 +14,12 @@
 2. **探针修复（probe_repro.go）**：①补 Accept goroutine（读请求 + 响应 200）；②`curl.exe -o NUL` 替代 `-o /dev/null`（Windows 侧 rc=23 写错误）；修复后首见 `win=ok:45ms`。
 3. **Grafana 测试失败机制精确化**：注册时序竞态（bind 返回先于 Windows listener 就绪 ~200ms，t+0 拨号必 refused），非网络栈残留；CI 无此竞态。
 4. **集群恢复**：Docker 重启后 5 节点 tmpfs 覆盖回来 → umount + chown + 删 Pod 重建 → 数据完好（PostgreSQL resource_events 560,684 增长中）；端口 8080/18080 转发重建。
-5. **文档修正**：32 号文档（Desktop/WSL + 仓库 Documents/ 镜像）；面试详案 E13/E14 + 13.6；lessons 与 operations 案例文档同步修正“修复 = wsl --shutdown”与“网络栈残留”表述。
+5. **文档修正**：本地研究文档（Desktop/WSL + 仓库 Documents/ 镜像）；面试详案；lessons 与 operations 案例文档同步修正“修复 = wsl --shutdown”与“网络栈残留”表述。
 
 ## 关键行为
 
 - 全程未改业务代码、未动 WSL 版本；Docker 启停为 #62 明确要求的对照条件，启停前后各完成一轮探针 / 地面真值验证。
-- 探针源码与三轮日志归档：Desktop\WSL\logs\reboot-exclusion/、Desktop\WSL\research\probe_repro.go。
+- 探针源码与三轮日志归档：本地研究目录。
 - 历史结论作废原则：凡是工具缺陷导致的读数（win=UNREACHABLE）一律不当作环境证据；地面真值 = 真实服务 + Windows netstat/curl。
 
 ## 验证
@@ -31,5 +31,5 @@
 
 ## 回滚
 
-- 纯文档 + 只读实验：删除 32 号文档与 change-history 条目即可回滚；探针修复在 Desktop 研究目录，与仓库代码无关。
+- 纯文档 + 只读实验：删除本地研究文档与 change-history 条目即可回滚；探针修复在本地研究目录，与仓库代码无关。
 - 集群恢复动作（umount/chown/删 Pod）已有 15/19 号 SOP 可重做；数据在 PVC 底层 /var volume，未破坏。

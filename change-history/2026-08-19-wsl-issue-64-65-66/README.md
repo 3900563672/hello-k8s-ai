@@ -1,6 +1,6 @@
 # WSL 回环研究三 issue 闭环（#66 查重 / #65 指纹 / #64 参数实验）
 
-> 日期：2026-08-19 ｜ 关联：docs/journal/2026-08-19-wsl-param-experiments.md、Desktop\WSL\ 20~23 号文档（仓库 Documents/ 同步副本，gitignore 不入库）
+> 日期：2026-08-19 ｜ 关联：docs/journal/2026-08-19-wsl-param-experiments.md、本地研究文档（仓库 Documents/ 同步副本，gitignore 不入库）
 
 ## 为什么做
 
@@ -28,7 +28,7 @@
 
 ## 验证
 
-- 实验数据与原始日志：桌面 WSL 23 号文档 + logs/（ETL 27MB、netstat 轮询日志）。
+- 实验数据与原始日志：本地研究文档 + logs/（ETL 27MB、netstat 轮询日志）。
 - WPR 证据：Duplicate TCB 拒绝序列（两轮复现）、基线 20 连 0ms、8080 重传对照。
 - 未验证：退化态"黑洞"（>30s 无响应）健康态不可复现，需数小时压力/故障态 + 同步抓包；churn 期间 Windows 端点事件数与 bind 数差异（744/6400）未定位。
 

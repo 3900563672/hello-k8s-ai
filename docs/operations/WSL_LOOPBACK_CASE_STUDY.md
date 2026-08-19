@@ -1,6 +1,6 @@
 # 一次真实环境故障排查：WSL 回环新端口首连被拒（完整研究链）
 
-> 维护层：human | last-reviewed：2026-08-19（32 号：Docker 排除、探针 wincheck 缺陷、Grafana 竞态机制精确化）| 事实源：docs/journal/2026-08-18-wsl-loopback-relay.md、docs/lessons/process-wsl-loopback-fresh-listen-refused.md
+> 维护层：human | last-reviewed：2026-08-19（Docker 排除、探针 wincheck 缺陷、Grafana 竞态机制精确化）| 事实源：docs/lessons/process-wsl-loopback-fresh-listen-refused.md；完整研究链归档见独立仓库 [wsl-loopback-stall](https://github.com/3900563672/wsl-loopback-stall)
 
 ## 一、背景与影响
 
@@ -105,7 +105,7 @@ cd dashboard/backend && go test ./internal/api/ -run TestGrafanaProxy -v
 
 ### 关联记录
 
-- 流水账（完整证据链）：[journal/2026-08-18-wsl-loopback-relay.md](../journal/2026-08-18-wsl-loopback-relay.md)
+- 流水账（完整证据链）：[wsl-loopback-stall 仓库 docs/](https://github.com/3900563672/wsl-loopback-stall)
 - 蒸馏规则（Agent 视角）：[lessons/process-wsl-loopback-fresh-listen-refused.md](../lessons/process-wsl-loopback-fresh-listen-refused.md)
-- 变更归档：[change-history/2026-08-18-wsl-loopback-case-study/](../../change-history/2026-08-18-wsl-loopback-case-study/README.md)
+- 变更归档：研究内容已整体迁移至 [wsl-loopback-stall](https://github.com/3900563672/wsl-loopback-stall)
 - 排障入口：[TROUBLESHOOTING.md](TROUBLESHOOTING.md)
