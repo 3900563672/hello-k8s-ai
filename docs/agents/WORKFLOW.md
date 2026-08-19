@@ -98,6 +98,7 @@ flowchart TD
   - 例外：确需拆分的大改动（跨模块重构 / 长时任务分批交付）可超 2 个，但必须在交付说明里写明拆分理由。
 - 中文提交信息用文件方式（`git commit -F`），避免终端编码丢失（见 docs/lessons/process-chinese-commit-file.md）。
 - UI / 面板视觉改动：提交前在条目 `change-history/<条目>/screenshots/` 下补 `before-<page>.png` 与 `after-<page>.png`（见 [UI_VERIFICATION.md](UI_VERIFICATION.md) 快照约定）。
+- **文件写入卫生（2026-08-19 起，防跨平台污染）**：仓库内文件写入一律在 WSL 侧用 Python `io.open(..., encoding='utf-8')`（无 BOM）；禁止 PowerShell `Set-Content` / `Out-File` 直接改写仓库文件（会引入 UTF-8 BOM 或 CRLF，破坏 `gen-docs.py` 解析与 `docs-sync-check`）。Windows Git 操作本仓库前确认 `core.fileMode false`；出现整批 `100755→100644` 差异时按 docs/lessons/process-cross-platform-file-hygiene.md 处理。
 - **外部编号禁令（2026-08-19 起，防 GitHub 交叉引用泄露）**：提交信息、PR 标题/正文、issue 标题/正文/评论、提交 diff 中禁止出现外部 issue 的完整编号（`#<数字>` 形式）——GitHub 会自动在对方 issue 时间线登记 cross-reference，第三方可见，且 close 无法移除，只有删除源才能消失。引用外部 issue 一律用描述语或 URL。提交前检查 `git diff` 与提交信息（详见 [docs/journal/2026-08-19-github-crossref-external-issue-number.md](../journal/2026-08-19-github-crossref-external-issue-number.md)）。
 - 提交前检查 `git status`：不提交 `.env`、`bin/`、`dist/`、`.runtime/`、覆盖率文件；`change-history/` 与文档改动记得一起提交。
 
