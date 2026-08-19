@@ -8,7 +8,7 @@
 
 1. 阅读根目录 `AGENTS.md` 与本文件。
 2. 按 [WORKFLOW.md](WORKFLOW.md) 第 8 节解析任务五要素；有对应任务的流程先读 WORKFLOW.md，按流程判断是否需要建 issue。
-3. 动手前扫 [FAILURE_REGISTRY.md](FAILURE_REGISTRY.md) 末尾 3 条 + [docs/journal/README.md](../journal/README.md) 与 [docs/lessons/README.md](../lessons/README.md)，避免重复踩坑。
+3. 动手前扫 [FAILURE_REGISTRY.md](FAILURE_REGISTRY.md) 末尾 3 条，并按任务类型匹配 [docs/lessons/README.md](../lessons/README.md) 的 **Use when 触发条件**（速查表见该文件），避免重复踩坑。
 4. 涉及 CRD、Controller 或 API 时，先核对 [PRINCIPLES.md](PRINCIPLES.md) 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
 5. 按任务选读 `docs/` 对应专题；事实以源码、生成清单和可执行测试为准，不依据说明文档猜实现。
 

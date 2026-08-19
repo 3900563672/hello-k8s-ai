@@ -1,6 +1,7 @@
 # kubectl 输出超过 1MB 会 ENOBUFS，脚本读取要分页或限长
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-cluster-and-deploy.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：脚本读取 kubectl 大输出（100+ Pod）时
 
 ## 现象
 

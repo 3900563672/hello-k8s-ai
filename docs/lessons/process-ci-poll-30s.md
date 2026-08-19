@@ -1,6 +1,7 @@
 # 等待 CI 不要长 sleep：推完立刻 30 秒轮询
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-github-actions-ci.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：推送后等待 CI 结论 / 查看 run 状态时
 
 ## 现象
 

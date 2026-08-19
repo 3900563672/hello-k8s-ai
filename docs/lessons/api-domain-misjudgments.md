@@ -1,6 +1,7 @@
 # 领域语义易误判点：策略、状态字段、时间与历史
 
 > 提升日期：2026-08-18 ｜ 来源：原 KNOWN_PITFALLS「领域已知易误判点」（原 AI_CONTEXT 第 8 节） ｜ 适用对象：本地 Agent 与远程 AI
+> 触发条件（Use when）：涉及 CR 语义判断（策略 Status / replicas=0 / SimulationClock 倍速 / SSE）或写配置批次时，先核对 FIELD_OWNERSHIP 再下结论
 
 ## 现象
 

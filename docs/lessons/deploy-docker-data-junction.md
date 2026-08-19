@@ -1,6 +1,7 @@
 # Docker Desktop WSL2 数据盘迁移必须用 Junction，DataFolder 配置无效
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-command-and-terminal.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：Docker Desktop 数据盘迁移 / 磁盘满 / docker ps 或 docker volume ls 显示为空时
 
 ## 现象
 

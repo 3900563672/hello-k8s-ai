@@ -1,6 +1,7 @@
 # Kind hostPath 放 Docker Desktop 根文件系统：WSL 重启后 bind 失效 → tmpfs 覆盖 → PVC "丢数据"
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-18-docker-bind-pvc-loss.md ｜ 适用对象：本地 Agent / 远程 AI
+> 触发条件（Use when）：kind 集群 PVC 异常 / CrashLoopBackOff + Permission denied / 节点挂载变 tmpfs / 数据恢复时
 
 ## 现象
 

@@ -1,6 +1,7 @@
 # Grafana 嵌入 Dashboard：sub-path 前缀、Live WS、安全中间件三处易错
 
 > 提升日期：2026-08-18 ｜ 来源：journal/2026-08-16-grafana-embed.md ｜ 适用对象：本地 Agent
+> 触发条件（Use when）：修改 Grafana 嵌入 / 反代 / 安全中间件放行；面板 404 / WebSocket 400 时
 
 ## 现象
 
