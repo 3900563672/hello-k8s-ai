@@ -16,12 +16,14 @@ bash setup.sh                                    # 完整开发栈部署（Kind 
 ### 必须（Always）
 
 1. 每次任务先读 `docs/agents/README.md` 与 `docs/agents/WORKFLOW.md`，按流程判断是否需要建 issue。
-2. 动手前扫一遍 `docs/journal/` 与 `docs/lessons/`（踩坑流水账与蒸馏规则）。
+2. 动手前扫 `docs/agents/FAILURE_REGISTRY.md` 末尾 3 条 + `docs/journal/` 与 `docs/lessons/`（失败模式注册表 + 踩坑流水账与蒸馏规则），命中先读证据链。
 3. 涉及 CRD、Controller 或写 API 时，先核对 `docs/agents/PRINCIPLES.md` 与 `docs/kubernetes/FIELD_OWNERSHIP.md`。
 4. 涉及 GitHub Issue / Project 看板 / 批量任务时，先读 `docs/agents/PROJECT_REVIEW.md`（看板状态机与闭环规则，只动 `Approved` 条目）。
 5. 源码和可执行清单优先于说明文档；没有运行证据时，不得把"清单中存在"写成"集群已就绪"。
 6. 每次交付后按 `docs/agents/WORKFLOW.md` 第 9 节同步：追加 `change-history/` 条目、更新受影响文档、重跑 `make docs-sync` 与 `make docs-check`、列出人类文档待同步清单。
-7. 一切皆异步：预计超过 ~30s 的等待必须并行推进其他有用工作（先查证预期时长，再查历史/沉淀/维护 issue），禁止空转死等；长等待一律后台化并汇报“等什么/预计多久/期间在做什么”。
+7. 脚本类改动（`.sh`/`.ps1`/`.mjs`）与 Agent 文档改动必须过静态检查：`make lint-sh`（shellcheck）、`make lint-ps1`（PSScriptAnalyzer）、`make lint-md`（markdownlint）——已并入 `make lint` / `make verify` 与 CI。
+8. 开工与长跑前先 `make doctor` 环境自检（磁盘 / Docker / WSL 回环 / 端口 / 内存 / tmpfs / dmesg），FAIL 项修复后再继续。
+9. 一切皆异步：预计超过 ~30s 的等待必须并行推进其他有用工作（先查证预期时长，再查历史/沉淀/维护 issue），禁止空转死等；长等待一律后台化并汇报“等什么/预计多久/期间在做什么”。
 
 ### 先问（Ask）
 
@@ -106,6 +108,8 @@ make vet
 make test
 make lint
 ```
+
+环境与脚本层：`make doctor`（环境自检）；`make lint-sh` / `make lint-md` / `make lint-ps1`（静态检查，已并入 `make lint` 与 `make verify`）。
 
 Dashboard Backend：
 

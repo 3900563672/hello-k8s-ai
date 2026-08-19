@@ -64,6 +64,12 @@ jobs:
           mv -f bin/golangci-lint-custom bin/golangci-lint
           bin/golangci-lint version
 
+      - name: 安装脚本/文档静态检查工具
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          npm install -g markdownlint-cli2
+
       - name: 校验 lint 配置
         run: make lint-config
       - name: 执行 lint

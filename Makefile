@@ -101,10 +101,22 @@ verify-deploy: kustomize ## 检查脚本语法并渲染全部部署清单
 	"$(KUSTOMIZE)" build config/demo >/dev/null
 	"$(KUSTOMIZE)" build dashboard/deploy >/dev/null
 
+.PHONY: lint-sh
+lint-sh: ## shellcheck 全部 *.sh（防"漏定义变量/sleep/引号"类低级错上线跑）
+	@command -v shellcheck >/dev/null 2>&1 || { echo "缺少 shellcheck：请在 WSL 执行 apt-get install -y shellcheck" >&2; exit 1; }; \
+	set -e; for f in $$(find . -path ./node_modules -prune -o -path ./.git -prune -o -path ./.runtime -prune -o -name '*.sh' -print); do shellcheck "$$f" || exit 1; done; echo "shellcheck OK"
+
+.PHONY: lint-md
+lint-md: ## markdownlint 检查 Agent 文档层（docs/agents、journal、lessons、remote-ai、change-history、README）
+	@command -v markdownlint-cli2 >/dev/null 2>&1 || { echo "缺少 markdownlint-cli2：请在 WSL 执行 npm install -g markdownlint-cli2" >&2; exit 1; }; \
+	markdownlint-cli2 && echo "markdownlint OK"
+
+.PHONY: lint-ps1
+lint-ps1: ## PSScriptAnalyzer 检查仓库 .ps1（非 Windows 或仓库无 .ps1 时跳过）
+	bash hack/lint-ps1.sh
+
 .PHONY: selfcheck
-selfcheck: ## 工具链自检：全部脚本语法 + Node 脚本语法 + 清单渲染（防"漏定义函数上线跑"）
-	@echo "== bash 语法 =="; \
-	set -e; for f in $$(find . -path ./node_modules -prune -o -name '*.sh' -print | grep -v node_modules); do bash -n "$$f" || exit 1; done; echo OK
+selfcheck: lint-sh lint-md ## 工具链自检：shell/markdown 静态检查 + Node 语法 + 清单渲染（防"漏定义函数上线跑"）
 	@echo "== Node 脚本语法 =="; \
 	set -e; for f in $$(find hack -name '*.mjs'); do node --check "$$f" || exit 1; done; echo OK
 	@echo "== Node 单测 =="; \
@@ -119,6 +131,10 @@ selfcheck: ## 工具链自检：全部脚本语法 + Node 脚本语法 + 清单�
 
 .PHONY: verify
 verify: fmt-check test test-backend test-e2e-compile test-frontend verify-deploy selfcheck lint ## 执行提交前完整静态验证
+
+.PHONY: doctor
+doctor: ## 环境自检：磁盘 / Docker / WSL 回环 / 端口 / 内存 / tmpfs / dmesg（开工与长跑前先跑）
+	bash hack/doctor.sh
 
 # e2e 使用独立集群，避免测试清理误删日常开发集群。
 E2E_KIND_CLUSTER ?= hello-k8s-ai-test-e2e
@@ -154,7 +170,7 @@ cleanup-test-e2e: ## 删掉 Kind 集群
 	@$(KIND) delete cluster --name $(E2E_KIND_CLUSTER)
 
 .PHONY: lint
-lint: golangci-lint ## lint 检查
+lint: golangci-lint lint-sh lint-md lint-ps1 ## lint 检查（Go + shell + markdown + PowerShell）
 	"$(GOLANGCI_LINT)" run
 
 .PHONY: lint-fix

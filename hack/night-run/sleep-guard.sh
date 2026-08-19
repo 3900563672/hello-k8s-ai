@@ -18,7 +18,7 @@ case "$ACTION" in
     if [ -f "$LOG_WSL" ]; then rm -f "$LOG_WSL"; fi
     powershell.exe -NoProfile -Command "Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','$PS1_UNC','$ACTION' -Verb RunAs -WindowStyle Hidden" >/dev/null 2>&1
     echo "UAC prompt sent for action=$ACTION; waiting for elevated script to finish..."
-    for i in $(seq 1 30); do
+    for _ in $(seq 1 30); do
       if [ -f "$LOG_WSL" ]; then
         sleep 2
         cat "$LOG_WSL"

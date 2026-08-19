@@ -26,3 +26,8 @@ jobs:
 
       - name: 生成物一致性（docs-sync 后无差异）
         run: make docs-sync-check
+
+      - name: Markdown 静态检查（markdownlint）
+        run: |
+          npm install -g markdownlint-cli2
+          make lint-md

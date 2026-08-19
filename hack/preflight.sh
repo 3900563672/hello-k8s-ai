@@ -40,7 +40,7 @@ ok "集群可达"
 
 # ---------- 2. 节点状态 ----------
 NODES=$(kubectl --context "$KUBE_CONTEXT" get nodes --no-headers 2>/dev/null | wc -l)
-NOT_READY=$(kubectl --context "$KUBE_CONTEXT" get nodes --no-headers 2>/dev/null | grep -v ' Ready' | grep -v 'Ready,SchedulingDisabled' | wc -l || true)
+NOT_READY=$(kubectl --context "$KUBE_CONTEXT" get nodes --no-headers 2>/dev/null | grep -Evc ' Ready|Ready,SchedulingDisabled' || true)
 CORDONED=$(kubectl --context "$KUBE_CONTEXT" get nodes --no-headers 2>/dev/null | grep -c 'Ready,SchedulingDisabled' || true)
 if (( NODES == 0 )); then
   bad "没有可用节点"
