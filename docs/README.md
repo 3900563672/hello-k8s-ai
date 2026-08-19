@@ -65,7 +65,7 @@
 | `docs/observability/OPENTELEMETRY.md` | `config/observability/`、`internal/observability/` |
 | `docs/observability/PROMETHEUS.md` | `config/observability/`、`config/prometheus/`、`dashboard/backend/internal/providers/`、`simulator/` |
 | `docs/operations/SECURITY_AND_RBAC.md` | `config/rbac/` |
-| `docs/operations/TROUBLESHOOTING.md` | `hack/` |
+| `docs/operations/TROUBLESHOOTING.md` | `hack/`、`hack/check-docs.py` |
 | `docs/overview/ARCHITECTURE_OVERVIEW.md` | `cmd/`、`internal/controller/` |
 | `docs/reference/API_EXAMPLES.md` | `dashboard/backend/internal/api/` |
 | `docs/reference/CONFIGURATION_REFERENCE.md` | `api/v1/`、`config/rbac/`、`dashboard/frontend/my-app/src/components/features/guide/` |

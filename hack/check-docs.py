@@ -164,6 +164,13 @@ def changed_files():
     return [line for line in diff.stdout.splitlines() if line]
 
 
+def is_test_file(path):
+    """测试文件不改变行为契约，MAP 门禁豁免；行为变更必然同时触碰非测试代码，门禁仍生效。"""
+    if path.endswith("_test.go"):
+        return True
+    return re.search(r"\.(test|spec)\.(ts|tsx|js|jsx)$", path) is not None
+
+
 def check_map_gate():
     map_path = os.path.join(ROOT, "docs", "MAP.yaml")
     if not os.path.isfile(map_path):
@@ -176,6 +183,8 @@ def check_map_gate():
     errors = 0
     for path in changed:
         if path.startswith("docs/") or path.startswith("change-history/"):
+            continue
+        if is_test_file(path):
             continue
         best = None
         for src in mapping:

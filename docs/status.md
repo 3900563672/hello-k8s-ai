@@ -11,4 +11,4 @@
 - 2026-08-19 [WSL 回环研究三 issue 闭环（#66 查重 / #65 指纹 / #64 参数实验）](../change-history/2026-08-19-wsl-issue-64-65-66/README.md)
 - 2026-08-19 [WSL 回环研究：openvmm/WSL “为什么这么写”git 溯源 + 版本缺陷区间勘误（31 号文档）](../change-history/2026-08-19-wsl-history-trace/README.md)
 - 2026-08-19 [WSL 评论修订记录](../change-history/2026-08-19-wsl-comment-v4-sent/README.md)
-- 2026-08-19 [重启后环境恢复 + Codex 卡死排查 + WSL 协作模式评估](../change-history/2026-08-19-environment-revive-after-reboot/README.md)
+- 2026-08-19 [Grafana 代理测试 WSL 注册竞态修复（Fixes #73）](../change-history/2026-08-19-grafana-test-wsl-race/README.md)
