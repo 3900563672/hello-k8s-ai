@@ -1,4 +1,4 @@
-# 变更归档
+﻿# 变更归档
 
 > 维护层：human | last-reviewed：2026-08-18 | 事实源：change-history/ 目录本身
 
@@ -17,6 +17,9 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-19 | WSL 重启后排除测试 + 探针工具缺陷修复（32 号文档） | P1 | [查看记录](2026-08-19-wsl-reboot-exclusion-test/README.md) |
+| 2026-08-19 | WSL 回环研究 openvmm/WSL 溯源 + 版本缺陷区间勘误（31 号文档） | P1 | [查看记录](2026-08-19-wsl-history-trace/README.md) |
+| 2026-08-19 | 重启后环境恢复 + Codex 卡死排查 + WSL 协作模式评估 | P2 | [查看记录](2026-08-19-environment-revive-after-reboot/README.md) |
 | 2026-08-19 | WSL #41286 follow-up 评论 v4 正式发送（编辑 v3 不新增） | P1 | [查看记录](2026-08-19-wsl-comment-v4-sent/README.md) |
 | 2026-08-18 | 切面为第一公民：生命周期 API + 混合采样器 + 分层存储（Fixes #51） | P0 | [查看记录](2026-08-18-issue51-segment-lifecycle/README.md) |
 | 2026-08-18 | 业务层优雅降级闭环：物理水位联动 + 资源受限标记（Fixes #49） | P0 | [查看记录](2026-08-18-issue49-graceful-degradation/README.md) |
