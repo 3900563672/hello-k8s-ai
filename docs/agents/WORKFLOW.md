@@ -31,6 +31,7 @@ flowchart TD
 - 读 `AGENTS.md` 与 [docs/agents/README.md](README.md)。
 - 按本文第 8 节解析任务五要素，缺项用默认假设补齐并在开工陈述中复述。
 - 扫 [docs/journal/README.md](../journal/README.md) 与 [docs/lessons/README.md](../lessons/README.md)，确认没有已知坑影响本次任务。
+- 扫 [FAILURE_REGISTRY.md](FAILURE_REGISTRY.md) **末尾 3 条**，确认本次任务未命中已登记失败模式；命中先读证据链再动手。
 - 记录任务目标与成功标准，避免做一半跑偏。
 
 ## 2. 需求分类与 issue 决策
@@ -60,7 +61,8 @@ flowchart TD
 - Frontend：`cd dashboard/frontend/my-app && npm ci && npm run check`。
 - 清单渲染：`kubectl kustomize config/dev`、`config/demo`、`dashboard/deploy`。
 - 一键启动 / 长跑前：先跑 `bash hack/preflight.sh`（FAIL 项必须修复才能启动；长跑由 `start-longrun.sh` 强制 `PREFLIGHT_REQUIRE_GUARD=1`）。
-- 工具链自检：`make selfcheck`（已并入 `make verify`）——全部 `*.sh` `bash -n`、`hack/*.mjs` `node --check`、三套清单渲染；脚本类改动必须过此项。
+- 环境自检：开工/长跑前先跑 `make doctor`（磁盘 / Docker / WSL 回环 / 端口 / 内存 / tmpfs / dmesg，不依赖集群，30 秒内出结果）。
+- 工具链静态检查：脚本类改动必须过 `make lint-sh`（shellcheck）与 `make lint-ps1`（PSScriptAnalyzer）；markdown 改动过 `make lint-md`；均已并入 `make verify` 与 CI。
 - 文档：`make docs-check`；生成包：`make context-pack`。
 - UI / 视觉验证：需要“看”页面或监控面板时，用 [UI_VERIFICATION.md](UI_VERIFICATION.md)，一条命令截图 + 读面板文本。
 - CI：推送后等 workflow 全绿（代码检查 / 源码与部署验证 / E2E 测试；docs-only 改动只跑"文档检查"），轮询节奏见 4.1。
@@ -82,7 +84,6 @@ flowchart TD
 - 无人值守长时运行（维持 + 施压 + 采集 → 分析 + 修复）走 [hack/night-run/README.md](../../hack/night-run/README.md)。
 - 由 Codex 桌面自动化触发：00:00 Phase A（只采集不推码）、04:30 Phase B（按决策矩阵处理，**全部走 PR 不推 main**，早上用户审阅合并）；非运行日自动空跑。
 - Phase A 的问题档案在 `.runtime/night-run/<日期>/problems.md`（不入库）；Phase B 修完必须同步 `change-history/` 与受影响 docs。
-
 
 ### 4.2.1 长时运行结束必须清理（2026-08-17 硬步骤）
 
@@ -121,7 +122,6 @@ flowchart TD
 
 - 固定格式：改了什么 / 验证了什么（命令与结果）/ 没验证什么 / 真实风险（模板见本文第 8 节）。
 - 涉及部署或集群的结论必须附验证证据；没有证据就写"未验证"。
-
 
 ## 8. 提示词协议（原 PROMPTING.md，2026-08-18 并入）
 
@@ -181,6 +181,7 @@ flowchart TD
 - [ ] 只包含任务范围内改动；`git status` 无意外文件（`.env` / `bin/` / `dist/` / `.runtime/` / 覆盖率文件）。
 - [ ] 生成文件未手改；需要时通过 `make manifests generate YEAR=2026` 更新并核对差异。
 - [ ] 派生文件一致：提交前 `make docs-sync && make docs-sync-check` 全绿（README 时间线段 / docs/status.md / llms.txt 等生成物随提交一起）。
+- [ ] done-check 三问：实跑命令？输出证据？未验证范围？无运行证据不得写"已通过"。
 - [ ] 能跑的验证都跑过，结果记录在汇报里。
 - [ ] change-history 条目已建；README 索引已登记。
 - [ ] 受影响文档已同步或列入"人类文档待同步清单"。

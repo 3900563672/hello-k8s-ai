@@ -5,7 +5,7 @@
 ## 现象
 
 - 251 个仓库文件整体出现 `old mode 100755 / new mode 100644` 的"幽灵差异"（0 行内容变化）：Windows Git 经 `\\wsl.localhost\...` UNC 访问 WSL 仓库时，把全部可执行文件的执行位判定为丢失，一旦 `git add` 会整体污染提交。
-- PowerShell `Set-Content -Encoding UTF8` 写入仓库文档后，文件头被加上 UTF-8 BOM（`EF BB BF`）；`hack/gen-docs.py` 的 `h1_of()` 按 `# ` 开头匹配 H1 失败，`llms.txt` 条目回退成裸文件名（如 `TROUBLESHOOTING.md`），`make docs-sync-check` 在 CI 直接失败。
+- PowerShell `Set-Content -Encoding UTF8` 写入仓库文档后，文件头被加上 UTF-8 BOM（`EF BB BF`）；`hack/gen-docs.py` 的 `h1_of()` 按 "# "（井号+空格）开头匹配 H1 失败，`llms.txt` 条目回退成裸文件名（如 `TROUBLESHOOTING.md`），`make docs-sync-check` 在 CI 直接失败。
 
 ## 根因
 

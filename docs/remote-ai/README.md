@@ -1,7 +1,6 @@
 # 远程 AI 工作手册（docs/remote-ai/）
 
 > 维护层：remote ｜ last-reviewed：2026-08-18 ｜ 事实源：docs/MAP.yaml、源码、change-history/
-
 > 本目录给**只在自己工作区工作**的 AI（如网页版 ChatGPT / Claude）：它只能读取用户发来的打包内容，不能访问用户电脑、仓库或 GitHub。
 > 能操作本机仓库的 Agent 见 [docs/agents/README.md](../agents/README.md)；人类入口是根目录 [README.md](../../README.md)。
 

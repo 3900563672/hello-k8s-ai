@@ -8,7 +8,7 @@
 
 | 检查项 | 结果 |
 | --- | --- |
-| 5 节点 `mount | grep hello-k8s-ai-pv` | 全部 NO_MOUNT（tmpfs 已移除） |
+| 5 节点 `mount \| grep hello-k8s-ai-pv` | 全部 NO_MOUNT（tmpfs 已移除） |
 | 目录所有权 postgres（worker3） | 70:70, drwx------ |
 | 目录所有权 prometheus（worker） | 65534:65534, drwx------ |
 | 目录所有权 jaeger（worker4） | 777, drwxrwxrwx |

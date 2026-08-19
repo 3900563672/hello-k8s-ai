@@ -33,11 +33,13 @@ node hack/ui-check/grafana-panels.mjs --url http://localhost:8080/monitor --out 
 - 命名：`before-<page>.png`（改前）与 `after-<page>.png`（改后）成对提交；`<page>` 用 `monitor` / `config` / `traffic` / `trace` / `dashboard`。
 - 触发条件：涉及 UI / Grafana 面板 / 前端视觉的改动必须带快照；纯后端 / CRD / 文档改动不需要。
 - 命令：
+
   ```bash
   node hack/ui-check/grafana-panels.mjs --url http://localhost:8080/<page> --out change-history/<条目>/screenshots/before-<page>.png
   # 改动完成后：
   node hack/ui-check/grafana-panels.mjs --url http://localhost:8080/<page> --out change-history/<条目>/screenshots/after-<page>.png
   ```
+
 - 体积控制：默认 1600×1000（约 120-280KB/张）；页面加载不稳定时加 `--wait <秒>`；不要上传超大或重复截图。
 - 基线参照：2026-08-16 现状基线在 `change-history/2026-08-16-ui-visual-verification/screenshots/`（monitor / config / traffic）。
 - `.codex-tmp/` 与 `.runtime/` 仍保持 gitignore，只放临时截图；正式快照一律进 change-history。

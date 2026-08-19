@@ -1,0 +1,33 @@
+# Agent 文档层 Markdown 规范（markdownlint-cli2）
+# 配套：make lint-md ｜ 规则取舍见 docs/agents/FAILURE_REGISTRY.md FR-006
+config:
+  # 中文文档不适用英文行长约束；元数据块开头/标题跳级/列表留白为仓库既有风格
+  MD013: false
+  MD001: false
+  MD022: false
+  MD032: false
+  MD041: false
+  MD029: false
+  MD060: false
+  # 强制保留的结构规则：
+  #   MD012 连续空行 / MD024 重复标题 / MD025 多个 H1 / MD028 引用块内空行
+  #   MD031 围栏代码块缺空行 / MD034 裸 URL / MD037 强调内空格 / MD038 代码内空格
+  #   MD047 文件尾换行 / MD056 表格列数不一致（会丢数据）
+  MD012: true
+  MD024: true
+  MD025: true
+  MD028: true
+  MD031: true
+  MD034: true
+  MD037: true
+  MD038: true
+  MD047: true
+  MD056: true
+globs:
+  - "AGENTS.md"
+  - "docs/agents/**/*.md"
+  - "docs/remote-ai/**/*.md"
+  - "docs/journal/**/*.md"
+  - "docs/lessons/**/*.md"
+  - "change-history/**/*.md"
+  - "README.md"

@@ -55,7 +55,6 @@ flowchart LR
 4. 交付：issue 自动关闭，卡片置 `Done`，追加 change-history 条目并按 WORKFLOW.md 第 9 节同步。
 5. 归档：一批完成后 `item-archive` 归档卡片，汇报本批结果与下一批候选。
 
-
 ## 6. 命令速查（GraphQL）
 
 项目是**仓库级** Project（显示在仓库 Projects 页面：`https://github.com/3900563672/hello-k8s-ai/projects`），gh CLI 的 `project` 命令只支持用户/组织级项目，因此操作统一走 GraphQL。关键 ID 稳定，但项目重建后会变化，以实际查询为准：
@@ -88,7 +87,6 @@ gh api graphql -f query='query { node(id: "PVT_kwHODN0KGM4BgfyL") { ... on Proje
 ```
 
 归档：issue 关闭（`gh issue close <number>`）+ 状态置 `Done`；不需要删除卡片。
-
 
 ## 7. 与 WORKFLOW.md 的衔接
 

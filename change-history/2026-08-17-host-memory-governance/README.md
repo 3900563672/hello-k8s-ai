@@ -27,7 +27,6 @@
 | `docs/agents/RESILIENCE.md` | 新增 3.5 内存预算与治理（实测数据 + 公式 + 强制清理） |
 | `docs/agents/WORKFLOW.md` | 新增 4.2.1 长时运行结束必须清理 |
 
-
 ## 5. 后续更正（同日第二次提交）
 
 - **`replicas=0` 不是"暂停"态**：实测删除负载时把 CR 归零后，Orchestrator 看到流量（qps=35）会从 0 自动扩容，负载复活。`replicas=0` 是合法最小值（新实例骨架），不是停止方式。
