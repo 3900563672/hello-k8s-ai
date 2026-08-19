@@ -21,6 +21,7 @@ bash setup.sh                                    # 完整开发栈部署（Kind 
 4. 涉及 GitHub Issue / Project 看板 / 批量任务时，先读 `docs/agents/PROJECT_REVIEW.md`（看板状态机与闭环规则，只动 `Approved` 条目）。
 5. 源码和可执行清单优先于说明文档；没有运行证据时，不得把"清单中存在"写成"集群已就绪"。
 6. 每次交付后按 `docs/agents/WORKFLOW.md` 第 9 节同步：追加 `change-history/` 条目、更新受影响文档、重跑 `make docs-sync` 与 `make docs-check`、列出人类文档待同步清单。
+7. 一切皆异步：预计超过 ~30s 的等待必须并行推进其他有用工作（先查证预期时长，再查历史/沉淀/维护 issue），禁止空转死等；长等待一律后台化并汇报“等什么/预计多久/期间在做什么”。
 
 ### 先问（Ask）
 
