@@ -137,6 +137,7 @@ flowchart LR
 ## 8. 防止 Mock 回归
 
 - CI 搜索生产路径中的 mock/localStorage 导入；测试 fixture 必须位于明确测试目录。
+- `scripts/record-fixtures.mjs` 从运行中的 Backend 录制真实响应到 `src/lib/mocks/fixtures/`（含 `manifest.json` 记录来源）；fixtures 是录制产物，只读复用，需要新数据时重录，不手工改内容。
 - ClusterStatus 初始态应是 unknown/loading，不是 connected。
 - 无 Backend 时展示 error/empty，不生成默认 Worker/Tenant。
 - Storybook/组件测试若使用 fixture，UI 明确测试环境，不能进入生产 bundle 的数据选择逻辑。

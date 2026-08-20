@@ -55,6 +55,7 @@ flowchart TB
 | `src/stores/` | control plane、time、traffic 等客户端状态。 |
 | `src/types/` | API 与页面领域类型。 |
 | `src/lib/` | 常量、格式化、验证、client ID。 |
+| `src/lib/mocks/fixtures/` | 真实 API 响应快照（录制产物），供 dev:mock 数据层免后端浏览；只读复用，重录不手工改。 |
 
 ## 4. 状态所有权
 
