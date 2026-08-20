@@ -14,6 +14,16 @@ npm run dev
 Vite 默认将 `/api` 代理到 `http://localhost:8080`。如需修改目标地址，设置 `VITE_API_PROXY_TARGET`。
 
 提交前执行：
+## 本地开发数据（fixtures）
+
+`scripts/record-fixtures.mjs` 从运行中的 Dashboard Backend 录制真实 API 快照到 `src/lib/mocks/fixtures/`（只读 GET，自动生成 manifest）：
+
+```bash
+node scripts/record-fixtures.mjs          # 默认 http://localhost:8080/api/v1
+DASHBOARD_URL=http://... node scripts/record-fixtures.mjs
+```
+
+快照是真实响应（含 envelope/meta），供后续 dev:mock 数据层免后端浏览；需要新数据时重录，不手工改内容。
 
 ```bash
 npm run check
