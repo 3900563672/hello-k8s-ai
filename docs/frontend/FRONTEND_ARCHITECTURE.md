@@ -123,7 +123,13 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - 历史模式使用明显只读标识；危险删除和流量提交需要确认。
 - 大型对象列表优先表格/筛选，Trace 使用树，指标使用时间序列；不要用同一种卡片承载所有信息。
 
-## 9. 已知前端技术债
+## 9. dev:mock 与录制快照
+
+- `src/lib/mocks/fixtures/` 是真实 Backend 响应快照（只读），由 `scripts/record-fixtures.mjs` 遍历 GET 端点重录，不手工改内容。
+- `dev:mock` 由 `mock-server.py` 提供静态预览（规避 WSL 回环掉注册问题）；录制快照中的空资源数组用 `dev-fixtures/` 样例补齐，`meta.devSamples` 标注仅预览。
+- Trace detail 与 overview 快照录制窗口不一致时，dev:mock 用摘要合成单 span 兜底；生产链路不受影响。
+
+## 10. 已知前端技术债
 
 - Traffic Overlay 应用后已写 Backend（常量目标 QPS）；未应用的模板/Overlay 仍是内存草稿，刷新会丢失，页面保留 Draft 标识。
 - Traffic QPS 当前趋势更接近单点/本地曲线，尚未完整使用 Prometheus 历史曲线。
