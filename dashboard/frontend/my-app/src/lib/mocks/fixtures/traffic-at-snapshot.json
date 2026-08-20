@@ -1,0 +1,581 @@
+{
+  "data": {
+    "asOf": "2026-08-16T23:59:48.558531711Z",
+    "tenants": [
+      {
+        "tenant": {
+          "apiVersion": "platform.study.com/v1",
+          "kind": "Tenant",
+          "name": "tenant-core",
+          "uid": "92a999b9-1d2a-4ce2-a9f3-e459eddd9d41"
+        },
+        "displayName": "核心在线业务",
+        "priority": "P1",
+        "requestedQPS": 35,
+        "allocatedQPS": 35,
+        "allocationBalanced": true,
+        "performance": {
+          "avgTTFT": {
+            "value": 677267,
+            "unit": "ms"
+          },
+          "avgQueue": {
+            "value": 2376,
+            "unit": "requests"
+          },
+          "sampleCount": 1,
+          "observedAt": "2026-08-16T23:59:47Z",
+          "freshness": "fresh",
+          "phase": "Running"
+        },
+        "readyReplicaCount": 10,
+        "runtimePhase": "Running",
+        "instances": [
+          {
+            "name": "tenant-core-model-lite",
+            "model": "model-lite",
+            "desiredReplicas": 10,
+            "availableReplicas": 10,
+            "assignedQPS": 35,
+            "score": 740,
+            "effectiveScore": 74,
+            "phase": "Running",
+            "observedAt": "2026-08-16T23:59:47Z",
+            "freshness": "fresh",
+            "pods": [
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-5df7469856-8sbkb",
+                  "uid": "dfcc4b1e-9a03-4793-a9e8-b850018e5aaa"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker",
+                "podIP": "10.244.9.5",
+                "startTime": "2026-08-16T13:45:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:53Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:53Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-node-a4ad59a91231-649d9b9t6b97",
+                  "uid": "1279566a-3d5b-4311-85a3-8ee9f26400a2"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker2",
+                "podIP": "10.244.5.6",
+                "startTime": "2026-08-16T13:44:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:03Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:45:03Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-node-a4ad59a91231-649d9b9x7ttt",
+                  "uid": "95910df8-da05-46a0-995b-8fecce8b22b1"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker2",
+                "podIP": "10.244.5.7",
+                "startTime": "2026-08-16T13:46:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:46:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:46:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:47:02Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:47:02Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:46:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-5df7469856-hjf2g",
+                  "uid": "80b7cc6a-4b4a-4ba4-a7e8-ee88856aecfa"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker",
+                "podIP": "10.244.9.4",
+                "startTime": "2026-08-16T13:44:36Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:37Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:36Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:47Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:47Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:44:36Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-5df7469856-2f9dd",
+                  "uid": "c29b3498-604f-4b29-baa6-5978f5f85776"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker",
+                "podIP": "10.244.9.8",
+                "startTime": "2026-08-16T13:51:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:51:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:51:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:51:53Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:51:53Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:51:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-node-a4ad59a91231-649d9b9s92ll",
+                  "uid": "cfce535b-b49a-4469-8916-0a0343d7a881"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker2",
+                "podIP": "10.244.5.10",
+                "startTime": "2026-08-16T13:52:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:52:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:52:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:52:53Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:52:53Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:52:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-node-a4ad59a91231-649d9b9nmn2j",
+                  "uid": "e1719ab4-2868-4cfd-a048-a0c4ff9e868c"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker2",
+                "podIP": "10.244.5.8",
+                "startTime": "2026-08-16T13:48:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:53Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:53Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-node-a4ad59a91231-649d9b98bszj",
+                  "uid": "68f1e5b9-9faa-4ae7-a5bc-c0b91840e78b"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker2",
+                "podIP": "10.244.5.9",
+                "startTime": "2026-08-16T13:50:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:50:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:50:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:50:53Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:50:53Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:50:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-5df7469856-z8plt",
+                  "uid": "7335eccf-2c56-43cb-9a00-6e23661d5d4d"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker",
+                "podIP": "10.244.9.6",
+                "startTime": "2026-08-16T13:47:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:47:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:47:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:02Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:48:02Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:47:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              },
+              {
+                "ref": {
+                  "apiVersion": "v1",
+                  "kind": "Pod",
+                  "namespace": "hello-k8s-ai-system",
+                  "name": "simulator-tenant-core-model-lite-5df7469856-2nrmt",
+                  "uid": "9861f50c-754f-4aff-a064-d09a8978ee90"
+                },
+                "phase": "Running",
+                "ready": true,
+                "nodeName": "desktop-worker",
+                "podIP": "10.244.9.7",
+                "startTime": "2026-08-16T13:49:52Z",
+                "conditions": [
+                  {
+                    "type": "PodReadyToStartContainers",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:49:52Z"
+                  },
+                  {
+                    "type": "Initialized",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:49:52Z"
+                  },
+                  {
+                    "type": "Ready",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:49:53Z"
+                  },
+                  {
+                    "type": "ContainersReady",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:49:53Z"
+                  },
+                  {
+                    "type": "PodScheduled",
+                    "status": "True",
+                    "lastTransitionTime": "2026-08-16T13:49:52Z"
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "simulator",
+                    "ready": true,
+                    "restartCount": 0,
+                    "state": "running"
+                  }
+                ],
+                "simulatorInstance": "tenant-core-model-lite",
+                "tenant": "tenant-core",
+                "model": "model-lite"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "3a7a93433a2547b6bb404df22c8270a5",
+    "servedAt": "2026-08-20T00:48:22.137309443Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

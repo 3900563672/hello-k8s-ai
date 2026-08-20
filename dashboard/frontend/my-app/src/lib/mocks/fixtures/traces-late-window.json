@@ -1,0 +1,298 @@
+{
+  "data": {
+    "items": [
+      {
+        "traceId": "31bf33824ad7c197d661d4e2f9becc41",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-18T03:59:59.798019Z",
+        "durationMs": 6.671,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "ef7416c36d556b9e5eeac1a4582d6789",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:59.295822Z",
+        "durationMs": 2.262,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "95a0cb77b315feacf028db49c00c249a",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:59.282737Z",
+        "durationMs": 1.781,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "a2ff2afdb87f6c97c1e23a9ce0bd0c90",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-18T03:59:59.158147Z",
+        "durationMs": 3.624,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "ed291458b9f31b68da2284de013fc804",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:59.072299Z",
+        "durationMs": 1.741,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "2544195d6deeb95d9c22b5bfa1818bf9",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.850793Z",
+        "durationMs": 1.757,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "141bbeebae654055c71ae2682a6fb534",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.819676Z",
+        "durationMs": 1.619,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "207aefeada7ce660c7037456ad57196a",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.677071Z",
+        "durationMs": 1.787,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "76c52d356d352af1f1e2b85342febd7f",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.642577Z",
+        "durationMs": 1.735,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "d560bb996b320f23a9586749aa4e3a5d",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.47723Z",
+        "durationMs": 1.773,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "a4e04ec2e77da57cab56de2411bcfb34",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "controller.orchestrator.reconcile",
+        "startTime": "2026-08-18T03:59:58.391681Z",
+        "durationMs": 0.911,
+        "spanCount": 6,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "c47a285459cce25b6f2e2722e796404c",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "controller.traffic.reconcile",
+        "startTime": "2026-08-18T03:59:58.387426Z",
+        "durationMs": 0.076,
+        "spanCount": 2,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "1765b128416bf2e2487e07c7992135de",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "controller.performance-collector.reconcile",
+        "startTime": "2026-08-18T03:59:58.387418Z",
+        "durationMs": 4.094,
+        "spanCount": 4,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "d821d45ffc4bc1870e1db18e1d9dc8c0",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "simulator.tick",
+        "startTime": "2026-08-18T03:59:58.377122Z",
+        "durationMs": 10.035,
+        "spanCount": 5,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "9e659a8f93e2a1215c96149da3398801",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.253849Z",
+        "durationMs": 2.073,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "80397f766efe0caf3e7dd962393f10f4",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:58.196877Z",
+        "durationMs": 2.291,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "3a671160d51dfd74b3a381b99717254a",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:57.980297Z",
+        "durationMs": 1.712,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "9c359d88ab5c9ddb45e49790ea5487c9",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:57.96366Z",
+        "durationMs": 1.758,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "54997fc2ddb33dd930502eaf692a6c65",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-18T03:59:57.793181Z",
+        "durationMs": 3.797,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      },
+      {
+        "traceId": "113547af6fdaa08824aae6e8673ed889",
+        "rootService": "hello-k8s-ai-simulator",
+        "rootOperation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:57.696365Z",
+        "durationMs": 1.786,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "model-lite",
+          "simulatorInstance": "tenant-core-model-lite",
+          "tenant": "tenant-core"
+        }
+      }
+    ],
+    "page": {
+      "next": null
+    }
+  },
+  "meta": {
+    "requestId": "e952373d5c2c80b0cdfd14852f6e1515",
+    "servedAt": "2026-08-20T00:48:22.709052405Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "jaeger": "2026-08-20T00:48:22.709044163Z"
+    }
+  }
+}

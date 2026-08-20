@@ -1,0 +1,51 @@
+{
+  "data": {
+    "checks": {
+      "database": {
+        "available": true,
+        "migrationsApplied": 4,
+        "resourceEvents": 619256,
+        "resourceSnapshots": 3670,
+        "resourceStates": 930
+      },
+      "kubernetesCache": {
+        "ready": true,
+        "syncedAt": "2026-08-20T00:44:52.098818259Z"
+      },
+      "providers": {
+        "jaeger": {
+          "state": "ready",
+          "observedAt": "2026-08-20T00:48:21.963973446Z",
+          "retention": "in-memory（进程生命周期）",
+          "storage": "jaeger"
+        },
+        "kubernetes": {
+          "state": "ready",
+          "observedAt": "2026-08-20T00:48:21.962932738Z"
+        },
+        "postgresql": {
+          "state": "ready",
+          "observedAt": "2026-08-20T00:48:21.963080002Z",
+          "retention": "720h0m0s",
+          "storage": "persistent"
+        },
+        "prometheus": {
+          "state": "ready",
+          "observedAt": "2026-08-20T00:48:21.963702953Z",
+          "retention": "24h0m0s",
+          "storage": "prometheus-tsdb"
+        }
+      }
+    },
+    "status": "ready"
+  },
+  "meta": {
+    "requestId": "708764a53e6a2b4e3233d7f6211e1379",
+    "servedAt": "2026-08-20T00:48:21.999153515Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

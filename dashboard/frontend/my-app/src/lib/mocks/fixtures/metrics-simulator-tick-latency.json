@@ -1,0 +1,22 @@
+{
+  "data": {
+    "metricId": "simulator.tickLatency",
+    "unit": "ms",
+    "start": "2026-08-17T00:00:00Z",
+    "end": "2026-08-17T01:00:00Z",
+    "stepSeconds": 60,
+    "series": [],
+    "resultType": "matrix",
+    "warnings": [],
+    "queriedAt": "2026-08-20T00:48:22.732628532Z"
+  },
+  "meta": {
+    "requestId": "bf17f3bbcaeabbe33ab763edfc26cf47",
+    "servedAt": "2026-08-20T00:48:22.733226948Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "prometheus": "2026-08-20T00:48:22.732628532Z"
+    }
+  }
+}

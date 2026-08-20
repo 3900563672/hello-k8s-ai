@@ -1,0 +1,12 @@
+{
+  "data": [],
+  "meta": {
+    "requestId": "720e8c52071c97e1de319bbfd0e0e4bc",
+    "servedAt": "2026-08-20T00:48:22.635629839Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

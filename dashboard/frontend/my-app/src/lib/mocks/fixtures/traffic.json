@@ -1,0 +1,15 @@
+{
+  "data": {
+    "asOf": "2026-08-18T04:03:54.643593Z",
+    "tenants": []
+  },
+  "meta": {
+    "requestId": "0afedb2960a09217d28a915a82c5781c",
+    "servedAt": "2026-08-20T00:48:22.13064942Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

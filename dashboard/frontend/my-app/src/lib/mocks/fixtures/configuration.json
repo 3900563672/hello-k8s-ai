@@ -1,0 +1,28 @@
+{
+  "data": {
+    "asOf": "2026-08-18T04:03:54.643593Z",
+    "availability": "available",
+    "models": [],
+    "workerNodes": [],
+    "tenants": [],
+    "policies": {
+      "tenantModel": [],
+      "tenantNode": [],
+      "modelNode": []
+    },
+    "orchestrators": [],
+    "simulationClocks": [],
+    "simulatorInstances": [],
+    "tenantPerformance": [],
+    "tenantRuntimes": []
+  },
+  "meta": {
+    "requestId": "4bae9a75ddc590856196317815179fa9",
+    "servedAt": "2026-08-20T00:48:22.115239839Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}
