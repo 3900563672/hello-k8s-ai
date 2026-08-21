@@ -51,3 +51,9 @@ AIOps 是 Dashboard 上的可选智能分析层：用 LLM + 硬指标规则把�
 - `aiops_*` 是辅助结论，不是事实源：Kubernetes API Server 仍是唯一事实源，PostgreSQL 保存历史与 AI 结论。
 - LLM、存储、遥测失败都不能阻断控制面、Simulator 或对话主流程。
 - 前端不直接访问 LLM，所有 AI 调用都经 Dashboard Backend。
+
+## 8. 演示与降级预案（#124）
+
+- 历史预生成：`bash hack/aiops-preseed.sh [数量]` 批量创建并完成切面实验，worker 自动产出 AI 分析历史（前置：AIOps 已启用且配置 Key；API 地址用 `AIOPS_API_BASE` 覆盖）。
+- 失败态文案：浮窗对话错误已区分配额超限（429 `DAILY_QUOTA_EXCEEDED`）、限流（429 `CHAT_RATE_LIMITED`）、未启用（404）、网络/超时四类，不再裸抛后端原文。
+- 开关关闭时：分析接口返回 404，前端各区块显示"未启用/空态"，页面本身不报错；重新打开开关后恢复。

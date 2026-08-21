@@ -115,7 +115,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - 历史模式禁用写按钮，而不只依赖 Backend 拒绝。
 - 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
 - AIOps（`src/types/aiops.types.ts` + `src/api/endpoints/aiopsApi.ts`）与后端 `internal/model/aiops.go` 字段对齐：分析/实体/分数（M0/M1）、命令与模板目录（M2）、窗口/警戒（M3）全部走真实 API；`AiInsightPanel` 顶部嵌入 `CommandInput`（一句话 → 解析预览 → 确认执行，确认前无写操作）。
-- 全局浮窗（#110 阶段三）：`AiChatWidget` 挂在 `MainLayout`，右下角气泡 → 对话面板；`POST /aiops/chat` SSE 流式渲染，工具步骤（读取切面总结/生成回答）以指示器展示；会话存 localStorage（仅聊天记录与会话 id，不含密钥），未启用时 404 显示提示；打开面板时经 `GET /aiops/chat/messages` 拉取服务端历史回填空会话（#112 阶段 D 读侧，失败静默降级）。
+- 全局浮窗（#110 阶段三）：`AiChatWidget` 挂在 `MainLayout`，右下角气泡 → 对话面板；`POST /aiops/chat` SSE 流式渲染，工具步骤（读取切面总结/生成回答）以指示器展示；会话存 localStorage（仅聊天记录与会话 id，不含密钥），未启用时 404 显示提示；失败态按错误类别展示可读文案（#124：配额/限流/未启用/网络，见 PAGE_STRUCTURE 浮窗节）；打开面板时经 `GET /aiops/chat/messages` 拉取服务端历史回填空会话（#112 阶段 D 读侧，失败静默降级）。
 - 面板配置（#110 阶段四 + 开关）：`AiChatWidget` 头部「设置」入口切换对话/配置视图；`GET/POST /aiops/settings` 读写掩码状态（key 不回显、不落前端存储）与 AI 分析开关（`enabled`），保存后刷新「已配置」标识。
 - 异步任务可见性（#110 阶段一）：`AIOpsJobList` 挂 `AiInsightPanel` 顶部（CommandInput 之下），10s 轮询 `/aiops/jobs`；进行中计数 + 状态徽章 + 重试次数 + 失败原因；任务失败原因前端可直接查看（attempts/last_error 经 `/aiops/jobs` 语义查询）。
 
