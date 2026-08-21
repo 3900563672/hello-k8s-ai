@@ -1,6 +1,6 @@
 # 开发环境
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 ## 1. 一键部署所需环境
 
@@ -23,7 +23,7 @@ kubectl get nodes
 kubectl get storageclass standard
 ```
 
-Context 必须是 `docker-desktop`。脚本不会自动切换 Context，也不会创建、重置或删除集群。
+Context 必须是 `kind-hello-k8s-ai-dev`（`make cluster-up` 幂等创建/复用的固定 Kind 开发集群）。脚本会自动创建/切换 Context，但不会重置或删除集群。
 
 ## 2. 开发源码时的额外工具
 
@@ -71,7 +71,7 @@ WSL 输出“localhost 代理未镜像”不等于 Docker Desktop Engine 无法�
 通常无需修改：
 
 ```bash
-KUBE_CONTEXT=docker-desktop
+KUBE_CONTEXT=kind-hello-k8s-ai-dev
 NAMESPACE=hello-k8s-ai-system
 DEMO_MODEL_ABSOLUTE_SCORE=100
 ```

@@ -1,6 +1,6 @@
 # 验证指南
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 ## 1. 提交前一条命令
 
@@ -78,7 +78,8 @@ make cluster-status
 | --- | --- |
 | `test.yml` | Controller、Backend、Frontend、生成文件、Kustomize 和四类 Docker 镜像。 |
 | `lint.yml` | golangci-lint 配置和源码检查。 |
-| `test-e2e.yml` | 固定版本 Kind 上的真实 Controller/Simulator E2E，并在结束时兜底清理集群。 |
+| `test-e2e.yml` | 固定版本 Kind 上的真实 Controller/Simulator E2E，并在结束时兜底清理集群（push 仅限 main，避免与 PR 并行双跑）。 |
+| `docs.yml` | 全仓库 Markdown lint、链接检查与文档同步漂移检查。 |
 
 CI 会在 `go mod tidy` 后检查 `go.mod/go.sum` 是否发生变化，避免工作流静默修改依赖文件。
 
