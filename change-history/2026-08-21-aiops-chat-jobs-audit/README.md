@@ -18,6 +18,7 @@
 
 - 后端 `go build` / `go vet` / `go test -count=1 ./...` 全绿；新增：任务生命周期（pending→done）与失败回写（failed + last_error）、流式 usage 解析（prompt=11/completion=3）、配置掩码态与审计落库。
 - 前端 `npm run check`（oxlint + tsc + vite build + state check）通过；`make lint`（shellcheck/markdownlint/PSScriptAnalyzer/golangci-lint）与 `make docs-check` 全绿。
+- 合入 main 后复核（f88caa0，#113）：attempts 重试上限语义生效——worker 单次 poll 重试 3 次达上限回写 failed，未达上限回 pending 续跑；对应测试同步更新。
 
 ## 迁移与回滚
 
