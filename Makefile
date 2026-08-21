@@ -416,6 +416,11 @@ context-pack:
 docs-check:
 	python3 hack/check-docs.py
 
+# 覆盖率门禁（issue #142）：核心包低于阈值退出非零；store 需 TEST_DATABASE_URL
+.PHONY: coverage
+coverage:
+	python3 hack/coverage-check.py
+
 # 生成派生文档（README 时间线段 / docs/status.md / llms.txt / 所有权表）
 .PHONY: docs-sync
 docs-sync:

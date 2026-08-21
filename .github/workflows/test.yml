@@ -74,6 +74,43 @@ jobs:
           go vet ./...
           go test -race ./... -count=1
 
+  coverage:
+    permissions:
+      contents: read
+    name: 覆盖率门禁（#142）
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 配置 Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: 覆盖率检查（核心包低于阈值退出非零）
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+        run: |
+          python3 hack/coverage-check.py
+
   frontend:
     permissions:
       contents: read
@@ -100,6 +137,7 @@ jobs:
         run: |
           npm ci
           npm run check
+          npm run test:coverage
 
   verify-deploy:
     permissions:

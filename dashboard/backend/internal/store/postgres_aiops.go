@@ -240,7 +240,7 @@ func (database *Postgres) ListAIOpsCommands(ctx context.Context, limit int) ([]m
 		SELECT command_id, raw_input, parsed, status, steps, error_text, created_at, updated_at
 		FROM aiops_commands
 		ORDER BY created_at DESC
-		LIMIT `, limit)
+		LIMIT $1`, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list aiops commands: %w", err)
 	}
