@@ -159,3 +159,7 @@ AIOps 分析（#93）在实验终态后异步执行，与时间域无关：不�
 M3 时间聚合（#95）按墙钟窗口聚合 L2 结果（L3 窗口 / L4 日总结，`aiops_window_summaries`），窗口粒度可配置（`AIOPS_WINDOW_GRANULARITY`）；粒度变更后按新粒度重新切分（window_id 含窗口起点，天然幂等）。警戒对分数序列跑规则（连续低分/趋势下滑），不依赖逻辑时间。
 
 任务队列（#110 阶段一）：`aiops_jobs` 记录每个切面分析的任务级状态（pending→running→done/failed + attempts + last_error + 起止时间），worker 用 `FOR UPDATE SKIP LOCKED` 认领后回写，崩溃遗留启动时回收；同样与逻辑时间无关，前端 10s 轮询 `/aiops/jobs` 展示。对话消息（`aiops_chat_messages`，#112 阶段 D）按墙钟 `created_at` 记录，回答引用的窗口/警戒 ID 是生成时刻的结论型快照引用，不随 replay/倍速改变；读侧 `GET /aiops/chat/messages` 按正序返回，同样不随 replay/倍速改变。日配额（#124）按墙钟 24h 滚动统计 `aiops_audit_log`，超限对话 429、分析短路，不随 replay/倍速变化。
+
+## 6. AIOps 读侧查询与逻辑时间无关
+
+AIOps 读侧（命令列表、对话消息、窗口总结）一律按墙钟时间查询，不随 replay/倍速变化；分页/条数限制使用参数绑定（如 `ListAIOpsCommands` 的 `LIMIT $1`），避免拼接注入。明细见 `docs/backend/DATABASE_DESIGN.md` 的 AIOps 表说明。

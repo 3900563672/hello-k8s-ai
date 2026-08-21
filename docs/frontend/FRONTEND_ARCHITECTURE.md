@@ -140,3 +140,9 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - Traffic QPS 当前趋势更接近单点/本地曲线，尚未完整使用 Prometheus 历史曲线。
 - 缺少组件与浏览器 E2E 测试；`npm run check` 主要验证 lint、build 和状态契约。
 - Route 名 `/trace` 已承载 Data View，多年后可能与产品信息架构冲突，应在稳定 API 前统一命名。
+
+## 7. 测试体系（#142/#143）
+
+- vitest + jsdom + Testing Library（react/jest-dom/user-event）；`src/test/setup.ts` 打桩浏览器 API（matchMedia/ResizeObserver 等），`src/test/queryUtils.tsx` 封装带 router/query-client 的渲染与查询辅助。
+- `npm run test:coverage` 为 CI 门禁（v8 覆盖率阈值见 `vitest.config.ts`，防回退基线；目标抬升跟踪 #143）。
+- 测试分布：组件测试在 `src/components/**/*.test.tsx`，纯逻辑测试在 `src/lib`、`src/api`、`src/stores` 对应 `*.test.ts`；`src/test/` 为脚手架目录，不参与覆盖率统计。

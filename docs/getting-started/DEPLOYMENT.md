@@ -171,3 +171,9 @@ change-history 门禁：非文档源码改动（后端/前端/脚本/CI/测试�
 | Deployment | `hello-k8s-ai-dashboard-frontend` | 1 |
 
 Controller 还会按 SimulatorInstance 动态创建 `simulator-<instance>` Deployment。
+
+## 6. 测试与覆盖率门禁（#142）
+
+- `make coverage`：后端覆盖率硬 gate（`hack/coverage-check.py`），CI 同款命令并自带 postgres service（store 集成测试）。
+- `hack/cover-gaps.py`：输出各包未覆盖函数清单（`go tool cover -func` 风格），用于定位补测缺口。
+- 前端：`npm run test:coverage`（vitest v8 + jsdom），阈值见 `vitest.config.ts`（防回退基线，目标抬升跟踪 #143）。

@@ -158,3 +158,7 @@ flowchart LR
 - dev:mock 由 `plugins/mock-fixtures.ts`（vite `--mode mock` 插件）拦截 `/api/v1` GET 返回 fixtures，写请求 405（只读）；快照空数组用 `dev-fixtures/` 样例补齐（meta.devSamples），不写控制面。
 - overview 与 trace detail 分属不同录制窗口时 traceId 可能不匹配；dev:mock 对缺失 detail 用摘要合成单 span 兜底，生产 API 不做该处理。
 - AIOps 契约演示数据已删除（后端 M2/M3 就绪，真实模式返回真实数据；dev:mock 下 aiops 接口 404，组件显示未启用/空态）。
+
+## 7. 测试替身与数据流验证
+
+`src/test/setup.ts` 与 `src/test/queryUtils.tsx` 提供测试脚手架：setup 打桩浏览器 API，queryUtils 封装渲染入口；组件/查询测试通过 `vi.mock` 替换 api client 验证各链路数据流，与 `dev:mock` 插件（真实 API 录制，见 vite `--mode mock`）互补，分别覆盖单元与联调两个层面。
