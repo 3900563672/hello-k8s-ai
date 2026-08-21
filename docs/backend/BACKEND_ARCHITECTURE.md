@@ -1,6 +1,6 @@
 # Backend 架构
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/kubernetes/、dashboard/backend/internal/api/ 等
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/kubernetes/、dashboard/backend/internal/api/ 等
 
 ## 1. Backend 的角色
 
@@ -193,5 +193,5 @@ DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 
 - 同步对话（#110 阶段二）：`chat.go` 组装「结论型」上下文（最近 L3 窗口总结 / 最近警戒 / 最近已完成分析分数，目标 ≤6000 字符），`POST /aiops/chat` SSE 流式返回（lifecycle/tool/text 事件，AG-UI 轻量子集）；`llm.go` 新增流式调用（stream=true 逐 delta 回调）。限制：消息 ≤ `AIOPS_CHAT_MAX_MESSAGE_LEN`（默认 4000）、按会话限流 `AIOPS_CHAT_RATE_PER_MINUTE`（默认 6 次/分钟）、模型白名单 `AIOPS_CHAT_MODELS`（默认仅 `AIOPS_MODEL`）。
 - 面板配置与调用审计（#110 阶段四）：`Settings`/`ConfigureLLM` 提供掩码状态与运行时写入（`configMu` 保护，key 仅存内存，重启由环境变量恢复）；`GET/POST /aiops/settings` 暴露掩码态，key 不落库不回显。`AuditChat` 在流式对话结束后写 `aiops_audit_log`（模型/耗时/消息长度/token 用量/结果；流式请求带 `stream_options.include_usage`，从末 chunk usage 解析），审计失败只记日志，不影响对话主流程。
 - 异步任务可见性（#110 阶段一）：`aiops_jobs` 表即队列（segment 唯一、幂等入队，job_id 复用 analysis_id），worker 每轮用 `FOR UPDATE SKIP LOCKED` 认领 pending（attempts+1/started_at），收尾回写 done/failed + finished_at + last_error；启动时 `RequeueStaleAIOpsJobs` 回收崩溃遗留。`GET /aiops/jobs` 暴露状态，前端「异步任务」区块 10s 轮询。
-- 提示词工程化（#112 阶段 A/B）：提示词模板迁入 `internal/aiops/prompts/`（go:embed + 每层版本 + 渲染 sha256 哈希，调用日志记录版本/哈希）；每层输出过运行时 schema 校验（枚举/范围/长度，`schema.go`），解析或校验失败重试 1 次再规则兜底，失败原因记日志；`CompleteJSON` 返回非流式 usage（token 用量），每次调用结构化日志记录；每层输入预算与截断优先级「分数 > 结论 > 现象 > 事件」（L2 摘要区 4000 rune、L3 ≤24 子级、L4 ≤96 窗口、对话上下文 6000 rune，裁剪记日志）。
+- 提示词工程化（#112 阶段 A/B）：提示词模板迁入 `internal/aiops/prompts/`（go:embed + 每层版本 + 渲染 sha256 哈希，调用日志记录版本/哈希）；每层输出过运行时 schema 校验（枚举/范围/长度，`schema.go`），解析或校验失败重试 1 次再规则兜底，失败原因记日志；`CompleteJSON` 返回非流式 usage（token 用量），每次调用结构化日志记录；每层输入预算与截断优先级「分数 > 结论 > 现象 > 事件」（L2 摘要区 4000 rune、L3 ≤24 子级、L4 ≤96 窗口、对话上下文 6000 rune，裁剪记日志）。阶段 C 收口：上下文组装器统一收口（`assembler.go`，L1/L2/聚合/对话都走预算与截断），对话检索器补充最近意图命令（`recentCommands`）；生成参数分层（分析层 temperature 0.1、对话层 0.5，0 省略走服务端默认）。阶段 D 对话追溯：`POST /aiops/chat` 回答成功后写 `aiops_chat_messages`（user+assistant 两条，assistant 携带引用的 window/alert/command ID 数组，失败只记日志不影响响应）。
 

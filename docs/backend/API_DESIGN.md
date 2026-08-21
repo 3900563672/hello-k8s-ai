@@ -1,6 +1,6 @@
 # API 设计
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/api/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/api/
 
 Base path：`/api/v1`。当前 API 是面向 Dashboard 的内部稳定契约；尚未生成正式 OpenAPI 文档，也没有公开版本兼容承诺。
 
@@ -144,7 +144,7 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | GET | `/aiops/templates` | 只读模板目录（model/node/tenant/orchestrator/traffic，LLM 只能选目录内 id）。 |
 | GET | `/aiops/windows` | 窗口/日总结；`level=L3|L4`、`limit` 1..200。 |
 | GET | `/aiops/alerts` | 警戒列表（分数序列规则触发）；`limit` 1..200。 |
-| POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话。 |
+| POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话；回答成功后问答对与引用的 window/alert/command ID 落 `aiops_chat_messages`（失败不影响响应）。 |
 | GET | `/aiops/jobs` | 异步任务列表（`status=pending\|running\|done\|failed`、`limit` 1..200）。 |
 | GET | `/aiops/settings` | LLM 配置掩码状态（模型/地址/key 是否已配置，不回显明文）。 |
 | POST | `/aiops/settings` | 面板写入 LLM 配置：`{"apiKey"?,"model"?,"baseUrl"?}` 至少一项；apiKey ≥8 字符，仅存服务端内存。 |

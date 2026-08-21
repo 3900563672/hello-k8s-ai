@@ -1,6 +1,6 @@
 # API 示例
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/api/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/api/
 
 示例假设 Backend 在 `http://localhost:8080`。生产环境必须通过认证/TLS；不要复制开发凭据。
 
@@ -284,7 +284,7 @@ curl -sS "$API/aiops/alerts?limit=10"
 **同步对话（#110 阶段二，SSE 流式）：**
 
 ```bash
-# 流式回答：事件为 data: {json}（lifecycle/tool/text），curl -N 关闭缓冲
+# 流式回答：事件为 data: {json}（lifecycle/tool/text），curl -N 关闭缓冲；回答成功后服务端落库 aiops_chat_messages
 curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
   -d '{"message":"当前集群什么情况？","sessionId":"demo-session"}'
 ```
