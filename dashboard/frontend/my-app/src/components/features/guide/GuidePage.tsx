@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
     BookOpen,
     Braces,
@@ -34,12 +34,12 @@ function FieldRow({ name, unit, defaultValue, children }: FieldRowProps) {
         <div className="flex flex-col gap-1 border-b border-[#1B2634]/60 py-2.5 last:border-b-0 sm:flex-row sm:items-baseline sm:gap-3">
             <div className="w-44 shrink-0">
                 <code className="text-xs text-[#C9D4E3]">{name}</code>
-                {unit && <span className="ml-1.5 text-[10px] text-[#596579]">{unit}</span>}
+                {unit && <span className="ml-1.5 text-[12px] text-[#596579]">{unit}</span>}
             </div>
             <div className="min-w-0 flex-1 text-xs leading-5 text-[#8B97A8]">{children}</div>
             {defaultValue && (
                 <div className="shrink-0 text-right">
-                    <span className="rounded border border-[#2A3548] bg-[#111722] px-1.5 py-0.5 font-mono text-[10px] text-[#8CB8F8]">
+                    <span className="rounded border border-[#2A3548] bg-[#111722] px-1.5 py-0.5 font-mono text-[12px] text-[#8CB8F8]">
                         默认 {defaultValue}
                     </span>
                 </div>
@@ -67,7 +67,7 @@ function ParamsTable({ rows }: { rows: ParamRow[] }) {
         <div className="overflow-hidden rounded-xl border border-[#232323] bg-[#0B1018]">
             <table className="w-full border-collapse text-left">
                 <thead>
-                    <tr className="border-b border-[#263244] bg-[#0D131C] text-[10px] text-[#6F7B8E]">
+                    <tr className="border-b border-[#263244] bg-[#0D131C] text-[12px] text-[#6F7B8E]">
                         <th className="px-4 py-2.5 font-medium">参数</th>
                         <th className="px-4 py-2.5 font-medium">值</th>
                         <th className="px-4 py-2.5 text-right font-medium">归属</th>
@@ -76,10 +76,10 @@ function ParamsTable({ rows }: { rows: ParamRow[] }) {
                 <tbody>
                     {rows.map((row) => (
                         <tr key={row.label} className="border-b border-[#1B2634]/60 last:border-b-0">
-                            <td className="px-4 py-2.5 font-mono text-[11px] text-[#C9D4E3]">{row.label}</td>
-                            <td className="px-4 py-2.5 font-mono text-[11px] text-[#AAB6C5]">{row.value}</td>
+                            <td className="px-4 py-2.5 font-mono text-[14px] text-[#C9D4E3]">{row.label}</td>
+                            <td className="px-4 py-2.5 font-mono text-[14px] text-[#AAB6C5]">{row.value}</td>
                             <td className="px-4 py-2.5 text-right">
-                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] ${ownerStyles[row.owner]}`}>
+                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] ${ownerStyles[row.owner]}`}>
                                     {row.owner}
                                 </span>
                             </td>
@@ -118,34 +118,97 @@ const systemParams: ParamRow[] = [
     { label: '后端 HTTP 读超时', value: '15 s', owner: '系统常量' },
 ]
 
+const GUIDE_SECTIONS = [
+    { id: 'guide-identifiers', num: '01', title: '标识符生成规则' },
+    { id: 'guide-models', num: '02', title: '模型' },
+    { id: 'guide-tenants', num: '03', title: '租户' },
+    { id: 'guide-nodes', num: '04', title: '节点' },
+    { id: 'guide-orchestrators', num: '05', title: '编排策略' },
+    { id: 'guide-policies', num: '06', title: '策略' },
+    { id: 'guide-traffic', num: '07', title: '流量' },
+    { id: 'guide-system-params', num: '08', title: '系统参数速查' },
+    { id: 'guide-simulation-tips', num: '09', title: '模拟条件下怎么填' },
+] as const
+
 export function GuidePage() {
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const [activeId, setActiveId] = useState<string>(GUIDE_SECTIONS[0].id)
+
+    useEffect(() => {
+        const container = containerRef.current
+        if (!container) return
+        const onScroll = () => {
+            const threshold = container.getBoundingClientRect().top + 140
+            let current: string = GUIDE_SECTIONS[0].id
+            for (const section of GUIDE_SECTIONS) {
+                const el = document.getElementById(section.id)
+                if (el && el.getBoundingClientRect().top <= threshold) current = section.id
+            }
+            setActiveId(current)
+        }
+        container.addEventListener('scroll', onScroll, { passive: true })
+        onScroll()
+        return () => container.removeEventListener('scroll', onScroll)
+    }, [])
+
+    const scrollToSection = (id: string) => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
     return (
-        <div className="relative h-full overflow-auto bg-[#05070A] text-[#E8EEF7]">
+        <div ref={containerRef} className="relative h-full overflow-auto bg-[#05070A] text-[#E8EEF7]">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_56%_6%,rgba(91,140,255,.08),transparent_28%)]" />
             <main className="relative mx-auto h-full w-full max-w-[1500px] px-5 py-6 lg:px-8 lg:py-8">
                 <header className="flex shrink-0 flex-col gap-4 border-b border-white/[0.07] pb-5 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.16em] text-[#6B788C]">
+                        <div className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.16em] text-[#6B788C]">
                             <BookOpen className="h-3.5 w-3.5 text-[#7CAEFF]" />
                             Guide / 参数速查
                         </div>
                         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.025em] text-[#F0F5FB]">
                             填写指南
                         </h1>
-                        <p className="mt-1.5 text-[11px] text-[#657286]">
+                        <p className="mt-1.5 text-[14px] text-[#657286]">
                             字段含义、性能单位、系统硬编码参数与模拟条件下的取值建议
                         </p>
                     </div>
                     <Link
                         to="/config"
-                        className="inline-flex h-8 items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.025] px-3 text-[10px] text-[#AAB6C8] outline-none transition duration-150 hover:bg-white/[0.06] hover:text-white"
+                        className="inline-flex h-8 items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.025] px-3 text-[12px] text-[#AAB6C8] outline-none transition duration-150 hover:bg-white/[0.06] hover:text-white"
                     >
                         <SlidersHorizontal className="h-3.5 w-3.5" />
                         返回配置中心
                     </Link>
                 </header>
 
-                <div className="mt-6 space-y-4">
+                <div className="mt-6 flex items-start gap-6">
+                    <aside className="sticky top-6 hidden w-52 shrink-0 xl:block">
+                        <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-panel/80">
+                            <div className="border-b border-white/[0.05] px-3.5 py-2.5 text-[12px] font-medium uppercase tracking-[0.14em] text-[#6B788C]">
+                                目录
+                            </div>
+                            <nav className="p-1.5">
+                                {GUIDE_SECTIONS.map((section) => (
+                                    <button
+                                        key={section.id}
+                                        type="button"
+                                        onClick={() => scrollToSection(section.id)}
+                                        className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors ${
+                                            activeId === section.id
+                                                ? 'bg-[#5B8CFF]/12 text-[#A9CDFF]'
+                                                : 'text-[#7C8AA0] hover:bg-white/[0.03] hover:text-[#C7D4E5]'
+                                        }`}
+                                    >
+                                        <span className={`font-mono text-[11px] ${
+                                            activeId === section.id ? 'text-[#6EA3F8]' : 'text-[#4F5D71]'
+                                        }`}>{section.num}</span>
+                                        <span className="truncate">{section.title}</span>
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </aside>
+                    <div className="min-w-0 flex-1 space-y-4">
                     <ConfigFormSection
                         title="标识符生成规则"
                         description="创建资源时，系统标识由显示名称自动生成，与配置中心预览保持一致。"
@@ -233,7 +296,11 @@ export function GuidePage() {
                     <ConfigFormSection
                         title="编排策略"
                         description="定义租户的扩缩容冷却、副本范围与缩容行为。"
-                        action={<Route className="h-4 w-4 text-[#5E9EFF]" />}
+                        id="guide-orchestrators"
+                        action={<span className="flex items-center gap-2">
+                            <Route className="h-4 w-4 text-[#5E9EFF]" />
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B8CFF]/15 font-mono text-[11px] font-semibold text-[#8CB8F8]">05</span>
+                        </span>}
                     >
                         <div className="space-y-0">
                             <FieldRow name="scaleUpCooldownSeconds" unit="s" defaultValue="60">扩容冷却：同方向扩容动作的最小间隔。</FieldRow>
@@ -255,7 +322,11 @@ export function GuidePage() {
                     <ConfigFormSection
                         title="策略"
                         description="租户、模型与节点的 Allow / Deny 关系，Controller 据此拉起 Simulator。"
-                        action={<ShieldCheck className="h-4 w-4 text-[#5E9EFF]" />}
+                        id="guide-policies"
+                        action={<span className="flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-[#5E9EFF]" />
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B8CFF]/15 font-mono text-[11px] font-semibold text-[#8CB8F8]">06</span>
+                        </span>}
                     >
                         <div className="space-y-0">
                             <FieldRow name="tenantmodelpolicy">租户 → 模型：决定租户能否使用某个模型。</FieldRow>
@@ -269,7 +340,11 @@ export function GuidePage() {
                     <ConfigFormSection
                         title="流量"
                         description="模板控制点语义、叠加方式与逻辑时间。"
-                        action={<Waves className="h-4 w-4 text-[#5E9EFF]" />}
+                        id="guide-traffic"
+                        action={<span className="flex items-center gap-2">
+                            <Waves className="h-4 w-4 text-[#5E9EFF]" />
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B8CFF]/15 font-mono text-[11px] font-semibold text-[#8CB8F8]">07</span>
+                        </span>}
                     >
                         <div className="space-y-0">
                             <FieldRow name="控制点">x 为逻辑时间（秒，从 T+0 起），y 为该时刻的绝对 QPS 增量；曲线在控制点之间插值。</FieldRow>
@@ -293,7 +368,11 @@ export function GuidePage() {
                     <ConfigFormSection
                         title="系统参数速查"
                         description="前端默认值与各组件硬编码参数；归属标注为系统常量时不可通过表单修改。"
-                        action={<Gauge className="h-4 w-4 text-[#5E9EFF]" />}
+                        id="guide-system-params"
+                        action={<span className="flex items-center gap-2">
+                            <Gauge className="h-4 w-4 text-[#5E9EFF]" />
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B8CFF]/15 font-mono text-[11px] font-semibold text-[#8CB8F8]">08</span>
+                        </span>}
                     >
                         <ParamsTable rows={systemParams} />
                     </ConfigFormSection>
@@ -301,7 +380,11 @@ export function GuidePage() {
                     <ConfigFormSection
                         title="模拟条件下怎么填"
                         description="容量、阈值与性能画像的取值思路。"
-                        action={<FileClock className="h-4 w-4 text-[#5E9EFF]" />}
+                        id="guide-simulation-tips"
+                        action={<span className="flex items-center gap-2">
+                            <FileClock className="h-4 w-4 text-[#5E9EFF]" />
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B8CFF]/15 font-mono text-[11px] font-semibold text-[#8CB8F8]">09</span>
+                        </span>}
                     >
                         <div className="space-y-0">
                             <FieldRow name="容量估算">模型 gpuUnits × 期望副本数 ≤ 可用节点 gpu 总和；模型 maxConcurrency × 副本数 ≤ 节点 maxConcurrency 总和。</FieldRow>
@@ -316,6 +399,7 @@ export function GuidePage() {
                             <FieldRow name="性能画像">无实测数据时保持 50 / 500 / 20 默认值；模拟结果偏快或偏慢时，再按实测校准这三个参数。</FieldRow>
                         </div>
                     </ConfigFormSection>
+                    </div>
                 </div>
             </main>
         </div>
@@ -330,7 +414,7 @@ interface PresetListProps {
 function PresetList({ title, rows }: PresetListProps) {
     return (
         <div className="mt-4 overflow-hidden rounded-xl border border-[#232323] bg-[#0D131C]">
-            <div className="border-b border-[#1B2634] px-4 py-2.5 text-[10px] font-medium text-[#6F7B8E]">
+            <div className="border-b border-[#1B2634] px-4 py-2.5 text-[12px] font-medium text-[#6F7B8E]">
                 {title}
             </div>
             <div className="divide-y divide-[#1B2634]/60">
@@ -340,7 +424,7 @@ function PresetList({ title, rows }: PresetListProps) {
                             <span className="h-1 w-1 rounded-full bg-[#5B8CFF]" />
                             {row.name}
                         </span>
-                        <span className="min-w-0 flex-1 font-mono text-[11px] text-[#8B97A8]">{row.summary}</span>
+                        <span className="min-w-0 flex-1 font-mono text-[14px] text-[#8B97A8]">{row.summary}</span>
                     </div>
                 ))}
             </div>

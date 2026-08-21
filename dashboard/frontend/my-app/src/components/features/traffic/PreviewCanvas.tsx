@@ -160,7 +160,7 @@ export function PreviewCanvas({
             <div className={`flex h-full w-full items-center justify-center rounded-xl border border-dashed border-white/[0.08] bg-[#080C12] px-8 text-center ${className}`}>
                 <div>
                     <div className="text-xs font-medium text-[#8995A8]">等待配置</div>
-                    <div className="mt-1 text-[10px] leading-4 text-[#586476]">选择租户并填写逻辑偏移后，这里会显示叠加前后对比</div>
+                    <div className="mt-1 text-[12px] leading-4 text-[#586476]">选择租户并填写逻辑偏移后，这里会显示叠加前后对比</div>
                 </div>
             </div>
         )
@@ -174,7 +174,7 @@ export function PreviewCanvas({
                 opts={{ renderer: 'canvas' }}
                 notMerge
             />
-            <div className="pointer-events-none absolute bottom-2 right-2 rounded-md border border-[#5B8CFF]/20 bg-[#0B1220]/90 px-2 py-1 text-[9px] text-[#82B9FF] backdrop-blur">
+            <div className="pointer-events-none absolute bottom-2 right-2 rounded-md border border-[#5B8CFF]/20 bg-[#0B1220]/90 px-2 py-1 text-[13px] text-[#82B9FF] backdrop-blur">
                 峰值增量 +{formatQps(preview.peakIncrease)} QPS
             </div>
         </div>

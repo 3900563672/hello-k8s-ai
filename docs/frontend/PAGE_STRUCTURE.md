@@ -1,6 +1,6 @@
 # 页面结构
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/traffic/、dashboard/frontend/my-app/src/components/features/config/ 等
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/frontend/my-app/src/components/features/observatory/、dashboard/frontend/my-app/src/components/features/traffic/、dashboard/frontend/my-app/src/components/features/config/ 等
 
 ## 1. 实际路由与产品概念
 
@@ -9,14 +9,14 @@
 | 产品概念 | 当前实现 | 路由 | 说明 |
 | --- | --- | --- | --- |
 | Dashboard | `MainLayout` 应用外壳 | 所有页面共享 | Sidebar、ClusterStatus、执行控件、全局时间条；没有独立 landing。 |
+| 状态总览（Observatory） | `ObservatoryPage` | `/observatory` | 拓扑气泡（`ClusterBubbleField`）+ 实时指标墙（`MonitorWall`）+ Trace 调用链（`TraceWaterfall`）+ 切面实验面板（`SegmentPanel`/`ExperimentPanel`）；原 Trace/Data View/Monitor 三页合并于此。 |
 | Config | `ConfigPage` | `/config` | Model、WorkerNode、Tenant 配置。 |
 | Traffic | `TrafficPage` | `/traffic` | 真实流量基线 + 本地场景草稿/Overlay。 |
-| Trace | `DataOverviewPage` 内的 Trace 区域 | `/trace` | Trace 搜索摘要与 Span 树。 |
-| Data View | 同一个 `DataOverviewPage` | `/trace` | 资源、指标、事件、时间和 Trace 的综合视图。 |
-| Monitor | `MonitorPage` | `/monitor` | Grafana 统一监控视图，Dashboard 单入口。 |
 | Guide | `GuidePage` | `/guide` | 参数填写指南：字段含义、默认值、系统常量与填法。 |
+| Trace（旧） | `DataOverviewPage` | `/trace` | 兼容重定向到 `/observatory`；组件保留供复用（`TraceWorkbench`）。 |
+| Monitor（旧） | `MonitorPage` | `/monitor` | 兼容重定向到 `/observatory`；组件保留供复用（`MonitorWall`）。 |
 
-`/` 重定向到 `/config`，未知路由显示 NotFound。未来如新增独立 Dashboard/Data View，应先确定 URL 迁移和导航兼容。
+`/` 重定向到 `/observatory`，未知路由显示 NotFound。旧 `/trace`、`/monitor` 路由保留但重定向到 `/observatory`，避免存量链接失效。
 
 ## 2. Dashboard 应用外壳
 
@@ -107,11 +107,29 @@ TanStack Query 拥有配置数据和 mutations；表单由 react-hook-form/Zod�
 
 Traffic 页面上的“应用 Overlay”会通过 `PATCH /tenants/{name}/traffic` 写入租户目标 QPS（当前 QPS + 模板起始增量），成功后 overlay 才加入本地列表；失败提示具体错误。控制面当前只支持常量目标 QPS，曲线仅作场景预览；历史模式只读，禁止应用。
 
-## 5. Trace 区域
+## 5. Observatory 页面（状态总览）
 
 ### 目的
 
-搜索 Controller/Simulator Trace，查看具体 Trace 的 Span 层级、持续时间、属性和错误，关联到 tenant/model/instance。
+重构后的首页与单一事实入口：把拓扑、实时指标、调用链与切面实验放在一个可滚动视图里，替代旧 `/trace`（Data View + Trace）与 `/monitor` 两个页面。
+
+### 组成模块
+
+- `ClusterBubbleField`：节点/租户/状态分组的气泡拓扑（聚类与详情下钻）。
+- `MonitorWall`：实时指标卡墙（Prometheus 指标、样本新鲜度、Grafana 健康入口）。
+- `TraceWaterfall`：Trace 调用链瀑布视图（关联 tenant/model/instance）。
+- `SegmentPanel` / `ExperimentPanel`：时间段切面与实验创建/开始/完成/失败（issue #51 逻辑保留）。
+
+### 数据与 API
+
+- `GET /overview`（Trace summaries + 页面块）、`GET /traces` / `GET /traces/{traceID}`。
+- 监控与 Grafana 入口沿用旧 Monitor 的反向代理 `/grafana/` 约定。
+
+## 6. Trace 区域（旧实现，路由已重定向）
+
+### 目的
+
+搜索 Controller/Simulator Trace，查看具体 Trace 的 Span 层级、持续时间、属性和错误，关联到 tenant/model/instance。当前 `/trace` 重定向到 `/observatory`，本节保留为历史实现说明；`DataOverviewPage`/`TraceWorkbench` 组件仍存在于源码中供复用。
 
 ### 数据与 API
 
@@ -131,11 +149,11 @@ DataOverview 页在时间段切面下方新增实验切面面板：左侧创建/
 
 Jaeger 是可选 provider，失败时页面应显示 warning 并继续展示 Kubernetes/Prometheus 数据。开发 Jaeger 没有持久存储保证，重启后旧 Trace 可能消失。
 
-## 6. Data View 综合区域
+## 7. Data View 综合区域（旧实现，路由已重定向）
 
 ### 目的
 
-让用户在一个时间上下文下理解“资源现在是什么、性能怎样、发生了什么、调用链如何”。当前与 Trace 合并在 `/trace`。
+让用户在一个时间上下文下理解“资源现在是什么、性能怎样、发生了什么、调用链如何”。原实现与 Trace 合并于 `/trace`；路由重定向后该视图内容由 `ObservatoryPage` 承接。
 
 ### 主要模块
 
@@ -156,11 +174,11 @@ Jaeger 是可选 provider，失败时页面应显示 warning 并继续展示 Kub
 
 Latest 默认约 15 秒 refetch；Historical 视图应保持不可变，除非用户选择另一个 snapshot。
 
-## 7. Monitor 页面
+## 8. Monitor 页面（旧实现，路由已重定向）
 
 ### 目的
 
-在 Dashboard 内嵌 Grafana 统一监控视图，让 Prometheus 指标与 Jaeger 链路不再单独暴露端口。页面只做外壳与健康检查，图表由 Grafana 渲染。
+在 Dashboard 内嵌 Grafana 统一监控视图，让 Prometheus 指标与 Jaeger 链路不再单独暴露端口。路由重定向后由 `ObservatoryPage` 内的 `MonitorWall` 承接；本节保留为历史实现说明。
 
 ### 数据与 API
 
@@ -177,7 +195,7 @@ Grafana 健康状态是页面本地 state；`reloadKey` 变化强制 iframe 重�
 - “新窗口打开”指向 `/grafana/`（同一 Dashboard 入口）。
 - Grafana 不可用时页面仍可渲染外壳并给出可执行提示，属于优雅降级。
 
-## 8. Guide 页面
+## 9. Guide 页面
 
 ### 目的
 
@@ -197,7 +215,7 @@ Grafana 健康状态是页面本地 state；`reloadKey` 变化强制 iframe 重�
 
 无全局状态；复用的 `ConfigFormSection` / `FieldRow` 只负责展示。模板数据来源见 [DATA_FLOW.md](DATA_FLOW.md)。
 
-## 9. Mock 到真实 Backend 的迁移矩阵
+## 10. Mock 到真实 Backend 的迁移矩阵
 
 | 旧实现 | 当前替代 | 状态 |
 | --- | --- | --- |
@@ -208,6 +226,7 @@ Grafana 健康状态是页面本地 state；`reloadKey` 变化强制 iframe 重�
 | Trace API 恒定失败/占位页 | Jaeger provider + DataOverviewPage | 已替换。 |
 | Mock traffic baseline | `/traffic` | 已替换。 |
 | Traffic templates/overlays | 仍是本地内存草稿 | 有意保留为编辑态，不是远端数据。 |
+| 开发期 mock 数据 | `npm run dev:mock`（vite `--mode mock`）+ `plugins/mock-fixtures.ts` 读 `src/lib/mocks/fixtures/` | 仅本地预览用；mock 模式关闭 HMR，不进入主链路。 |
 | 浏览器逻辑时钟假状态 | `/clock` 墙钟 + Kubernetes Simulator rate | 已替换；倍速通过 Backend/CRD/Controller 真正作用于 Simulator。 |
 
 迁移的核心不是“删除所有本地数据”，而是只允许本地数据承担 UI 草稿；任何声称是集群事实的内容必须来自 Backend。

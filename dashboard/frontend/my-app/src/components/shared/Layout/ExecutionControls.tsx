@@ -136,7 +136,7 @@ export function ExecutionControls() {
                             value={cluster.clockRate}
                             disabled={rateDisabled}
                             onChange={(event) => void setSimulationRate(Number(event.target.value))}
-                            className="w-[28px] appearance-none bg-transparent text-center font-mono text-[9px] font-semibold text-[#AEB9C9] outline-none disabled:cursor-not-allowed"
+                            className="w-[28px] appearance-none bg-transparent text-center font-mono text-[13px] font-semibold text-[#AEB9C9] outline-none disabled:cursor-not-allowed"
                         >
                             {rateOptions.map((rate) => (
                                 <option key={rate} value={rate} className="bg-[#111722] text-[#DDE5F0]">
@@ -161,7 +161,7 @@ export function ExecutionControls() {
 
             <div className="flex max-w-[60px] items-center justify-center gap-1.5">
                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} />
-                <span className="truncate text-[9px] font-medium text-[#7C899C]">
+                <span className="truncate text-[13px] font-medium text-[#7C899C]">
                     {status.label}
                 </span>
             </div>

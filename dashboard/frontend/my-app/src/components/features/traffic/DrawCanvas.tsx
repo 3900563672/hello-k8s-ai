@@ -755,9 +755,9 @@ export function DrawCanvas({ onSave, onCancel }: DrawCanvasProps) {
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
                             <h2 className="truncate text-sm font-semibold tracking-[-0.01em] text-[#F3F7FC]">曲线工作台</h2>
-                            <span className="rounded-full border border-[#2F81F7]/20 bg-[#2F81F7]/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#75B1FF]">QPS</span>
+                            <span className="rounded-full border border-[#2F81F7]/20 bg-[#2F81F7]/10 px-2 py-0.5 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#75B1FF]">QPS</span>
                         </div>
-                        <p className="mt-0.5 truncate text-[11px] text-[#667085]">真实秒 / QPS 坐标 · 多笔自动续接 · 无业务上限</p>
+                        <p className="mt-0.5 truncate text-[14px] text-[#667085]">真实秒 / QPS 坐标 · 多笔自动续接 · 无业务上限</p>
                     </div>
                 </div>
 
@@ -851,7 +851,7 @@ export function DrawCanvas({ onSave, onCancel }: DrawCanvasProps) {
                     <Button variant="ghost" size="icon" onClick={() => zoomAt(1.2)} title="放大" className="h-8 w-8 rounded-lg text-[#7D899B] hover:bg-white/[0.06] hover:text-white">
                         <ZoomIn className="h-4 w-4" />
                     </Button>
-                    <span className="w-12 text-center font-mono text-[10px] text-[#8B96A8]">{Math.round(camera.zoom * 100)}%</span>
+                    <span className="w-12 text-center font-mono text-[12px] text-[#8B96A8]">{Math.round(camera.zoom * 100)}%</span>
                     <Button variant="ghost" size="icon" onClick={() => zoomAt(1 / 1.2)} title="缩小" className="h-8 w-8 rounded-lg text-[#7D899B] hover:bg-white/[0.06] hover:text-white">
                         <ZoomOut className="h-4 w-4" />
                     </Button>
@@ -877,14 +877,14 @@ export function DrawCanvas({ onSave, onCancel }: DrawCanvasProps) {
                 )}
 
                 <div className="pointer-events-none absolute bottom-3 left-[84px] right-4 z-10 flex items-end justify-between gap-3">
-                    <div className="rounded-lg border border-white/[0.06] bg-[#0B0F17]/78 px-3 py-2 text-[10px] text-[#657184] backdrop-blur-md">
+                    <div className="rounded-lg border border-white/[0.06] bg-[#0B0F17]/78 px-3 py-2 text-[12px] text-[#657184] backdrop-blur-md">
                         <span className="text-[#93A0B2]">可视范围</span>
                         <span className="mx-2 text-white/15">/</span>
                         {formatTime(camera.x)} – {formatTime(camera.x + visibleTime)}
                         <span className="mx-2 text-white/15">·</span>
                         {formatQps(camera.y)} – {formatQps(camera.y + visibleQps)} QPS
                     </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-[#0B0F17]/78 px-3 py-2 text-[10px] text-[#657184] backdrop-blur-md">
+                    <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-[#0B0F17]/78 px-3 py-2 text-[12px] text-[#657184] backdrop-blur-md">
                         <span><span className="text-[#93A0B2]">{strokes.length}</span> 笔</span>
                         <span><span className="text-[#93A0B2]">{points.length}</span> 采样点</span>
                         <span className="hidden xl:inline">真实坐标 · 仅正时间 / 正 QPS</span>

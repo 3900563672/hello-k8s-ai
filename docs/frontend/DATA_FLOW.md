@@ -140,3 +140,9 @@ flowchart LR
 - ClusterStatus 初始态应是 unknown/loading，不是 connected。
 - 无 Backend 时展示 error/empty，不生成默认 Worker/Tenant。
 - Storybook/组件测试若使用 fixture，UI 明确测试环境，不能进入生产 bundle 的数据选择逻辑。
+
+## 9. 录制快照（fixtures）与 dev:mock
+
+- `src/lib/mocks/fixtures/` 保存 GET 端点真实响应快照，`scripts/record-fixtures.mjs` 幂等重录；manifest.json 记录来源与大小，供审计。
+- dev:mock 仅服务前端预览：快照空数组用 `dev-fixtures/configuration-dev.json` 补齐（meta.devSamples），不写控制面。
+- overview 与 trace detail 分属不同录制窗口时 traceId 可能不匹配；dev:mock 对缺失 detail 用摘要合成单 span 兜底，生产 API 不做该处理。
