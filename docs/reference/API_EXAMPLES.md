@@ -253,7 +253,7 @@ curl -N -H 'Accept: text/event-stream' "$API/stream"
 # 列表（AIOPS_ENABLED=false 时返回 404 AI_OPS_DISABLED）
 curl -sS "$API/aiops/analyses?limit=10"
 curl -sS "$API/aiops/analyses?status=completed&limit=10"
-# 任务队列语义别名（含 attempts/kind）
+# 任务队列列表（attempts/kind 字段）
 curl -sS "$API/aiops/jobs?limit=10"
 # 详情：主记录 + L1 实体总结；支持按切面查询
 curl -sS "$API/aiops/analyses/<analysisId>"
