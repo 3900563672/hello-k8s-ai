@@ -127,3 +127,14 @@ export type AIOpsAnalysisDetailEnvelope = ApiEnvelope<AIOpsAnalysisDetail>
 export type AIOpsAlertsEnvelope = ApiEnvelope<AIOpsAlert[]>
 export type AIOpsCommandEnvelope = ApiEnvelope<AIOpsCommand>
 export type AIOpsWindowsEnvelope = ApiEnvelope<AIOpsWindowSummary[]>
+
+/** 同步对话 SSE 事件（#110 阶段二，AG-UI 轻量子集）：lifecycle / tool / text。 */
+export interface AIOpsChatEvent {
+    type: 'lifecycle' | 'tool' | 'text'
+    phase?: 'start' | 'end'
+    name?: string
+    delta?: string
+    sessionId?: string
+    error?: string
+    durationMs?: number
+}

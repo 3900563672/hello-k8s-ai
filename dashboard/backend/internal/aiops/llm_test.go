@@ -110,3 +110,45 @@ func TestNormalizeScores(t *testing.T) {
 		t.Fatalf("verdict = %s, want attention", scores.Verdict)
 	}
 }
+
+// TestOpenAIStreamComplete 验证流式响应：逐 chunk 回调增量，[DONE] 正常结束。
+func TestOpenAIStreamComplete(t *testing.T) {
+	streamBody := "data: {\"choices\":[{\"delta\":{\"content\":\"你\"}}]}\n\n" +
+		"data: {\"choices\":[{\"delta\":{\"content\":\"好\"}}]}\n\n" +
+		"data: {\"choices\":[{\"delta\":{\"content\":\"！\"}}]}\n\n" +
+		"data: [DONE]\n\n"
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/chat/completions" {
+			t.Errorf("path = %s", request.URL.Path)
+		}
+		writer.Header().Set("Content-Type", "text/event-stream")
+		_, _ = writer.Write([]byte(streamBody))
+	}))
+	defer server.Close()
+	client := newTestClient(server.URL)
+	var deltas []string
+	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(delta string) {
+		deltas = append(deltas, delta)
+	}); err != nil {
+		t.Fatalf("StreamComplete: %v", err)
+	}
+	joined := ""
+	for _, delta := range deltas {
+		joined += delta
+	}
+	if joined != "你好！" {
+		t.Fatalf("streamed content = %q, want 你好！", joined)
+	}
+}
+
+// TestOpenAIStreamCompleteHTTPError 验证非 200 时返回错误。
+func TestOpenAIStreamCompleteHTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		http.Error(writer, "boom", http.StatusInternalServerError)
+	}))
+	defer server.Close()
+	client := newTestClient(server.URL)
+	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(string) {}); err == nil {
+		t.Fatal("stream should fail on HTTP error")
+	}
+}

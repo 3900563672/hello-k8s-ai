@@ -281,6 +281,14 @@ curl -sS "$API/aiops/windows?level=L4"
 curl -sS "$API/aiops/alerts?limit=10"
 ```
 
+**同步对话（#110 阶段二，SSE 流式）：**
+
+```bash
+# 流式回答：事件为 data: {json}（lifecycle/tool/text），curl -N 关闭缓冲
+curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
+  -d '{"message":"当前集群什么情况？","sessionId":"demo-session"}'
+```
+
 窗口/日总结由定时器自动产出（粒度 `AIOPS_WINDOW_GRANULARITY` 可配）；警戒为分数序列规则触发（连续低分/趋势下滑），alert_id 幂等。
 
 ## 13. 错误处理脚本规则

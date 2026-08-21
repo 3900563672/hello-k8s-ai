@@ -190,4 +190,5 @@ DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 
 - 单向依赖：只读 segments 数据 + 写 `aiops_*` 表，不反向依赖其它模块。
 - M2 意图执行（#94）：`internal/aiops/command.go` 解析一句话 → 结构化意图（LLM 严格 JSON + 模板目录校验，编造 id 拒绝）；`POST /aiops/commands` 落库 parsed，`confirm` 时 gate 校验（节点/租户必须存在）后按序执行：写流量（`SetTenantQPS`）→ 调倍速（`SetSimulationRate`）→ 创建并启动实验（store + aggregator 快照），每步追加 `steps`，任一失败整体 `failed`。执行编排在 api 层复用既有写通道，不新增越权入口。
 - M3 时间聚合（#95）：`aggregator.go` 定时把窗口内切面 L2 总结聚合为 L3 窗口认知、当日 L3 聚合为 L4 日总结（LLM + 规则兜底，Upsert 幂等，已结束窗口跳过）；`alerts.go` 对分数序列跑规则（连续低分/趋势下滑），触发写 `aiops_alerts`（alert_id 由规则+切面+窗口派生，幂等）。粒度/阈值可配置：`AIOPS_WINDOW_GRANULARITY`、`AIOPS_ALERT_THRESHOLD`、`AIOPS_ALERT_CONSECUTIVE`。
+- 同步对话（#110 阶段二）：`chat.go` 组装「结论型」上下文（最近 L3 窗口总结 / 最近警戒 / 最近已完成分析分数，目标 ≤6000 字符），`POST /aiops/chat` SSE 流式返回（lifecycle/tool/text 事件，AG-UI 轻量子集）；`llm.go` 新增流式调用（stream=true 逐 delta 回调）。限制：消息 ≤ `AIOPS_CHAT_MAX_MESSAGE_LEN`（默认 4000）、按会话限流 `AIOPS_CHAT_RATE_PER_MINUTE`（默认 6 次/分钟）、模型白名单 `AIOPS_CHAT_MODELS`（默认仅 `AIOPS_MODEL`）。
 

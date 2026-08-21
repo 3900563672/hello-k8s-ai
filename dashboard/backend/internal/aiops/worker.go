@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
@@ -18,18 +19,22 @@ import (
 // 分析单次拉取上限：轮询时最多认领的任务数。
 const analysisBatchSize = 8
 
-// Service 是 AIOps 分析服务：入队（API 触发）+ 后台 worker（事件驱动 L1/L2）。
+// Service 是 AIOps 分析服务：入队（API 触发）+ 后台 worker（事件驱动 L1/L2）+ 同步对话（#110 阶段二）。
 // 单向依赖：只读 segments/子级摘要，写 aiops_* 表。
 type Service struct {
 	database store.Store
 	llm      LLM
 	logger   *slog.Logger
 	config   config.AIOpsConfig
+
+	// 同步对话会话限流状态（sessionID → 滑动窗口内调用时间戳）。
+	chatMu   sync.Mutex
+	chatRate map[string][]time.Time
 }
 
 // NewService 构造分析服务；database 必须可用（调用方已判断）。
 func NewService(cfg config.AIOpsConfig, database store.Store, llm LLM, logger *slog.Logger) *Service {
-	return &Service{database: database, llm: llm, logger: logger, config: cfg}
+	return &Service{database: database, llm: llm, logger: logger, config: cfg, chatRate: make(map[string][]time.Time)}
 }
 
 func randomAnalysisID() string {

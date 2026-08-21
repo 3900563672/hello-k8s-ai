@@ -144,6 +144,7 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | GET | `/aiops/templates` | 只读模板目录（model/node/tenant/orchestrator/traffic，LLM 只能选目录内 id）。 |
 | GET | `/aiops/windows` | 窗口/日总结；`level=L3|L4`、`limit` 1..200。 |
 | GET | `/aiops/alerts` | 警戒列表（分数序列规则触发）；`limit` 1..200。 |
+| POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话。 |
 
 意图权限边界：AI 只能 create/start/complete/fail 实验、写流量、调倍速、选目录内模板/既有节点；不可改模板/节点/其他 CR。执行只走既有写通道（gateway/store/aggregator）。
 

@@ -125,6 +125,14 @@ func (store *fakeStore) FailAIOpsAnalysis(_ context.Context, analysisID, errorTe
 	return errors.New("analysis not found")
 }
 
+func (store *fakeStore) ListAIOpsWindowSummaries(_ context.Context, _ string, _ int) ([]model.AIOpsWindowSummary, error) {
+	return nil, nil
+}
+
+func (store *fakeStore) ListAIOpsAlerts(_ context.Context, _ int) ([]model.AIOpsAlert, error) {
+	return nil, nil
+}
+
 func (store *fakeStore) ListAIOpsAnalyses(_ context.Context, limit int, status string) ([]model.AIOpsAnalysis, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
@@ -207,6 +215,32 @@ type fakeLLM struct {
 
 func newFakeLLM(responses []string, errs []error) *fakeLLM {
 	return &fakeLLM{responses: responses, errs: errs}
+}
+
+func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int, onDelta func(string)) error {
+	llm.mu.Lock()
+	defer llm.mu.Unlock()
+	if len(llm.responses) == 0 {
+		return nil
+	}
+	response := llm.responses[0]
+	llm.responses = llm.responses[1:]
+	if len(llm.errs) > 0 && llm.errs[0] != nil {
+		err := llm.errs[0]
+		llm.errs = llm.errs[1:]
+		return err
+	}
+	_ = system
+	_ = user
+	// 按 2 字符切分模拟流式增量。
+	for i := 0; i < len(response); i += 2 {
+		end := i + 2
+		if end > len(response) {
+			end = len(response)
+		}
+		onDelta(response[i:end])
+	}
+	return nil
 }
 
 func (llm *fakeLLM) CompleteJSON(context.Context, string, string, int) (string, error) {
