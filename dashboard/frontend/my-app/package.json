@@ -9,6 +9,9 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "lint": "oxlint src",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "verify:state": "vite build --ssr verification/state-check.ts --outDir verification/dist --emptyOutDir && node verification/dist/state-check.js",
     "check": "npm run lint && npm run build && npm run verify:state",
     "preview": "vite preview"
@@ -42,12 +45,18 @@
   },
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.101.4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "@vitest/coverage-v8": "^4.1.11",
+    "jsdom": "^30.0.1",
     "oxlint": "^1.78.0",
     "typescript": "~7.0.2",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "vitest": "^4.1.11"
   }
 }

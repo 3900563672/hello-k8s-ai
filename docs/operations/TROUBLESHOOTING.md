@@ -318,7 +318,7 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 
 `make docs-check`（即 `hack/check-docs.py`）是全仓库文档门禁，CI 同样执行。常见失败：
 
-- **根目录 Markdown 不在白名单**：新增根目录 .md 必须加入 `hack/check-docs.py` 的根目录白名单（当前允许 README / AGENTS / PROJECT_OVERVIEW_NEW / CONTRIBUTING / SECURITY），否则 docs-check 报“未在白名单”。
+- **根目录 Markdown 不在白名单**：新增根目录 .md 必须加入 `hack/check-docs.py` 的根目录白名单（当前允许 README / AGENTS / PROJECT_OVERVIEW_NEW / CONTRIBUTING / SECURITY / AI_COORDINATION），否则 docs-check 报“未在白名单”。
 - **MAP 门禁**：diff 命中 `docs/MAP.yaml` 映射的源码路径（如 `hack/`）时，映射的文档必须同时在本提交中更新；先看 `docs/MAP.yaml` 确认应同步哪份人类文档。
 - **MAP 门禁豁免（2026-08-19 起）**：纯测试文件（`*_test.go`、`*.test.ts(x)`、`*.spec.ts(x)`）不改变行为契约，豁免文档同步要求；行为变更必然同时触碰非测试代码，门禁仍会生效。
 - **链接/行数限制**：所有 Markdown 链接必须指向现有文件；README 等有行数上限，超限需精简内容。
