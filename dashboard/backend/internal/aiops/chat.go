@@ -63,6 +63,25 @@ func (service *Service) ChatAllowSession(sessionID string, now time.Time) bool {
 	return true
 }
 
+// CheckDailyQuota 全局日配额（#124 降级预案）：基于 aiops_audit_log 统计近 24h 调用次数与 token，
+// 超过 AIOPS_DAILY_MAX_CALLS / AIOPS_DAILY_MAX_TOKENS 时拒绝新调用，防止 key 被刷爆。
+func (service *Service) CheckDailyQuota(ctx context.Context) error {
+	if service.config.DailyMaxCalls <= 0 && service.config.DailyMaxTokens <= 0 {
+		return nil
+	}
+	calls, tokens, err := service.database.SumAIOpsUsageSince(ctx, time.Now().Add(-24*time.Hour))
+	if err != nil {
+		return fmt.Errorf("check daily quota: %w", err)
+	}
+	if service.config.DailyMaxCalls > 0 && calls >= service.config.DailyMaxCalls {
+		return fmt.Errorf("今日 AIOps 调用配额已达上限（%d 次/24h）", service.config.DailyMaxCalls)
+	}
+	if service.config.DailyMaxTokens > 0 && tokens >= service.config.DailyMaxTokens {
+		return fmt.Errorf("今日 AIOps token 配额已达上限（%d/24h）", service.config.DailyMaxTokens)
+	}
+	return nil
+}
+
 // ChatContextRefs 是回答生成时注入上下文的结论型引用 ID（#112 阶段 D 持久化用）：
 // 窗口总结 / 警戒 / 意图命令，用于事后回溯「这条回答当时引用了什么」。
 type ChatContextRefs struct {

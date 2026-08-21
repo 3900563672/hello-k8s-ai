@@ -397,6 +397,19 @@ func (database *Postgres) CreateAIOpsAuditLog(ctx context.Context, audit model.A
 	return nil
 }
 
+// SumAIOpsUsageSince 统计指定时间点后的 AIOps 调用次数与 token 总量（#124 日配额）。
+func (database *Postgres) SumAIOpsUsageSince(ctx context.Context, since time.Time) (int, int64, error) {
+	var calls int
+	var tokens int64
+	err := database.pool.QueryRow(ctx, `
+		SELECT COUNT(*), COALESCE(SUM(prompt_tokens + completion_tokens), 0)
+		FROM aiops_audit_log WHERE created_at >= $1`, since).Scan(&calls, &tokens)
+	if err != nil {
+		return 0, 0, fmt.Errorf("sum aiops usage: %w", err)
+	}
+	return calls, tokens, nil
+}
+
 // CreateAIOpsChatMessage 写入一条对话消息（#112 阶段 D）：问答对与回答的上下文引用 ID。
 func (database *Postgres) CreateAIOpsChatMessage(ctx context.Context, message model.AIOpsChatMessage) error {
 	_, err := database.pool.Exec(ctx, `

@@ -24,6 +24,9 @@ type m3FakeStore struct {
 }
 
 func (store *m3FakeStore) Available() bool { return true }
+func (store *m3FakeStore) SumAIOpsUsageSince(_ context.Context, _ time.Time) (int, int64, error) {
+	return 0, 0, nil
+}
 func (store *m3FakeStore) ListAIOpsAnalysesInWindow(_ context.Context, _, _ time.Time) ([]model.AIOpsAnalysis, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()

@@ -292,6 +292,7 @@ curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
 
 # 问答历史（#112 阶段 D 读侧）：sessionId 必填、limit 1..200（默认 50），按时间正序；打开面板时前端用于回填
 curl -sS "$API/aiops/chat/messages?sessionId=demo-session&limit=50"
+# 日配额超限（#124）：返回 429 DAILY_QUOTA_EXCEEDED（24h 滚动，默认 300 次/200 万 token）
 ```
 
 **面板配置（#110 阶段四，key 不回显、仅存服务端内存）：**

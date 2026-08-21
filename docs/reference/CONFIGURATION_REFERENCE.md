@@ -163,3 +163,5 @@ Backend 的 duration/int/bool 环境变量解析失败时多数回退默认，�
 | `AIOPS_CHAT_MODELS` | 空（仅 `AIOPS_MODEL`） | 对话模型白名单（csv）。 |
 | `AIOPS_CHAT_MAX_MESSAGE_LEN` | 4000 | 单条对话消息上限（≥100）。 |
 | `AIOPS_CHAT_RATE_PER_MINUTE` | 6 | 每会话每分钟限流次数。 |
+| `AIOPS_DAILY_MAX_CALLS` | 300 | 日配额：24h 内 LLM 调用次数上限（含对话与分析）；0 表示不限。 |
+| `AIOPS_DAILY_MAX_TOKENS` | 2000000 | 日配额：24h 内 token 总量上限；0 表示不限。 |

@@ -105,6 +105,7 @@ type Store interface {
 	CreateAIOpsAlert(context.Context, model.AIOpsAlert) error
 	ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error)
 	CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error
+	SumAIOpsUsageSince(context.Context, time.Time) (int, int64, error)
 	CreateAIOpsJob(context.Context, model.AIOpsJob) error
 	ClaimNextAIOpsJob(context.Context) (model.AIOpsJob, bool, error)
 	CompleteAIOpsJob(context.Context, string, string, string) error
@@ -223,6 +224,10 @@ func (Disabled) CreateAIOpsChatMessage(context.Context, model.AIOpsChatMessage) 
 }
 func (Disabled) ListAIOpsChatMessages(context.Context, string, int) ([]model.AIOpsChatMessage, error) {
 	return nil, nil
+}
+
+func (Disabled) SumAIOpsUsageSince(context.Context, time.Time) (int, int64, error) {
+	return 0, 0, ErrUnavailable
 }
 
 func (Disabled) GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error) {

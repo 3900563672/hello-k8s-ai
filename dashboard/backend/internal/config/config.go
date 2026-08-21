@@ -102,6 +102,8 @@ type AIOpsConfig struct {
 	WindowGranularity      time.Duration
 	AlertThreshold         int
 	AlertConsecutive       int
+	DailyMaxCalls          int
+	DailyMaxTokens         int64
 }
 
 func Load() (Config, error) {
@@ -192,6 +194,8 @@ func Load() (Config, error) {
 			WindowGranularity:      duration("AIOPS_WINDOW_GRANULARITY", 2*time.Hour),
 			AlertThreshold:         integer("AIOPS_ALERT_THRESHOLD", 40),
 			AlertConsecutive:       integer("AIOPS_ALERT_CONSECUTIVE", 3),
+			DailyMaxCalls:          integer("AIOPS_DAILY_MAX_CALLS", 300),
+			DailyMaxTokens:         int64(integer("AIOPS_DAILY_MAX_TOKENS", 2000000)),
 		},
 		LogLevel:    *logLevel,
 		ClusterName: env("K8S_CLUSTER_NAME", "default"),
@@ -255,6 +259,9 @@ func (cfg Config) validate() error {
 		if cfg.AIOps.ChatRatePerMinute < 1 {
 			failures = append(failures, errors.New("AIOPS_CHAT_RATE_PER_MINUTE must be positive"))
 		}
+	}
+	if cfg.AIOps.DailyMaxCalls < 0 || cfg.AIOps.DailyMaxTokens < 0 {
+		failures = append(failures, errors.New("AIOPS_DAILY_MAX_CALLS and AIOPS_DAILY_MAX_TOKENS must be non-negative"))
 	}
 	return errors.Join(failures...)
 }

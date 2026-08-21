@@ -59,6 +59,11 @@ func (service *Service) EnqueueAnalysis(ctx context.Context, segmentID string) e
 		// 运行时开关关闭时不产生新分析（实验仍可正常完成，只是不入队）。
 		return nil
 	}
+
+	if err := service.CheckDailyQuota(ctx); err != nil {
+		service.logger.Warn("AIOps daily quota exceeded, skip enqueue", "error", err.Error())
+		return nil
+	}
 	analysisID := randomAnalysisID()
 	analysis := model.AIOpsAnalysis{
 		AnalysisID: analysisID,
@@ -178,6 +183,9 @@ func (service *Service) processJob(ctx context.Context, job model.AIOpsJob) {
 
 // processAnalysis 执行单次分析：claim → 加载切面 → L1 批量总结 → L2 混合打分 → 落库。
 func (service *Service) processAnalysis(ctx context.Context, analysis model.AIOpsAnalysis) error {
+	if err := service.CheckDailyQuota(ctx); err != nil {
+		return err
+	}
 	claimed, err := service.database.ClaimAIOpsAnalysis(ctx, analysis.AnalysisID)
 	if err != nil {
 		return fmt.Errorf("claim analysis: %w", err)
