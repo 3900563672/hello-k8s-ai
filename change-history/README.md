@@ -17,6 +17,9 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-21 | Codex 桌面版 WSL UNC 沙箱故障 + auto-review 模型错配修复与沉淀 | P2 | [查看记录](2026-08-21-codex-unc-workspace-sandbox/README.md) |
+| 2026-08-21 | AIOps 分层总结后端骨架（M0+M1：L1/L2 + 混合打分，Fixes #93） | P1 | [查看记录](2026-08-21-aiops-l1l2-backend/README.md) |
+| 2026-08-20 | Notion Hub 数据库内嵌化（is_inline 翻转）+ 沉淀库清理 | P3 | [查看记录](2026-08-20-notion-inline-databases/README.md) |
 | 2026-08-20 | 前端重构第四轮：设计打磨 + 配置样例数据 + 模板加载真实 bug（#101） | P2 | [查看记录](2026-08-20-frontend-redesign-round4/README.md) |
 | 2026-08-20 | 浏览器自动化与人工分工经验沉淀（Notion 中枢搭建复盘） | P3 | [查看记录](2026-08-20-notion-agent-collab-lesson/README.md) |
 | 2026-08-20 | 真实 API fixtures 录制：前端免后端迭代的素材底座 | P2 | [查看记录](2026-08-20-fixtures-recording/README.md) |

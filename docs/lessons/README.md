@@ -45,6 +45,8 @@
 | 扩容停在节点容量上限 | [simulator-scale-node-capacity.md](simulator-scale-node-capacity.md) |
 | 对外提交 / 开源贡献（AI 产出自查与披露） | [process-ai-collaboration-disclosure.md](process-ai-collaboration-disclosure.md) |
 | 浏览器 UI 自动化 / 同一 UI 动作连续失败 / 全自动 vs 人工决策 | [process-human-agent-division-of-labor.md](process-human-agent-division-of-labor.md) |
+| Codex 命令全挂（setup refresh）/ 会话掉出项目分组 / 自动审批拒绝高风险操作 | [codex-wsl-unc-workspace-setup-refresh.md](codex-wsl-unc-workspace-setup-refresh.md) |
+| Notion 页面/数据库自动化 / 内嵌展示 / Views API / 冗余容器清理 | [process-notion-api-first-automation.md](process-notion-api-first-automation.md) |
 
 ## 提升流程（每攒约 20 条 journal 或每周一次）
 
