@@ -84,6 +84,8 @@ sequenceDiagram
 | Experiment 面板 | `/experiments[?status]`、`/experiments/{id}` | `POST /experiments`、`/experiments/{id}/start|complete|fail` | 列表 10s 轮询；详情创建/结束后失效重取 |
 | Metrics detail | `/metrics/query` | 无 | 查询窗口/step 决定缓存 |
 | Trace list/detail | `/traces`、`/traces/{id}` | 无 | latest 可刷新；detail 按 traceId 缓存 |
+| AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/analyses?segmentId=` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止 |
+| 警戒（AlertList） | `/aiops/alerts` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
 
 编排策略表单字段与 CRD/Backend 白名单一致：含 scaleUpCooldownSeconds、scaleDownCooldownSeconds、min/maxReplicas、maxScaleUpBatch（扩容步长）与 allowScaleToZero。
@@ -144,5 +146,6 @@ flowchart LR
 ## 9. 录制快照（fixtures）与 dev:mock
 
 - `src/lib/mocks/fixtures/` 保存 GET 端点真实响应快照，`scripts/record-fixtures.mjs` 幂等重录；manifest.json 记录来源与大小，供审计。
-- dev:mock 仅服务前端预览：快照空数组用 `dev-fixtures/configuration-dev.json` 补齐（meta.devSamples），不写控制面。
+- dev:mock 由 `plugins/mock-fixtures.ts`（vite `--mode mock` 插件）拦截 `/api/v1` GET 返回 fixtures，写请求 405（只读）；快照空数组用 `dev-fixtures/` 样例补齐（meta.devSamples），不写控制面。
 - overview 与 trace detail 分属不同录制窗口时 traceId 可能不匹配；dev:mock 对缺失 detail 用摘要合成单 span 兜底，生产 API 不做该处理。
+- AIOps 契约演示数据：`aiops-analyses.json`、`aiops-analysis-ana-20260821-0001.json`、`aiops-alerts.json`（meta.warnings 标注"契约演示数据"）；实体名与 overview fixtures 的 Pod/Node 名对齐，用于气泡外圈分级演示。后端 M2/M3 就绪后删除对应 fixture，组件逻辑不变。

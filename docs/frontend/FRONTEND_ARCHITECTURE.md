@@ -114,6 +114,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - Orchestrator 配置含单次扩容步长 maxScaleUpBatch（0=默认 10），表单/表格/预置模板与 Guide 页同步展示。
 - 历史模式禁用写按钮，而不只依赖 Backend 拒绝。
 - 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
+- AIOps 契约（`src/types/aiops.types.ts`）与后端 `internal/model/aiops.go` 字段对齐；M2/M3 未就绪的 window/alert/command 类型先落契约，组件经 API 层取数、不写假数据路径。
 
 ## 8. 设计系统原则
 
@@ -126,8 +127,9 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 ## 9. dev:mock 与录制快照
 
 - `src/lib/mocks/fixtures/` 是真实 Backend 响应快照（只读），由 `scripts/record-fixtures.mjs` 遍历 GET 端点重录，不手工改内容。
-- `dev:mock` 由 `mock-server.py` 提供静态预览（规避 WSL 回环掉注册问题）；录制快照中的空资源数组用 `dev-fixtures/` 样例补齐，`meta.devSamples` 标注仅预览。
+- `dev:mock`（vite `--mode mock`）由 `plugins/mock-fixtures.ts` 拦截 `/api/v1` GET 提供预览（写请求 405）；录制快照中的空资源数组用 `dev-fixtures/` 样例补齐，`meta.devSamples` 标注仅预览。
 - Trace detail 与 overview 快照录制窗口不一致时，dev:mock 用摘要合成单 span 兜底；生产链路不受影响。
+- AIOps 契约演示：`/aiops/analyses`、`/aiops/analyses/{id}?segmentId=`、`/aiops/alerts` 由 `aiops-*.json` fixtures 提供，meta.warnings 标注演示来源；真实后端就绪后删除 fixtures 即切真实链路。
 
 ## 10. 已知前端技术债
 

@@ -1,6 +1,7 @@
 import type { ApiEnvelope } from '@/types/api.types'
 import type { BackendResource, ConfigurationReadModel, KubernetesCondition } from '@/types/config.types'
 import type { ReplayTimeContext } from '@/stores/timeSlice'
+import type { AgentVerdict } from '@/types/aiops.types'
 
 export interface OverviewQuery extends ReplayTimeContext {
     tenantId?: string
@@ -39,6 +40,8 @@ export interface BackendPod {
     simulatorInstance?: string
     tenant?: string
     model?: string
+    /** AIOps L1 结论（外圈分级着色），未分析时不存在。 */
+    agentVerdict?: AgentVerdict
 }
 
 export interface BackendNode {
@@ -52,6 +55,8 @@ export interface BackendNode {
     internalIP?: string
     conditions: KubernetesCondition[]
     observedAt: string
+    /** AIOps L1 结论（外圈分级着色），未分析时不存在。 */
+    agentVerdict?: AgentVerdict
 }
 
 export interface BackendDeployment {
@@ -127,6 +132,8 @@ export interface TenantTraffic {
     readyReplicaCount: number
     runtimePhase?: string
     instances: TrafficInstance[]
+    /** AIOps L1 结论（外圈分级着色），未分析时不存在。 */
+    agentVerdict?: AgentVerdict
 }
 
 export interface MetricPoint {

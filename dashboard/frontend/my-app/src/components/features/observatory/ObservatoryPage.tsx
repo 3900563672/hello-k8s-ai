@@ -5,18 +5,24 @@ import {
     Gauge,
     LayoutDashboard,
     RefreshCw,
+    Sparkles,
     Spline,
     TimerReset,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAIOpsAnalyses, useAIOpsAnalysisBySegment } from '@/api/queries/aiopsQueries'
 import { useOverview } from '@/api/queries/traceQueries'
 import { useReplayTimeContext } from '@/stores/timeSlice'
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection'
+import { AiInsightPanel } from '@/components/features/observatory/AiInsightPanel'
+import { AlertList } from '@/components/features/observatory/AlertList'
 import { ClusterBubbleField } from '@/components/features/observatory/ClusterBubbleField'
+import { CommandInput } from '@/components/features/observatory/CommandInput'
 import { TraceWaterfall } from '@/components/features/observatory/TraceWaterfall'
 import { MonitorWall } from '@/components/features/monitor/MonitorWall'
 import { SegmentPanel } from '@/components/features/trace/SegmentPanel'
 import { ExperimentPanel } from '@/components/features/trace/ExperimentPanel'
+import type { AgentVerdict } from '@/types/aiops.types'
 import { cn } from '@/lib/utils'
 
 const GRAFANA_BASE = '/grafana'
@@ -27,6 +33,7 @@ const SECTIONS = [
     { id: 'metrics', label: '实时指标', icon: Gauge },
     { id: 'grafana', label: 'Grafana', icon: Activity },
     { id: 'segments', label: '调度与切面', icon: TimerReset },
+    { id: 'ai', label: 'AI 洞察', icon: Sparkles },
     { id: 'traces', label: '调用链', icon: Spline },
 ] as const
 
@@ -85,6 +92,61 @@ export function ObservatoryPage() {
         const readyNodes = overview?.workloads.nodes.filter((node) => node.ready).length ?? 0
         return { nodes, readyNodes, pods, readyPods, tenants, traces }
     }, [overview])
+
+    // AI 洞察 → 气泡外圈：取最新 completed 分析的 L1 实体总结注入 overview。
+    const aiopsAnalyses = useAIOpsAnalyses()
+    const latestCompletedSegmentId = useMemo(() => {
+        const completed = aiopsAnalyses.data?.data.find(
+            (analysis) => analysis.status === 'completed',
+        )
+        return completed?.segmentId ?? null
+    }, [aiopsAnalyses.data])
+    const aiopsDetail = useAIOpsAnalysisBySegment(latestCompletedSegmentId)
+    const verdicts = useMemo(() => {
+        const map = new Map<string, AgentVerdict>()
+        const detail = aiopsDetail.data?.data
+        if (!detail) return map
+        const overall = detail.analysis.scores?.overall
+        for (const entity of detail.entities) {
+            const grade =
+                entity.classification === 'healthy'
+                    ? 'normal'
+                    : entity.classification === 'suspect'
+                        ? 'odd'
+                        : 'problematic'
+            map.set(`${entity.entityKind}:${entity.entityName}`, {
+                grade,
+                score: overall,
+                summary: entity.conclusion,
+                updatedAt: entity.createdAt,
+            })
+        }
+        return map
+    }, [aiopsDetail.data])
+    const overviewWithVerdicts = useMemo(() => {
+        if (!overview || verdicts.size === 0) return overview
+        return {
+            ...overview,
+            workloads: {
+                ...overview.workloads,
+                pods: overview.workloads.pods.map((pod) => {
+                    const verdict = verdicts.get(`Pod:${pod.ref.name}`)
+                    return verdict ? { ...pod, agentVerdict: verdict } : pod
+                }),
+                nodes: overview.workloads.nodes.map((node) => {
+                    const verdict = verdicts.get(`Node:${node.ref.name}`)
+                    return verdict ? { ...node, agentVerdict: verdict } : node
+                }),
+            },
+            traffic: {
+                ...overview.traffic,
+                tenants: overview.traffic.tenants.map((tenant) => {
+                    const verdict = verdicts.get(`Tenant:${tenant.tenant.name}`)
+                    return verdict ? { ...tenant, agentVerdict: verdict } : tenant
+                }),
+            },
+        }
+    }, [overview, verdicts])
 
     return (
         <div className="relative h-full overflow-auto bg-[#05070A] text-[#E8EEF7]">
@@ -164,7 +226,7 @@ export function ObservatoryPage() {
                         <section id="topology" className="scroll-mt-6 rounded-2xl border border-white/[0.07] bg-[#090D14]/70 p-4 lg:p-5">
                             <SectionTitle index="01" title="集群拓扑" subtitle="节点 / Pod / 租户气泡场，颜色表示健康度，外圈表示 Agent 分级" />
                             <div className="mt-4">
-                                <ClusterBubbleField overview={overview} />
+                                <ClusterBubbleField overview={overviewWithVerdicts} />
                             </div>
                         </section>
 
@@ -198,8 +260,19 @@ export function ObservatoryPage() {
                             </div>
                         </section>
 
+                        <section id="ai" className="scroll-mt-6 rounded-2xl border border-white/[0.07] bg-[#090D14]/70 p-4 lg:p-5">
+                            <SectionTitle index="05" title="AI 洞察" subtitle="切面分层总结与打分、一句话起实验入口与警戒" />
+                            <div className="mt-4 space-y-3">
+                                <CommandInput />
+                                <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+                                    <AiInsightPanel />
+                                    <AlertList />
+                                </div>
+                            </div>
+                        </section>
+
                         <section id="traces" className="scroll-mt-6 rounded-2xl border border-white/[0.07] bg-[#090D14]/70 p-4 lg:p-5">
-                            <SectionTitle index="05" title="调用链" subtitle="Trace 瀑布图：父子缩进、耗时条宽、关键路径高亮与 Span 详情" />
+                            <SectionTitle index="06" title="调用链" subtitle="Trace 瀑布图：父子缩进、耗时条宽、关键路径高亮与 Span 详情" />
                             <div className="mt-4">
                                 <TraceWaterfall traces={overview?.traces ?? []} />
                             </div>

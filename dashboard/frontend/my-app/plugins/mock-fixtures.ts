@@ -56,6 +56,15 @@ function resolveFixture(pathname: string, params: URLSearchParams): string | nul
         if (status) return `experiments-status-${status}.json`
         return 'experiments.json'
     }
+    if (pathname === '/aiops/analyses') {
+        if (params.get('segmentId')) return 'aiops-analysis-ana-20260821-0001.json'
+        return 'aiops-analyses.json'
+    }
+    if (pathname.startsWith('/aiops/analyses/')) {
+        const analysisId = pathname.slice('/aiops/analyses/'.length)
+        return `aiops-analysis-${analysisId}.json`
+    }
+    if (pathname === '/aiops/alerts') return 'aiops-alerts.json'
     if (pathname === '/traces') {
         const start = params.get('start')
         return start === '2026-08-18T03:00:00Z' ? 'traces-late-window.json' : 'traces.json'

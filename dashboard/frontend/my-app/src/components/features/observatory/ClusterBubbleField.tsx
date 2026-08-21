@@ -22,19 +22,7 @@ import type {
     TenantTraffic,
 } from '@/types/trace.types'
 import type { KubernetesCondition } from '@/types/config.types'
-
-/**
- * Agent 结构化分级（预留）：未来 AI Ops 写入 Pod/Node/Tenant 上的
- * agentVerdict 字段后，气泡外圈会按分级着色；未接入前不渲染外圈。
- */
-export type AgentGrade = 'normal' | 'odd' | 'problematic'
-
-export interface AgentVerdict {
-    grade?: AgentGrade
-    score?: number
-    summary?: string
-    updatedAt?: string
-}
+import type { AgentGrade, AgentVerdict } from '@/types/aiops.types'
 
 type Health = 'ok' | 'warn' | 'crit' | 'unknown'
 type BubbleKind = 'node' | 'pod' | 'tenant' | 'header'
@@ -182,7 +170,7 @@ function layoutBubbles(
             const podCount = pods.filter((pod) => pod.nodeName === node.ref.name).length
             const col = index % NODES_PER_ROW
             const row = Math.floor(index / NODES_PER_ROW)
-            const agent = agentOf(node as { agentVerdict?: AgentVerdict })
+            const agent = agentOf(node)
             items.push({
                 id: refKey(node.ref),
                 kind: 'node',
@@ -203,7 +191,7 @@ function layoutBubbles(
         const tenantCount = Math.max(1, tenants.length)
         const tenantTop = Math.max(TOP_PAD, (MIN_CANVAS_H - 170) / 2)
         tenants.forEach((tenant, index) => {
-            const agent = agentOf(tenant as { agentVerdict?: AgentVerdict })
+            const agent = agentOf(tenant)
             const podCount = pods.filter((pod) => pod.tenant === tenant.tenant.name).length
             items.push({
                 id: refKey(tenant.tenant),
@@ -245,7 +233,7 @@ function layoutBubbles(
         list.forEach((pod, index) => {
             const col = index % PODS_PER_ROW
             const row = Math.floor(index / PODS_PER_ROW)
-            const agent = agentOf(pod as { agentVerdict?: AgentVerdict })
+            const agent = agentOf(pod)
             items.push({
                 id: refKey(pod.ref),
                 kind: 'pod',
@@ -703,7 +691,7 @@ export function ClusterBubbleField({ overview }: { overview: OverviewData | unde
             map.set(item.id, item)
         }
         return map
-    }, [pods])
+    }, [pods, podAliasById])
 
     const visible = useMemo(() => {
         return layout.items.filter((item) => {

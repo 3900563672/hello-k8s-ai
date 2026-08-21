@@ -1,0 +1,55 @@
+{
+  "data": [
+    {
+      "analysisId": "ana-20260821-0001",
+      "segmentId": "seg-demo-2026-08-21-0130",
+      "status": "completed",
+      "l1Total": 6,
+      "l1Done": 6,
+      "scores": {
+        "goal": 72,
+        "stability": 58,
+        "efficiency": 81,
+        "anomaly": 64,
+        "overall": 69,
+        "verdict": "基本达标，但稳定性存在风险",
+        "reason": "目标 QPS 达成率 96%，TTFT p95 2.4s 略高于阈值；worker3 上 2 个 Pod 出现 CrashLoopBackOff 波动，已标记可疑；整体效率良好。"
+      },
+      "summary": null,
+      "error": "",
+      "createdAt": "2026-08-21T01:30:00Z",
+      "updatedAt": "2026-08-21T01:32:10Z"
+    },
+    {
+      "analysisId": "ana-20260821-0002",
+      "segmentId": "seg-demo-2026-08-21-0005",
+      "status": "running",
+      "l1Total": 5,
+      "l1Done": 2,
+      "scores": null,
+      "summary": null,
+      "error": "",
+      "createdAt": "2026-08-21T01:05:00Z",
+      "updatedAt": "2026-08-21T01:06:40Z"
+    },
+    {
+      "analysisId": "ana-20260820-0009",
+      "segmentId": "seg-demo-2026-08-20-2230",
+      "status": "failed",
+      "l1Total": 3,
+      "l1Done": 1,
+      "scores": null,
+      "summary": null,
+      "error": "L2 汇总时 LLM 调用超时（重试 3 次后放弃）",
+      "createdAt": "2026-08-20T22:30:00Z",
+      "updatedAt": "2026-08-20T22:35:00Z"
+    }
+  ],
+  "meta": {
+    "requestId": "mock-aiops-analyses-0001",
+    "servedAt": "2026-08-21T10:00:00Z",
+    "partial": false,
+    "warnings": ["契约演示数据：实体名与 overview fixtures 对齐，用于气泡外圈演示"],
+    "sourceVersions": {}
+  }
+}
