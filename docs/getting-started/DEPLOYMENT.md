@@ -116,7 +116,7 @@ PVC 数据落在节点容器 `/var` named volume（Docker 数据盘 vhdx，WSL/D
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
 | Backend | `/configuration` 返回 `tenant-sample` |
 | Frontend | Service 代理返回页面 HTML |
-| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg 共 11 项）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
+| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
 
 这些检查通过后，脚本才输出“完整系统部署并验收通过”。
 
