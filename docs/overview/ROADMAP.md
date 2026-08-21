@@ -1,6 +1,6 @@
 # 路线图（ROADMAP）
 
-> 维护层：human ｜ last-reviewed：2026-08-18 ｜ 事实源：docs/status.md（当前状态）、change-history/（已完成变更）
+> 维护层：human ｜ last-reviewed：2026-08-21 ｜ 事实源：docs/status.md（当前状态）、change-history/（已完成变更）
 
 > 由 `CURRENT_STATUS_AND_ROADMAP.md` 改造而来（2026-08-18）："当前状态"（能力矩阵）已由生成的 `docs/status.md` 承担，本文件只保留"下一步"。
 
@@ -12,19 +12,19 @@
 - Backend 没有最终用户身份认证与用户级授权；当前是 ServiceAccount 能力边界。
 - PostgreSQL、Prometheus、Jaeger 单实例（已 PVC 持久化），Grafana 易失，无备份/恢复演练。
 - 没有完整 NetworkPolicy、入口 TLS、镜像签名/扫描和 Secret 外部管理。
-- 没有从用户命令到页面回显的真实集群 E2E 证据。
+- 从用户命令到页面回显的真实集群 E2E 证据：控制器链路已有 CI E2E 覆盖；页面回显链路待 [#122](https://github.com/3900563672/hello-k8s-ai/issues/122)（演示链路 smoke test）。
 
 ### P1 - 下一开发周期
 
-- 告警规则实测触发验收（[#31](https://github.com/3900563672/hello-k8s-ai/issues/31)）：内存告警 10m 周期、Simulator Leader 接管演练，归档触发证据。
-- 把当前本地完整栈验收复刻到独立 CI Kind E2E，并归档失败证据。
-- 为 Traffic Overlay 增加 Preview -> Confirm -> PATCH -> Observe 的真实闭环。
+- ~~告警规则实测触发验收（[#31](https://github.com/3900563672/hello-k8s-ai/issues/31)）~~ **已完成（2026-08-18）**：内存告警 10m 周期与 Leader 接管演练已归档（journal/2026-08-18-alert-drill-and-scale-pacing.md）。
+- ~~把当前本地完整栈验收复刻到独立 CI Kind E2E~~ **已完成（2026-08-21）**：隔离集群 `hello-k8s-ai-test-e2e`，随 PR 自动跑；E2E flake 修复见 [#120](https://github.com/3900563672/hello-k8s-ai/issues/120)。
+- Traffic Overlay 闭环：PATCH 写入控制面（`Tenant.spec.qps`）**已完成（2026-08-19，#89）**；Preview -> Confirm 前端交互与差异预览待确认是否完整。
 - 验证 Jaeger 2.20 部署是否持续提供 Backend 使用的 legacy Query API。
 - 为 Backend mutation 记录真实调用者身份，而不是只记录请求。
 
 ### P2 - 架构增强
 
-- 评估 Simulator 扩容节奏与超大副本行为（[#32](https://github.com/3900563672/hello-k8s-ai/issues/32)）：`maxReplicas=0` 无限制下的批量扩容、扩容冷却与队列收敛。
+- ~~评估 Simulator 扩容节奏与超大副本行为（[#32](https://github.com/3900563672/hello-k8s-ai/issues/32)）~~ **已完成（2026-08-21，#32 关闭）**。
 - 在现有 `SimulationClock` 引擎倍速之上设计 `SimulationRun`，补可恢复逻辑时间、随机种子和 checkpoint。
 - 把 `TenantRuntime.status.instanceCount` 迁移为语义准确的字段名（需版本兼容）。
 - 增加领域 Event，或定义长期可重放的操作事件模型。
@@ -44,9 +44,9 @@ flowchart TB
 ### R1 - 交付可复验
 
 - 在目标 Docker Desktop 机器执行当前一键流程，保存首次完整验收证据。
-- Kind E2E 创建完整 CR，断言 Controller/Simulator/Backend/Frontend API 链路。
+- ~~Kind E2E 创建完整 CR，断言 Controller/Simulator/Backend/Frontend API 链路~~ **已完成**（test-e2e workflow）。
 - CI 归档对象、日志、Prom target、关键 API 响应和 Trace 查询证据。
-- 文档链接、Mermaid、API 契约和 CRD 生成差异检查。
+- ~~文档链接、Mermaid、API 契约和 CRD 生成差异检查~~ **已完成**（docs-check / 生成文件检查已入 CI）。
 
 完成标准：一条命令能在干净机器上拉起完整开发环境，测试能解释失败发生在哪一层。
 
