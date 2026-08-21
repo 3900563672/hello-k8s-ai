@@ -1,9 +1,9 @@
 # hello-k8s-ai 完整技术总览
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 副标题：Kubernetes 原生 AI 推理调度与仿真平台技术白皮书  
-文档基线：2026-08-18（随文档体系重构全面核对，与当前源码一致）
+文档基线：2026-08-18（正文以该日期源码为准）；AIOps 等后续新增能力见 [AIOPS_OVERVIEW](../aiops/AIOPS_OVERVIEW.md) 与 [INDEX](../INDEX.md)
 适用读者：第一次接触项目的开发者、架构师、SRE 与 AI 编程代理
 
 > 本文是 `hello-k8s-ai-complete-overview.pdf` 的唯一正文源。实现事实来自当前源码与清单；“声明部署”不等于当前集群 Ready；“未来设计”不等于现有能力。

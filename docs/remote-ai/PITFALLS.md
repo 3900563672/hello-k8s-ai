@@ -1,6 +1,6 @@
 # 远程 AI 踩坑速查
 
-> 维护层：remote ｜ last-reviewed：2026-08-18 ｜ 适用：产出前扫一遍；包内 `docs/lessons/` 含全量蒸馏条目
+> 维护层：remote ｜ last-reviewed：2026-08-21 ｜ 适用：产出前扫一遍；包内 `docs/lessons/` 含全量蒸馏条目
 
 ## 一、环境与身份（最容易犯）
 
@@ -21,6 +21,8 @@
 | 把倍速当成全局时间加速 | `SimulationClock` 只加速 Simulator 离散事件引擎；Controller 冷却、数据新鲜度、历史时间不变 |
 | 忽略字段所有权 | 谁写 Spec、谁写 Status 有硬约束（`docs/kubernetes/FIELD_OWNERSHIP.md`）；方案不能越权 |
 | 默认"没有 Allow 就是允许" | 策略语义是显式 Allow、Deny wins；没有 Allow 默认不是允许 |
+| 把 AIOps 分析当事实源 | `aiops_*` 是辅助结论（LLM + 规则兜底），Kubernetes 才是事实源；LLM 输出不驱动 Controller |
+| 认为 LLM key 可落库/可回显 | key 仅存 Backend 内存；`/aiops/settings` 只回显掩码态；方案不得改此行为 |
 
 ## 三、方案与代码（交付前自检）
 

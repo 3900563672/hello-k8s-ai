@@ -46,6 +46,13 @@ dashboard/backend/internal/kubernetes/:
 dashboard/backend/internal/:
   - docs/backend/BACKEND_ARCHITECTURE.md
   - docs/data-flow/EVENT_FLOW.md
+dashboard/backend/internal/aiops/:
+  - docs/aiops/AIOPS_OVERVIEW.md
+  - docs/overview/ARCHITECTURE_OVERVIEW.md
+dashboard/frontend/my-app/src/components/features/aiops/:
+  - docs/aiops/AIOPS_OVERVIEW.md
+  - docs/frontend/PAGE_STRUCTURE.md
+  - docs/frontend/FRONTEND_ARCHITECTURE.md
 dashboard/backend/deploy/:
   - docs/getting-started/DEPLOYMENT.md
   - docs/backend/DATABASE_DESIGN.md

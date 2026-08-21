@@ -1,6 +1,6 @@
 # 源码地图
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 ## 1. 根控制面
 
@@ -70,19 +70,28 @@
 | `internal/store/postgres.go` | connection/migrate/query/write |
 | `internal/store/recorder.go` | async informer event recorder |
 | `internal/clock/clock.go` | authoritative UTC + Simulator desired/applied rate 投影 |
+| `internal/aiops/worker.go` | 分析队列轮询（FOR UPDATE SKIP LOCKED、attempts 重试、stale 回收） |
+| `internal/aiops/aggregator.go` | L3 窗口 / L4 日聚合（Upsert、已结束窗口跳过） |
+| `internal/aiops/llm.go` | OpenAI 兼容 Provider（json_object、流式、429/5xx 重试、token 用量） |
+| `internal/aiops/prompts/` | 分层提示词模板（go:embed、版本哈希）与 schema 校验 |
+| `internal/aiops/chat.go` | SSE 对话、上下文组装、限流与会话历史 |
+| `internal/aiops/command.go` | 一句话意图解析、模板校验与确认执行编排 |
+| `internal/aiops/alerts.go` | 分数序列规则警戒 |
 | `internal/model/types.go` | API read model DTO |
 
 ## 4. Frontend
 
 | 路径 | 职责 |
 | --- | --- |
-| `dashboard/frontend/my-app/src/app/router.tsx` | `/config` `/traffic` `/trace` `/monitor` `/guide`（`/` 重定向 `/config`，未知路由 404） |
-| `src/components/shared/Layout/MainLayout.tsx` | app shell + sync |
+| `dashboard/frontend/my-app/src/app/router.tsx` | `/observatory` `/config` `/traffic` `/guide`；`/`、`/trace`、`/monitor` 重定向 `/observatory`，未知 404 |
+| `src/components/shared/Layout/MainLayout.tsx` | app shell + AiChatWidget 浮窗 + sync |
 | `src/components/shared/TimeTravelBar/` | latest/historical UI |
+| `src/components/features/observatory/` | 状态总览页（拓扑气泡/指标墙/Trace/切面实验/AI 洞察/警戒/窗口总结） |
+| `src/components/features/aiops/` | AI 对话浮窗（设置、SSE 流式、会话历史） |
 | `src/components/features/config/` | Config page/forms/tables |
 | `src/components/features/traffic/` | templates/canvas/overlay |
-| `src/components/features/trace/DataOverviewPage.tsx` | Data View + Trace |
-| `src/components/features/monitor/MonitorPage.tsx` | Grafana 监控面板（`/grafana/` 代理 + 健康检查） |
+| `src/components/features/trace/DataOverviewPage.tsx` | 旧 Data View + Trace（路由已重定向，组件保留） |
+| `src/components/features/monitor/MonitorPage.tsx` | 旧 Monitor（路由已重定向，组件保留） |
 | `src/components/features/guide/GuidePage.tsx` | 参数填写指南（预置模板 + 系统常量速查） |
 | `src/api/client.ts` | envelope/problem HTTP client |
 | `src/api/endpoints/` | domain endpoints |

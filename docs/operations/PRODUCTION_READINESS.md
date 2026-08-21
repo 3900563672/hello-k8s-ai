@@ -1,6 +1,6 @@
 # 生产就绪度
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 ## 1. 结论
 
@@ -22,6 +22,7 @@
 | 供应链 | dev images/tags | digest、registry、SBOM、scan、sign | 未完成 |
 | DR | 无 | RPO/RTO、演练 | 未完成 |
 | 可重复仿真 | 随机/墙钟 | seed/clock/checkpoint/version | 未完成 |
+| AIOps/LLM 依赖 | 可选、默认关闭、规则兜底、单机内存 key | 密钥托管/轮换、供应商多活、成本与配额监控、数据出域政策 | 未完成 |
 
 ## 3. 数据持久化
 
@@ -62,6 +63,17 @@
 - Simulator 高 QPS virtual queue、Tick duration、Status write contention。
 
 达到阈值后再决定 informer namespace/shard、多 Backend read replica、snapshot leader、缓存和 provider query budget。
+
+## 5.1 AIOps 与外部 LLM
+
+当前：AIOps 默认关闭；开启后分析/对话调用 OpenAI 兼容 API，硬指标规则先行 + schema 校验 + 失败重试与规则兜底，LLM 故障不影响控制面；key 仅存 Backend 内存，`/aiops/settings` 只回显掩码态。
+
+生产门：
+
+- 密钥外部托管与轮换，禁止长期静态内存/环境变量值；配置审计不回显。
+- LLM 供应商多活、超时/预算配额与成本监控（`aiops_audit_log` 已有 token 用量）。
+- 切面名称与对话内容出域评估与脱敏；retention/删除策略。
+- 多副本 Backend 下 worker 认领（`FOR UPDATE SKIP LOCKED`）与限流共享的压测验证。
 
 ## 6. 可靠性测试
 

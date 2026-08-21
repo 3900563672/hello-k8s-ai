@@ -5,6 +5,7 @@
 
 - [docs/INDEX.md](docs/INDEX.md): 文档总索引
 - [docs/README.md](docs/README.md): hello-k8s-ai 文档体系
+- [docs/aiops/AIOPS_OVERVIEW.md](docs/aiops/AIOPS_OVERVIEW.md): AIOps 智能分析层总览
 - [docs/backend/API_DESIGN.md](docs/backend/API_DESIGN.md): API 设计
 - [docs/backend/BACKEND_ARCHITECTURE.md](docs/backend/BACKEND_ARCHITECTURE.md): Backend 架构
 - [docs/backend/DATABASE_DESIGN.md](docs/backend/DATABASE_DESIGN.md): Database 设计

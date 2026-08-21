@@ -1,6 +1,6 @@
 # 配置参考
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/guide/、config/rbac/ 等
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/frontend/my-app/src/components/features/guide/、config/rbac/、dashboard/backend/internal/config/ 等
 
 本文件记录关键默认值，最终依据仍是源码和清单。修改默认值时同时更新测试与对应专题文档。
 
@@ -140,3 +140,26 @@ Nginx listen 8080，`/api/` proxy Backend service，read timeout 1h、buffering/
 ## 10. 配置解析注意
 
 Backend 的 duration/int/bool 环境变量解析失败时多数回退默认，而不是启动失败；只有最终 `validate()` 检查部分跨字段/最小值。这提高容错但可能掩盖拼写错误。生产建议启动日志输出脱敏后的有效配置，并对显式非法值 fail fast。
+
+## 11. Backend AIOps（可选，AIOPS_ENABLED=true 时生效）
+
+| Env | 默认 | 说明 |
+| --- | --- | --- |
+| `AIOPS_ENABLED` | false | 是否启动 worker 与触发分析入队（`/aiops/settings` 路由始终注册）。 |
+| `AIOPS_OPENAI_API_KEY` | 空 | 开启时必填；建议 Secret 注入。 |
+| `AIOPS_OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI 兼容端点。 |
+| `AIOPS_MODEL` | `gpt-4o-mini` | 分析模型；对话默认同款。 |
+| `AIOPS_TIMEOUT` | 60s | 单次 LLM 调用超时。 |
+| `AIOPS_MAX_TOKENS_PER_CALL` | 2000 | 单次调用 token 上限（≥256）。 |
+| `AIOPS_MAX_CALLS_PER_ANALYSIS` | 8 | 单次分析 LLM 调用预算。 |
+| `AIOPS_MAX_ENTITIES_PER_CALL` | 20 | 单次 L1 批量实体数。 |
+| `AIOPS_MAX_ATTEMPTS_PER_ANALYSIS` | 2 | 分析失败重试上限。 |
+| `AIOPS_POLL_INTERVAL` | 5s | worker 轮询间隔。 |
+| `AIOPS_STALE_REQUEUE_INTERVAL` | 10m | 崩溃遗留任务回收。 |
+| `AIOPS_WINDOW_INTERVAL` | 15m | L3 窗口聚合周期。 |
+| `AIOPS_WINDOW_GRANULARITY` | 2h | 窗口粒度（≥1m）。 |
+| `AIOPS_ALERT_THRESHOLD` | 40 | 分数警戒阈值（0-100）。 |
+| `AIOPS_ALERT_CONSECUTIVE` | 3 | 连续低分触发次数。 |
+| `AIOPS_CHAT_MODELS` | 空（仅 `AIOPS_MODEL`） | 对话模型白名单（csv）。 |
+| `AIOPS_CHAT_MAX_MESSAGE_LEN` | 4000 | 单条对话消息上限（≥100）。 |
+| `AIOPS_CHAT_RATE_PER_MINUTE` | 6 | 每会话每分钟限流次数。 |

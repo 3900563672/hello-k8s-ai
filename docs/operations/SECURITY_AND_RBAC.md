@@ -1,6 +1,6 @@
 # 安全与 RBAC
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：config/rbac/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：config/rbac/
 
 ## 1. 当前信任边界
 
@@ -126,3 +126,12 @@ PostgreSQL/Prometheus/Jaeger/Grafana 访问都应认证、加密、备份并有�
 - 备份加密/恢复演练。
 - 依赖/provider 超时、rate limit、DoS 测试。
 - Pod Security/NetworkPolicy 由策略测试验证。
+
+## 11. AIOps 凭据与隐私
+
+- LLM key 仅存 Backend 进程内存（面板写入或环境变量），不落 PostgreSQL、不进日志/Trace/审计；`/aiops/settings` 只回显掩码状态。
+- 前端不直接访问 LLM；`AIOPS_OPENAI_BASE_URL` 由受信配置设定，避免任意 URL 注入（SSRF 面收敛到部署配置）。
+- 切面名称、Pod/Node/Tenant 摘要与对话内容会进入外部 LLM 上下文：生产部署前需评估数据出域政策、供应商数据处理条款与脱敏方案。
+- 调用审计（`aiops_audit_log`）记录模型、耗时、消息长度、token 用量与结果，不含请求原文与 key；审计失败只记日志，不阻塞对话。
+- 限流（每会话 6 次/分钟）与消息长度上限（4000 字符）约束滥用面；AIOps 默认关闭，按需启用。
+- 生产建议：key 走外部 Secret manager 并轮换、供应商侧配额与成本监控、对话/总结内容 retention 与删除策略。

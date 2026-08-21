@@ -1,6 +1,6 @@
 # 实现复盘与工程评价
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 本文件回答交接时最重要的三个问题：已经做了什么、怎么做的、哪里仍不够好。结论来自代码、清单、测试和历史验证记录，不依赖未保留的聊天上下文。
 
@@ -29,6 +29,14 @@
 - 接入 Prometheus/Jaeger：服务端命名查询、过滤、超时和 partial/warning。
 - 建立读写边界：七种用户配置 CR 可写，三个派生 CR 和 SimulatorInstance 禁写。
 - 提供 REST、SSE、严格 JSON、CORS、请求 ID、恢复中间件、健康/能力接口。
+
+### AIOps 智能分析
+
+- 分层总结后端：L1 实体总结（Pod/Node/Tenant）+ L2 混合打分（硬指标规则先行、LLM 基于摘要出分）、L3 窗口与 L4 日聚合，全部 Upsert 幂等、attempts 重试、进度落库。
+- 意图执行：一句话 → 严格 JSON 解析 + 模板目录校验 → 确认 gate → 写流量/调倍速/创建实验，每步记录，失败整体 failed。
+- 同步对话浮窗：SSE 流式、工具步骤可见、限流、会话历史回填与调用审计（模型/耗时/token 用量）。
+- 提示词工程化：prompts 模板目录 + schema 校验 + token 预算截断 + 温度分层 + 渲染哈希审计。
+- 运行时开关与配置：面板可启停分析入队，key 仅存内存；`/aiops/settings` 始终注册。
 
 ### Frontend
 
@@ -60,6 +68,7 @@
 | 写命令可靠性 | dry-run、resourceVersion、幂等键、审计 | 防重复与丢失更新 |
 | 外部数据源故障 | partial/warnings、可选 provider | 指标或 Trace 故障不拖垮配置页 |
 | 前端刷新 | SSE 失效通知 + REST resync + 轮询 | 弱实时且能从丢事件恢复 |
+| AI 输出可信度 | 硬指标规则先行 + LLM 出分、schema 校验、失败重试与规则兜底 | 单点 LLM 故障不污染结论 |
 
 ## 3. 做得较好的地方
 
@@ -114,6 +123,7 @@ PostgreSQL 有 `clock_state` scaffold，Frontend 有时间条，但 Controller/S
 - Backend 批量配置不是跨对象原子事务；API/文案必须避免暗示原子性。
 - SSE 没有持久游标；慢客户端丢事件只能全量重同步。
 - 前端测试以构建/状态脚本为主，缺少组件、API 错误态和用户流程自动化。
+- AIOps 的生产化（LLM 供应商多活、密钥托管、成本/配额监控、多副本 worker 负载验证）未验证；当前是单机开发/演示形态。
 
 ## 5. 测试与验证评价
 
@@ -127,8 +137,8 @@ PostgreSQL 有 `clock_state` scaffold，Frontend 有时间条，但 Controller/S
 
 ### 当前不足
 
-- 无真实浏览器端到端测试。
-- 无全栈 Kind E2E 覆盖 Dashboard、PostgreSQL、Prometheus 和 Jaeger。
+- 无真实浏览器端到端测试（API 层已有独立 Kind E2E：控制面/Simulator/Backend 主链路，随 PR 自动运行）。
+- AIOps 覆盖 worker/chat/schema/aggregator 单元与集成测试，但无真实 LLM 供应商端到端验证（CI 用 mock/规则兜底路径）。
 - DB test 以轻量路径为主；需要真实 PostgreSQL 迁移/并发/保留策略测试。
 - 缺少 chaos/restart：Manager 崩溃、Lease 切换、DB 短暂不可用、SSE 丢事件。
 - 缺少规模基准：大量 CR、Pod、snapshot、metric series、trace span。
@@ -137,7 +147,7 @@ PostgreSQL 有 `clock_state` scaffold，Frontend 有时间条，但 Controller/S
 
 优先做可验证性而不是立即扩功能：
 
-1. 在目标机执行现有完整部署验收，并把等价 E2E 做成 CI 可信基线。
+1. 在目标机执行完整部署验收（CI E2E 已是 API 层基线；页面回显链路见 [#122](https://github.com/3900563672/hello-k8s-ai/issues/122)）。
 2. 修复所有会误导用户的 UI 文案/按钮状态。
 3. 让 Traffic 命令闭环并补审计证据。
 4. 加生产安全和持久化，再谈对外部署。
