@@ -41,6 +41,7 @@
 | 脚本读 kubectl 大输出（100+ Pod） | [process-kubectl-enobufs.md](process-kubectl-enobufs.md) |
 | 任何 >30s 阻塞等待 | [process-no-idle-wait.md](process-no-idle-wait.md) |
 | 本地连 127.0.0.1 新端口被拒 / 回环排查 | [process-wsl-loopback-fresh-listen-refused.md](process-wsl-loopback-fresh-listen-refused.md) |
+| WSL 内 GitHub 慢/断连（clone/push/PR） | [process-wsl-github-proxy.md](process-wsl-github-proxy.md) |
 | PowerShell 直传 wsl 复杂命令 | [process-wsl-powershell-quoting.md](process-wsl-powershell-quoting.md) |
 | 扩容停在节点容量上限 | [simulator-scale-node-capacity.md](simulator-scale-node-capacity.md) |
 | 对外提交 / 开源贡献（AI 产出自查与披露） | [process-ai-collaboration-disclosure.md](process-ai-collaboration-disclosure.md) |
