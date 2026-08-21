@@ -61,18 +61,18 @@ func TestValidateCommandIntent(t *testing.T) {
 			Traffic:      &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(50), PeriodMinutes: intPointer(30)},
 			Rate:         intPointer(20),
 		}, wantErr: false},
-		{name: "固定 QPS 超上限拒绝", intent: &CommandIntent{
+		{name: "固定 QPS 超上限由归一化钳制（#134）", intent: &CommandIntent{
 			TargetTenant: "core",
 			Traffic:      &TrafficIntent{QPS: intPointer(MaxTrafficQPS + 1)},
-		}, wantErr: true},
-		{name: "峰值 QPS 超上限拒绝", intent: &CommandIntent{
+		}, wantErr: false},
+		{name: "峰值 QPS 超上限由归一化钳制（#134）", intent: &CommandIntent{
 			TargetTenant: "core",
 			Traffic:      &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(MaxTrafficQPS + 1)},
-		}, wantErr: true},
-		{name: "潮汐缺 peakQps 拒绝", intent: &CommandIntent{
+		}, wantErr: false},
+		{name: "潮汐缺 peakQps 由归一化补默认（#134）", intent: &CommandIntent{
 			TargetTenant: "core",
 			Traffic:      &TrafficIntent{Shape: string(TrafficShapeTidal)},
-		}, wantErr: true},
+		}, wantErr: false},
 		{name: "非法形状拒绝", intent: &CommandIntent{
 			TargetTenant: "core",
 			Traffic:      &TrafficIntent{Shape: "moon", PeakQPS: intPointer(20)},
@@ -80,9 +80,9 @@ func TestValidateCommandIntent(t *testing.T) {
 		{name: "写流量缺租户拒绝", intent: &CommandIntent{
 			Traffic: &TrafficIntent{QPS: intPointer(20)},
 		}, wantErr: true},
-		{name: "倍速超上限拒绝", intent: &CommandIntent{
+		{name: "倍速超上限由归一化钳制（#134）", intent: &CommandIntent{
 			Rate: intPointer(MaxSimulationRate + 1),
-		}, wantErr: true},
+		}, wantErr: false},
 		{name: "倍速为零拒绝", intent: &CommandIntent{
 			Rate: intPointer(0),
 		}, wantErr: true},
@@ -94,6 +94,106 @@ func TestValidateCommandIntent(t *testing.T) {
 				t.Fatalf("ValidateCommandIntent() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestNormalizeTrafficIntent(t *testing.T) {
+	tests := []struct {
+		name         string
+		intent       *CommandIntent
+		wantPeak     int
+		wantRate     int
+		wantDuration int
+		wantReason   string
+		wantCurve    bool
+	}{
+		{name: "无流量返回 nil", intent: &CommandIntent{}, wantCurve: false},
+		{name: "稳态缺省补默认 20/倍速 1", intent: &CommandIntent{
+			TargetTenant: "core", Traffic: &TrafficIntent{},
+		}, wantPeak: 20, wantRate: 1, wantReason: "defaulted", wantCurve: true},
+		{name: "超上限钳制 500→200", intent: &CommandIntent{
+			TargetTenant: "core", Traffic: &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(500)},
+		}, wantPeak: MaxTrafficQPS, wantRate: 1, wantReason: "clamped-to-max", wantCurve: true},
+		{name: "非稳态缺时长补一个周期", intent: &CommandIntent{
+			TargetTenant: "core", Traffic: &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(50)},
+		}, wantPeak: 50, wantRate: 1, wantDuration: DefaultTidalPeriod, wantCurve: true},
+		{name: "倍速超上限钳制 500→100", intent: &CommandIntent{
+			TargetTenant: "core", Rate: intPointer(500),
+			Traffic: &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(50)},
+		}, wantPeak: 50, wantRate: MaxSimulationRate, wantReason: "clamped-to-max", wantCurve: true},
+		{name: "2 小时潮汐曲线覆盖全程", intent: &CommandIntent{
+			TargetTenant: "preset-tenant-001", DurationMinutes: 120,
+			Traffic: &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(50), PeriodMinutes: intPointer(30)},
+			Rate:    intPointer(20),
+		}, wantPeak: 50, wantRate: 20, wantDuration: 120, wantCurve: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			applied, err := NormalizeTrafficIntent(tt.intent)
+			if err != nil {
+				t.Fatalf("NormalizeTrafficIntent() error = %v", err)
+			}
+			if !tt.wantCurve {
+				if applied != nil {
+					t.Fatalf("NormalizeTrafficIntent() = %v, want nil", applied)
+				}
+				return
+			}
+			if applied == nil {
+				t.Fatal("NormalizeTrafficIntent() = nil, want applied")
+			}
+			expectedEnd := tt.intent.DurationMinutes * 60
+			if expectedEnd <= 0 {
+				expectedEnd = DefaultTidalPeriod * 60 // 未给时长时曲线预览至少一个周期
+			}
+			if got := applied.Curve[len(applied.Curve)-1].X; got != expectedEnd {
+				t.Errorf("curve 终点 = %d 秒, want %d 秒（覆盖全程）", got, expectedEnd)
+			}
+			if tt.wantReason != "" {
+				found := false
+				for _, value := range applied.Values {
+					if value.Reason == tt.wantReason {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("applied.Values 缺少 reason=%q：%+v", tt.wantReason, applied.Values)
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateTrafficCurve(t *testing.T) {
+	curve := GenerateTrafficCurve(TrafficShapeTidal, 50, 30, 120)
+	if len(curve) < 10 {
+		t.Fatalf("2 小时潮汐曲线点数过少：%d", len(curve))
+	}
+	if curve[0].X != 0 || curve[len(curve)-1].X != 7200 {
+		t.Fatalf("曲线范围应为 0..7200 秒，实际 %d..%d", curve[0].X, curve[len(curve)-1].X)
+	}
+	for _, point := range curve {
+		if point.Y < 1 || point.Y > 50 {
+			t.Errorf("曲线点越界 (%ds, %dQPS)，应在 1..50", point.X, point.Y)
+		}
+	}
+	// 潮汐必须有起伏（不是平线，#134 根因 1）
+	minValue, maxValue := curve[0].Y, curve[0].Y
+	for _, point := range curve[1:] {
+		if point.Y < minValue {
+			minValue = point.Y
+		}
+		if point.Y > maxValue {
+			maxValue = point.Y
+		}
+	}
+	if minValue == maxValue {
+		t.Error("潮汐曲线是平线（min==max），波形生成失败")
+	}
+	// 长时长自适应粒度：24h+ 用 30 分钟粒度，点数有界
+	longCurve := GenerateTrafficCurve(TrafficShapeTidal, 50, 30, 72*60)
+	if len(longCurve) > 200 {
+		t.Errorf("72 小时曲线点数过多：%d", len(longCurve))
 	}
 }
 

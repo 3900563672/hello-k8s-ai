@@ -5,7 +5,9 @@ import {
     fetchAIOpsAlerts,
     fetchAIOpsJobs,
     fetchAIOpsLimits,
+    fetchAIOpsQuota,
     fetchAIOpsWindows,
+    stopAIOpsCommand,
 } from '@/api/endpoints/aiopsApi'
 import type { AIOpsWindowLevel } from '@/types/aiops.types'
 
@@ -21,6 +23,17 @@ export const aiopsQueryKeys = {
         [...aiopsQueryKeys.all, 'analyses', status ?? null] as const,
     detail: (segmentId: string) => [...aiopsQueryKeys.all, 'detail', segmentId] as const,
     limits: ['aiops', 'limits'] as const,
+}
+
+/** 日配额用量（#134：顶部展示剩余额度，被拒前先知道）。 */
+export function useAIOpsQuota() {
+    return useQuery({
+        queryKey: ['aiops', 'quota'] as const,
+        queryFn: () => fetchAIOpsQuota(),
+        refetchInterval: 60_000,
+        staleTime: 30_000,
+        retry: 0,
+    })
 }
 
 /** 意图执行硬限制：确认面板提示条展示（失败静默，不影响起实验主流程）。 */
@@ -96,6 +109,17 @@ export function useCreateAIOpsCommand() {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: (rawInput: string) => createAIOpsCommand(rawInput),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: aiopsQueryKeys.all })
+        },
+    })
+}
+
+/** 停止执行中的波形调度（#134，mutation）。 */
+export function useStopAIOpsCommand() {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (commandId: string) => stopAIOpsCommand(commandId),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: aiopsQueryKeys.all })
         },

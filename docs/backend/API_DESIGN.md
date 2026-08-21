@@ -142,7 +142,9 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | GET | `/aiops/commands/{id}` | 意图命令详情（解析结果 + 执行 steps）。 |
 | POST | `/aiops/commands/{id}/confirm` | 确认执行：gate 校验（节点/租户存在）→ 写流量/调倍速 → 创建并启动实验 → `done`/`failed`。 |
 | GET | `/aiops/templates` | 只读模板目录（model/node/tenant 各 10 条预置 + orchestrator/traffic，LLM 只能选目录内 id）；model/node/tenant 的 id 与集群 CR 同名，由 `hack/aiops-templates-seed.sh` 预置。 |
-| GET | `/aiops/limits` | 意图执行硬限制（峰值 QPS/倍速/波形/潮汐周期），解析校验与前端提示共用。 |
+| GET | `/aiops/limits` | 意图执行硬限制与能力（峰值 QPS/倍速/波形/潮汐周期/时长不限/随时可停止），解析校验与前端提示共用。 |
+| POST | `/aiops/commands/{id}/stop` | 停止执行中的波形调度（#134）：QPS 归零 + 恢复倍速 + 状态 stopped。 |
+| GET | `/aiops/quota` | 日配额用量与上限（#134）：24h 调用/token 已用与上限，面板展示剩余额度。 |
 | GET | `/aiops/windows` | 窗口/日总结；`level=L3|L4`、`limit` 1..200。 |
 | GET | `/aiops/alerts` | 警戒列表（分数序列规则触发）；`limit` 1..200。 |
 | POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话；回答成功后问答对与引用的 window/alert/command ID 落 `aiops_chat_messages`（失败不影响响应）；日配额超限（24h 滚动，默认 300 次/200 万 token，`AIOPS_DAILY_MAX_CALLS`/`AIOPS_DAILY_MAX_TOKENS`）返回 429 `DAILY_QUOTA_EXCEEDED`。 |

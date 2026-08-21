@@ -66,7 +66,8 @@ type AIOpsScores struct {
 }
 
 // AIOpsCommandStatus 是 aiops_commands 表的状态机（#94 M2）：
-// parsed → confirmed → gate → executing → verified → done；拒绝/失败为 rejected/failed。
+// parsed → confirmed → gate → executing → verified → done；拒绝/失败为 rejected/failed；
+// 波形调度执行中可用户停止 → stopped（#134）。
 type AIOpsCommandStatus string
 
 const (
@@ -78,6 +79,7 @@ const (
 	AIOpsCommandDone      AIOpsCommandStatus = "done"
 	AIOpsCommandRejected  AIOpsCommandStatus = "rejected"
 	AIOpsCommandFailed    AIOpsCommandStatus = "failed"
+	AIOpsCommandStopped   AIOpsCommandStatus = "stopped"
 )
 
 // AIOpsCommand 是 aiops_commands 表的一行：一句话意图的解析、确认与执行记录。
@@ -90,6 +92,9 @@ type AIOpsCommand struct {
 	Error     string          `json:"error,omitempty"`
 	CreatedAt time.Time       `json:"createdAt"`
 	UpdatedAt time.Time       `json:"updatedAt"`
+
+	// Applied 是动态计算的生效参数与 AI 描绘波形（#134，不落库，响应时附加）。
+	Applied json.RawMessage `json:"applied,omitempty"`
 }
 
 // AIOpsWindowLevel 是时间聚合层级（#95 M3）：L3 窗口总结 / L4 日总结。
@@ -109,6 +114,15 @@ type AIOpsWindowSummary struct {
 	Scores      json.RawMessage `json:"scores,omitempty"`
 	Summary     json.RawMessage `json:"summary,omitempty"`
 	CreatedAt   time.Time       `json:"createdAt"`
+}
+
+// AIOpsQuotaStatus 是日配额用量状态（#134：页面可见，被拒前先知道还剩多少）。
+type AIOpsQuotaStatus struct {
+	Enabled    bool  `json:"enabled"`
+	CallsUsed  int   `json:"callsUsed"`
+	CallsMax   int   `json:"callsMax"`
+	TokensUsed int64 `json:"tokensUsed"`
+	TokensMax  int64 `json:"tokensMax"`
 }
 
 // AIOpsAuditLog 是 aiops_audit_log 表的一行：同步对话/分析调用审计（#110 阶段四）。

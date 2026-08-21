@@ -75,7 +75,40 @@ export interface AIOpsLimits {
     trafficShapes: string[]
     defaultTidalPeriodMinutes: number
     defaultPeakQPS: number
+    defaultRate: number
     trafficRequiresTenant: boolean
+    unlimitedDuration: boolean
+    supportsStop: boolean
+}
+
+/** 生效参数记录（#134）：请求值→生效值+原因（clamped-to-max/defaulted/ok）。 */
+export interface AIOpsAppliedValue {
+    field: string
+    requested?: number
+    effective: number
+    reason: 'ok' | 'clamped-to-max' | 'defaulted'
+}
+
+/** 波形采样点（AI 描绘，#134）：x 为模拟秒，y 为 QPS。 */
+export interface AIOpsTrafficPoint {
+    x: number
+    y: number
+}
+
+/** 命令的生效参数与 AI 描绘波形（后端动态计算，不落库，#134）。 */
+export interface AIOpsTrafficApplied {
+    values: AIOpsAppliedValue[]
+    curve: AIOpsTrafficPoint[]
+    wallClockSeconds: number
+}
+
+/** 日配额用量（GET /aiops/quota，#134：被拒前先知道还剩多少）。 */
+export interface AIOpsQuota {
+    enabled: boolean
+    callsUsed: number
+    callsMax: number
+    tokensUsed: number
+    tokensMax: number
 }
 
 /** 气泡 Agent 分级（ClusterBubbleField 外圈着色；后端 AI 结论接入前不渲染）。 */
@@ -124,6 +157,7 @@ export type AIOpsCommandStatus =
     | 'done'
     | 'rejected'
     | 'failed'
+    | 'stopped'
 
 export interface AIOpsCommand {
     commandId: string
@@ -134,12 +168,15 @@ export interface AIOpsCommand {
     errorText?: string
     createdAt: string
     updatedAt: string
+    /** 生效参数与 AI 描绘波形（#134，动态计算）。 */
+    applied?: AIOpsTrafficApplied
 }
 
 export type AIOpsAnalysesEnvelope = ApiEnvelope<AIOpsAnalysis[]>
 export type AIOpsAnalysisDetailEnvelope = ApiEnvelope<AIOpsAnalysisDetail>
 export type AIOpsAlertsEnvelope = ApiEnvelope<AIOpsAlert[]>
 export type AIOpsCommandEnvelope = ApiEnvelope<AIOpsCommand>
+export type AIOpsQuotaEnvelope = ApiEnvelope<AIOpsQuota>
 export type AIOpsWindowsEnvelope = ApiEnvelope<AIOpsWindowSummary[]>
 
 /** 同步对话 SSE 事件（#110 阶段二，AG-UI 轻量子集）：lifecycle / tool / text。 */

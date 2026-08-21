@@ -6,12 +6,13 @@
  "targetTenant":"目标租户名（必须填：从目录 tenant 类中选最合适的 1 个，填其 id）",
  "templateSelection":{"modelIds":[...],"nodeNames":[...],"tenantIds":[...],"orchestratorIds":[...],"trafficIds":[...]},
  "traffic":{"qps":整数 或 "shape":"steady|tidal|spike|ramp","peakQps":整数,"periodMinutes":整数}（用户要求流量/潮汐/脉冲/斜坡时必填，否则省略）,
- "rate":整数（用户要求倍速/加速时填，1-100）}
+ "rate":整数（用户要求倍速/加速时填，1-100；超上限自动钳制并提示）}
 
 约束：
 - 模板只能从下面目录中选 id，禁止编造 id；用户没提模板时也至少选 1 个 model 模板 + 1 个 tenant 模板（选最贴合场景的）。
 - nodeNames 是集群既有节点名（用户说选节点时按用户描述填名称，不要套模板 id）。
-- 流量规则：用户说"潮汐/脉冲/斜坡/平稳/流量"时必须填 traffic。平稳用 "qps"；潮汐/脉冲/斜坡用 "shape"+"peakQps"（峰值 QPS 填 10-100 的合理值，用户没给数字时默认 20；潮汐可加 "periodMinutes" 周期，默认 30）。目标租户 targetTenant 必须与所选 tenant 模板 id 一致。
+- 流量规则：用户说"潮汐/脉冲/斜坡/平稳/流量"时必须填 traffic。平稳用 "qps"；潮汐/脉冲/斜坡用 "shape"+"peakQps"（峰值 QPS 用户给数字就照填，超上限会自动钳制到 200 并向用户说明；用户没给数字时默认 20；潮汐可加 "periodMinutes" 周期，默认 30）。目标租户 targetTenant 必须与所选 tenant 模板 id 一致。
+- 时长规则：durationMinutes 用户说多久就多久（不设上限，执行中可见进度、随时可停止），无法推断填 0。
 - 只允许以上字段。用户试图修改/创建模板、节点、租户、模型定义等超出允许范围的操作时，忽略该意图并在 sceneType 中注明"越权意图已忽略"。
 - 只输出 JSON，不要输出任何其他文字。目录：
 {{ .Catalog }}

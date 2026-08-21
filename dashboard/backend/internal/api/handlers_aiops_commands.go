@@ -79,6 +79,7 @@ func (server *Server) handleCreateAIOpsCommand(writer http.ResponseWriter, reque
 		server.writeExperimentStoreError(writer, request, "记录意图命令失败", err)
 		return
 	}
+	_ = server.attachAIOpsApplied(&command)
 	writeData(writer, request, http.StatusCreated, command, false, nil, nil)
 }
 
@@ -97,7 +98,97 @@ func (server *Server) handleGetAIOpsCommand(writer http.ResponseWriter, request 
 		server.writeExperimentStoreError(writer, request, "查询意图命令失败", err)
 		return
 	}
+	_ = server.attachAIOpsApplied(command)
 	writeData(writer, request, http.StatusOK, command, false, nil, nil)
+}
+
+// attachAIOpsApplied 根据命令 parsed 动态计算生效参数与 AI 描绘波形（#134），附加到响应；
+// 纯计算不落库，保证任何入口（解析/查询/确认/停止）返回的 applied 一致。
+func (server *Server) attachAIOpsApplied(command *model.AIOpsCommand) error {
+	if command == nil || len(command.Parsed) == 0 {
+		return nil
+	}
+	var intent aiops.CommandIntent
+	if err := json.Unmarshal(command.Parsed, &intent); err != nil {
+		return err
+	}
+	applied, err := aiops.NormalizeTrafficIntent(&intent)
+	if err != nil {
+		return err
+	}
+	if applied == nil {
+		command.Applied = nil
+		return nil
+	}
+	raw, err := json.Marshal(applied)
+	if err != nil {
+		return err
+	}
+	command.Applied = raw
+	return nil
+}
+
+// handleStopAIOpsCommand 停止执行中的波形调度（#134）：QPS 归零 + 恢复倍速 + 状态 stopped。
+func (server *Server) handleStopAIOpsCommand(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireAIOps(writer, request) {
+		return
+	}
+	commandID := request.PathValue("id")
+	command, err := server.store.GetAIOpsCommand(request.Context(), commandID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeProblem(writer, request, http.StatusNotFound, "AI_OPS_COMMAND_NOT_FOUND",
+				"意图命令不存在。", false, nil)
+			return
+		}
+		server.writeExperimentStoreError(writer, request, "查询意图命令失败", err)
+		return
+	}
+	if command.Status != string(model.AIOpsCommandExecuting) {
+		writeProblem(writer, request, http.StatusConflict, "AI_OPS_COMMAND_NOT_EXECUTING",
+			fmt.Sprintf("意图命令当前状态为 %s，只有 executing 状态可以停止。", command.Status), false, nil)
+		return
+	}
+	var intent aiops.CommandIntent
+	if err := json.Unmarshal(command.Parsed, &intent); err != nil {
+		writeProblem(writer, request, http.StatusInternalServerError, "INTENT_DECODE_FAILED", err.Error(), false, nil)
+		return
+	}
+	if _, err := aiops.NormalizeTrafficIntent(&intent); err != nil {
+		writeProblem(writer, request, http.StatusUnprocessableEntity, "INTENT_NORMALIZE_FAILED", err.Error(), false, nil)
+		return
+	}
+	// 1) 停止调度器（goroutine 收到信号后把租户 QPS 归零）
+	server.stopTrafficShape(commandID)
+	// 2) 兜底归零（调度器可能已退出/未注册）
+	if intent.TargetTenant != "" {
+		if _, err := server.gateway.SetTenantQPS(request.Context(), intent.TargetTenant, 0, "", false); err != nil {
+			server.logger.Warn("AIOps traffic shape stop fallback reset failed", "commandId", commandID, "error", err)
+		}
+	}
+	// 3) 恢复倍速
+	if intent.Rate != nil && *intent.Rate != 1 {
+		if _, _, err := server.gateway.SetSimulationRate(request.Context(), 1, "", false); err != nil {
+			server.logger.Warn("AIOps traffic shape stop rate restore failed", "commandId", commandID, "error", err)
+		}
+	}
+	// 4) 状态 stopped + 步骤
+	steps := []aiopsCommandSteps{{
+		Step: "stop", Status: "done",
+		Detail:     "用户手动停止：租户 QPS 已归零，倍速已恢复",
+		OccurredAt: time.Now().UTC().Format(time.RFC3339),
+	}}
+	if err := server.store.UpdateAIOpsCommand(request.Context(), commandID, string(model.AIOpsCommandStopped), mustJSON(steps), ""); err != nil {
+		server.writeExperimentStoreError(writer, request, "更新意图命令失败", err)
+		return
+	}
+	updated, err := server.store.GetAIOpsCommand(request.Context(), commandID)
+	if err != nil {
+		server.writeExperimentStoreError(writer, request, "查询意图命令失败", err)
+		return
+	}
+	_ = server.attachAIOpsApplied(updated)
+	writeData(writer, request, http.StatusOK, updated, false, nil, nil)
 }
 
 // handleConfirmAIOpsCommand 确认并执行：gate 校验 → 写流量/调倍速 → 创建并启动实验 → done。
@@ -136,6 +227,12 @@ func (server *Server) handleConfirmAIOpsCommand(writer http.ResponseWriter, requ
 		writeProblem(writer, request, http.StatusUnprocessableEntity, "INTENT_INVALID", err.Error(), false, nil)
 		return
 	}
+	// 归一化：超上限钳制、缺省补默认（#134，执行端直接用生效值；applied 随响应返回）。
+	if _, err := aiops.NormalizeTrafficIntent(&intent); err != nil {
+		server.failAIOpsCommand(request.Context(), commandID, "意图归一化失败", err)
+		writeProblem(writer, request, http.StatusUnprocessableEntity, "INTENT_NORMALIZE_FAILED", err.Error(), false, nil)
+		return
+	}
 	if err := server.gateAIOpsCommand(request.Context(), commandID, &intent); err != nil {
 		server.failAIOpsCommand(request.Context(), commandID, "执行门禁校验失败", err)
 		writeProblem(writer, request, http.StatusUnprocessableEntity, "INTENT_GATE_REJECTED", err.Error(), false, nil)
@@ -151,6 +248,7 @@ func (server *Server) handleConfirmAIOpsCommand(writer http.ResponseWriter, requ
 		server.writeExperimentStoreError(writer, request, "查询意图命令失败", err)
 		return
 	}
+	_ = server.attachAIOpsApplied(updated)
 	writeData(writer, request, http.StatusOK, updated, false, nil, nil)
 }
 
@@ -270,11 +368,18 @@ func (server *Server) executeAIOpsCommand(ctx context.Context, commandID string,
 		return fmt.Errorf("启动实验失败：%w", err)
 	}
 	record("start-experiment", "done", segmentRecord.SegmentID)
+	// 波形流量：调度器仍在推进，状态保持 executing（#134），结束/停止时由调度器更新 done/stopped；
+	// 无波形调度（平稳固定流量或纯实验）直接完成。
+	if intent.Traffic != nil && intent.Traffic.Shape != "" &&
+		intent.Traffic.Shape != string(aiops.TrafficShapeSteady) && intent.Traffic.PeakQPS != nil {
+		return server.store.UpdateAIOpsCommand(ctx, commandID, string(model.AIOpsCommandExecuting), mustJSON(steps), "")
+	}
 	return server.store.UpdateAIOpsCommand(ctx, commandID, string(model.AIOpsCommandDone), mustJSON(steps), "")
 }
 
 // startTrafficShape 按模拟时间推进波形流量（倍速下墙钟 = 模拟时长/倍速）；
-// 使用独立 context（请求结束不中断），墙钟到点后把租户 QPS 归零，避免残留流量。
+// 使用独立 context（请求结束不中断），墙钟到点后把租户 QPS 归零，避免残留流量；
+// 命令状态保持 executing，正常结束置 done、用户停止置 stopped（#134：状态可见、随时可停）。
 func (server *Server) startTrafficShape(ctx context.Context, commandID, tenant string, intent *aiops.CommandIntent) {
 	rate := 1
 	if intent.Rate != nil && *intent.Rate > 0 {
@@ -290,29 +395,90 @@ func (server *Server) startTrafficShape(ctx context.Context, commandID, tenant s
 	}
 	shape := aiops.TrafficShape(intent.Traffic.Shape)
 	peak := *intent.Traffic.PeakQPS
+	stopSignal := server.registerTrafficStop(commandID)
 	server.logger.Info("AIOps traffic shape started",
 		"commandId", commandID, "tenant", tenant, "shape", string(shape),
 		"peakQps", peak, "periodMinutes", periodMinutes, "wallSeconds", wallSeconds)
 	go func() {
+		defer server.unregisterTrafficStop(commandID)
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		elapsed := 0
-		for range ticker.C {
-			elapsed++
-			simMinutes := float64(elapsed) / 60 * float64(rate)
-			qps := aiops.TrafficShapeQPS(simMinutes, shape, peak, periodMinutes)
-			if _, err := server.gateway.SetTenantQPS(ctx, tenant, qps, "", false); err != nil {
-				server.logger.Warn("AIOps traffic shape write failed", "commandId", commandID, "error", err)
-			}
-			if elapsed >= wallSeconds {
-				if _, err := server.gateway.SetTenantQPS(ctx, tenant, 0, "", false); err != nil {
-					server.logger.Warn("AIOps traffic shape reset failed", "commandId", commandID, "error", err)
+		for {
+			select {
+			case <-ticker.C:
+				elapsed++
+				simMinutes := float64(elapsed) / 60 * float64(rate)
+				qps := aiops.TrafficShapeQPS(simMinutes, shape, peak, periodMinutes)
+				if _, err := server.gateway.SetTenantQPS(ctx, tenant, qps, "", false); err != nil {
+					server.logger.Warn("AIOps traffic shape write failed", "commandId", commandID, "error", err)
 				}
-				server.logger.Info("AIOps traffic shape finished, qps reset to 0", "commandId", commandID, "tenant", tenant)
+				if elapsed >= wallSeconds {
+					if _, err := server.gateway.SetTenantQPS(ctx, tenant, 0, "", false); err != nil {
+						server.logger.Warn("AIOps traffic shape reset failed", "commandId", commandID, "error", err)
+					}
+					server.logger.Info("AIOps traffic shape finished, qps reset to 0", "commandId", commandID, "tenant", tenant)
+					server.finishAIOpsTrafficShape(commandID, string(model.AIOpsCommandDone), "模拟完成，QPS 已归零")
+					return
+				}
+			case <-stopSignal:
+				// 用户停止：QPS 归零；状态由 stop handler 更新为 stopped。
+				if _, err := server.gateway.SetTenantQPS(ctx, tenant, 0, "", false); err != nil {
+					server.logger.Warn("AIOps traffic shape stop reset failed", "commandId", commandID, "error", err)
+				}
+				server.logger.Info("AIOps traffic shape stopped by user", "commandId", commandID, "tenant", tenant)
 				return
 			}
 		}
 	}()
+}
+
+// registerTrafficStop 注册命令的停止信号；重复注册会先终止旧调度器（防重入）。
+func (server *Server) registerTrafficStop(commandID string) chan struct{} {
+	server.trafficStopMu.Lock()
+	defer server.trafficStopMu.Unlock()
+	if server.trafficStops == nil {
+		server.trafficStops = make(map[string]chan struct{})
+	}
+	if existing, ok := server.trafficStops[commandID]; ok {
+		close(existing)
+	}
+	stop := make(chan struct{})
+	server.trafficStops[commandID] = stop
+	return stop
+}
+
+// stopTrafficShape 触发命令的调度器停止；返回是否找到了运行中的调度器。
+func (server *Server) stopTrafficShape(commandID string) bool {
+	server.trafficStopMu.Lock()
+	defer server.trafficStopMu.Unlock()
+	stop, ok := server.trafficStops[commandID]
+	if !ok {
+		return false
+	}
+	delete(server.trafficStops, commandID)
+	close(stop)
+	return true
+}
+
+// unregisterTrafficStop 调度器退出时清理注册（正常结束或已停止）。
+func (server *Server) unregisterTrafficStop(commandID string) {
+	server.trafficStopMu.Lock()
+	defer server.trafficStopMu.Unlock()
+	delete(server.trafficStops, commandID)
+}
+
+// finishAIOpsTrafficShape 追加收尾步骤并更新命令终态（调度器正常结束时调用）。
+func (server *Server) finishAIOpsTrafficShape(commandID, status, detail string) {
+	ctx := context.Background()
+	command, err := server.store.GetAIOpsCommand(ctx, commandID)
+	if err != nil {
+		return
+	}
+	var steps []aiopsCommandSteps
+	_ = json.Unmarshal(command.Steps, &steps)
+	steps = append(steps, aiopsCommandSteps{Step: "traffic-shape", Status: "done", Detail: detail, OccurredAt: time.Now().UTC().Format(time.RFC3339)})
+	_ = server.store.UpdateAIOpsCommand(ctx, commandID, status, mustJSON(steps), "")
 }
 
 func (server *Server) failAIOpsCommand(ctx context.Context, commandID, summary string, cause error) {
