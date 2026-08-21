@@ -556,10 +556,11 @@ verify_clean_state() {
   local leftover replay
   leftover="$(kube get tenants,models,orchestrators,simulatorinstances,workernodes \
     -o name 2>/dev/null || true)"
+  leftover="$(printf '%s\n' "$leftover" | grep -v '/preset-' || true)"
   if [[ -n "$leftover" ]]; then
     fail "干净环境断言失败：仍存在业务 CR：$leftover"
   fi
-  log "干净环境断言：业务 CR 为空"
+  log "干净环境断言：业务 CR 为空（#131 预置模板 preset-* 已豁免）"
 
   replay="$(service_proxy hello-k8s-ai-dashboard-backend http /api/v1/replay 2>/dev/null || true)"
   if [[ "$replay" == *'snapshot-'* ]]; then
