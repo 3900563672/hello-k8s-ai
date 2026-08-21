@@ -95,18 +95,18 @@ describe('timeSlice', () => {
         expect(useTimeStore.getState().selectedSnapshotId).toBe('a')
     })
 
-    it('jumpToTimestamp 使用“目标时刻之前最后一个快照”，早于首条则不变', () => {
+    it('jumpToTimestamp 使用“目标时刻之前最后一个快照”，早于首条则 no-op', () => {
         useTimeStore.getState().setSnapshots([
             makeSnapshot('a', T0),
             makeSnapshot('b', T1),
         ])
         useTimeStore.getState().jumpToTimestamp('2026-08-12T12:00:30.000Z')
         expect(useTimeStore.getState().selectedSnapshotId).toBe('a')
-        // 实现行为：目标早于时间线起点时钳制到第一条快照
-        // （timelineMath 注释描述为“目标之前最后一个”，实现返回 snapshots[0]，此处按实现固化）。
+        // #140：目标早于时间线起点时无“之前”的快照，保持 no-op（与后端 unavailable 语义一致），不钳制到未来快照。
         useTimeStore.getState().jumpToTimestamp('2026-08-12T11:00:00.000Z')
         expect(useTimeStore.getState().selectedSnapshotId).toBe('a')
         expect(useTimeStore.getState().mode).toBe('historical')
+        expect(useTimeStore.getState().revision).toBe(2)
     })
 
     it('stepSnapshot 从当前选中步进并夹紧边界', () => {

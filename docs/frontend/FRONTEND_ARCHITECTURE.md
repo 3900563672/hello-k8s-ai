@@ -100,6 +100,7 @@ SSE 是通知，不是数据源。事件本身不包含页面完整状态，也�
 
 - **Latest**：请求不带 `at`，读 Backend live cache，可使用支持的 mutation。
 - **Historical**：从 replay timeline 选择 snapshot，查询带 `at`，页面只读。
+- 目标时间早于最早 snapshot 时前端不选中任何快照（跳转 no-op，保持当前选择），查询由 Backend 返回 unavailable；不回退到最新快照冒充历史。
 - Backend 把距现在 2 秒内的 `at` 视为 live；更旧时间点查数据库最后一个 `captured_at <= at` 的 snapshot。
 - Backend 逻辑时钟仍等于 UTC 真实时间，不支持 pause/seek。
 - ExecutionControls 提供 1x、2x、5x、10x、20x Simulator 倍速；它调用 Backend 后等待 Clock/Instance 收敛，不在浏览器自行加速。

@@ -120,7 +120,7 @@ Backend 的 SSE channel 每客户端有有限缓冲，慢客户端可能错过�
 | PostgreSQL 必需且不可用 | 命令禁用，readiness 失败；当前态读取可能仍有诊断价值但以 API 响应为准。 |
 | Prometheus 不可用 | Overview 指标 section warning，其余资源继续展示。 |
 | Jaeger 不可用 | Trace section warning，不清空配置/工作负载。 |
-| 历史无 snapshot | 明确 unavailable，不回退 current。 |
+| 历史无 snapshot（含目标早于最早快照） | 明确 unavailable，不回退 current；跳转早于最早快照时前端 no-op，不选中未来快照。 |
 | resourceVersion conflict | 提示数据已变化，refetch 后由用户重新确认。 |
 | idempotent replay | 接受 Backend 已缓存响应，可提示命令未重复执行。 |
 | SSE 断开 | 显示连接退化，依靠轮询并自动重连。 |

@@ -76,6 +76,14 @@ expect(snapshotTime({ timestamp: Date.parse(T0) } as unknown as Parameters<typeo
         expect(clampViewport({ start: 100, end: 5000 }, bounds)).toEqual({ start: 0, end: 1000 })
     })
 
+    it('clampViewport NaN 输入回退到合法视窗，不产生 NaN 边界（#141）', () => {
+        const bounds = { start: 0, end: 100_000 }
+        expect(clampViewport({ start: Number.NaN, end: Number.NaN }, bounds)).toEqual({ start: 0, end: 100_000 })
+        expect(clampViewport({ start: Number.NaN, end: 50_000 }, bounds)).toEqual({ start: 0, end: 50_000 })
+        expect(clampViewport({ start: 10_000, end: Number.NaN }, bounds)).toEqual({ start: 10_000, end: 100_000 })
+        expect(clampViewport({ start: Number.NEGATIVE_INFINITY, end: 50_000 }, bounds)).toEqual({ start: 0, end: 50_000 })
+    })
+
     it('viewportEquals 在容差内比较', () => {
         expect(viewportEquals({ start: 0, end: 100 }, { start: 0, end: 100 })).toBe(true)
         expect(viewportEquals({ start: 0, end: 100 }, { start: 1, end: 101 }, 2)).toBe(true)
@@ -115,12 +123,12 @@ expect(snapshotTime({ timestamp: Date.parse(T0) } as unknown as Parameters<typeo
         expect(findNearestSnapshot([], T0)).toBeNull()
     })
 
-    it('findSnapshotAtOrBefore 返回目标之前最后一个，早于首条时钳制到第一条', () => {
+    it('findSnapshotAtOrBefore 返回目标之前最后一个，早于首条返回 null（与后端 unavailable 语义一致）', () => {
         const snapshots = [makeSnapshot('a', T0), makeSnapshot('b', T1)]
         expect(findSnapshotAtOrBefore(snapshots, T0)?.id).toBe('a')
         expect(findSnapshotAtOrBefore(snapshots, '2026-08-12T12:00:30.000Z')?.id).toBe('a')
         expect(findSnapshotAtOrBefore(snapshots, T2)?.id).toBe('b')
-        expect(findSnapshotAtOrBefore(snapshots, '2026-08-12T11:00:00.000Z')?.id).toBe('a')
+        expect(findSnapshotAtOrBefore(snapshots, '2026-08-12T11:00:00.000Z')).toBeNull()
         expect(findSnapshotAtOrBefore([], T0)).toBeNull()
     })
 })

@@ -4,7 +4,7 @@
 
 检查项（error 为失败，warning 仅提示）：
 1. Markdown 相对链接 / 图片路径目标存在
-2. 根目录 markdown 白名单：只允许 README.md、AGENTS.md、PROJECT_OVERVIEW_NEW.md
+2. 根目录 markdown 白名单：只允许 README.md、AGENTS.md、PROJECT_OVERVIEW_NEW.md、CONTRIBUTING.md、SECURITY.md、AI_COORDINATION.md
 3. 入口行数上限：README<=150、AGENTS.md<=200、docs/remote-ai/README.md<=60、docs/remote-ai/llms.txt<=80
 4. MAP 门禁：diff 命中的源码路径，其映射文档必须同时出现在 diff 中（最长匹配）
 5. 生成物新鲜度：README 时间线段与 docs/status.md 必须包含最新 change-history 目录
@@ -94,7 +94,7 @@ def check_root_whitelist():
     errors = 0
     for name in os.listdir(ROOT):
         if name.endswith(".md") and name not in ROOT_MD_WHITELIST:
-            print(f"根目录 markdown 白名单违规：{name}（只允许 README.md / AGENTS.md / PROJECT_OVERVIEW_NEW.md / CONTRIBUTING.md / SECURITY.md）")
+            print(f"根目录 markdown 白名单违规：{name}（只允许 README.md / AGENTS.md / PROJECT_OVERVIEW_NEW.md / CONTRIBUTING.md / SECURITY.md / AI_COORDINATION.md）")
             errors += 1
     return errors
 
