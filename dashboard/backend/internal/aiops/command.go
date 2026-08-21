@@ -35,18 +35,39 @@ type TemplateEntry struct {
 
 // TemplateCatalog 是 AI 可选模板的完整目录；LLM 只能从该目录选 id。
 var TemplateCatalog = []TemplateEntry{
-	// 模型模板（前端 PRESET_MODEL_TEMPLATES）
-	{ID: "preset-model-lite", Name: "轻量在线推理", Kind: TemplateModel, Description: "8 GPU，并发 16，绝对分 75"},
-	{ID: "preset-model-standard", Name: "标准在线推理", Kind: TemplateModel, Description: "16 GPU，并发 32，绝对分 100"},
-	{ID: "preset-model-batch", Name: "批量离线任务", Kind: TemplateModel, Description: "32 GPU，并发 64，绝对分 60"},
-	// 节点模板（前端 PRESET_NODE_TEMPLATES；节点本身是集群既有资源）
-	{ID: "preset-node-gpu-pool", Name: "高并发 GPU 池", Kind: TemplateNode, Description: "80 GPU，并发 128"},
-	{ID: "preset-node-standard", Name: "标准 GPU 节点", Kind: TemplateNode, Description: "32 GPU，并发 48"},
-	{ID: "preset-node-edge", Name: "边缘轻量节点", Kind: TemplateNode, Description: "8 GPU，并发 16"},
-	// 租户模板（前端 PRESET_TENANT_TEMPLATES）
-	{ID: "preset-tenant-core", Name: "核心在线业务", Kind: TemplateTenant, Description: "P1，基准 20 QPS，TTFT 阈值 800ms"},
-	{ID: "preset-tenant-general", Name: "一般在线业务", Kind: TemplateTenant, Description: "P3，基准 10 QPS，TTFT 阈值 500ms"},
-	{ID: "preset-tenant-batch", Name: "离线分析批", Kind: TemplateTenant, Description: "P5，基准 0 QPS，TTFT 阈值 2000ms"},
+	// 模型模板（与集群 Model CR 名一一对应，由 hack/aiops-templates-seed.sh 预置）
+	{ID: "preset-model-001", Name: "轻量在线推理", Kind: TemplateModel, Description: "8 GPU，并发 16，绝对分 75，冷启 800ms"},
+	{ID: "preset-model-002", Name: "标准在线推理", Kind: TemplateModel, Description: "16 GPU，并发 32，绝对分 100，冷启 1500ms"},
+	{ID: "preset-model-003", Name: "批量离线任务", Kind: TemplateModel, Description: "32 GPU，并发 64，绝对分 60，冷启 5000ms"},
+	{ID: "preset-model-004", Name: "高并发推荐", Kind: TemplateModel, Description: "64 GPU，并发 96，绝对分 95，冷启 1200ms"},
+	{ID: "preset-model-005", Name: "图像生成服务", Kind: TemplateModel, Description: "40 GPU，并发 24，绝对分 85，冷启 3000ms"},
+	{ID: "preset-model-006", Name: "语音实时转写", Kind: TemplateModel, Description: "24 GPU，并发 40，绝对分 90，冷启 1000ms"},
+	{ID: "preset-model-007", Name: "向量检索服务", Kind: TemplateModel, Description: "12 GPU，并发 48，绝对分 88，冷启 900ms"},
+	{ID: "preset-model-008", Name: "多模态理解", Kind: TemplateModel, Description: "48 GPU，并发 32，绝对分 92，冷启 2500ms"},
+	{ID: "preset-model-009", Name: "代码补全", Kind: TemplateModel, Description: "20 GPU，并发 64，绝对分 87，冷启 1100ms"},
+	{ID: "preset-model-010", Name: "长文本摘要", Kind: TemplateModel, Description: "16 GPU，并发 20，绝对分 78，冷启 4000ms"},
+	// 节点模板（与集群 WorkerNode CR 名一一对应，由 hack/aiops-templates-seed.sh 预置）
+	{ID: "preset-node-001", Name: "高并发 GPU 池", Kind: TemplateNode, Description: "80 GPU，并发 128"},
+	{ID: "preset-node-002", Name: "标准 GPU 节点", Kind: TemplateNode, Description: "32 GPU，并发 48"},
+	{ID: "preset-node-003", Name: "边缘轻量节点", Kind: TemplateNode, Description: "8 GPU，并发 16"},
+	{ID: "preset-node-004", Name: "推理加速节点", Kind: TemplateNode, Description: "48 GPU，并发 96"},
+	{ID: "preset-node-005", Name: "大显存节点", Kind: TemplateNode, Description: "64 GPU，并发 64"},
+	{ID: "preset-node-006", Name: "训练节点", Kind: TemplateNode, Description: "72 GPU，并发 32"},
+	{ID: "preset-node-007", Name: "弹性扩缩节点", Kind: TemplateNode, Description: "40 GPU，并发 80"},
+	{ID: "preset-node-008", Name: "高可用节点", Kind: TemplateNode, Description: "56 GPU，并发 72"},
+	{ID: "preset-node-009", Name: "通用计算节点", Kind: TemplateNode, Description: "24 GPU，并发 56"},
+	{ID: "preset-node-010", Name: "混合负载节点", Kind: TemplateNode, Description: "16 GPU，并发 40"},
+	// 租户模板（与集群 Tenant CR 名一一对应，由 hack/aiops-templates-seed.sh 预置；qps 预置 0 = 空环境）
+	{ID: "preset-tenant-001", Name: "核心在线业务", Kind: TemplateTenant, Description: "P1，基准 0 QPS，TTFT 阈值 800ms"},
+	{ID: "preset-tenant-002", Name: "一般在线业务", Kind: TemplateTenant, Description: "P3，基准 0 QPS，TTFT 阈值 500ms"},
+	{ID: "preset-tenant-003", Name: "离线分析批", Kind: TemplateTenant, Description: "P5，基准 0 QPS，TTFT 阈值 2000ms"},
+	{ID: "preset-tenant-004", Name: "实时风控", Kind: TemplateTenant, Description: "P1，基准 0 QPS，TTFT 阈值 300ms"},
+	{ID: "preset-tenant-005", Name: "搜索服务", Kind: TemplateTenant, Description: "P2，基准 0 QPS，TTFT 阈值 400ms"},
+	{ID: "preset-tenant-006", Name: "视频渲染批", Kind: TemplateTenant, Description: "P5，基准 0 QPS，TTFT 阈值 3000ms"},
+	{ID: "preset-tenant-007", Name: "交互式助手", Kind: TemplateTenant, Description: "P2，基准 0 QPS，TTFT 阈值 600ms"},
+	{ID: "preset-tenant-008", Name: "数据管道", Kind: TemplateTenant, Description: "P4，基准 0 QPS，TTFT 阈值 1500ms"},
+	{ID: "preset-tenant-009", Name: "模型微调任务", Kind: TemplateTenant, Description: "P4，基准 0 QPS，TTFT 阈值 2500ms"},
+	{ID: "preset-tenant-010", Name: "边缘推理", Kind: TemplateTenant, Description: "P3，基准 0 QPS，TTFT 阈值 700ms"},
 	// 编排策略模板（前端 PRESET_ORCHESTRATOR_TEMPLATES）
 	{ID: "preset-orchestrator-core", Name: "核心租户编排策略", Kind: TemplateOrchestrator, Description: "60s 扩容冷却，120s 缩容冷却，不缩零"},
 	{ID: "preset-orchestrator-elastic", Name: "弹性扩缩策略", Kind: TemplateOrchestrator, Description: "30s 扩容冷却，90s 缩容冷却，可缩零，快速吸收突发"},

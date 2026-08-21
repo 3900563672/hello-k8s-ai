@@ -33,8 +33,8 @@ func TestValidateCommandIntent(t *testing.T) {
 		{name: "空意图拒绝", intent: nil, wantErr: true},
 		{name: "目录内模板通过", intent: &CommandIntent{
 			TemplateSelection: TemplateSelections{
-				ModelIDs:        []string{"preset-model-standard"},
-				TenantIDs:       []string{"preset-tenant-core"},
+				ModelIDs:        []string{"preset-model-002"},
+				TenantIDs:       []string{"preset-tenant-001"},
 				TrafficIDs:      []string{"preset-traffic-spike"},
 				OrchestratorIDs: []string{"preset-orchestrator-elastic"},
 			},
@@ -70,7 +70,7 @@ func TestValidateCommandIntent(t *testing.T) {
 func TestParseCommand(t *testing.T) {
 	ctx := context.Background()
 	t.Run("解析成功并落库", func(t *testing.T) {
-		llm := fakeCommandLLM{content: `{"sceneTimeAnchor":"美国时间 09:00","durationMinutes":120,"sceneType":"突发流量高峰","targetTenant":"core","templateSelection":{"modelIds":["preset-model-standard"],"tenantIds":["preset-tenant-core"],"trafficIds":["preset-traffic-spike"]},"rate":4}`}
+		llm := fakeCommandLLM{content: `{"sceneTimeAnchor":"美国时间 09:00","durationMinutes":120,"sceneType":"突发流量高峰","targetTenant":"core","templateSelection":{"modelIds":["preset-model-002"],"tenantIds":["preset-tenant-001"],"trafficIds":["preset-traffic-spike"]},"rate":4}`}
 		intent, err := ParseCommand(ctx, "美国时间 9 点开始，持续 2 小时，突发流量高峰", llm, 2048)
 		if err != nil {
 			t.Fatalf("ParseCommand() error = %v", err)

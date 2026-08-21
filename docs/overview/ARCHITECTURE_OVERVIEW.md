@@ -134,6 +134,7 @@ Docker Desktop 本地环境保留两个 Kustomize 边界：
 - 可靠性：硬指标规则先行 + LLM 出分、schema 校验、失败重试与规则兜底；对话与审计失败只记日志。
 - 安全：LLM key 仅存 Backend 内存，设置接口只回显掩码；前端不直连 LLM。
 - 配额：对话与分析共用 24h 滚动日额度（次数/token，`AIOPS_DAILY_MAX_CALLS`/`AIOPS_DAILY_MAX_TOKENS`），超限对话 429、分析不入队，防 key 刷爆。
+- 模板目录：`GET /aiops/templates` 预置 model/node/tenant 各 10 条，id 与集群 CR 同名（`preset-model-001..010` / `preset-node-001..010` / `preset-tenant-001..010`），集群侧由 `hack/aiops-templates-seed.sh` 幂等预置，租户 qps=0 空环境；AI 起实验时直接选模板即可通过 gate。
 - 主文档：[AIOPS_OVERVIEW](../aiops/AIOPS_OVERVIEW.md)；API 见 [API_DESIGN](../backend/API_DESIGN.md)。
 - Prometheus 通过 Pod discovery 抓取 Simulator；当前没有为每个 SimulatorInstance 创建 Service。
 - 最新查询从 cache 读；旧时间点从 snapshot 读；两者不能静默混用。

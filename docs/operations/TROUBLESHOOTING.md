@@ -311,6 +311,7 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **演示前没有 AI 分析历史**：`bash hack/aiops-preseed.sh [数量]` 预生成（自动创建→完成实验并等待分析完成）；前置：AIOps 已启用且已配置 Key，否则脚本直接退出并提示。
 - **对话返回 429**：`DAILY_QUOTA_EXCEEDED` 表示当日次数/token 配额用尽（`AIOPS_DAILY_MAX_CALLS` / `AIOPS_DAILY_MAX_TOKENS`，默认 300 次/200 万 token 每 24h）；`CHAT_RATE_LIMITED` 是会话级限流（默认 6 次/分钟），前端会展示对应可读文案。
 - **分析一直为 0**：检查 AIOps 开关（面板设置或 `AIOPS_ENABLED`）、Key 是否有效、日配额是否用尽；后端日志关键字 `enqueue analysis failed` / `quota`。
+- **一句话起实验被拒（节点/租户不存在）**：先跑 `bash hack/aiops-templates-seed.sh` 预置模板 CR（节点校验同时接受真实 Node 与 WorkerNode CR），再重新解析执行。
 
 ## 18. 文档门禁检查失败（docs-check）
 

@@ -26,6 +26,8 @@ AIOps 是 Dashboard 上的可选智能分析层：用 LLM + 硬指标规则把�
 
 用户一句话 → `POST /aiops/commands`（LLM 严格 JSON 解析 + 模板目录校验，编造 id 拒绝）→ 落库 `parsed` → `POST /aiops/commands/{id}/confirm` 时 gate 校验（节点/租户存在）→ 顺序执行：写流量（`SetTenantQPS`）→ 调倍速（`SetSimulationRate`）→ 创建并启动实验，每步追加 `steps`，任一步失败整体 `failed`。执行复用既有写通道，不新增越权入口。
 
+模板目录（`GET /aiops/templates`）预置 model/node/tenant 各 10 条，模板 id 与集群 Model/Tenant/WorkerNode CR 名一一对应（`preset-model-001..010` 等）；集群侧由 `hack/aiops-templates-seed.sh` 幂等预置（含 ModelNodePolicy/TenantNodePolicy/TenantModelPolicy 关系策略），租户 `qps` 预置 0（空环境，无预置流量）。gate 的节点校验同时接受真实 Node 与 WorkerNode CR，AI 可直接选中任一预置节点模板。
+
 ## 4. 对话浮窗与异步
 
 - 浮窗在 `MainLayout` 全局挂载；设置视图配置 API Key/模型/地址并开启运行时开关，设置接口只回显掩码状态。
