@@ -160,6 +160,8 @@ kubectl -n hello-k8s-ai-system get --raw \
 
 部署脚本报「SimulationClock 配置收敛」超时：先确认是否存在 SimulationClock CR（kubectl get simulationclock）。干净环境无 CR 时脚本按 CR 存在性跳过该检查；若仍等待说明脚本版本过旧，更新后重跑。
 
+干净环境断言中 /replay 若含历史快照（保留的 PostgreSQL PVC 数据），脚本仅警告不失败：业务 CR 为空即视为数据面干净。
+
 ## 8. Score 为 0 / Traffic 不合理
 
 Score 可能为 0：
