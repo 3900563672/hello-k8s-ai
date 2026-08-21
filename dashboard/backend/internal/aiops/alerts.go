@@ -147,14 +147,13 @@ func (service *Service) emitAlert(ctx context.Context, rule, severity, analysisI
 	// LLM 生成解读；schema 校验失败重试一次，仍失败用规则文本兜底（#112）。
 	payload, err := json.Marshal(sequence)
 	if err == nil {
-		parsed, usage, ok, reason := callStructured(ctx, service, prompts.AlertInterpretation, string(payload),
+		parsed, _, ok, reason := callStructured(ctx, service, prompts.AlertInterpretation, string(payload),
 			func(content string) (alertInterpretation, error) {
 				var parsed alertInterpretation
 				err := json.Unmarshal([]byte(content), &parsed)
 				return parsed, err
 			}, validateAlertInterpretation)
 		if ok {
-			service.recordTokenUsage("alert", prompts.AlertInterpretation.ID, usage)
 			interpretation = parsed
 		} else {
 			service.logger.Warn("AIOps alert interpretation falling back to rules", "reason", reason)

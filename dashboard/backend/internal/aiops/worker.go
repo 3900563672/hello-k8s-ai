@@ -250,10 +250,9 @@ func (service *Service) summarizeEntities(ctx context.Context, analysisID string
 		userPrompt, err := l1UserPrompt(batch)
 		if err == nil {
 			usedCall = true
-			parsed, usage, ok, reason := callStructured(ctx, service, prompts.L1Entity, userPrompt,
+			parsed, _, ok, reason := callStructured(ctx, service, prompts.L1Entity, userPrompt,
 				parseEntityResults, validateEntityResults)
 			if ok {
-				service.recordTokenUsage("L1", prompts.L1Entity.ID, usage)
 				service.logger.Debug("AIOps L1 batch summarized by LLM", "analysisId", analysisID, "entities", len(parsed))
 				return service.normalizeEntityResults(analysisID, batch, parsed), true
 			}
@@ -271,14 +270,13 @@ func (service *Service) judgeSegment(ctx context.Context, hard hardMetrics, summ
 			if truncated {
 				service.logger.Warn("AIOps L2 input truncated by budget", "budgetRunes", budgetL2Summaries)
 			}
-			scores, usage, ok, reason := callStructured(ctx, service, prompts.L2Scores, userPrompt,
+			scores, _, ok, reason := callStructured(ctx, service, prompts.L2Scores, userPrompt,
 				func(content string) (model.AIOpsScores, error) {
 					var scores model.AIOpsScores
 					err := json.Unmarshal([]byte(content), &scores)
 					return scores, err
 				}, validateScores)
 			if ok {
-				service.recordTokenUsage("L2", prompts.L2Scores.ID, usage)
 				service.logger.Debug("AIOps L2 judged by LLM")
 				return normalizeScores(scores)
 			}

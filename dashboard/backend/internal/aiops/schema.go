@@ -144,6 +144,8 @@ func callStructured[T any](ctx context.Context, service *Service, definition pro
 	}
 	value, usage, err := attempt()
 	if err == nil {
+		prompt, _ := definition.Render(nil)
+		service.recordTokenUsage(prompt, usage)
 		return value, usage, true, ""
 	}
 	reason := err.Error()
@@ -156,9 +158,9 @@ func callStructured[T any](ctx context.Context, service *Service, definition pro
 	return zero, usage, false, reason + "; retry failed: " + err.Error()
 }
 
-// recordTokenUsage 记录一次 LLM 调用的 token 用量（#112 预算校准），结构化日志。
-func (service *Service) recordTokenUsage(layer, promptID string, usage TokenUsage) {
+// recordTokenUsage 记录一次 LLM 调用的 token 用量与提示词版本/哈希（#112 预算校准与归因）。
+func (service *Service) recordTokenUsage(prompt prompts.Prompt, usage TokenUsage) {
 	service.logger.Info("AIOps LLM call usage",
-		"layer", layer, "promptId", promptID,
+		"layer", prompt.ID, "promptId", prompt.ID, "promptVersion", prompt.Version, "promptHash", prompt.Hash,
 		"promptTokens", usage.PromptTokens, "completionTokens", usage.CompletionTokens)
 }

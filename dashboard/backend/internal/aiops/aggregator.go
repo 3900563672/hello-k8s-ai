@@ -164,14 +164,13 @@ func (service *Service) aggregateChildren(ctx context.Context, systemPrompt prom
 	if err != nil {
 		return windowAggregation{}, fmt.Errorf("marshal children: %w", err)
 	}
-	aggregation, usage, ok, reason := callStructured(ctx, service, systemPrompt, string(payload),
+	aggregation, _, ok, reason := callStructured(ctx, service, systemPrompt, string(payload),
 		func(content string) (windowAggregation, error) {
 			var aggregation windowAggregation
 			err := json.Unmarshal([]byte(content), &aggregation)
 			return aggregation, err
 		}, validateWindowAggregation)
 	if ok {
-		service.recordTokenUsage("aggregation", systemPrompt.ID, usage)
 		return normalizeWindowAggregation(aggregation), nil
 	}
 	service.logger.Warn("AIOps window aggregation falling back to rules", "reason", reason)
