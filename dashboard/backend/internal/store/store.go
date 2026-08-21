@@ -100,6 +100,7 @@ type Store interface {
 	ListAIOpsAnalysesInWindow(context.Context, time.Time, time.Time) ([]model.AIOpsAnalysis, error)
 	CreateAIOpsAlert(context.Context, model.AIOpsAlert) error
 	ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error)
+	CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -217,6 +218,9 @@ func (Disabled) ListAIOpsAnalysesInWindow(context.Context, time.Time, time.Time)
 	return nil, ErrUnavailable
 }
 func (Disabled) CreateAIOpsAlert(context.Context, model.AIOpsAlert) error {
+	return ErrUnavailable
+}
+func (Disabled) CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error {
 	return ErrUnavailable
 }
 func (Disabled) ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error) {

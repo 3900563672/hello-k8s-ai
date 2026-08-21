@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -97,11 +98,15 @@ func (server *Server) streamChat(writer http.ResponseWriter, request *http.Reque
 	} else {
 		answerErr = aiops.ErrChatUnavailable
 	}
+	duration := time.Since(started)
+	auditContext, cancel := context.WithTimeout(request.Context(), 5*time.Second)
+	server.aiops.AuditChat(auditContext, sessionID, duration, len([]rune(message)), answerErr)
+	cancel()
 	if answerErr != nil {
 		writeSSE(chatEvent{Type: "lifecycle", Phase: "end", SessionID: sessionID,
-			Error: answerErr.Error(), Duration: time.Since(started).Milliseconds()})
+			Error: answerErr.Error(), Duration: duration.Milliseconds()})
 		return
 	}
 	writeSSE(chatEvent{Type: "lifecycle", Phase: "end", SessionID: sessionID,
-		Duration: time.Since(started).Milliseconds()})
+		Duration: duration.Milliseconds()})
 }

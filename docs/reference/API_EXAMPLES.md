@@ -289,6 +289,17 @@ curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
   -d '{"message":"当前集群什么情况？","sessionId":"demo-session"}'
 ```
 
+**面板配置（#110 阶段四，key 不回显、仅存服务端内存）：**
+
+```bash
+# 读取掩码状态（key 只显示是否已配置）
+curl -sS "$API/aiops/settings"
+
+# 运行时写入：至少一项；apiKey ≥8 字符，留空保持不变
+curl -sS -X POST "$API/aiops/settings" -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-4o-mini","apiKey":"sk-..."}'
+```
+
 窗口/日总结由定时器自动产出（粒度 `AIOPS_WINDOW_GRANULARITY` 可配）；警戒为分数序列规则触发（连续低分/趋势下滑），alert_id 幂等。
 
 ## 13. 错误处理脚本规则

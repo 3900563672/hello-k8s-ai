@@ -30,6 +30,9 @@ type Service struct {
 	// 同步对话会话限流状态（sessionID → 滑动窗口内调用时间戳）。
 	chatMu   sync.Mutex
 	chatRate map[string][]time.Time
+
+	// 运行时配置（面板写入，#110 阶段四）保护锁。
+	configMu sync.Mutex
 }
 
 // NewService 构造分析服务；database 必须可用（调用方已判断）。

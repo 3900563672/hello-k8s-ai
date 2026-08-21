@@ -335,3 +335,16 @@ func (database *Postgres) ListAIOpsAlerts(ctx context.Context, limit int) ([]mod
 	}
 	return alerts, nil
 }
+
+// CreateAIOpsAuditLog 写入一条 AIOps 调用审计（#110 阶段四）。
+func (database *Postgres) CreateAIOpsAuditLog(ctx context.Context, audit model.AIOpsAuditLog) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_audit_log (audit_id, session_id, kind, model, duration_ms, message_len, status, error_text)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		audit.AuditID, audit.SessionID, audit.Kind, audit.Model,
+		audit.DurationMS, audit.MessageLen, audit.Status, audit.Error)
+	if err != nil {
+		return fmt.Errorf("insert aiops audit log: %w", err)
+	}
+	return nil
+}

@@ -6,6 +6,7 @@ import type {
     AIOpsAlertsEnvelope,
     AIOpsChatEvent,
     AIOpsCommandEnvelope,
+    AIOpsSettingsEnvelope,
     AIOpsWindowLevel,
     AIOpsWindowsEnvelope,
 } from '@/types/aiops.types'
@@ -135,4 +136,21 @@ export async function streamAIOpsChat(
             }
         }
     }
+}
+
+/** 读取 LLM 配置掩码状态（key 不回显）。 */
+export function fetchAIOpsSettings(): Promise<AIOpsSettingsEnvelope> {
+    return apiRequest<AIOpsSettingsEnvelope>('/aiops/settings')
+}
+
+/** 面板写入 LLM 配置：key 仅存服务端内存，返回掩码状态。 */
+export function updateAIOpsSettings(payload: {
+    apiKey?: string
+    model?: string
+    baseUrl?: string
+}): Promise<AIOpsSettingsEnvelope> {
+    return apiRequest<AIOpsSettingsEnvelope>('/aiops/settings', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    })
 }

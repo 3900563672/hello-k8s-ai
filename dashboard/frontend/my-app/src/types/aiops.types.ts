@@ -138,3 +138,13 @@ export interface AIOpsChatEvent {
     error?: string
     durationMs?: number
 }
+
+/** LLM 配置掩码状态（#110 阶段四）：key 只显示是否配置，不回显明文。 */
+export interface AIOpsSettings {
+    configured: boolean
+    model: string
+    baseUrl: string
+    keyConfigured: boolean
+}
+
+export type AIOpsSettingsEnvelope = ApiEnvelope<AIOpsSettings>

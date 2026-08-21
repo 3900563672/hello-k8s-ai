@@ -109,6 +109,19 @@ type AIOpsWindowSummary struct {
 	CreatedAt   time.Time       `json:"createdAt"`
 }
 
+// AIOpsAuditLog 是 aiops_audit_log 表的一行：同步对话/分析调用审计（#110 阶段四）。
+type AIOpsAuditLog struct {
+	AuditID    string    `json:"auditId"`
+	SessionID  string    `json:"sessionId"`
+	Kind       string    `json:"kind"`
+	Model      string    `json:"model"`
+	DurationMS int64     `json:"durationMs"`
+	MessageLen int       `json:"messageLen"`
+	Status     string    `json:"status"`
+	Error      string    `json:"error,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
 // AIOpsAlert 是 aiops_alerts 表的一行：分数序列规则触发的警戒（不进 Prometheus）。
 type AIOpsAlert struct {
 	AlertID        string          `json:"alertId"`

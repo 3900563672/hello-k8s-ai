@@ -137,6 +137,75 @@ func (service *Service) ChatSystemPrompt() string {
 	return chatSystemPrompt
 }
 
+// SettingsState 是 /aiops/settings 的掩码状态（#110 阶段四）：key 只显示是否配置，不回显明文。
+type SettingsState struct {
+	Configured    bool   `json:"configured"`
+	Model         string `json:"model"`
+	BaseURL       string `json:"baseUrl"`
+	KeyConfigured bool   `json:"keyConfigured"`
+}
+
+// ConfigureLLM 运行时更新 LLM 配置（面板写入，仅服务端内存；重启后由环境变量恢复）。
+// 空字段保持不变；apiKey 为空时也允许只改模型/地址。
+func (service *Service) ConfigureLLM(baseURL, apiKey, model string) {
+	if updater, ok := service.llm.(interface {
+		UpdateConfig(baseURL, apiKey, model string)
+	}); ok {
+		updater.UpdateConfig(baseURL, apiKey, model)
+	}
+	service.configMu.Lock()
+	defer service.configMu.Unlock()
+	if strings.TrimSpace(baseURL) != "" {
+		service.config.OpenAIBaseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	}
+	if strings.TrimSpace(apiKey) != "" {
+		service.config.OpenAIAPIKey = strings.TrimSpace(apiKey)
+	}
+	if strings.TrimSpace(model) != "" {
+		service.config.Model = strings.TrimSpace(model)
+	}
+}
+
+// Settings 返回当前配置掩码状态。
+func (service *Service) Settings() SettingsState {
+	service.configMu.Lock()
+	defer service.configMu.Unlock()
+	state := SettingsState{
+		Model:         service.config.Model,
+		BaseURL:       service.config.OpenAIBaseURL,
+		KeyConfigured: strings.TrimSpace(service.config.OpenAIAPIKey) != "",
+	}
+	state.Configured = state.KeyConfigured
+	return state
+}
+
+// AuditChat 记录一次同步对话调用（#110 阶段四）：模型 / 耗时 / 消息长度 / 结果。
+// 审计失败只记日志，不影响对话主流程。
+func (service *Service) AuditChat(ctx context.Context, sessionID string, duration time.Duration, messageLen int, err error) {
+	status := "ok"
+	errorText := ""
+	if err != nil {
+		status = "failed"
+		errorText = err.Error()
+	}
+	service.configMu.Lock()
+	modelName := service.config.Model
+	service.configMu.Unlock()
+	audit := model.AIOpsAuditLog{
+		AuditID:    randomAnalysisID(),
+		SessionID:  sessionID,
+		Kind:       "chat",
+		Model:      modelName,
+		DurationMS: duration.Milliseconds(),
+		MessageLen: messageLen,
+		Status:     status,
+		Error:      errorText,
+	}
+	if auditErr := service.database.CreateAIOpsAuditLog(ctx, audit); auditErr != nil {
+		service.logger.Warn("AIOps audit log failed", "error", auditErr)
+	}
+}
+
 // ChatStream 流式生成回答：先校验消息，再组装上下文（工具步骤回调），最后流式调 LLM。
 // onTool 用于上报工具步骤（start/end + 名称）；onDelta 接收文本增量。
 func (service *Service) ChatStream(ctx context.Context, message string, onTool func(name, phase string), onDelta func(string)) error {

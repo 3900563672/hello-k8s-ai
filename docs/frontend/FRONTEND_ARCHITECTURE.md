@@ -116,6 +116,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
 - AIOps（`src/types/aiops.types.ts` + `src/api/endpoints/aiopsApi.ts`）与后端 `internal/model/aiops.go` 字段对齐：分析/实体/分数（M0/M1）、命令与模板目录（M2）、窗口/警戒（M3）全部走真实 API；`AiInsightPanel` 顶部嵌入 `CommandInput`（一句话 → 解析预览 → 确认执行，确认前无写操作）。
 - 全局浮窗（#110 阶段三）：`AiChatWidget` 挂在 `MainLayout`，右下角气泡 → 对话面板；`POST /aiops/chat` SSE 流式渲染，工具步骤（读取切面总结/生成回答）以指示器展示；会话存 localStorage（仅聊天记录与会话 id，不含密钥），未启用时 404 显示提示。
+- 面板配置（#110 阶段四）：`AiChatWidget` 头部「设置」入口切换对话/配置视图；`GET/POST /aiops/settings` 读写掩码状态（key 不回显、不落前端存储），保存后刷新「已配置」标识。
 
 ## 8. 设计系统原则
 

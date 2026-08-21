@@ -2,6 +2,7 @@ package aiops
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -94,4 +95,33 @@ func TestChatStreamEvents(t *testing.T) {
 	if joined != "你好，我是 AIOps 助手" {
 		t.Fatalf("streamed answer = %q", joined)
 	}
+}
+
+func TestChatConfigureAndSettings(t *testing.T) {
+	service := chatTestService(t, config.AIOpsConfig{Model: "gpt-4o-mini", OpenAIBaseURL: "https://api.openai.com/v1"})
+	state := service.Settings()
+	if state.Configured || state.KeyConfigured {
+		t.Fatalf("settings should start unconfigured: %+v", state)
+	}
+	service.ConfigureLLM("https://custom.example.com/v1/", "sk-test-key-123456", "gpt-4.1")
+	state = service.Settings()
+	if !state.Configured || !state.KeyConfigured {
+		t.Fatalf("settings should be configured after update: %+v", state)
+	}
+	if state.Model != "gpt-4.1" || state.BaseURL != "https://custom.example.com/v1" {
+		t.Fatalf("unexpected settings: %+v", state)
+	}
+	// 空字段保持不变。
+	service.ConfigureLLM("", "", "")
+	state = service.Settings()
+	if state.Model != "gpt-4.1" || state.BaseURL != "https://custom.example.com/v1" {
+		t.Fatalf("empty update should keep previous config: %+v", state)
+	}
+}
+
+func TestChatAuditLog(t *testing.T) {
+	service := chatTestService(t, config.AIOpsConfig{})
+	// 不 panic、不报错（fakeStore 审计成功路径）。
+	service.AuditChat(context.Background(), "session-x", 123*time.Millisecond, 42, nil)
+	service.AuditChat(context.Background(), "session-x", 55*time.Millisecond, 40, errors.New("boom"))
 }

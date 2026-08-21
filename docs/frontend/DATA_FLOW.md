@@ -87,7 +87,7 @@ sequenceDiagram
 | AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/analyses?segmentId=` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止 |
 | 警戒（AlertList） | `/aiops/alerts` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
 | 窗口总结（WindowSummaryPanel） | `/aiops/windows` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
-| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE） | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储 |
+| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE）、`GET/POST /aiops/settings` | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储 |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
 
 编排策略表单字段与 CRD/Backend 白名单一致：含 scaleUpCooldownSeconds、scaleDownCooldownSeconds、min/maxReplicas、maxScaleUpBatch（扩容步长）与 allowScaleToZero。

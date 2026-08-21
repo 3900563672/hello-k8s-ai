@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
@@ -25,7 +26,9 @@ type LLM interface {
 
 // OpenAI 是 OpenAI 兼容 chat completions 客户端（M0 Provider 抽象）。
 // 预算由 worker 层统计调用次数，客户端只负责单次调用的可靠性与超时。
+// 配置可运行时更新（#110 阶段四：面板配置 key/model/baseURL），读操作走 mu 保护。
 type OpenAI struct {
+	mu        sync.RWMutex
 	baseURL   string
 	apiKey    string
 	model     string
@@ -46,6 +49,28 @@ func NewOpenAI(cfg config.AIOpsConfig, logger *slog.Logger) *OpenAI {
 		client:    &http.Client{Timeout: cfg.Timeout},
 		logger:    logger,
 	}
+}
+
+// UpdateConfig 运行时更新配置（#110 阶段四）；空字段保持不变。
+func (client *OpenAI) UpdateConfig(baseURL, apiKey, model string) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	if strings.TrimSpace(baseURL) != "" {
+		client.baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	}
+	if strings.TrimSpace(apiKey) != "" {
+		client.apiKey = strings.TrimSpace(apiKey)
+	}
+	if strings.TrimSpace(model) != "" {
+		client.model = strings.TrimSpace(model)
+	}
+}
+
+// Snapshot 返回当前配置快照（apiKey 只含是否配置，不回显明文）。
+func (client *OpenAI) Snapshot() (baseURL, model string, keyConfigured bool) {
+	client.mu.RLock()
+	defer client.mu.RUnlock()
+	return client.baseURL, client.model, client.apiKey != ""
 }
 
 type chatMessage struct {
@@ -91,8 +116,11 @@ type chatStreamChunk struct {
 
 // CompleteJSON 调用 chat completions，最多重试 2 次（429/5xx/网络错误），指数退避。
 func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, maxTokens int) (string, error) {
+	client.mu.RLock()
+	model, baseURL := client.model, client.baseURL
+	client.mu.RUnlock()
 	payload, err := json.Marshal(chatRequest{
-		Model: client.model,
+		Model: model,
 		Messages: []chatMessage{
 			{Role: "system", Content: system},
 			{Role: "user", Content: user},
@@ -103,7 +131,7 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 	if err != nil {
 		return "", fmt.Errorf("marshal chat request: %w", err)
 	}
-	endpoint := client.baseURL + "/chat/completions"
+	endpoint := baseURL + "/chat/completions"
 	var lastErr error
 	for attempt := 0; attempt < 3; attempt++ {
 		if attempt > 0 {
@@ -129,8 +157,11 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 
 // StreamComplete 流式调用 chat completions；错误语义与 CompleteJSON 一致（无重试，流一旦开始不重试）。
 func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string)) error {
+	client.mu.RLock()
+	model, baseURL, apiKey := client.model, client.baseURL, client.apiKey
+	client.mu.RUnlock()
 	payload, err := json.Marshal(chatRequest{
-		Model:     client.model,
+		Model:     model,
 		Messages:  []chatMessage{{Role: "system", Content: system}, {Role: "user", Content: user}},
 		MaxTokens: maxTokens,
 		Stream:    true,
@@ -138,13 +169,13 @@ func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, m
 	if err != nil {
 		return fmt.Errorf("marshal stream chat request: %w", err)
 	}
-	endpoint := client.baseURL + "/chat/completions"
+	endpoint := baseURL + "/chat/completions"
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("build stream LLM request: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+client.apiKey)
+	request.Header.Set("Authorization", "Bearer "+apiKey)
 
 	response, err := client.client.Do(request)
 	if err != nil {
@@ -196,7 +227,10 @@ func (client *OpenAI) do(ctx context.Context, endpoint string, payload []byte) (
 		return "", 0, fmt.Errorf("build LLM request: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+client.apiKey)
+	client.mu.RLock()
+	apiKey := client.apiKey
+	client.mu.RUnlock()
+	request.Header.Set("Authorization", "Bearer "+apiKey)
 
 	response, err := client.client.Do(request)
 	if err != nil {
