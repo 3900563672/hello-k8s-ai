@@ -326,18 +326,18 @@ func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int
 	return nil
 }
 
-func (llm *fakeLLM) CompleteJSON(context.Context, string, string, int) (string, error) {
+func (llm *fakeLLM) CompleteJSON(context.Context, string, string, int) (Completion, error) {
 	llm.mu.Lock()
 	defer llm.mu.Unlock()
 	index := llm.calls
 	llm.calls++
 	if index < len(llm.errs) && llm.errs[index] != nil {
-		return "", llm.errs[index]
+		return Completion{}, llm.errs[index]
 	}
 	if index < len(llm.responses) {
-		return llm.responses[index], nil
+		return Completion{Content: llm.responses[index]}, nil
 	}
-	return "{}", nil
+	return Completion{Content: "{}"}, nil
 }
 
 func (llm *fakeLLM) callCount() int {

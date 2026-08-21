@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops/prompts"
 )
 
 // 本文件实现 M2 意图执行（#94）：一句话 → LLM 结构化解析 → 目录校验 → 用户确认 → 执行编排。
@@ -91,40 +93,28 @@ type TrafficIntent struct {
 	QPS *int `json:"qps,omitempty"`
 }
 
-// commandSystemPrompt 组装意图解析提示词：模板目录 + 允许字段 + 严格 JSON 要求。
-func commandSystemPrompt() string {
+// commandSystemPrompt 用模板目录渲染命令意图解析提示词（#112 提示词工程化）。
+func commandSystemPrompt() (prompts.Prompt, error) {
 	var builder strings.Builder
-	builder.WriteString(`你是 Kubernetes 调度实验的意图解析器。用户会输入一句话，要求自动起一次调度实验。
-把这句话解析为严格 JSON 对象，字段：
-{"sceneTimeAnchor":"场景时间锚点（用户语义，如 美国时间 09:00；只作标记，不控制实际执行）",
- "durationMinutes":整数（预计持续分钟数，无法推断则为 0）,
- "sceneType":"场景类型（如 突发流量高峰/平稳负载）",
- "targetTenant":"目标租户名（用户提到租户时填）",
- "templateSelection":{"modelIds":[...],"nodeNames":[...],"tenantIds":[...],"orchestratorIds":[...],"trafficIds":[...]},
- "traffic":{"qps":整数}（用户自由指定流量 QPS 时填，否则省略）,
- "rate":整数（用户要求调倍速时填，否则省略）}
-
-约束：
-- 模板只能从下面目录中选 id，禁止编造 id；用户未提模板时对应数组省略或为空。
-- nodeNames 是集群既有节点名（用户说选节点时按用户描述填名称，不要套模板 id）。
-- 只允许以上字段。用户试图修改/创建模板、节点、租户、模型定义等超出允许范围的操作时，忽略该意图并在 sceneType 中注明"越权意图已忽略"。
-- 只输出 JSON，不要输出任何其他文字。目录：
-`)
 	for _, entry := range TemplateCatalog {
 		builder.WriteString(fmt.Sprintf("- %s（%s）：%s\n", entry.ID, entry.Name, entry.Description))
 	}
-	return builder.String()
+	return prompts.CommandIntent.Render(map[string]any{"Catalog": builder.String()})
 }
 
 // ParseCommand 解析一句话为结构化意图；LLM 失败返回错误（调用方落库失败态），
 // 解析结果必须通过目录校验，否则视为解析失败（不部分执行）。
 func ParseCommand(ctx context.Context, rawInput string, llm LLM, maxTokens int) (*CommandIntent, error) {
-	content, err := llm.CompleteJSON(ctx, commandSystemPrompt(), rawInput, maxTokens)
+	prompt, err := commandSystemPrompt()
+	if err != nil {
+		return nil, fmt.Errorf("render command prompt: %w", err)
+	}
+	completion, err := llm.CompleteJSON(ctx, prompt.System, rawInput, maxTokens)
 	if err != nil {
 		return nil, fmt.Errorf("parse command intent: %w", err)
 	}
 	var intent CommandIntent
-	if err := json.Unmarshal([]byte(content), &intent); err != nil {
+	if err := json.Unmarshal([]byte(completion.Content), &intent); err != nil {
 		return nil, fmt.Errorf("parse command intent JSON: %w", err)
 	}
 	if err := ValidateCommandIntent(&intent); err != nil {

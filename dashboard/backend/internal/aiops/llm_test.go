@@ -45,13 +45,13 @@ func TestOpenAICompleteJSON(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	content, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
 	if err != nil {
 		t.Fatalf("CompleteJSON: %v", err)
 	}
 	var decoded map[string]bool
-	if err := json.Unmarshal([]byte(content), &decoded); err != nil || !decoded["ok"] {
-		t.Fatalf("unexpected content: %s", content)
+	if err := json.Unmarshal([]byte(completion.Content), &decoded); err != nil || !decoded["ok"] {
+		t.Fatalf("unexpected content: %s", completion.Content)
 	}
 }
 
@@ -68,12 +68,12 @@ func TestOpenAIRetry(t *testing.T) {
 	defer server.Close()
 	client := newTestClient(server.URL)
 	start := time.Now()
-	content, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
 	if err != nil {
 		t.Fatalf("CompleteJSON after retry: %v", err)
 	}
-	if content != "{}" {
-		t.Fatalf("unexpected content: %s", content)
+	if completion.Content != "{}" {
+		t.Fatalf("unexpected content: %s", completion.Content)
 	}
 	if calls.Load() < 2 {
 		t.Fatalf("expected at least 2 calls, got %d", calls.Load())
@@ -155,5 +155,42 @@ func TestOpenAIStreamCompleteHTTPError(t *testing.T) {
 	client := newTestClient(server.URL)
 	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(string) {}, nil); err == nil {
 		t.Fatal("stream should fail on HTTP error")
+	}
+}
+
+// TestOpenAICompleteJSONUsage 验证非流式响应解析 usage（#112 token 记录）。
+func TestOpenAICompleteJSONUsage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"choices":[{"message":{"content":"{}"}}],"usage":{"prompt_tokens":12,"completion_tokens":7}}`))
+	}))
+	defer server.Close()
+	client := newTestClient(server.URL)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	if err != nil {
+		t.Fatalf("CompleteJSON: %v", err)
+	}
+	if completion.Content != "{}" {
+		t.Fatalf("unexpected content: %s", completion.Content)
+	}
+	if completion.Usage.PromptTokens != 12 || completion.Usage.CompletionTokens != 7 {
+		t.Fatalf("unexpected usage: %+v", completion.Usage)
+	}
+}
+
+// TestOpenAICompleteJSONNoUsage 验证服务端不返回 usage 时零值兜底。
+func TestOpenAICompleteJSONNoUsage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"choices":[{"message":{"content":"{}"}}]}`))
+	}))
+	defer server.Close()
+	client := newTestClient(server.URL)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	if err != nil {
+		t.Fatalf("CompleteJSON: %v", err)
+	}
+	if completion.Usage.PromptTokens != 0 || completion.Usage.CompletionTokens != 0 {
+		t.Fatalf("expected zero usage, got %+v", completion.Usage)
 	}
 }

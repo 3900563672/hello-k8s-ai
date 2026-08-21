@@ -12,8 +12,8 @@ type fakeCommandLLM struct {
 	err     error
 }
 
-func (llm fakeCommandLLM) CompleteJSON(_ context.Context, _, _ string, _ int) (string, error) {
-	return llm.content, llm.err
+func (llm fakeCommandLLM) CompleteJSON(_ context.Context, _, _ string, _ int) (Completion, error) {
+	return Completion{Content: llm.content}, llm.err
 }
 
 func (llm fakeCommandLLM) StreamComplete(_ context.Context, _ string, _ string, _ int, onDelta func(string), _ func(TokenUsage)) error {

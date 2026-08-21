@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops/prompts"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 )
 
@@ -16,20 +17,8 @@ var ErrChatUnavailable = fmt.Errorf("chat unavailable")
 // 同步对话（#110 阶段二）参数：
 // 消息长度上限、会话限流窗口与每次上限。上下文组装只取「结论型」数据
 // （窗口总结 / 警戒 / 已完成分析的分数），不读原始事件，避免上下文污染。
-const (
-	chatRateWindow    = time.Minute
-	chatContextTarget = 6000 // 组装上下文的目标字符数（超限按优先级裁剪）
-)
-
-// chatSystemPrompt 对话系统提示词：角色 + 可用上下文说明 + 引用要求。
-const chatSystemPrompt = `你是 hello-k8s-ai 控制台的 AIOps 助手，面向运维人员。
-背景：系统由多个切面（Pod / 节点 / 租户）组成，AIOps 分层分析产出 L2 切面分数、
-L3 窗口总结与警戒。你只能基于下方「当前上下文」回答，上下文未覆盖的内容要明确说明不知道，禁止编造。
-回答要求：
-- 使用中文，简洁、面向运维；
-- 涉及分数 / 警戒 / 窗口总结时引用来源（如「L3 窗口总结」「未确认警戒」）；
-- 用户问「当前集群什么情况」时，先给总体判断，再列问题点；
-- 不要复述整个上下文，只输出结论与依据。`
+// 上下文预算常量见 budget.go（budgetChatContextRun）。
+const chatRateWindow = time.Minute
 
 // ChatValidateMessage 校验单条消息：去空白后非空且不超过长度上限。
 func (service *Service) ChatValidateMessage(message string) error {
@@ -122,19 +111,20 @@ func (service *Service) ChatBuildContext(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("marshal chat context: %w", err)
 	}
-	text := string(encoded)
-	if len([]rune(text)) > chatContextTarget {
-		// 超限裁剪：按「分数 > 结论 > 现象 > 事件」优先级，这里直接丢弃过程型字段
-		// （briefs 已只含结论型字段），进一步按字符截断。
-		runes := []rune(text)
-		text = string(runes[:chatContextTarget]) + "…（上下文已裁剪）"
+	text, truncated := truncateChatContext(string(encoded), budgetChatContextRun)
+	if truncated {
+		service.logger.Warn("AIOps chat context truncated by budget", "budgetRunes", budgetChatContextRun)
 	}
 	return text, nil
 }
 
-// ChatSystemPrompt 返回对话系统提示词。
+// ChatSystemPrompt 返回对话系统提示词（#112：模板渲染，带版本/哈希）。
 func (service *Service) ChatSystemPrompt() string {
-	return chatSystemPrompt
+	prompt, err := prompts.ChatAssistant.Render(nil)
+	if err != nil {
+		return ""
+	}
+	return prompt.System
 }
 
 // SettingsState 是 /aiops/settings 的掩码状态（#110 阶段四）：key 只显示是否配置，不回显明文。
@@ -222,8 +212,12 @@ func (service *Service) ChatStream(ctx context.Context, message string, onTool f
 	onTool("读取切面总结", "end")
 
 	userPrompt := fmt.Sprintf("用户问题：%s\n\n当前上下文：\n%s", message, contextText)
+	prompt, renderErr := prompts.ChatAssistant.Render(nil)
+	if renderErr != nil {
+		return fmt.Errorf("render chat prompt: %w", renderErr)
+	}
 	onTool("生成回答", "start")
-	err = service.llm.StreamComplete(ctx, chatSystemPrompt, userPrompt, service.config.MaxTokensPerCall, onDelta, onUsage)
+	err = service.llm.StreamComplete(ctx, prompt.System, userPrompt, service.config.MaxTokensPerCall, onDelta, onUsage)
 	onTool("生成回答", "end")
 	if err != nil {
 		return fmt.Errorf("stream chat answer: %w", err)

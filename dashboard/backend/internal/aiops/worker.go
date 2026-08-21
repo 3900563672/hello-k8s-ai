@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops/prompts"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/store"
@@ -248,18 +249,15 @@ func (service *Service) summarizeEntities(ctx context.Context, analysisID string
 	if llmAvailable {
 		userPrompt, err := l1UserPrompt(batch)
 		if err == nil {
-			content, callErr := service.llm.CompleteJSON(ctx, l1SystemPrompt, userPrompt, service.config.MaxTokensPerCall)
 			usedCall = true
-			if callErr == nil {
-				parsed, parseErr := parseEntityResults(content)
-				if parseErr == nil && len(parsed) > 0 {
-					service.logger.Debug("AIOps L1 batch summarized by LLM", "analysisId", analysisID, "entities", len(parsed))
-					return service.normalizeEntityResults(analysisID, batch, parsed), true
-				}
-				service.logger.Warn("AIOps L1 parse failed, falling back to rules", "analysisId", analysisID, "error", parseErr)
-			} else {
-				service.logger.Warn("AIOps L1 LLM call failed, falling back to rules", "analysisId", analysisID, "error", callErr)
+			parsed, usage, ok, reason := callStructured(ctx, service, prompts.L1Entity, userPrompt,
+				parseEntityResults, validateEntityResults)
+			if ok {
+				service.recordTokenUsage("L1", prompts.L1Entity.ID, usage)
+				service.logger.Debug("AIOps L1 batch summarized by LLM", "analysisId", analysisID, "entities", len(parsed))
+				return service.normalizeEntityResults(analysisID, batch, parsed), true
 			}
+			service.logger.Warn("AIOps L1 falling back to rules", "analysisId", analysisID, "reason", reason)
 		}
 	}
 	return service.ruleSummaries(analysisID, batch, events), usedCall
@@ -268,20 +266,23 @@ func (service *Service) summarizeEntities(ctx context.Context, analysisID string
 // judgeSegment L2 打分：LLM 可用且预算内时调用，否则规则兜底。
 func (service *Service) judgeSegment(ctx context.Context, hard hardMetrics, summaries []model.AIOpsEntitySummary, llmAvailable bool) model.AIOpsScores {
 	if llmAvailable {
-		userPrompt, err := l2UserPrompt(hard, summaries)
+		userPrompt, truncated, err := l2UserPrompt(hard, summaries, budgetL2Summaries, service.logger)
 		if err == nil {
-			content, callErr := service.llm.CompleteJSON(ctx, l2SystemPrompt, userPrompt, service.config.MaxTokensPerCall)
-			if callErr == nil {
-				var scores model.AIOpsScores
-				if parseErr := json.Unmarshal([]byte(content), &scores); parseErr == nil && scores.Overall != 0 {
-					service.logger.Debug("AIOps L2 judged by LLM")
-					return normalizeScores(scores)
-				} else {
-					service.logger.Warn("AIOps L2 parse failed, falling back to rules", "error", parseErr)
-				}
-			} else {
-				service.logger.Warn("AIOps L2 LLM call failed, falling back to rules", "error", callErr)
+			if truncated {
+				service.logger.Warn("AIOps L2 input truncated by budget", "budgetRunes", budgetL2Summaries)
 			}
+			scores, usage, ok, reason := callStructured(ctx, service, prompts.L2Scores, userPrompt,
+				func(content string) (model.AIOpsScores, error) {
+					var scores model.AIOpsScores
+					err := json.Unmarshal([]byte(content), &scores)
+					return scores, err
+				}, validateScores)
+			if ok {
+				service.recordTokenUsage("L2", prompts.L2Scores.ID, usage)
+				service.logger.Debug("AIOps L2 judged by LLM")
+				return normalizeScores(scores)
+			}
+			service.logger.Warn("AIOps L2 falling back to rules", "reason", reason)
 		}
 	}
 	fallback := fallbackScores(hard)

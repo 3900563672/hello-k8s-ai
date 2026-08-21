@@ -18,8 +18,8 @@ import (
 
 // LLM 是分析 worker 依赖的模型接口，便于单元测试注入假模型。
 type LLM interface {
-	// CompleteJSON 调用模型并返回纯 JSON 文本（响应格式强制 json_object）。
-	CompleteJSON(ctx context.Context, system, user string, maxTokens int) (string, error)
+	// CompleteJSON 调用模型并返回纯 JSON 文本（响应格式强制 json_object）与 token 用量。
+	CompleteJSON(ctx context.Context, system, user string, maxTokens int) (Completion, error)
 	// StreamComplete 流式调用模型（stream=true），每个增量回调 onDelta；无增量时也要调用一次 onDelta("")。
 	// onUsage 在流结束后回调 token 用量（prompt/completion，服务端返回 usage 时；无 usage 时回调零值）。
 	StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string), onUsage func(TokenUsage)) error
@@ -89,6 +89,12 @@ type TokenUsage struct {
 	CompletionTokens int
 }
 
+// Completion 是 CompleteJSON 的返回（#112 token 预算）：模型输出文本 + token 用量。
+type Completion struct {
+	Content string
+	Usage   TokenUsage
+}
+
 type chatStreamOptions struct {
 	IncludeUsage bool `json:"include_usage"`
 }
@@ -110,7 +116,11 @@ type chatChoice struct {
 
 type chatResponse struct {
 	Choices []chatChoice `json:"choices"`
-	Error   *struct {
+	Usage   *struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+	} `json:"usage,omitempty"`
+	Error *struct {
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
 }
@@ -131,7 +141,7 @@ type chatStreamChunk struct {
 }
 
 // CompleteJSON 调用 chat completions，最多重试 2 次（429/5xx/网络错误），指数退避。
-func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, maxTokens int) (string, error) {
+func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, maxTokens int) (Completion, error) {
 	client.mu.RLock()
 	model, baseURL := client.model, client.baseURL
 	client.mu.RUnlock()
@@ -145,7 +155,7 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 		ResponseFormat: &responseFormat{Type: "json_object"},
 	})
 	if err != nil {
-		return "", fmt.Errorf("marshal chat request: %w", err)
+		return Completion{}, fmt.Errorf("marshal chat request: %w", err)
 	}
 	endpoint := baseURL + "/chat/completions"
 	var lastErr error
@@ -153,22 +163,22 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 		if attempt > 0 {
 			select {
 			case <-ctx.Done():
-				return "", ctx.Err()
+				return Completion{}, ctx.Err()
 			case <-time.After(time.Duration(1<<attempt) * 500 * time.Millisecond):
 			}
 		}
-		response, statusCode, err := client.do(ctx, endpoint, payload)
+		completion, statusCode, err := client.do(ctx, endpoint, payload)
 		if err == nil {
-			return response, nil
+			return completion, nil
 		}
 		lastErr = err
 		// 4xx（429 除外）为确定性错误，重试无意义。
 		if statusCode >= 400 && statusCode < 500 && statusCode != http.StatusTooManyRequests {
-			return "", fmt.Errorf("LLM call failed: %w", err)
+			return Completion{}, fmt.Errorf("LLM call failed: %w", err)
 		}
 		client.logger.Warn("AIOps LLM call failed, retrying", "attempt", attempt, "status", statusCode, "error", err)
 	}
-	return "", fmt.Errorf("LLM call failed after retries: %w", lastErr)
+	return Completion{}, fmt.Errorf("LLM call failed after retries: %w", lastErr)
 }
 
 // StreamComplete 流式调用 chat completions；错误语义与 CompleteJSON 一致（无重试，流一旦开始不重试）。
@@ -247,10 +257,10 @@ func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, m
 	return nil
 }
 
-func (client *OpenAI) do(ctx context.Context, endpoint string, payload []byte) (string, int, error) {
+func (client *OpenAI) do(ctx context.Context, endpoint string, payload []byte) (Completion, int, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
 	if err != nil {
-		return "", 0, fmt.Errorf("build LLM request: %w", err)
+		return Completion{}, 0, fmt.Errorf("build LLM request: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	client.mu.RLock()
@@ -260,27 +270,31 @@ func (client *OpenAI) do(ctx context.Context, endpoint string, payload []byte) (
 
 	response, err := client.client.Do(request)
 	if err != nil {
-		return "", 0, fmt.Errorf("send LLM request: %w", err)
+		return Completion{}, 0, fmt.Errorf("send LLM request: %w", err)
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(response.Body, 4<<20))
 	if err != nil {
-		return "", 0, fmt.Errorf("read LLM response: %w", err)
+		return Completion{}, 0, fmt.Errorf("read LLM response: %w", err)
 	}
 	if response.StatusCode != http.StatusOK {
-		return "", response.StatusCode, fmt.Errorf("LLM HTTP %d: %s", response.StatusCode, truncate(string(body), 200))
+		return Completion{}, response.StatusCode, fmt.Errorf("LLM HTTP %d: %s", response.StatusCode, truncate(string(body), 200))
 	}
 	var decoded chatResponse
 	if err := json.Unmarshal(body, &decoded); err != nil {
-		return "", response.StatusCode, fmt.Errorf("decode LLM response: %w", err)
+		return Completion{}, response.StatusCode, fmt.Errorf("decode LLM response: %w", err)
 	}
 	if decoded.Error != nil {
-		return "", response.StatusCode, fmt.Errorf("LLM error: %s", decoded.Error.Message)
+		return Completion{}, response.StatusCode, fmt.Errorf("LLM error: %s", decoded.Error.Message)
 	}
 	if len(decoded.Choices) == 0 || decoded.Choices[0].Message.Content == "" {
-		return "", response.StatusCode, fmt.Errorf("LLM response has no content")
+		return Completion{}, response.StatusCode, fmt.Errorf("LLM response has no content")
 	}
-	return decoded.Choices[0].Message.Content, response.StatusCode, nil
+	completion := Completion{Content: decoded.Choices[0].Message.Content}
+	if decoded.Usage != nil {
+		completion.Usage = TokenUsage{PromptTokens: decoded.Usage.PromptTokens, CompletionTokens: decoded.Usage.CompletionTokens}
+	}
+	return completion, response.StatusCode, nil
 }
 
 func truncate(text string, max int) string {
