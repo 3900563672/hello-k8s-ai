@@ -171,6 +171,73 @@ def is_test_file(path):
     return re.search(r"\.(test|spec)\.(ts|tsx|js|jsx)$", path) is not None
 
 
+# 文档类路径前缀：这些路径的改动视为「文档交付」，不强制配 change-history 条目。
+CH_DOC_PREFIXES = ("docs/", "change-history/", "README.md", "AGENTS.md",
+                   "CONTRIBUTING.md", "SECURITY.md", "PROJECT_OVERVIEW_NEW.md")
+
+
+def diff_base():
+    """门禁共用的 diff 左边界：DOCS_CHECK_BASE（CI 的 PR base）或默认 HEAD~1。"""
+    base = os.environ.get("DOCS_CHECK_BASE")
+    if base:
+        merged = subprocess.run(
+            ["git", "merge-base", base, "HEAD"], cwd=ROOT,
+            capture_output=True, text=True, check=False,
+        )
+        if merged.returncode != 0:
+            return None
+        return merged.stdout.strip()
+    return "HEAD~1"
+
+
+def check_change_history_gate():
+    """change-history 门禁：非文档源码改动必须配条目（2026-08-21 起）。
+
+    通过条件（任一）：
+    ① diff 新增 change-history/YYYY-MM-DD-*/README.md；
+    ② 提交信息显式引用条目（change-history: <条目名> 或 change-history/<条目名>/），
+       且条目目录存在（允许小改动并入既有条目）。
+    豁免：纯文档改动（docs/、change-history/、根文档）。测试/CI/脚本/后端/前端均视为交付。
+    """
+    changed = changed_files()
+    if not changed:
+        return 0
+    source_files = [path for path in changed if not path.startswith(CH_DOC_PREFIXES)]
+    if not source_files:
+        return 0
+    left = diff_base()
+    if left is None:
+        return 0
+    # ① diff 新增条目
+    diff = subprocess.run(
+        ["git", "diff", "--name-status", left, "HEAD"], cwd=ROOT,
+        capture_output=True, text=True, check=False,
+    )
+    if diff.returncode == 0:
+        for line in diff.stdout.splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[0].startswith("A") \
+                    and parts[1].startswith("change-history/") and parts[1].endswith("/README.md"):
+                return 0
+    # ② 提交信息引用已有条目
+    log = subprocess.run(
+        ["git", "log", "--format=%B", f"{left}..HEAD"], cwd=ROOT,
+        capture_output=True, text=True, check=False,
+    )
+    if log.returncode == 0:
+        messages = log.stdout
+        for entry in re.findall(r"change-history[:：]\s*([A-Za-z0-9_-]+)", messages):
+            if os.path.isfile(os.path.join(ROOT, "change-history", entry, "README.md")):
+                return 0
+        for entry in re.findall(r"change-history/([A-Za-z0-9_-]+)/", messages):
+            if os.path.isfile(os.path.join(ROOT, "change-history", entry, "README.md")):
+                return 0
+    preview = "、".join(source_files[:3]) + ("…" if len(source_files) > 3 else "")
+    print(f"CHANGE_HISTORY 门禁：本次 diff 含非文档源码改动（{preview}），"
+          "但未新增 change-history 条目，提交信息也未引用（格式：change-history: <条目名>）。")
+    return 1
+
+
 def check_map_gate():
     map_path = os.path.join(ROOT, "docs", "MAP.yaml")
     if not os.path.isfile(map_path):
@@ -370,6 +437,7 @@ def main():
     total += check_root_whitelist()
     total += check_line_limits()
     total += check_map_gate()
+    total += check_change_history_gate()
     total += check_freshness()
     total += check_front_matter()
     total += check_whitepaper_freshness()

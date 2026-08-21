@@ -289,3 +289,4 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **链接/行数限制**：所有 Markdown 链接必须指向现有文件；README 等有行数上限，超限需精简内容。
 - **本地与 CI 差异**：CI 用 PR base 计算 diff（`DOCS_CHECK_BASE`），本地默认 `HEAD~1`；合并前 base 变化时可能需要在分支内先同步目标文档再推。
 - **派生文件漂移（多会话工作树）**：`hack/gen-docs.py` 只统计 git 已跟踪的 `change-history/` 条目（未提交目录不会混入 README 时间线段与 `docs/status.md`）。若 `docs-sync-check` 仍报差异：先确认工作树无未提交变更（含其它会话的批次），再 `make docs-sync` 生成后一并提交；不要把未提交条目对应的链接提交进去。
+- **CHANGE_HISTORY 门禁**：非文档源码改动（后端/前端/脚本/CI/测试）必须新增 `change-history/YYYY-MM-DD-*/README.md`，或在提交信息引用既有条目（`change-history: <条目名>`）。修复方式：补条目后重新提交；小改动并入大条目时在提交信息写引用即可。纯文档提交（`docs/`、`change-history/`、根文档）豁免。
