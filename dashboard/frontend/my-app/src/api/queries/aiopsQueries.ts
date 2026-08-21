@@ -3,6 +3,7 @@ import {
     confirmAIOpsCommand,
     createAIOpsCommand,
     fetchAIOpsAlerts,
+    fetchAIOpsJobs,
     fetchAIOpsWindows,
 } from '@/api/endpoints/aiopsApi'
 import type { AIOpsWindowLevel } from '@/types/aiops.types'
@@ -59,6 +60,15 @@ export function useAIOpsWindows(level: AIOpsWindowLevel = 'L3') {
 }
 
 /** 警戒列表：30 秒轮询。 */
+export function useAIOpsJobs() {
+    return useQuery({
+        queryKey: ['aiops', 'jobs'],
+        queryFn: () => fetchAIOpsJobs(),
+        refetchInterval: 10_000,
+        staleTime: 5_000,
+    })
+}
+
 export function useAIOpsAlerts() {
     return useQuery({
         queryKey: [...aiopsQueryKeys.all, 'alerts'] as const,

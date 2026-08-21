@@ -7,28 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops/prompts"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 )
 
 // 本文件实现 M3 时间聚合（#95）：L3 窗口总结 + L4 日总结。
 // 与 L1/L2 同一 worker 框架：输入源换成子级摘要（L3 读切面 L2 结果，L4 读 L3 窗口总结），
 // 触发为定时器；LLM 失败走规则兜底，不影响调度主流程。
-
-// l3SystemPrompt 窗口聚合提示词：输入窗口内切面 L2 总结，输出窗口级认知。
-const l3SystemPrompt = `你是 Kubernetes 调度实验的窗口总结器。输入是时间窗口内所有切面的 L2 总结数组（分数与结论），
-请给出窗口级认知，只输出一个 JSON 对象：
-{"overall":0-100（窗口综合分）,"trend":"improving|stable|degrading",
-"commonIssues":["不超过60字的共性问题，最多3条"],
-"situation":"不超过150字的窗口整体态势","recommendation":"不超过150字的建议"}
-不要输出 JSON 以外的任何文字。`
-
-// l4SystemPrompt 日总结提示词：输入当日所有 L3 窗口总结，输出日级认知（字段同上）。
-const l4SystemPrompt = `你是 Kubernetes 调度实验的日总结器。输入是当天所有 L3 窗口总结数组，
-请给出日级认知，只输出一个 JSON 对象：
-{"overall":0-100,"trend":"improving|stable|degrading",
-"commonIssues":["不超过60字的共性问题，最多3条"],
-"situation":"不超过150字的当日整体态势","recommendation":"不超过150字的建议"}
-不要输出 JSON 以外的任何文字。`
 
 // windowAggregation 是窗口/日聚合的产出（LLM 与规则兜底共用 schema）。
 type windowAggregation struct {
@@ -85,7 +70,7 @@ func (service *Service) runWindowAggregation(ctx context.Context) error {
 		if len(analyses) == 0 {
 			continue
 		}
-		aggregation, err := service.aggregateChildren(ctx, l3SystemPrompt, toL3Children(analyses), analyses)
+		aggregation, err := service.aggregateChildren(ctx, prompts.L3Window, toL3Children(analyses), analyses)
 		if err != nil {
 			return fmt.Errorf("aggregate L3 window %s: %w", windowID, err)
 		}
@@ -142,7 +127,7 @@ func (service *Service) runDayAggregation(ctx context.Context) error {
 	if len(children) == 0 {
 		return nil
 	}
-	aggregation, err := service.aggregateChildren(ctx, l4SystemPrompt, children, nil)
+	aggregation, err := service.aggregateChildren(ctx, prompts.L4Day, children, nil)
 	if err != nil {
 		return fmt.Errorf("aggregate L4 %s: %w", windowID, err)
 	}
@@ -161,20 +146,48 @@ func (service *Service) runDayAggregation(ctx context.Context) error {
 }
 
 // aggregateChildren 用 LLM 聚合子级摘要；LLM 失败用规则兜底（平均分 + 问题抽取）。
-func (service *Service) aggregateChildren(ctx context.Context, systemPrompt string, children any, analyses []model.AIOpsAnalysis) (windowAggregation, error) {
+func (service *Service) aggregateChildren(ctx context.Context, systemPrompt prompts.Definition, children any, analyses []model.AIOpsAnalysis) (windowAggregation, error) {
+	// 输入预算：超过窗口数上限只保留最近 N 个（#112 阶段 C，统一走 assembler）。
+	trimmed, truncated := assembleAggregationInput(children, aggregationBudget(systemPrompt.ID))
+	if truncated {
+		service.logger.Warn("AIOps aggregation input trimmed by budget",
+			"layer", systemPrompt.ID, "before", childCount(children), "after", childCount(trimmed))
+		children = trimmed
+	}
 	payload, err := json.Marshal(children)
 	if err != nil {
 		return windowAggregation{}, fmt.Errorf("marshal children: %w", err)
 	}
-	content, err := service.llm.CompleteJSON(ctx, systemPrompt, string(payload), service.config.MaxTokensPerCall)
-	if err == nil {
-		var aggregation windowAggregation
-		if parseErr := json.Unmarshal([]byte(content), &aggregation); parseErr == nil && aggregation.Overall != 0 {
-			return normalizeWindowAggregation(aggregation), nil
-		}
-		service.logger.Warn("AIOps window aggregation parse failed, falling back to rules", "error", err)
+	aggregation, _, ok, reason := callStructured(ctx, service, systemPrompt, string(payload),
+		func(content string) (windowAggregation, error) {
+			var aggregation windowAggregation
+			err := json.Unmarshal([]byte(content), &aggregation)
+			return aggregation, err
+		}, validateWindowAggregation)
+	if ok {
+		return normalizeWindowAggregation(aggregation), nil
 	}
+	service.logger.Warn("AIOps window aggregation falling back to rules", "reason", reason)
 	return service.ruleWindowAggregation(children, analyses), nil
+}
+
+// aggregationBudget 返回 L3/L4 的输入窗口数预算（#112 阶段 B）。
+func aggregationBudget(promptID string) int {
+	if promptID == "l4-day" {
+		return budgetL4Children
+	}
+	return budgetL3Children
+}
+
+// childCount 统计 L3/L4 输入子级数量（用于裁剪日志）。
+func childCount(children any) int {
+	switch items := children.(type) {
+	case []l3Child:
+		return len(items)
+	case []l4Child:
+		return len(items)
+	}
+	return 0
 }
 
 // ruleWindowAggregation 规则兜底：overall 取子级平均，trend 由平均比较，问题从 verdict 抽取。

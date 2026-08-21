@@ -131,3 +131,58 @@ export type AIOpsAnalysisDetailEnvelope = ApiEnvelope<AIOpsAnalysisDetail>
 export type AIOpsAlertsEnvelope = ApiEnvelope<AIOpsAlert[]>
 export type AIOpsCommandEnvelope = ApiEnvelope<AIOpsCommand>
 export type AIOpsWindowsEnvelope = ApiEnvelope<AIOpsWindowSummary[]>
+
+/** 同步对话 SSE 事件（#110 阶段二，AG-UI 轻量子集）：lifecycle / tool / text。 */
+export interface AIOpsChatEvent {
+    type: 'lifecycle' | 'tool' | 'text'
+    phase?: 'start' | 'end'
+    name?: string
+    delta?: string
+    sessionId?: string
+    error?: string
+    durationMs?: number
+}
+
+/** aiops_chat_messages 一行：同步对话的问答对（#112 阶段 D 读侧）。 */
+export interface AIOpsChatMessage {
+    messageId: string
+    sessionId: string
+    role: 'user' | 'assistant'
+    content: string
+    windowIds?: string[]
+    alertIds?: string[]
+    commandIds?: string[]
+    createdAt: string
+}
+
+export type AIOpsChatMessagesEnvelope = ApiEnvelope<AIOpsChatMessage[]>
+
+/** 异步任务状态（#110 阶段一）：DB 即队列，pending→running→done/failed。 */
+export type AIOpsJobStatus = 'pending' | 'running' | 'done' | 'failed'
+
+/** 异步任务（#110 阶段一）：任务级状态 / 重试次数 / 失败原因。 */
+export interface AIOpsJob {
+    jobId: string
+    segmentId: string
+    kind: string
+    status: AIOpsJobStatus
+    attempts: number
+    maxAttempts: number
+    lastError?: string
+    createdAt: string
+    startedAt?: string
+    finishedAt?: string
+    updatedAt: string
+}
+
+export type AIOpsJobsEnvelope = ApiEnvelope<AIOpsJob[]>
+
+/** LLM 配置掩码状态（#110 阶段四）：key 只显示是否配置，不回显明文。 */
+export interface AIOpsSettings {
+    configured: boolean
+    model: string
+    baseUrl: string
+    keyConfigured: boolean
+}
+
+export type AIOpsSettingsEnvelope = ApiEnvelope<AIOpsSettings>
