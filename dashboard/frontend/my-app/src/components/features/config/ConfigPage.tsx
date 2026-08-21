@@ -761,7 +761,7 @@ export function ConfigPage() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-lg font-semibold tracking-tight text-[#F5F5F5]">配置中心</h1>
-                                <span className="rounded-full border border-[#263244] bg-[#121212] px-2 py-0.5 text-[10px] tabular-nums text-[#747474]">
+                                <span className="rounded-full border border-[#263244] bg-[#121212] px-2 py-0.5 text-[12px] tabular-nums text-[#747474]">
                                     {totalResources} 项资源
                                 </span>
                             </div>
@@ -771,7 +771,7 @@ export function ConfigPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-[#748196]">
+                    <div className="flex items-center gap-2 text-[14px] text-[#748196]">
                         {readOnly ? (
                             <span className="flex items-center gap-1.5 rounded-full border border-[#7D8FFF]/20 bg-[#7D8FFF]/[0.06] px-2.5 py-1.5 text-[#AEB9FF]">
                                 <History className="h-3 w-3" />
@@ -791,7 +791,7 @@ export function ConfigPage() {
 
                 {readOnly && (
                     <div className="mt-3 flex flex-col gap-2 rounded-xl border border-[#7D8FFF]/15 bg-[#7D8FFF]/[0.045] px-3.5 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0 text-[10px] leading-5 text-[#8997C8]">
+                        <div className="min-w-0 text-[12px] leading-5 text-[#8997C8]">
                             <span className="font-medium text-[#AEB9FF]">历史切面对照</span>
                             <span className="mx-2 text-[#4F5C83]">·</span>
                             <span className="font-mono">{formatUtcTimestamp(workspace.effectiveAt, true)} UTC</span>
@@ -802,7 +802,7 @@ export function ConfigPage() {
                             variant="ghost"
                             size="sm"
                             onClick={returnToLatest}
-                            className="h-7 shrink-0 gap-1.5 px-2 text-[10px] text-[#AEB9FF] hover:bg-[#7D8FFF]/10 hover:text-white"
+                            className="h-7 shrink-0 gap-1.5 px-2 text-[12px] text-[#AEB9FF] hover:bg-[#7D8FFF]/10 hover:text-white"
                         >
                             <RotateCcw className="h-3 w-3" />
                             回到最新
@@ -818,7 +818,7 @@ export function ConfigPage() {
                         >
                             <BrainCircuit className="h-3.5 w-3.5" />
                             模型
-                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{models.length}</span>
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[12px] tabular-nums text-[#8A8A8A]">{models.length}</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="nodes"
@@ -826,7 +826,7 @@ export function ConfigPage() {
                         >
                             <Server className="h-3.5 w-3.5" />
                             节点
-                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{nodes.length}</span>
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[12px] tabular-nums text-[#8A8A8A]">{nodes.length}</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="tenants"
@@ -834,7 +834,7 @@ export function ConfigPage() {
                         >
                             <Users className="h-3.5 w-3.5" />
                             租户
-                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{tenants.length}</span>
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[12px] tabular-nums text-[#8A8A8A]">{tenants.length}</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="orchestrators"
@@ -842,7 +842,7 @@ export function ConfigPage() {
                         >
                             <SlidersHorizontal className="h-3.5 w-3.5" />
                             编排策略
-                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{orchestrators.length}</span>
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[12px] tabular-nums text-[#8A8A8A]">{orchestrators.length}</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="policies"
@@ -850,7 +850,7 @@ export function ConfigPage() {
                         >
                             <ShieldCheck className="h-3.5 w-3.5" />
                             策略
-                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[10px] tabular-nums text-[#8A8A8A]">{policies.length}</span>
+                            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[12px] tabular-nums text-[#8A8A8A]">{policies.length}</span>
                         </TabsTrigger>
                     </TabsList>
                 </Tabs>

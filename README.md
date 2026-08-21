@@ -82,11 +82,11 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 <!-- docs-sync:timeline-start -->
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
-- 2026-08-19 [WSL 升级验证实验：2.9.4 预览线仍复现，环境已回滚（#71/#63）](change-history/2026-08-19-wsl-upgrade-validation/README.md)
-- 2026-08-19 [WSL 源码级验证：2.9.5+ 修复已确认存在（#71 最后证明项）](change-history/2026-08-19-wsl-source-fix-verified/README.md)
-- 2026-08-19 [WSL 回环案例整体迁移至独立仓库 wsl-loopback-stall](change-history/2026-08-19-wsl-repo-migration/README.md)
-- 2026-08-19 [WSL 重启后排除测试 + 探针工具缺陷修复](change-history/2026-08-19-wsl-reboot-exclusion-test/README.md)
-- 2026-08-19 [WSL 回环研究三 issue 闭环（#66 查重 / #65 指纹 / #64 参数实验）](change-history/2026-08-19-wsl-issue-64-65-66/README.md)
+- 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](change-history/2026-08-21-frontend-redesign-merge/README.md)
+- 2026-08-21 [变更总览：AIOps 前端 M4——AI 洞察分区与契约先行（#98 前端部分）](change-history/2026-08-21-aiops-frontend-m4/README.md)
+- 2026-08-20 [浏览器自动化与人工分工经验沉淀（Notion 中枢搭建复盘）](change-history/2026-08-20-notion-agent-collab-lesson/README.md)
+- 2026-08-20 [默认不截图：预览交给用户、验证用 DOM 断言](change-history/2026-08-20-no-screenshot-preview-rule/README.md)
+- 2026-08-20 [前端重构第四轮：设计打磨 + 配置样例数据 + 模板加载真实 bug（#101）](change-history/2026-08-20-frontend-redesign-round4/README.md)
 
 <!-- docs-sync:timeline-end -->
 

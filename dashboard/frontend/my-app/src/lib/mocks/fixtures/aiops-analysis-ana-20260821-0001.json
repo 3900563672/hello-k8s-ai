@@ -1,0 +1,99 @@
+{
+  "data": {
+    "analysis": {
+      "analysisId": "ana-20260821-0001",
+      "segmentId": "seg-demo-2026-08-21-0130",
+      "status": "completed",
+      "l1Total": 6,
+      "l1Done": 6,
+      "scores": {
+        "goal": 72,
+        "stability": 58,
+        "efficiency": 81,
+        "anomaly": 64,
+        "overall": 69,
+        "verdict": "基本达标，但稳定性存在风险",
+        "reason": "目标 QPS 达成率 96%，TTFT p95 2.4s 略高于阈值；worker3 上 2 个 Pod 出现 CrashLoopBackOff 波动，已标记可疑；整体效率良好。"
+      },
+      "summary": null,
+      "error": "",
+      "createdAt": "2026-08-21T01:30:00Z",
+      "updatedAt": "2026-08-21T01:32:10Z"
+    },
+    "entities": [
+      {
+        "summaryId": "sum-0001",
+        "analysisId": "ana-20260821-0001",
+        "entityKind": "Pod",
+        "entityName": "dns-test-w6",
+        "classification": "healthy",
+        "phenomenon": "全程 Running，重启 0 次，QPS 达标",
+        "issueFlag": false,
+        "conclusion": "表现正常，无需干预",
+        "createdAt": "2026-08-21T01:31:00Z"
+      },
+      {
+        "summaryId": "sum-0002",
+        "analysisId": "ana-20260821-0001",
+        "entityKind": "Pod",
+        "entityName": "dns-test-worker6",
+        "classification": "suspect",
+        "phenomenon": "TTFT p95 2.8s，高于同组平均 40%",
+        "issueFlag": true,
+        "conclusion": "疑似调度热点，建议观察下一窗口",
+        "createdAt": "2026-08-21T01:31:05Z"
+      },
+      {
+        "summaryId": "sum-0003",
+        "analysisId": "ana-20260821-0001",
+        "entityKind": "Pod",
+        "entityName": "drill-w6-net-test2",
+        "classification": "problem",
+        "phenomenon": "CrashLoopBackOff 3 次，最近一次崩溃在 01:22",
+        "issueFlag": true,
+        "conclusion": "镜像或参数异常，需要介入排查",
+        "createdAt": "2026-08-21T01:31:10Z"
+      },
+      {
+        "summaryId": "sum-0004",
+        "analysisId": "ana-20260821-0001",
+        "entityKind": "Node",
+        "entityName": "desktop-control-plane",
+        "classification": "healthy",
+        "phenomenon": "负载平稳，无事件",
+        "issueFlag": false,
+        "conclusion": "表现正常",
+        "createdAt": "2026-08-21T01:31:15Z"
+      },
+      {
+        "summaryId": "sum-0005",
+        "analysisId": "ana-20260821-0001",
+        "entityKind": "Node",
+        "entityName": "desktop-worker3",
+        "classification": "suspect",
+        "phenomenon": "2 个 Pod 反复重启，节点内存使用率 78%",
+        "issueFlag": true,
+        "conclusion": "节点资源压力偏大，建议关注调度分布",
+        "createdAt": "2026-08-21T01:31:20Z"
+      },
+      {
+        "summaryId": "sum-0006",
+        "analysisId": "ana-20260821-0001",
+        "entityKind": "Tenant",
+        "entityName": "tenant-demo-burst",
+        "classification": "suspect",
+        "phenomenon": "突发流量下队列积压上升至 120",
+        "issueFlag": true,
+        "conclusion": "分配 QPS 接近上限，突发场景下需要扩容",
+        "createdAt": "2026-08-21T01:31:25Z"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "mock-aiops-detail-0001",
+    "servedAt": "2026-08-21T10:00:00Z",
+    "partial": false,
+    "warnings": ["契约演示数据"],
+    "sourceVersions": {}
+  }
+}

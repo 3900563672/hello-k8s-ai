@@ -176,7 +176,7 @@ export function TrafficPage() {
                                 </div>
                                 <div className="hidden xl:block">
                                     <div className="text-xs font-semibold text-[#E8EEF7]">流量布置</div>
-                                    <div className="mt-0.5 text-[9px] uppercase tracking-[0.15em] text-[#536073]">Traffic Composer</div>
+                                    <div className="mt-0.5 text-[13px] uppercase tracking-[0.15em] text-[#536073]">Traffic Composer</div>
                                 </div>
                             </div>
 
@@ -219,7 +219,7 @@ export function TrafficPage() {
                                                 variant="outline"
                                                 onClick={() => toggleCompareTenant(tenant.id)}
                                                 className={cn(
-                                                    'h-7 shrink-0 cursor-pointer gap-1 border-white/[0.08] bg-white/[0.02] px-2 text-[10px] font-normal text-[#788599] transition-colors hover:bg-white/[0.05] hover:text-white',
+                                                    'h-7 shrink-0 cursor-pointer gap-1 border-white/[0.08] bg-white/[0.02] px-2 text-[12px] font-normal text-[#788599] transition-colors hover:bg-white/[0.05] hover:text-white',
                                                     selected && 'border-[#5B8CFF]/35 bg-[#5B8CFF]/12 text-[#9BC5FF]',
                                                 )}
                                             >
@@ -233,7 +233,7 @@ export function TrafficPage() {
                         </div>
 
                         <div
-                            className="flex shrink-0 items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-1.5 text-[9px] text-[#687487]"
+                            className="flex shrink-0 items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-1.5 text-[13px] text-[#687487]"
                             title={`${replay.effectiveAt} · ${replay.snapshotId ?? '无切面 ID'}`}
                         >
                             <Clock3 className="h-3 w-3 text-[#7292BF]" />
@@ -250,9 +250,9 @@ export function TrafficPage() {
                     <div className="flex min-h-[44px] items-center justify-between gap-4 border-t border-white/[0.045] px-5">
                         <div className="min-w-0">
                             <div className="truncate text-xs font-medium text-[#DCE5F0]">{copy.title}</div>
-                            <div className="mt-0.5 truncate text-[10px] text-[#5E6A7D]">{copy.description}</div>
+                            <div className="mt-0.5 truncate text-[12px] text-[#5E6A7D]">{copy.description}</div>
                         </div>
-                        <div className="flex shrink-0 items-center gap-5 text-[9px] text-[#5E6A7D]">
+                        <div className="flex shrink-0 items-center gap-5 text-[13px] text-[#5E6A7D]">
                             <HeaderMetric label="启用叠加" value={`${activeOverlays.length}`} />
                             <HeaderMetric label="有流量租户" value={`${activeTenantCount}`} />
                             <HeaderMetric label="当前视域" value={`T+${formatLogicalTime(horizon)}`} />
@@ -314,7 +314,7 @@ function ViewTab({ value, icon, label }: { value: TrafficViewMode; icon: React.R
     return (
         <TabsTrigger
             value={value}
-            className="h-7 gap-1.5 rounded-lg px-3 text-[10px] text-[#778397] data-[state=active]:bg-[#5B8CFF]/15 data-[state=active]:text-[#A9CDFF] data-[state=active]:shadow-none"
+            className="h-7 gap-1.5 rounded-lg px-3 text-[12px] text-[#778397] data-[state=active]:bg-[#5B8CFF]/15 data-[state=active]:text-[#A9CDFF] data-[state=active]:shadow-none"
         >
             {icon}
             {label}

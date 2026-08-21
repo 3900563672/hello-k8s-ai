@@ -147,7 +147,7 @@ export function ConfigTabPanel<
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-sm font-semibold text-[#F2F2F2]">{listTitle}</h2>
-                                <span className="rounded-full border border-[#2A3548] bg-[#111722] px-2 py-0.5 text-[10px] tabular-nums text-[#8B8B8B]">
+                                <span className="rounded-full border border-[#2A3548] bg-[#111722] px-2 py-0.5 text-[12px] tabular-nums text-[#8B8B8B]">
                                     {data.length}
                                 </span>
                             </div>
@@ -259,7 +259,7 @@ export function ConfigTabPanel<
                             </div>
                             <Link
                                 to="/guide"
-                                className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-md border border-[#303C50] bg-[#111722] px-2.5 text-[11px] text-[#9AA7B9] transition-colors hover:bg-[#1B2634] hover:text-white"
+                                className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-md border border-[#303C50] bg-[#111722] px-2.5 text-[14px] text-[#9AA7B9] transition-colors hover:bg-[#1B2634] hover:text-white"
                             >
                                 <BookOpen className="h-3.5 w-3.5" />
                                 查看填写指南
@@ -308,8 +308,8 @@ export function ConfigTabPanel<
                             <span
                                 className={
                                     readOnly
-                                        ? 'shrink-0 rounded-full border border-[#7D8FFF]/20 bg-[#7D8FFF]/10 px-2 py-1 text-[10px] font-medium text-[#AEB9FF]'
-                                        : 'shrink-0 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-[#66D9A3]'
+                                        ? 'shrink-0 rounded-full border border-[#7D8FFF]/20 bg-[#7D8FFF]/10 px-2 py-1 text-[12px] font-medium text-[#AEB9FF]'
+                                        : 'shrink-0 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[12px] font-medium text-[#66D9A3]'
                                 }
                             >
                                 {readOnly ? '历史只读' : '已持久化'}
@@ -319,7 +319,7 @@ export function ConfigTabPanel<
                         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
                             <div className="mx-auto w-full max-w-3xl">
                                 {readOnly && (
-                                    <div className="mb-4 rounded-xl border border-[#7D8FFF]/15 bg-[#7D8FFF]/[0.055] px-3.5 py-3 text-[10px] leading-5 text-[#98A6D9]">
+                                    <div className="mb-4 rounded-xl border border-[#7D8FFF]/15 bg-[#7D8FFF]/[0.055] px-3.5 py-3 text-[12px] leading-5 text-[#98A6D9]">
                                         这是历史切面的只读对照视图。返回最新切面后才能修改资源或保存模板。
                                     </div>
                                 )}

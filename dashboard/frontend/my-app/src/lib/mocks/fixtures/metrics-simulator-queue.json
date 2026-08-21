@@ -1,0 +1,22 @@
+{
+  "data": {
+    "metricId": "simulator.queue",
+    "unit": "requests",
+    "start": "2026-08-17T00:00:00Z",
+    "end": "2026-08-17T01:00:00Z",
+    "stepSeconds": 60,
+    "series": [],
+    "resultType": "matrix",
+    "warnings": [],
+    "queriedAt": "2026-08-20T00:48:22.71915402Z"
+  },
+  "meta": {
+    "requestId": "7b9986c3606b233b445bfbff532ab9e3",
+    "servedAt": "2026-08-20T00:48:22.719867813Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "prometheus": "2026-08-20T00:48:22.71915402Z"
+    }
+  }
+}

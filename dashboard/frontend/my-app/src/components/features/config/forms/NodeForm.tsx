@@ -10,6 +10,7 @@ import {
     ConfigNumberField,
     ConfigTextField,
     FormSaveBar,
+    LiveImpactSummary,
     TemplateActions,
     useConfigForm,
 } from './ConfigFormParts'
@@ -52,6 +53,7 @@ export const NodeForm = memo(function NodeForm({
                     onDelete={removeNodeTemplate}
                     getPreview={getNodePreview}
                 />
+                <LiveImpactSummary fields={getNodePreview(form.watch())} />
 
                 <ConfigFormSection
                     title="节点容量"
@@ -68,7 +70,7 @@ export const NodeForm = memo(function NodeForm({
 
                     <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-[#222] bg-[#101010] p-3">
                         <div>
-                            <p className="text-[11px] text-[#696969]">单并发平均显存</p>
+                            <p className="text-[14px] text-[#696969]">单并发平均显存</p>
                             <p className="mt-1 text-sm font-medium tabular-nums text-[#D4D4D4]">
                                 {form.watch('maxConcurrency') > 0 && Number.isFinite(form.watch('gpu'))
                                     ? `${(form.watch('gpu') / form.watch('maxConcurrency')).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} G`
@@ -76,7 +78,7 @@ export const NodeForm = memo(function NodeForm({
                             </p>
                         </div>
                         <div className="border-l border-[#252525] pl-3">
-                            <p className="text-[11px] text-[#696969]">容量说明</p>
+                            <p className="text-[14px] text-[#696969]">容量说明</p>
                             <p className="mt-1 text-sm font-medium text-[#D4D4D4]">本地调度上限</p>
                         </div>
                     </div>

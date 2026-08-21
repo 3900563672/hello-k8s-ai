@@ -1,0 +1,55 @@
+{
+  "data": {
+    "traceId": "1874e4eb74a94736f24925d1d4d29d74",
+    "spans": [
+      {
+        "spanId": "94a403ac5ed8ddd6",
+        "service": "hello-k8s-ai-controller",
+        "operation": "HTTP POST",
+        "startTime": "2026-08-20T00:48:08.612989Z",
+        "durationMs": 2.579,
+        "status": "ok",
+        "attributes": {
+          "deployment.environment.name": "docker-desktop",
+          "host.name": "hello-k8s-ai-controller-manager-5df7455cf6-bxqdl",
+          "http.request.method": "POST",
+          "http.response.status_code": 201,
+          "k8s.cluster.name": "docker-desktop",
+          "k8s.namespace.name": "hello-k8s-ai-system",
+          "k8s.node.name": "hello-k8s-ai-dev-worker2",
+          "k8s.pod.name": "hello-k8s-ai-controller-manager-5df7455cf6-bxqdl",
+          "network.protocol.version": "2.0",
+          "otel.scope.name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+          "otel.scope.version": "0.70.0",
+          "process.command_args": "[\"/manager\",\"--leader-elect\",\"--health-probe-bind-address=:8081\",\"--metrics-bind-address=:8443\",\"--simulator-metrics-port=9090\"]",
+          "process.executable.name": "manager",
+          "process.executable.path": "/manager",
+          "process.owner": "nonroot",
+          "process.pid": 1,
+          "process.runtime.description": "go version go1.26.6 linux/amd64",
+          "process.runtime.name": "go",
+          "process.runtime.version": "go1.26.6",
+          "server.address": "10.96.0.1",
+          "service.instance.id": "hello-k8s-ai-controller-manager-5df7455cf6-bxqdl",
+          "service.version": "dev",
+          "span.kind": "client",
+          "telemetry.sdk.language": "go",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.45.0",
+          "url.full": "https://10.96.0.1:443/apis/authentication.k8s.io/v1/tokenreviews"
+        },
+        "events": []
+      }
+    ],
+    "entityLinks": []
+  },
+  "meta": {
+    "requestId": "b53b74d868b0af33096785224d5c95a1",
+    "servedAt": "2026-08-20T00:48:22.776893415Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "jaeger": "2026-08-20T00:48:22.776885235Z"
+    }
+  }
+}

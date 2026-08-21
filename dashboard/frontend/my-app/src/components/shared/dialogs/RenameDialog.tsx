@@ -69,7 +69,7 @@ export function RenameDialog({
                         />
                     </div>
                     <div className="rounded-md border border-[#202B3A] bg-[#0B1018] px-3 py-2">
-                        <p className="text-[11px] text-[#596579]">稳定标识</p>
+                        <p className="text-[14px] text-[#596579]">稳定标识</p>
                         <code className="mt-1 block truncate font-mono text-xs text-[#9A9A9A]">{resourceId}</code>
                     </div>
                     {error && (

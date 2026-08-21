@@ -28,11 +28,12 @@ interface ConfigFormSectionProps {
     description: string
     children: ReactNode
     action?: ReactNode
+    id?: string
 }
 
-export function ConfigFormSection({ title, description, children, action }: ConfigFormSectionProps) {
+export function ConfigFormSection({ title, description, children, action, id }: ConfigFormSectionProps) {
     return (
-        <section className="rounded-xl border border-[#232323] bg-[#0B1018]">
+        <section id={id} className="scroll-mt-4 rounded-xl border border-[#232323] bg-[#0B1018]">
             <header className="flex items-start justify-between gap-4 border-b border-[#1B2634] px-4 py-3.5">
                 <div>
                     <h3 className="text-sm font-medium text-[#EDEDED]">{title}</h3>
@@ -87,7 +88,7 @@ export function TemplateActions<T>({
                     </div>
                     <div className="min-w-0">
                         <p className="text-xs font-medium text-[#DADADA]">配置模板</p>
-                        <p className="mt-0.5 truncate text-[11px] text-[#6F6F6F]">
+                        <p className="mt-0.5 truncate text-[14px] text-[#6F6F6F]">
                             保存常用参数，快速复用到其他{typeLabel} · {templates.length} 个模板
                         </p>
                     </div>
@@ -252,10 +253,32 @@ interface UseConfigFormOptions<TFieldValues extends FieldValues> {
     afterLoadTemplate?: (template: ConfigTemplate<TFieldValues>) => void
 }
 
+export function LiveImpactSummary({ fields }: { fields: PreviewConfig }) {
+    if (fields.length === 0) return null
+    return (
+        <div className="overflow-hidden rounded-xl border border-[#5B8CFF]/15 bg-[#5B8CFF]/[0.04]">
+            <div className="flex items-center gap-2 border-b border-[#5B8CFF]/10 px-4 py-2.5">
+                <span className="text-xs font-medium text-[#8CB8F8]">变更影响</span>
+                <span className="text-[12px] text-[#596579]">按当前表单实时计算，保存后写入 Kubernetes</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-3 xl:grid-cols-4">
+                {fields.map((field) => (
+                    <div key={field.key} className="min-w-0">
+                        <div className="truncate text-[12px] text-[#596579]">{field.key}</div>
+                        <div className="mt-0.5 truncate font-mono text-[13px] tabular-nums text-[#D6E4F7]">
+                            {typeof field.value === 'number' ? field.value.toLocaleString('zh-CN') : field.value}
+                            {field.unit && <span className="ml-1 text-[12px] text-[#748196]">{field.unit}</span>}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 // useConfigForm 收敛各配置表单共用的提交、模板与脏状态逻辑。
 export function useConfigForm<TFieldValues extends FieldValues>({
     form,
-    defaultValues,
     onSubmit,
     onDirtyChange,
     addTemplate,
@@ -264,10 +287,11 @@ export function useConfigForm<TFieldValues extends FieldValues>({
     const [submitError, setSubmitError] = useState('')
     const { isDirty, isSubmitting } = form.formState
 
+    // 切换选中项时表单由 key={selectedItem.name} 整体重挂载，defaultValues 自带最新值；
+    // 这里不再监听 defaultValues 重置，否则会立刻覆盖“模板库加载”等用户操作。
     useEffect(() => {
-        form.reset(defaultValues)
         setSubmitError('')
-    }, [defaultValues, form])
+    }, [])
 
     useEffect(() => {
         onDirtyChange?.(isDirty)

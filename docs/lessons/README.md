@@ -44,6 +44,7 @@
 | PowerShell 直传 wsl 复杂命令 | [process-wsl-powershell-quoting.md](process-wsl-powershell-quoting.md) |
 | 扩容停在节点容量上限 | [simulator-scale-node-capacity.md](simulator-scale-node-capacity.md) |
 | 对外提交 / 开源贡献（AI 产出自查与披露） | [process-ai-collaboration-disclosure.md](process-ai-collaboration-disclosure.md) |
+| 浏览器 UI 自动化 / 同一 UI 动作连续失败 / 全自动 vs 人工决策 | [process-human-agent-division-of-labor.md](process-human-agent-division-of-labor.md) |
 
 ## 提升流程（每攒约 20 条 journal 或每周一次）
 

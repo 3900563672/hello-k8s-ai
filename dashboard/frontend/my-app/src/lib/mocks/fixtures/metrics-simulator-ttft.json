@@ -1,0 +1,22 @@
+{
+  "data": {
+    "metricId": "simulator.ttft",
+    "unit": "ms",
+    "start": "2026-08-17T00:00:00Z",
+    "end": "2026-08-17T01:00:00Z",
+    "stepSeconds": 60,
+    "series": [],
+    "resultType": "matrix",
+    "warnings": [],
+    "queriedAt": "2026-08-20T00:48:22.714375479Z"
+  },
+  "meta": {
+    "requestId": "2779322038f7f3ca8afc35e5787eb549",
+    "servedAt": "2026-08-20T00:48:22.715045619Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "prometheus": "2026-08-20T00:48:22.714375479Z"
+    }
+  }
+}

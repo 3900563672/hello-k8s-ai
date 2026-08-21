@@ -1,0 +1,37 @@
+{
+  "data": {
+    "clockId": "default",
+    "mode": "actual-with-simulator-acceleration",
+    "state": "running",
+    "serverTime": "2026-08-20T00:48:22.14191566Z",
+    "actualTime": "2026-08-20T00:48:22.14191566Z",
+    "logicalTime": "2026-08-20T00:48:22.14191566Z",
+    "simulationTime": null,
+    "actualAnchor": "2026-08-20T00:44:51.997639115Z",
+    "logicalAnchor": "2026-08-20T00:44:51.997639115Z",
+    "offsetMs": 0,
+    "rate": 1,
+    "appliedRate": 1,
+    "converged": false,
+    "synchronizedInstances": 0,
+    "totalInstances": 0,
+    "version": "actual-v2",
+    "authoritative": true,
+    "maxClientDriftMs": 2000,
+    "capabilities": {
+      "canSetRate": true,
+      "canPause": false,
+      "canSeek": false,
+      "simulatorAcceleration": true
+    }
+  },
+  "meta": {
+    "requestId": "809880d88a380de9011d78407be94f03",
+    "servedAt": "2026-08-20T00:48:22.141925779Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

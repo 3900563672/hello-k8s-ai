@@ -1,0 +1,629 @@
+{
+  "recordedAt": "2026-08-20T00:48:22.973Z",
+  "baseUrl": "http://localhost:8080/api/v1",
+  "note": "真实录制快照，供 dev:mock 数据层使用；/stream(SSE) 不录制；动态详情由列表自动发现。",
+  "items": [
+    {
+      "name": "health-live",
+      "path": "/health/live",
+      "status": 200,
+      "size": 176
+    },
+    {
+      "name": "health-ready",
+      "path": "/health/ready",
+      "status": 200,
+      "size": 897
+    },
+    {
+      "name": "capabilities",
+      "path": "/capabilities",
+      "status": 200,
+      "size": 1164
+    },
+    {
+      "name": "bootstrap",
+      "path": "/bootstrap",
+      "status": 200,
+      "size": 133902
+    },
+    {
+      "name": "configuration",
+      "path": "/configuration",
+      "status": 200,
+      "size": 480
+    },
+    {
+      "name": "traffic",
+      "path": "/traffic",
+      "status": 200,
+      "size": 254
+    },
+    {
+      "name": "traffic-at-snapshot",
+      "path": "/traffic?at=2026-08-17T00%3A00%3A00Z",
+      "status": 200,
+      "size": 10148
+    },
+    {
+      "name": "clock",
+      "path": "/clock",
+      "status": 200,
+      "size": 807
+    },
+    {
+      "name": "events",
+      "path": "/events?limit=200",
+      "status": 200,
+      "size": 6924
+    },
+    {
+      "name": "resources",
+      "path": "/resources?limit=100",
+      "status": 200,
+      "size": 106892
+    },
+    {
+      "name": "replay",
+      "path": "/replay?limit=1000",
+      "status": 200,
+      "size": 421533
+    },
+    {
+      "name": "overview",
+      "path": "/overview",
+      "status": 200,
+      "size": 895293
+    },
+    {
+      "name": "overview-at-snapshot",
+      "path": "/overview?at=2026-08-17T00%3A00%3A00Z",
+      "status": 200,
+      "size": 97193
+    },
+    {
+      "name": "overview-at-late-snapshot",
+      "path": "/overview?at=2026-08-18T03%3A00%3A00Z",
+      "status": 200,
+      "size": 166865
+    },
+    {
+      "name": "segment",
+      "path": "/segment?start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z",
+      "status": 200,
+      "size": 273107
+    },
+    {
+      "name": "segment-early",
+      "path": "/segment?start=2026-08-16T14:00:00Z&end=2026-08-16T15:00:00Z",
+      "status": 200,
+      "size": 278852
+    },
+    {
+      "name": "segment-late",
+      "path": "/segment?start=2026-08-18T03:00:00Z&end=2026-08-18T04:00:00Z",
+      "status": 200,
+      "size": 279039
+    },
+    {
+      "name": "experiments",
+      "path": "/experiments",
+      "status": 200,
+      "size": 205
+    },
+    {
+      "name": "experiments-status-pending",
+      "path": "/experiments?status=pending",
+      "status": 200,
+      "size": 206
+    },
+    {
+      "name": "experiments-status-running",
+      "path": "/experiments?status=running",
+      "status": 200,
+      "size": 206
+    },
+    {
+      "name": "experiments-status-completed",
+      "path": "/experiments?status=completed",
+      "status": 200,
+      "size": 206
+    },
+    {
+      "name": "experiments-status-failed",
+      "path": "/experiments?status=failed",
+      "status": 200,
+      "size": 206
+    },
+    {
+      "name": "traces",
+      "path": "/traces?limit=20",
+      "status": 200,
+      "size": 5572
+    },
+    {
+      "name": "traces-late-window",
+      "path": "/traces?start=2026-08-18T03:00:00Z&end=2026-08-18T04:00:00Z&limit=20",
+      "status": 200,
+      "size": 6361
+    },
+    {
+      "name": "metrics-simulator-ttft",
+      "path": "/metrics?metricId=simulator.ttft&start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z&step=60s",
+      "status": 200,
+      "size": 415
+    },
+    {
+      "name": "metrics-simulator-queue",
+      "path": "/metrics?metricId=simulator.queue&start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z&step=60s",
+      "status": 200,
+      "size": 420
+    },
+    {
+      "name": "metrics-simulator-qps",
+      "path": "/metrics?metricId=simulator.qps&start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z&step=60s",
+      "status": 200,
+      "size": 422
+    },
+    {
+      "name": "metrics-simulator-error-rate",
+      "path": "/metrics?metricId=simulator.errorRate&start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z&step=60s",
+      "status": 200,
+      "size": 3009
+    },
+    {
+      "name": "metrics-simulator-tick-latency",
+      "path": "/metrics?metricId=simulator.tickLatency&start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z&step=60s",
+      "status": 200,
+      "size": 422
+    },
+    {
+      "name": "metrics-controller-error-rate",
+      "path": "/metrics?metricId=controller.errorRate&start=2026-08-17T00:00:00Z&end=2026-08-17T01:00:00Z&step=60s",
+      "status": 200,
+      "size": 424
+    },
+    {
+      "name": "trace-c71f2a57df2f35201e09c4558f082e47",
+      "path": "/traces/c71f2a57df2f35201e09c4558f082e47",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-ed5cbd3cba0d389a168f44ab608a9b93",
+      "path": "/traces/ed5cbd3cba0d389a168f44ab608a9b93",
+      "status": 200,
+      "size": 1761
+    },
+    {
+      "name": "trace-1eac7c0050c45fe84dfb3e3a8ef89481",
+      "path": "/traces/1eac7c0050c45fe84dfb3e3a8ef89481",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-e635d16cd3c91d65f262cc3b0cf008a3",
+      "path": "/traces/e635d16cd3c91d65f262cc3b0cf008a3",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-78281b1dfd59a310291655f347b28561",
+      "path": "/traces/78281b1dfd59a310291655f347b28561",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-5817b3732098585e62cb4574f4b04b4b",
+      "path": "/traces/5817b3732098585e62cb4574f4b04b4b",
+      "status": 200,
+      "size": 1760
+    },
+    {
+      "name": "trace-1874e4eb74a94736f24925d1d4d29d74",
+      "path": "/traces/1874e4eb74a94736f24925d1d4d29d74",
+      "status": 200,
+      "size": 1702
+    },
+    {
+      "name": "trace-0e71700e5061116b6f2c71a415f4315d",
+      "path": "/traces/0e71700e5061116b6f2c71a415f4315d",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-d9261e8a5c0c2529659646ce83a31882",
+      "path": "/traces/d9261e8a5c0c2529659646ce83a31882",
+      "status": 200,
+      "size": 1761
+    },
+    {
+      "name": "trace-86006fff1eb7f22424d4795d51172b57",
+      "path": "/traces/86006fff1eb7f22424d4795d51172b57",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-3b6da9093ed69f3940567184a3e14870",
+      "path": "/traces/3b6da9093ed69f3940567184a3e14870",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-8bb26040b593e56dddee48115570a60f",
+      "path": "/traces/8bb26040b593e56dddee48115570a60f",
+      "status": 200,
+      "size": 1761
+    },
+    {
+      "name": "trace-74ff034b2d628f82f628d76bc39c9e22",
+      "path": "/traces/74ff034b2d628f82f628d76bc39c9e22",
+      "status": 200,
+      "size": 1761
+    },
+    {
+      "name": "trace-e9594d6f882dfbe75ebf6251e05a02e3",
+      "path": "/traces/e9594d6f882dfbe75ebf6251e05a02e3",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-53dc8349814ed446782bc6995b211240",
+      "path": "/traces/53dc8349814ed446782bc6995b211240",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-d4038e18f701e84c075b779f5c50f61f",
+      "path": "/traces/d4038e18f701e84c075b779f5c50f61f",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-4e09445e327b59d32b5fbc58d3cf4ba1",
+      "path": "/traces/4e09445e327b59d32b5fbc58d3cf4ba1",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-588c1ee1f8d44b5599f8f8334ef3c022",
+      "path": "/traces/588c1ee1f8d44b5599f8f8334ef3c022",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-7f5106505063fb2f00288c77ccc8edac",
+      "path": "/traces/7f5106505063fb2f00288c77ccc8edac",
+      "status": 200,
+      "size": 1761
+    },
+    {
+      "name": "trace-1bf24a95cc6c84593ba15adc2f610409",
+      "path": "/traces/1bf24a95cc6c84593ba15adc2f610409",
+      "status": 200,
+      "size": 1762
+    },
+    {
+      "name": "trace-31bf33824ad7c197d661d4e2f9becc41",
+      "path": "/traces/31bf33824ad7c197d661d4e2f9becc41",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-ef7416c36d556b9e5eeac1a4582d6789",
+      "path": "/traces/ef7416c36d556b9e5eeac1a4582d6789",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-95a0cb77b315feacf028db49c00c249a",
+      "path": "/traces/95a0cb77b315feacf028db49c00c249a",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-a2ff2afdb87f6c97c1e23a9ce0bd0c90",
+      "path": "/traces/a2ff2afdb87f6c97c1e23a9ce0bd0c90",
+      "status": 200,
+      "size": 1753
+    },
+    {
+      "name": "trace-ed291458b9f31b68da2284de013fc804",
+      "path": "/traces/ed291458b9f31b68da2284de013fc804",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-2544195d6deeb95d9c22b5bfa1818bf9",
+      "path": "/traces/2544195d6deeb95d9c22b5bfa1818bf9",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-141bbeebae654055c71ae2682a6fb534",
+      "path": "/traces/141bbeebae654055c71ae2682a6fb534",
+      "status": 200,
+      "size": 1769
+    },
+    {
+      "name": "trace-207aefeada7ce660c7037456ad57196a",
+      "path": "/traces/207aefeada7ce660c7037456ad57196a",
+      "status": 200,
+      "size": 1812
+    },
+    {
+      "name": "trace-76c52d356d352af1f1e2b85342febd7f",
+      "path": "/traces/76c52d356d352af1f1e2b85342febd7f",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-d560bb996b320f23a9586749aa4e3a5d",
+      "path": "/traces/d560bb996b320f23a9586749aa4e3a5d",
+      "status": 200,
+      "size": 1768
+    },
+    {
+      "name": "trace-a4e04ec2e77da57cab56de2411bcfb34",
+      "path": "/traces/a4e04ec2e77da57cab56de2411bcfb34",
+      "status": 200,
+      "size": 8370
+    },
+    {
+      "name": "trace-c47a285459cce25b6f2e2722e796404c",
+      "path": "/traces/c47a285459cce25b6f2e2722e796404c",
+      "status": 200,
+      "size": 3022
+    },
+    {
+      "name": "trace-1765b128416bf2e2487e07c7992135de",
+      "path": "/traces/1765b128416bf2e2487e07c7992135de",
+      "status": 200,
+      "size": 5727
+    },
+    {
+      "name": "trace-d821d45ffc4bc1870e1db18e1d9dc8c0",
+      "path": "/traces/d821d45ffc4bc1870e1db18e1d9dc8c0",
+      "status": 200,
+      "size": 8099
+    },
+    {
+      "name": "trace-9e659a8f93e2a1215c96149da3398801",
+      "path": "/traces/9e659a8f93e2a1215c96149da3398801",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-80397f766efe0caf3e7dd962393f10f4",
+      "path": "/traces/80397f766efe0caf3e7dd962393f10f4",
+      "status": 200,
+      "size": 1768
+    },
+    {
+      "name": "trace-3a671160d51dfd74b3a381b99717254a",
+      "path": "/traces/3a671160d51dfd74b3a381b99717254a",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-9c359d88ab5c9ddb45e49790ea5487c9",
+      "path": "/traces/9c359d88ab5c9ddb45e49790ea5487c9",
+      "status": 200,
+      "size": 1767
+    },
+    {
+      "name": "trace-54997fc2ddb33dd930502eaf692a6c65",
+      "path": "/traces/54997fc2ddb33dd930502eaf692a6c65",
+      "status": 200,
+      "size": 1813
+    },
+    {
+      "name": "trace-113547af6fdaa08824aae6e8673ed889",
+      "path": "/traces/113547af6fdaa08824aae6e8673ed889",
+      "status": 200,
+      "size": 1769
+    }
+  ],
+  "dynamicDetails": [
+    {
+      "name": "trace-c71f2a57df2f35201e09c4558f082e47",
+      "path": "/traces/c71f2a57df2f35201e09c4558f082e47",
+      "status": 200
+    },
+    {
+      "name": "trace-ed5cbd3cba0d389a168f44ab608a9b93",
+      "path": "/traces/ed5cbd3cba0d389a168f44ab608a9b93",
+      "status": 200
+    },
+    {
+      "name": "trace-1eac7c0050c45fe84dfb3e3a8ef89481",
+      "path": "/traces/1eac7c0050c45fe84dfb3e3a8ef89481",
+      "status": 200
+    },
+    {
+      "name": "trace-e635d16cd3c91d65f262cc3b0cf008a3",
+      "path": "/traces/e635d16cd3c91d65f262cc3b0cf008a3",
+      "status": 200
+    },
+    {
+      "name": "trace-78281b1dfd59a310291655f347b28561",
+      "path": "/traces/78281b1dfd59a310291655f347b28561",
+      "status": 200
+    },
+    {
+      "name": "trace-5817b3732098585e62cb4574f4b04b4b",
+      "path": "/traces/5817b3732098585e62cb4574f4b04b4b",
+      "status": 200
+    },
+    {
+      "name": "trace-1874e4eb74a94736f24925d1d4d29d74",
+      "path": "/traces/1874e4eb74a94736f24925d1d4d29d74",
+      "status": 200
+    },
+    {
+      "name": "trace-0e71700e5061116b6f2c71a415f4315d",
+      "path": "/traces/0e71700e5061116b6f2c71a415f4315d",
+      "status": 200
+    },
+    {
+      "name": "trace-d9261e8a5c0c2529659646ce83a31882",
+      "path": "/traces/d9261e8a5c0c2529659646ce83a31882",
+      "status": 200
+    },
+    {
+      "name": "trace-86006fff1eb7f22424d4795d51172b57",
+      "path": "/traces/86006fff1eb7f22424d4795d51172b57",
+      "status": 200
+    },
+    {
+      "name": "trace-3b6da9093ed69f3940567184a3e14870",
+      "path": "/traces/3b6da9093ed69f3940567184a3e14870",
+      "status": 200
+    },
+    {
+      "name": "trace-8bb26040b593e56dddee48115570a60f",
+      "path": "/traces/8bb26040b593e56dddee48115570a60f",
+      "status": 200
+    },
+    {
+      "name": "trace-74ff034b2d628f82f628d76bc39c9e22",
+      "path": "/traces/74ff034b2d628f82f628d76bc39c9e22",
+      "status": 200
+    },
+    {
+      "name": "trace-e9594d6f882dfbe75ebf6251e05a02e3",
+      "path": "/traces/e9594d6f882dfbe75ebf6251e05a02e3",
+      "status": 200
+    },
+    {
+      "name": "trace-53dc8349814ed446782bc6995b211240",
+      "path": "/traces/53dc8349814ed446782bc6995b211240",
+      "status": 200
+    },
+    {
+      "name": "trace-d4038e18f701e84c075b779f5c50f61f",
+      "path": "/traces/d4038e18f701e84c075b779f5c50f61f",
+      "status": 200
+    },
+    {
+      "name": "trace-4e09445e327b59d32b5fbc58d3cf4ba1",
+      "path": "/traces/4e09445e327b59d32b5fbc58d3cf4ba1",
+      "status": 200
+    },
+    {
+      "name": "trace-588c1ee1f8d44b5599f8f8334ef3c022",
+      "path": "/traces/588c1ee1f8d44b5599f8f8334ef3c022",
+      "status": 200
+    },
+    {
+      "name": "trace-7f5106505063fb2f00288c77ccc8edac",
+      "path": "/traces/7f5106505063fb2f00288c77ccc8edac",
+      "status": 200
+    },
+    {
+      "name": "trace-1bf24a95cc6c84593ba15adc2f610409",
+      "path": "/traces/1bf24a95cc6c84593ba15adc2f610409",
+      "status": 200
+    },
+    {
+      "name": "trace-31bf33824ad7c197d661d4e2f9becc41",
+      "path": "/traces/31bf33824ad7c197d661d4e2f9becc41",
+      "status": 200
+    },
+    {
+      "name": "trace-ef7416c36d556b9e5eeac1a4582d6789",
+      "path": "/traces/ef7416c36d556b9e5eeac1a4582d6789",
+      "status": 200
+    },
+    {
+      "name": "trace-95a0cb77b315feacf028db49c00c249a",
+      "path": "/traces/95a0cb77b315feacf028db49c00c249a",
+      "status": 200
+    },
+    {
+      "name": "trace-a2ff2afdb87f6c97c1e23a9ce0bd0c90",
+      "path": "/traces/a2ff2afdb87f6c97c1e23a9ce0bd0c90",
+      "status": 200
+    },
+    {
+      "name": "trace-ed291458b9f31b68da2284de013fc804",
+      "path": "/traces/ed291458b9f31b68da2284de013fc804",
+      "status": 200
+    },
+    {
+      "name": "trace-2544195d6deeb95d9c22b5bfa1818bf9",
+      "path": "/traces/2544195d6deeb95d9c22b5bfa1818bf9",
+      "status": 200
+    },
+    {
+      "name": "trace-141bbeebae654055c71ae2682a6fb534",
+      "path": "/traces/141bbeebae654055c71ae2682a6fb534",
+      "status": 200
+    },
+    {
+      "name": "trace-207aefeada7ce660c7037456ad57196a",
+      "path": "/traces/207aefeada7ce660c7037456ad57196a",
+      "status": 200
+    },
+    {
+      "name": "trace-76c52d356d352af1f1e2b85342febd7f",
+      "path": "/traces/76c52d356d352af1f1e2b85342febd7f",
+      "status": 200
+    },
+    {
+      "name": "trace-d560bb996b320f23a9586749aa4e3a5d",
+      "path": "/traces/d560bb996b320f23a9586749aa4e3a5d",
+      "status": 200
+    },
+    {
+      "name": "trace-a4e04ec2e77da57cab56de2411bcfb34",
+      "path": "/traces/a4e04ec2e77da57cab56de2411bcfb34",
+      "status": 200
+    },
+    {
+      "name": "trace-c47a285459cce25b6f2e2722e796404c",
+      "path": "/traces/c47a285459cce25b6f2e2722e796404c",
+      "status": 200
+    },
+    {
+      "name": "trace-1765b128416bf2e2487e07c7992135de",
+      "path": "/traces/1765b128416bf2e2487e07c7992135de",
+      "status": 200
+    },
+    {
+      "name": "trace-d821d45ffc4bc1870e1db18e1d9dc8c0",
+      "path": "/traces/d821d45ffc4bc1870e1db18e1d9dc8c0",
+      "status": 200
+    },
+    {
+      "name": "trace-9e659a8f93e2a1215c96149da3398801",
+      "path": "/traces/9e659a8f93e2a1215c96149da3398801",
+      "status": 200
+    },
+    {
+      "name": "trace-80397f766efe0caf3e7dd962393f10f4",
+      "path": "/traces/80397f766efe0caf3e7dd962393f10f4",
+      "status": 200
+    },
+    {
+      "name": "trace-3a671160d51dfd74b3a381b99717254a",
+      "path": "/traces/3a671160d51dfd74b3a381b99717254a",
+      "status": 200
+    },
+    {
+      "name": "trace-9c359d88ab5c9ddb45e49790ea5487c9",
+      "path": "/traces/9c359d88ab5c9ddb45e49790ea5487c9",
+      "status": 200
+    },
+    {
+      "name": "trace-54997fc2ddb33dd930502eaf692a6c65",
+      "path": "/traces/54997fc2ddb33dd930502eaf692a6c65",
+      "status": 200
+    },
+    {
+      "name": "trace-113547af6fdaa08824aae6e8673ed889",
+      "path": "/traces/113547af6fdaa08824aae6e8673ed889",
+      "status": 200
+    }
+  ]
+}

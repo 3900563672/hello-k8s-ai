@@ -24,6 +24,7 @@ bash setup.sh                                    # 完整开发栈部署（Kind 
 7. 脚本类改动（`.sh`/`.ps1`/`.mjs`）与 Agent 文档改动必须过静态检查：`make lint-sh`（shellcheck）、`make lint-ps1`（PSScriptAnalyzer）、`make lint-md`（markdownlint）——已并入 `make lint` / `make verify` 与 CI。
 8. 开工与长跑前先 `make doctor` 环境自检（磁盘 / Docker / WSL 回环 / 端口 / 内存 / tmpfs / dmesg），FAIL 项修复后再继续。
 9. 一切皆异步：预计超过 ~30s 的等待必须并行推进其他有用工作（先查证预期时长，再查历史/沉淀/维护 issue），禁止空转死等；长等待一律后台化并汇报“等什么/预计多久/期间在做什么”。
+10. 默认不截图：页面/UI 效果由用户自己在浏览器查看（把本地服务地址告诉用户即可），禁止为验证 UI 主动截图；截图仅在用户明确要求、或必须视觉确认（文档/绘图/设计产物）时使用。前端验证用 `npm run check` + DOM 断言/控制台错误检查完成。
 
 ### 先问（Ask）
 
