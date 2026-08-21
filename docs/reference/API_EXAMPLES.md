@@ -267,6 +267,9 @@ curl -sS "$API/aiops/analyses?segmentId=<segmentId>"
 ```bash
 # 模板目录（只读；LLM 只能选目录内 id；model/node/tenant 各 10 条预置模板与集群 CR 同名）
 curl -sS "$API/aiops/templates"
+
+# 意图执行硬限制（峰值 QPS / 倍速 / 波形 / 潮汐周期；解析校验与前端提示共用）
+curl -sS "$API/aiops/limits"
 # 一句话 → 解析（落库 parsed，返回 commandId）
 curl -sS -X POST "$API/aiops/commands" -H 'Content-Type: application/json'   -d '{"rawInput":"美国时间 9 点开始，持续 2 小时，突发流量高峰"}'
 # 确认执行：gate 校验 → 写流量/调倍速 → 创建并启动实验 → done

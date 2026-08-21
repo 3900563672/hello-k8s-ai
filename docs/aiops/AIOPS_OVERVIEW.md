@@ -28,6 +28,10 @@ AIOps 是 Dashboard 上的可选智能分析层：用 LLM + 硬指标规则把�
 
 模板目录（`GET /aiops/templates`）预置 model/node/tenant 各 10 条，模板 id 与集群 Model/Tenant/WorkerNode CR 名一一对应（`preset-model-001..010` 等）；集群侧由 `hack/aiops-templates-seed.sh` 幂等预置（含 ModelNodePolicy/TenantNodePolicy/TenantModelPolicy 关系策略），租户 `qps` 预置 0（空环境，无预置流量）。gate 的节点校验同时接受真实 Node 与 WorkerNode CR，AI 可直接选中任一预置节点模板。
 
+流量形状与上限：`traffic` 支持 `steady`（固定 qps）/ `tidal`（潮汐）/ `spike`（脉冲）/ `ramp`（斜坡），波形用 `shape`+`peakQps`（+`periodMinutes` 潮汐周期，默认 30 分钟）；单命令峰值 QPS 上限 200、倍速上限 100（解析校验拒绝超限，防 AI 把流量设得离谱打爆环境）。非平稳波形由执行端调度器按模拟时间推进（墙钟 = 模拟时长/倍速），到点自动把租户 QPS 归零，不留残留流量。
+
+限制可见性：`GET /aiops/limits` 返回上述全部硬限制（单一事实源），确认面板「可执行范围」提示条直接展示（峰值 QPS ≤ 200 / 倍速 1-100 / 波形 / 潮汐周期），任何约束都不会让用户凭空猜测。流量目录含小时级模板（`preset-traffic-tidal-2h`：2 小时潮汐，峰值 50 QPS，30 分钟周期），Traffic 模板库预览图同步支持小时级时间轴。
+
 ## 4. 对话浮窗与异步
 
 - 浮窗在 `MainLayout` 全局挂载；设置视图配置 API Key/模型/地址并开启运行时开关，设置接口只回显掩码状态。

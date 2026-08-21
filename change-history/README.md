@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-21 | AIOps 流量形状与上限：潮汐/脉冲/斜坡波形 + 峰值/倍速防打爆 | P1 | [查看记录](2026-08-21-aiops-traffic-shape/README.md) |
 | 2026-08-21 | AIOps 模板预置：10 模型 + 10 租户 + 10 节点（空环境待命） | P1 | [查看记录](2026-08-21-aiops-template-seed/README.md) |
 | 2026-08-21 | 环境一键自愈 make env-up（重启后一条命令恢复联调） | P1 | [查看记录](2026-08-21-env-up/README.md) |
 | 2026-08-21 | E2E 双触发并行 flake 修复：push 限 main + go test 超时放宽 | P1 | [查看记录](2026-08-21-e2e-trigger-fix/README.md) |

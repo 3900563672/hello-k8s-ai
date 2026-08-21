@@ -249,4 +249,23 @@ export const PRESET_TRAFFIC_TEMPLATES: TrafficTemplate[] = [
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
     },
+    {
+        id: 'preset-traffic-tidal-2h',
+        name: '2 小时潮汐',
+        description: '2 小时潮汐：峰值 50 QPS，30 分钟周期正弦涨落',
+        shapeType: 'custom',
+        controlPoints: [
+            { x: 0, y: 30 },
+            { x: 900, y: 30 },
+            { x: 1800, y: 30 },
+            { x: 2700, y: 30 },
+            { x: 3600, y: 30 },
+            { x: 4500, y: 30 },
+            { x: 5400, y: 30 },
+            { x: 6300, y: 30 },
+            { x: 7200, y: 30 },
+        ],
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+    },
 ]

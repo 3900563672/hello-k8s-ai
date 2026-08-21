@@ -9,6 +9,7 @@ import type {
     AIOpsCommandEnvelope,
     AIOpsJobStatus,
     AIOpsJobsEnvelope,
+    AIOpsLimits,
     AIOpsSettingsEnvelope,
     AIOpsWindowLevel,
     AIOpsWindowsEnvelope,
@@ -39,6 +40,11 @@ export function fetchAIOpsAnalysisBySegment(segmentId: string): Promise<AIOpsAna
 /** 只读模板目录（LLM 与前端确认共用）。 */
 export function fetchAIOpsTemplates(): Promise<unknown> {
     return apiRequest('/aiops/templates')
+}
+
+/** 意图执行硬限制（峰值 QPS/倍速/波形），确认面板提示条展示。 */
+export function fetchAIOpsLimits(): Promise<{ data: AIOpsLimits }> {
+    return apiRequest<{ data: AIOpsLimits }>('/aiops/limits')
 }
 
 /** 一句话意图：解析并落库 parsed，返回命令（含 commandId 与解析结果）。 */

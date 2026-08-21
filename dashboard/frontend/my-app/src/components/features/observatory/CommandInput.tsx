@@ -8,6 +8,7 @@ import {
     XCircle,
 } from 'lucide-react'
 import {
+    useAIOpsLimits,
     useConfirmAIOpsCommand,
     useCreateAIOpsCommand,
 } from '@/api/queries/aiopsQueries'
@@ -27,7 +28,7 @@ interface ParsedIntent {
         orchestratorIds?: string[]
         trafficIds?: string[]
     }
-    traffic?: { qps?: number }
+    traffic?: { qps?: number; shape?: string; peakQps?: number; periodMinutes?: number }
     rate?: number
 }
 
@@ -75,6 +76,7 @@ export function CommandInput() {
     const [error, setError] = useState<string | null>(null)
     const parseMutation = useCreateAIOpsCommand()
     const confirmMutation = useConfirmAIOpsCommand()
+    const limitsQuery = useAIOpsLimits()
 
     const intent = command ? (command.parsed as ParsedIntent | null) : null
     const statusMeta = command ? STATUS_META[command.status] : null
@@ -115,6 +117,17 @@ export function CommandInput() {
                 )}
             </h3>
 
+            {limitsQuery.data && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-white/[0.05] bg-white/[0.02] px-3 py-1.5 text-[11px] text-[#8B98AB]">
+                    <span className="text-[#5A6778]">可执行范围：</span>
+                    <span>峰值 QPS ≤ {limitsQuery.data.data.maxTrafficQPS}</span>
+                    <span>倍速 1-{limitsQuery.data.data.maxSimulationRate}</span>
+                    <span>波形 {limitsQuery.data.data.trafficShapes.map((shape) => (
+                        shape === 'tidal' ? '潮汐' : shape === 'spike' ? '脉冲' : shape === 'ramp' ? '斜坡' : '平稳'
+                    )).join(' / ')}</span>
+                    <span>潮汐周期默认 {limitsQuery.data.data.defaultTidalPeriodMinutes} 分钟</span>
+                </div>
+            )}
             <div className="mt-3 flex items-center gap-2">
                 <input
                     value={rawInput}
@@ -122,7 +135,7 @@ export function CommandInput() {
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && !parseMutation.isPending) handleParse()
                     }}
-                    placeholder="例如：美国时间 9 点开始，持续 2 小时，突发流量高峰"
+                    placeholder="例如：给 preset-tenant-001 模拟 2 小时潮汐流量，峰值 50 QPS，倍速 20"
                     className="h-9 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-[12px] text-[#C6D0DE] outline-none placeholder:text-[#4C5868] focus:border-[#5B8CFF]/50"
                 />
                 <button
@@ -173,6 +186,14 @@ export function CommandInput() {
                         {intent.traffic?.qps != null && (
                             <span>
                                 <span className="text-[#5A6778]">流量：</span>{intent.traffic.qps} QPS
+                            </span>
+                        )}
+                        {intent.traffic?.peakQps != null && (
+                            <span>
+                                <span className="text-[#5A6778]">流量：</span>
+                                峰值 {intent.traffic.peakQps} QPS（
+                                {intent.traffic.shape === 'tidal' ? '潮汐' : intent.traffic.shape === 'spike' ? '脉冲' : intent.traffic.shape === 'ramp' ? '斜坡' : '波形'}
+                                {intent.traffic.periodMinutes ? `，周期 ${intent.traffic.periodMinutes} 分钟` : ''}）
                             </span>
                         )}
                         {intent.rate != null && (

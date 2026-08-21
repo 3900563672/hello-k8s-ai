@@ -68,6 +68,16 @@ export interface AIOpsAnalysisDetail {
     entities: AIOpsEntitySummary[]
 }
 
+/** AIOps 意图执行硬限制（GET /aiops/limits，解析校验与前端提示共用同一事实源）。 */
+export interface AIOpsLimits {
+    maxTrafficQPS: number
+    maxSimulationRate: number
+    trafficShapes: string[]
+    defaultTidalPeriodMinutes: number
+    defaultPeakQPS: number
+    trafficRequiresTenant: boolean
+}
+
 /** 气泡 Agent 分级（ClusterBubbleField 外圈着色；后端 AI 结论接入前不渲染）。 */
 export type AgentGrade = 'normal' | 'odd' | 'problematic'
 

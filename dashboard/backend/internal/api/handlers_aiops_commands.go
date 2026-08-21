@@ -31,6 +31,11 @@ type createAIOpsCommandRequest struct {
 }
 
 // handleListAIOpsTemplates 返回只读模板目录（LLM 与前端确认共用，防止编造 id）。
+// handleGetAIOpsLimits 返回意图执行的硬限制（前端提示条展示，单一事实源）。
+func (server *Server) handleGetAIOpsLimits(writer http.ResponseWriter, request *http.Request) {
+	writeData(writer, request, http.StatusOK, aiops.Limits(), false, nil, nil)
+}
+
 func (server *Server) handleListAIOpsTemplates(writer http.ResponseWriter, request *http.Request) {
 	if !server.requireAIOps(writer, request) {
 		return
@@ -216,6 +221,21 @@ func (server *Server) executeAIOpsCommand(ctx context.Context, commandID string,
 		}
 		record("set-rate", "done", fmt.Sprintf("rate=%d", *intent.Rate))
 	}
+	// 2.5 波形流量（潮汐/脉冲/斜坡）：倍速已生效后按模拟时间推进 QPS，墙钟结束归零
+	if intent.Traffic != nil && intent.Traffic.Shape != "" &&
+		intent.Traffic.Shape != string(aiops.TrafficShapeSteady) && intent.Traffic.PeakQPS != nil {
+		periodMinutes := aiops.DefaultTidalPeriod
+		if intent.Traffic.PeriodMinutes != nil && *intent.Traffic.PeriodMinutes > 0 {
+			periodMinutes = *intent.Traffic.PeriodMinutes
+		}
+		wallMinutes := 1
+		if intent.DurationMinutes > 0 && intent.Rate != nil && *intent.Rate > 0 {
+			wallMinutes = max(1, intent.DurationMinutes/(*intent.Rate))
+		}
+		server.startTrafficShape(context.Background(), commandID, intent.TargetTenant, intent)
+		record("traffic-shape", "done", fmt.Sprintf("%s peak=%d period=%dmin wall=%dmin",
+			intent.Traffic.Shape, *intent.Traffic.PeakQPS, periodMinutes, wallMinutes))
+	}
 	// 3. 创建实验（配置快照定格当前集群状态）
 	snapshot, err := json.Marshal(server.aggregator.CurrentSnapshot(time.Now().UTC()))
 	if err != nil {
@@ -251,6 +271,48 @@ func (server *Server) executeAIOpsCommand(ctx context.Context, commandID string,
 	}
 	record("start-experiment", "done", segmentRecord.SegmentID)
 	return server.store.UpdateAIOpsCommand(ctx, commandID, string(model.AIOpsCommandDone), mustJSON(steps), "")
+}
+
+// startTrafficShape 按模拟时间推进波形流量（倍速下墙钟 = 模拟时长/倍速）；
+// 使用独立 context（请求结束不中断），墙钟到点后把租户 QPS 归零，避免残留流量。
+func (server *Server) startTrafficShape(ctx context.Context, commandID, tenant string, intent *aiops.CommandIntent) {
+	rate := 1
+	if intent.Rate != nil && *intent.Rate > 0 {
+		rate = *intent.Rate
+	}
+	wallSeconds := 1
+	if intent.DurationMinutes > 0 {
+		wallSeconds = max(1, intent.DurationMinutes*60/rate)
+	}
+	periodMinutes := aiops.DefaultTidalPeriod
+	if intent.Traffic.PeriodMinutes != nil && *intent.Traffic.PeriodMinutes > 0 {
+		periodMinutes = *intent.Traffic.PeriodMinutes
+	}
+	shape := aiops.TrafficShape(intent.Traffic.Shape)
+	peak := *intent.Traffic.PeakQPS
+	server.logger.Info("AIOps traffic shape started",
+		"commandId", commandID, "tenant", tenant, "shape", string(shape),
+		"peakQps", peak, "periodMinutes", periodMinutes, "wallSeconds", wallSeconds)
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		elapsed := 0
+		for range ticker.C {
+			elapsed++
+			simMinutes := float64(elapsed) / 60 * float64(rate)
+			qps := aiops.TrafficShapeQPS(simMinutes, shape, peak, periodMinutes)
+			if _, err := server.gateway.SetTenantQPS(ctx, tenant, qps, "", false); err != nil {
+				server.logger.Warn("AIOps traffic shape write failed", "commandId", commandID, "error", err)
+			}
+			if elapsed >= wallSeconds {
+				if _, err := server.gateway.SetTenantQPS(ctx, tenant, 0, "", false); err != nil {
+					server.logger.Warn("AIOps traffic shape reset failed", "commandId", commandID, "error", err)
+				}
+				server.logger.Info("AIOps traffic shape finished, qps reset to 0", "commandId", commandID, "tenant", tenant)
+				return
+			}
+		}
+	}()
 }
 
 func (server *Server) failAIOpsCommand(ctx context.Context, commandID, summary string, cause error) {

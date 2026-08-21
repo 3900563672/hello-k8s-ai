@@ -56,6 +56,36 @@ func TestValidateCommandIntent(t *testing.T) {
 			Traffic:      &TrafficIntent{QPS: intPointer(50)},
 			Rate:         intPointer(4),
 		}, wantErr: false},
+		{name: "潮汐流量通过", intent: &CommandIntent{
+			TargetTenant: "preset-tenant-001",
+			Traffic:      &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(50), PeriodMinutes: intPointer(30)},
+			Rate:         intPointer(20),
+		}, wantErr: false},
+		{name: "固定 QPS 超上限拒绝", intent: &CommandIntent{
+			TargetTenant: "core",
+			Traffic:      &TrafficIntent{QPS: intPointer(MaxTrafficQPS + 1)},
+		}, wantErr: true},
+		{name: "峰值 QPS 超上限拒绝", intent: &CommandIntent{
+			TargetTenant: "core",
+			Traffic:      &TrafficIntent{Shape: string(TrafficShapeTidal), PeakQPS: intPointer(MaxTrafficQPS + 1)},
+		}, wantErr: true},
+		{name: "潮汐缺 peakQps 拒绝", intent: &CommandIntent{
+			TargetTenant: "core",
+			Traffic:      &TrafficIntent{Shape: string(TrafficShapeTidal)},
+		}, wantErr: true},
+		{name: "非法形状拒绝", intent: &CommandIntent{
+			TargetTenant: "core",
+			Traffic:      &TrafficIntent{Shape: "moon", PeakQPS: intPointer(20)},
+		}, wantErr: true},
+		{name: "写流量缺租户拒绝", intent: &CommandIntent{
+			Traffic: &TrafficIntent{QPS: intPointer(20)},
+		}, wantErr: true},
+		{name: "倍速超上限拒绝", intent: &CommandIntent{
+			Rate: intPointer(MaxSimulationRate + 1),
+		}, wantErr: true},
+		{name: "倍速为零拒绝", intent: &CommandIntent{
+			Rate: intPointer(0),
+		}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -106,4 +136,48 @@ func TestParseCommand(t *testing.T) {
 
 func intPointer(value int) *int {
 	return &value
+}
+
+func TestTrafficShapeQPS(t *testing.T) {
+	// 平稳：恒为峰值
+	if got := TrafficShapeQPS(10, TrafficShapeSteady, 50, 30); got != 50 {
+		t.Fatalf("steady qps = %d, want 50", got)
+	}
+	// 潮汐：值域在 [base, peak] 内，且周期 30 分钟整周期回到起点附近
+	peak := 60
+	base := peak / 5
+	for minute := 0.0; minute < 120; minute += 5 {
+		got := TrafficShapeQPS(minute, TrafficShapeTidal, peak, 30)
+		if got < base || got > peak {
+			t.Fatalf("tidal qps at %v = %d, out of range [%d, %d]", minute, got, base, peak)
+		}
+	}
+	start := TrafficShapeQPS(0, TrafficShapeTidal, peak, 30)
+	afterPeriod := TrafficShapeQPS(30, TrafficShapeTidal, peak, 30)
+	if start != afterPeriod {
+		t.Fatalf("tidal not periodic: t0=%d t30=%d", start, afterPeriod)
+	}
+	// 斜坡：单调不降，到达周期后维持峰值
+	prev := -1
+	for minute := 0.0; minute <= 30; minute += 5 {
+		got := TrafficShapeQPS(minute, TrafficShapeRamp, peak, 30)
+		if got < prev {
+			t.Fatalf("ramp decreased at %v: %d < %d", minute, got, prev)
+		}
+		prev = got
+	}
+	if got := TrafficShapeQPS(31, TrafficShapeRamp, peak, 30); got != peak {
+		t.Fatalf("ramp hold = %d, want %d", got, peak)
+	}
+	// 脉冲：前 80% 低水位，后 20% 峰值
+	if got := TrafficShapeQPS(10, TrafficShapeSpike, peak, 30); got != base {
+		t.Fatalf("spike low = %d, want %d", got, base)
+	}
+	if got := TrafficShapeQPS(25, TrafficShapeSpike, peak, 30); got != peak {
+		t.Fatalf("spike high = %d, want %d", got, peak)
+	}
+	// 非法峰值：返回 0
+	if got := TrafficShapeQPS(0, TrafficShapeTidal, 0, 30); got != 0 {
+		t.Fatalf("zero peak = %d, want 0", got)
+	}
 }

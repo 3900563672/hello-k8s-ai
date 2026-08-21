@@ -103,6 +103,7 @@ func (server *Server) Handler() http.Handler {
 		mux.HandleFunc("GET /api/v1/aiops/analyses", server.handleListAIOpsAnalyses)
 		mux.HandleFunc("GET /api/v1/aiops/analyses/{id}", server.handleGetAIOpsAnalysis)
 		mux.HandleFunc("GET /api/v1/aiops/templates", server.handleListAIOpsTemplates)
+		mux.HandleFunc("GET /api/v1/aiops/limits", server.handleGetAIOpsLimits)
 		mux.HandleFunc("POST /api/v1/aiops/commands", server.handleCreateAIOpsCommand)
 		mux.HandleFunc("GET /api/v1/aiops/commands/{id}", server.handleGetAIOpsCommand)
 		mux.HandleFunc("POST /api/v1/aiops/commands/{id}/confirm", server.handleConfirmAIOpsCommand)

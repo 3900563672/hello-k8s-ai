@@ -4,6 +4,7 @@ import {
     createAIOpsCommand,
     fetchAIOpsAlerts,
     fetchAIOpsJobs,
+    fetchAIOpsLimits,
     fetchAIOpsWindows,
 } from '@/api/endpoints/aiopsApi'
 import type { AIOpsWindowLevel } from '@/types/aiops.types'
@@ -19,6 +20,17 @@ export const aiopsQueryKeys = {
     analyses: (status?: AIOpsAnalysisStatus) =>
         [...aiopsQueryKeys.all, 'analyses', status ?? null] as const,
     detail: (segmentId: string) => [...aiopsQueryKeys.all, 'detail', segmentId] as const,
+    limits: ['aiops', 'limits'] as const,
+}
+
+/** 意图执行硬限制：确认面板提示条展示（失败静默，不影响起实验主流程）。 */
+export function useAIOpsLimits() {
+    return useQuery({
+        queryKey: aiopsQueryKeys.limits,
+        queryFn: () => fetchAIOpsLimits(),
+        staleTime: 5 * 60_000,
+        retry: 0,
+    })
 }
 
 /** 分析列表：15 秒轮询（状态机进行中时进度会推进）。 */
