@@ -35,6 +35,8 @@ type AIOpsAnalysis struct {
 	Scores     json.RawMessage `json:"scores,omitempty"`
 	Summary    json.RawMessage `json:"summary,omitempty"`
 	Error      string          `json:"error,omitempty"`
+	Attempts   int             `json:"attempts"`
+	Kind       string          `json:"kind"`
 	CreatedAt  time.Time       `json:"createdAt"`
 	UpdatedAt  time.Time       `json:"updatedAt"`
 }

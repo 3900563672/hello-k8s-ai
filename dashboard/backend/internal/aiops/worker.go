@@ -147,12 +147,24 @@ func (service *Service) processJob(ctx context.Context, job model.AIOpsJob) {
 	processErr := service.processAnalysis(ctx, analysis)
 	finishContext, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	status, errorText := "done", ""
-	if processErr != nil {
-		status, errorText = "failed", processErr.Error()
-		service.logger.Error("AIOps analysis failed", "jobId", job.JobID, "segmentId", job.SegmentID, "error", processErr)
+	if processErr == nil {
+		if completeErr := service.database.CompleteAIOpsJob(finishContext, job.JobID, "done", ""); completeErr != nil {
+			service.logger.Error("AIOps complete job failed", "jobId", job.JobID, "error", completeErr)
+		}
+		return
 	}
-	if completeErr := service.database.CompleteAIOpsJob(finishContext, job.JobID, status, errorText); completeErr != nil {
+	service.logger.Error("AIOps analysis failed", "jobId", job.JobID, "segmentId", job.SegmentID, "error", processErr)
+	// 重试语义（#110 阶段一）：attempts 未达上限回 pending 下轮重试，达上限 failed。
+	maxAttempts := job.MaxAttempts
+	if maxAttempts < 1 {
+		maxAttempts = service.config.MaxAttemptsPerAnalysis
+	}
+	retried, failErr := service.database.FailOrRetryAIOpsAnalysis(finishContext, job.JobID, processErr.Error(), maxAttempts)
+	status := "failed"
+	if failErr == nil && retried {
+		status = "pending"
+	}
+	if completeErr := service.database.CompleteAIOpsJob(finishContext, job.JobID, status, processErr.Error()); completeErr != nil {
 		service.logger.Error("AIOps complete job failed", "jobId", job.JobID, "error", completeErr)
 	}
 }

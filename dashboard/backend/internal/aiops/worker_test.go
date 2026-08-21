@@ -125,6 +125,7 @@ func (store *fakeStore) ClaimAIOpsAnalysis(_ context.Context, analysisID string)
 				return false, nil
 			}
 			analysis.Status = string(model.AIOpsRunning)
+			analysis.Attempts++
 			analysis.UpdatedAt = time.Now().UTC()
 			store.analyses[segmentID] = analysis
 			return true, nil
@@ -171,6 +172,25 @@ func (store *fakeStore) CompleteAIOpsAnalysis(_ context.Context, analysisID stri
 		}
 	}
 	return errors.New("analysis not found")
+}
+
+func (store *fakeStore) FailOrRetryAIOpsAnalysis(_ context.Context, analysisID, errorText string, maxAttempts int) (bool, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	for segmentID, analysis := range store.analyses {
+		if analysis.AnalysisID == analysisID {
+			analysis.Error = errorText
+			analysis.UpdatedAt = time.Now().UTC()
+			if analysis.Attempts >= maxAttempts {
+				analysis.Status = string(model.AIOpsFailed)
+			} else {
+				analysis.Status = string(model.AIOpsPending)
+			}
+			store.analyses[segmentID] = analysis
+			return analysis.Status == string(model.AIOpsPending), nil
+		}
+	}
+	return false, errors.New("analysis not found")
 }
 
 func (store *fakeStore) FailAIOpsAnalysis(_ context.Context, analysisID, errorText string) error {
@@ -608,7 +628,9 @@ func TestPollProcessesJob(t *testing.T) {
 	}
 }
 
-// TestJobFailedRecordsError 验证处理失败时任务回写 failed + last_error，attempts 递增。
+// TestJobFailedRecordsError 验证处理失败时任务回写 last_error，attempts 递增并重试到上限（#110 阶段一）。
+// 一次 poll 最多消耗一批（analysisBatchSize=8）：同一 job 失败后回 pending 继续被认领，
+// 直到 attempts 达上限（job.MaxAttempts=3）转 failed。
 func TestJobFailedRecordsError(t *testing.T) {
 	database := newFakeStore(segmentWithSnapshots())
 	llm := newFakeLLM(nil, []error{errors.New("down"), errors.New("down")})
@@ -623,12 +645,12 @@ func TestJobFailedRecordsError(t *testing.T) {
 
 	jobs, _ := database.ListAIOpsJobs(context.Background(), 10, "")
 	if len(jobs) != 1 || jobs[0].Status != "failed" {
-		t.Fatalf("job = %+v, want failed", jobs)
+		t.Fatalf("job = %+v, want failed after retries", jobs)
 	}
 	if jobs[0].LastError == "" {
 		t.Fatalf("last_error empty, want reason")
 	}
-	if jobs[0].Attempts != 1 {
-		t.Fatalf("attempts = %d, want 1", jobs[0].Attempts)
+	if jobs[0].Attempts != 3 {
+		t.Fatalf("attempts = %d, want 3 (max attempts)", jobs[0].Attempts)
 	}
 }

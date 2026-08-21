@@ -131,6 +131,7 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | --- | --- | --- |
 | GET | `/aiops/analyses` | 分析列表；`status=pending|running|aggregating|completed|failed`、`limit` 1..200。 |
 | GET | `/aiops/analyses/{id}` | 单条分析（主记录 + L1 实体总结）；`?segmentId=` 按切面查询。 |
+| GET | `/aiops/jobs` | 任务队列语义别名（同 `/aiops/analyses`，含 `attempts`/`kind`）。 |
 
 `AIOPS_ENABLED=false`（默认）时返回 404 `AI_OPS_DISABLED`；持久化存储不可用返回 503。分析由实验 complete/fail 自动入队，状态机与进度见 Backend 架构第 13 节。
 

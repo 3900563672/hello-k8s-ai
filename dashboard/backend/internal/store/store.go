@@ -87,6 +87,7 @@ type Store interface {
 	UpdateAIOpsAnalysisProgress(context.Context, string, string, int, int, string) error
 	CompleteAIOpsAnalysis(context.Context, string, json.RawMessage, json.RawMessage) error
 	FailAIOpsAnalysis(context.Context, string, string) error
+	FailOrRetryAIOpsAnalysis(context.Context, string, string, int) (bool, error)
 	GetAIOpsAnalysis(context.Context, string) (*model.AIOpsAnalysis, error)
 	GetAIOpsAnalysisBySegment(context.Context, string) (*model.AIOpsAnalysis, error)
 	ListAIOpsAnalyses(context.Context, int, string) ([]model.AIOpsAnalysis, error)
@@ -192,6 +193,9 @@ func (Disabled) CompleteAIOpsAnalysis(context.Context, string, json.RawMessage, 
 	return ErrUnavailable
 }
 func (Disabled) FailAIOpsAnalysis(context.Context, string, string) error { return ErrUnavailable }
+func (Disabled) FailOrRetryAIOpsAnalysis(context.Context, string, string, int) (bool, error) {
+	return false, ErrUnavailable
+}
 func (Disabled) GetAIOpsAnalysis(context.Context, string) (*model.AIOpsAnalysis, error) {
 	return nil, ErrUnavailable
 }

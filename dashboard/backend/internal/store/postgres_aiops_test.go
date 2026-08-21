@@ -82,6 +82,14 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 	if err != nil || !claimed {
 		t.Fatalf("claim analysis: claimed=%v err=%v", claimed, err)
 	}
+	// 认领后 attempts 计数为 1（重试语义：#110 阶段一）。
+	claimedRow, err := database.GetAIOpsAnalysis(ctx, first.AnalysisID)
+	if err != nil {
+		t.Fatalf("get analysis after claim: %v", err)
+	}
+	if claimedRow.Attempts != 1 {
+		t.Fatalf("attempts after first claim = %d, want 1", claimedRow.Attempts)
+	}
 	// 二次认领失败（已 running）。
 	claimed, err = database.ClaimAIOpsAnalysis(ctx, first.AnalysisID)
 	if err != nil || claimed {
@@ -112,6 +120,39 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 	}
 	if bySegment.Status != string(model.AIOpsCompleted) || bySegment.L1Done != 3 {
 		t.Fatalf("unexpected analysis: %+v", bySegment)
+	}
+
+	// 失败重试流转：attempts(1) < maxAttempts(2) → 回 pending；再认领后 attempts=2，
+	// 失败达上限 → failed 终态。
+	retried, err := database.FailOrRetryAIOpsAnalysis(ctx, first.AnalysisID, "boom once", 2)
+	if err != nil {
+		t.Fatalf("fail or retry: %v", err)
+	}
+	if !retried {
+		t.Fatalf("first failure should retry (attempts=1 < max=2)")
+	}
+	requeuedRow, err := database.GetAIOpsAnalysis(ctx, first.AnalysisID)
+	if err != nil {
+		t.Fatalf("get analysis after retry: %v", err)
+	}
+	if requeuedRow.Status != string(model.AIOpsPending) || requeuedRow.Error != "boom once" {
+		t.Fatalf("analysis should be pending with error kept: %+v", requeuedRow)
+	}
+	if claimed, err = database.ClaimAIOpsAnalysis(ctx, first.AnalysisID); err != nil || !claimed {
+		t.Fatalf("re-claim after retry: claimed=%v err=%v", claimed, err)
+	}
+	if retried, err = database.FailOrRetryAIOpsAnalysis(ctx, first.AnalysisID, "boom twice", 2); err != nil {
+		t.Fatalf("fail or retry second: %v", err)
+	}
+	if retried {
+		t.Fatalf("second failure should be final (attempts=2 >= max=2)")
+	}
+	failedRow, err := database.GetAIOpsAnalysis(ctx, first.AnalysisID)
+	if err != nil {
+		t.Fatalf("get analysis after final fail: %v", err)
+	}
+	if failedRow.Status != string(model.AIOpsFailed) || failedRow.Attempts != 2 || failedRow.Error != "boom twice" {
+		t.Fatalf("analysis should be failed with attempts=2: %+v", failedRow)
 	}
 	entities, err := database.ListAIOpsEntitySummaries(ctx, first.AnalysisID)
 	if err != nil {

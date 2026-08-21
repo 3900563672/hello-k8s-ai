@@ -101,6 +101,7 @@ func (server *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/experiments/{id}", server.handleExperimentDetail)
 	if server.aiops != nil {
 		mux.HandleFunc("GET /api/v1/aiops/analyses", server.handleListAIOpsAnalyses)
+		mux.HandleFunc("GET /api/v1/aiops/jobs", server.handleListAIOpsAnalyses)
 		mux.HandleFunc("GET /api/v1/aiops/analyses/{id}", server.handleGetAIOpsAnalysis)
 		mux.HandleFunc("GET /api/v1/aiops/templates", server.handleListAIOpsTemplates)
 		mux.HandleFunc("POST /api/v1/aiops/commands", server.handleCreateAIOpsCommand)

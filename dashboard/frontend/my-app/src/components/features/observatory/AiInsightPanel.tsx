@@ -159,6 +159,16 @@ function AnalysisCard({ analysis, selected, onSelect }: {
             <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[#5A6778]">
                 <Clock3 className="h-3 w-3" />
                 {formatTime(analysis.createdAt)}
+                {analysis.attempts != null && analysis.attempts > 0 && (
+                    <span className={cn(
+                        'rounded-full border px-1.5 py-px text-[10px]',
+                        analysis.status === 'failed'
+                            ? 'border-red-400/25 bg-red-400/[0.08] text-red-300'
+                            : 'border-amber-300/25 bg-amber-300/[0.08] text-amber-200',
+                    )}>
+                        已试 {analysis.attempts} 次
+                    </span>
+                )}
                 {analysis.l1Total > 0 && (
                     <span className="ml-auto font-mono text-[#8C99AC]">
                         L1 {analysis.l1Done}/{analysis.l1Total}
@@ -299,9 +309,13 @@ export function AiInsightPanel() {
                         {selected.status === 'failed' && (
                             <div className="flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/[0.06] px-3 py-2">
                                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
-                                <p className="text-[12px] leading-5 text-red-200/90">
-                                    {selected.error || '分析失败，未产出总结与分数。'}
-                                </p>
+                                <div className="text-[12px] leading-5 text-red-200/90">
+                                    <p>
+                                        {selected.error || '分析失败，未产出总结与分数。'}
+                                        {selected.attempts != null && selected.attempts > 0 &&
+                                            `（已尝试 ${selected.attempts} 次）`}
+                                    </p>
+                                </div>
                             </div>
                         )}
 
