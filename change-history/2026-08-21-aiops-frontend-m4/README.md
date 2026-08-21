@@ -15,11 +15,12 @@
 4. 气泡 AI 分级：ObservatoryPage 取最新 completed 分析的 L1 实体总结，注入 overview 的 `agentVerdict` → ClusterBubbleField 外圈按 classification 着色（healthy→normal/suspect→odd/problem→problematic）。
 5. dev:mock：`plugins/mock-fixtures.ts` 增加 `/aiops/analyses`、`/aiops/analyses/{id}`、`/aiops/alerts` 路由；新增 `aiops-analyses.json`、`aiops-analysis-ana-20260821-0001.json`、`aiops-alerts.json`（meta.warnings 标注契约演示，实体名与 overview fixtures 对齐）。
 6. 顺带修复：ClusterBubbleField 两处既有依赖数组 bug（podAliasById 自引用依赖、podItemsById 缺 podAliasById 依赖），lint warning 归零。
+7. 增量（同批二提交）：AiInsightPanel 增加状态过滤（全部/排队/分析中/完成/失败，走后端 `?status=`）；新增 `WindowSummaryPanel`（L3 窗口/L4 日总结入口，契约先行）；`/aiops/windows` mock 路由与 `aiops-windows.json` fixture；mock 插件 `/aiops/analyses` 支持 `?status=` 过滤。
 
 ## 验证
 
 - `npm run check`（lint 0 warning + build + verify:state）全绿。
-- dev:mock 实测：`/api/v1/aiops/analyses`（3 条）、`?segmentId=`（completed + 6 实体）、`/aiops/alerts`（2 条）、`/overview` 均返回正确。
+- dev:mock 实测：`/api/v1/aiops/analyses`（3 条，`?status=` 过滤各返回对应子集）、`?segmentId=`（completed + 6 实体）、`/aiops/alerts`（2 条）、`/aiops/windows`（L3/L4 各 1 条）、`/overview` 均返回正确。
 - `make docs-sync` / `make docs-check` 通过；DATA_FLOW/FRONTEND_ARCHITECTURE/PAGE_STRUCTURE 同步（MAP 门禁）。
 
 ## 回滚

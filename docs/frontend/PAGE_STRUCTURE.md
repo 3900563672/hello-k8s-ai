@@ -122,6 +122,7 @@ Traffic 页面上的“应用 Overlay”会通过 `PATCH /tenants/{name}/traffic
 - `CommandInput`：一句话起实验入口（契约先行：后端 M2 未接入时为本地规则演示，明确标注 DEMO）。
 - `AiInsightPanel`：切面分析列表（状态机 + L1 进度）+ 详情（L2 四维分数/总分/理由 + L1 实体总结按分类着色）。
 - `AlertList`：警戒列表（M3 未启用时显示未接入空态；dev:mock 提供契约演示数据）。
+- `WindowSummaryPanel`：L3 窗口 / L4 日总结入口（M3 未启用时显示未接入空态；dev:mock 提供契约演示数据）。
 - 气泡 AI 分级：最新 completed 分析的 L1 实体总结注入 `agentVerdict`，气泡外圈按 classification 着色（healthy→normal / suspect→odd / problem→problematic）。
 
 ### 数据与 API

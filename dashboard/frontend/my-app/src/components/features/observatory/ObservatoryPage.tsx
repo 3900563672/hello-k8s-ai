@@ -19,6 +19,7 @@ import { AlertList } from '@/components/features/observatory/AlertList'
 import { ClusterBubbleField } from '@/components/features/observatory/ClusterBubbleField'
 import { CommandInput } from '@/components/features/observatory/CommandInput'
 import { TraceWaterfall } from '@/components/features/observatory/TraceWaterfall'
+import { WindowSummaryPanel } from '@/components/features/observatory/WindowSummaryPanel'
 import { MonitorWall } from '@/components/features/monitor/MonitorWall'
 import { SegmentPanel } from '@/components/features/trace/SegmentPanel'
 import { ExperimentPanel } from '@/components/features/trace/ExperimentPanel'
@@ -266,7 +267,10 @@ export function ObservatoryPage() {
                                 <CommandInput />
                                 <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
                                     <AiInsightPanel />
-                                    <AlertList />
+                                    <div className="space-y-3">
+                                        <AlertList />
+                                        <WindowSummaryPanel />
+                                    </div>
                                 </div>
                             </div>
                         </section>

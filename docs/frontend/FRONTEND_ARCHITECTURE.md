@@ -129,7 +129,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - `src/lib/mocks/fixtures/` 是真实 Backend 响应快照（只读），由 `scripts/record-fixtures.mjs` 遍历 GET 端点重录，不手工改内容。
 - `dev:mock`（vite `--mode mock`）由 `plugins/mock-fixtures.ts` 拦截 `/api/v1` GET 提供预览（写请求 405）；录制快照中的空资源数组用 `dev-fixtures/` 样例补齐，`meta.devSamples` 标注仅预览。
 - Trace detail 与 overview 快照录制窗口不一致时，dev:mock 用摘要合成单 span 兜底；生产链路不受影响。
-- AIOps 契约演示：`/aiops/analyses`、`/aiops/analyses/{id}?segmentId=`、`/aiops/alerts` 由 `aiops-*.json` fixtures 提供，meta.warnings 标注演示来源；真实后端就绪后删除 fixtures 即切真实链路。
+- AIOps 契约演示：`/aiops/analyses`（支持 `?status=` 过滤）、`/aiops/analyses/{id}?segmentId=`、`/aiops/alerts`、`/aiops/windows` 由 `aiops-*.json` fixtures 提供，meta.warnings 标注演示来源；真实后端就绪后删除 fixtures 即切真实链路。
 
 ## 10. 已知前端技术债
 

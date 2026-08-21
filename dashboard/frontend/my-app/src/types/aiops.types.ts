@@ -125,3 +125,4 @@ export interface AIOpsCommand {
 export type AIOpsAnalysesEnvelope = ApiEnvelope<AIOpsAnalysis[]>
 export type AIOpsAnalysisDetailEnvelope = ApiEnvelope<AIOpsAnalysisDetail>
 export type AIOpsAlertsEnvelope = ApiEnvelope<AIOpsAlert[]>
+export type AIOpsWindowsEnvelope = ApiEnvelope<AIOpsWindowSummary[]>

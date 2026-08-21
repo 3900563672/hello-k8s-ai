@@ -180,7 +180,8 @@ function AnalysisCard({ analysis, selected, onSelect }: {
 
 export function AiInsightPanel() {
     const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null)
-    const analysesQuery = useAIOpsAnalyses()
+    const [statusFilter, setStatusFilter] = useState<AIOpsAnalysisStatus | null>(null)
+    const analysesQuery = useAIOpsAnalyses(statusFilter ?? undefined)
     const detailQuery = useAIOpsAnalysisBySegment(selectedSegmentId)
 
     const analyses = analysesQuery.data?.data ?? []
@@ -208,8 +209,33 @@ export function AiInsightPanel() {
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div className="space-y-2">
-                <div className="flex items-center justify-between px-1">
+                <div className="flex items-center justify-between gap-2 px-1">
                     <span className="text-[11px] font-medium text-[#5A6778]">最近分析（15s 轮询）</span>
+                    <div className="flex items-center gap-1">
+                        {(
+                            [
+                                [null, '全部'],
+                                ['pending', '排队'],
+                                ['running', '分析中'],
+                                ['completed', '完成'],
+                                ['failed', '失败'],
+                            ] as Array<[AIOpsAnalysisStatus | null, string]>
+                        ).map(([value, label]) => (
+                            <button
+                                key={label}
+                                type="button"
+                                onClick={() => setStatusFilter(value)}
+                                className={cn(
+                                    'rounded-md px-1.5 py-0.5 text-[10px] transition-colors',
+                                    statusFilter === value
+                                        ? 'bg-[#5B8CFF]/20 text-[#9EB2FF]'
+                                        : 'text-[#5A6778] hover:text-[#8C99AC]',
+                                )}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                     {analysesQuery.isFetching && (
                         <Loader2 className="h-3 w-3 animate-spin text-[#5B8CFF]" />
                     )}
