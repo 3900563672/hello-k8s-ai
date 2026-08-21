@@ -18,9 +18,15 @@ hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度�
 | 全部读者 | 变更历史 [change-history/README.md](change-history/README.md)；最近 5 条见下方时间线 |
 | 想读完整技术阐述 | [技术白皮书](docs/whitepaper/COMPLETE_OVERVIEW.md)（含 [PDF 构建说明](docs/whitepaper/BUILD_PDF.md)） |
 
-想用 AI 协作开发，人类可先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。参与贡献见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+参与贡献见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 项目采用 [Apache-2.0](LICENSE) 许可证。
+
+## 🤖 AI 协作
+
+本项目深度使用 AI 协作开发——设计、编码、测试、文档与复盘均有 AI 参与，并沉淀了可复用的工程化体系（文档按读者分层、变更全归档、CI 强制同步、提示词协议化）。这不是需要隐藏的辅助，而是我的工程方法：**人负责决策与质量，AI 负责执行与探索**。
+
+想参与 AI 协作开发，先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)；更多 AI×Human 协作研究见 [我的主页](https://github.com/3900563672)。
 
 ## 最省事的部署方式
 
@@ -87,9 +93,9 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 
 - 2026-08-21 [WSL/Docker 僵尸进程锁 vhdx 识别 + 系统服务卡死处置边界（崩溃重启清场）](change-history/2026-08-21-wsl-zombie-lock-host-restart/README.md)
 - 2026-08-21 [WSL/Docker 安全重启 SOP + doctor 宿主残留检查（固化排查链路）](change-history/2026-08-21-wsl-docker-restart-sop/README.md)
+- 2026-08-21 [README 新增 AI×Human 协作立场声明（统一人设）](change-history/2026-08-21-readme-ai-collab-stance/README.md)
 - 2026-08-21 [沉淀「事故 vs bug」复盘——系统级故障先存档证据、后追源码路径](change-history/2026-08-21-incident-vs-bug-lesson/README.md)
 - 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](change-history/2026-08-21-frontend-redesign-merge/README.md)
-- 2026-08-21 [变更总览：环境一键自愈 make env-up（重启后一条命令恢复联调）](change-history/2026-08-21-env-up/README.md)
 
 <!-- docs-sync:timeline-end -->
 
