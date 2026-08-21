@@ -65,7 +65,7 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 | 4 | apply CRD、RBAC、Controller、可观测性 | 等待 CRD Established 和全部 rollout |
 | 5 | 创建/复用 PostgreSQL Secret，部署 Dashboard | PVC 存在但 Secret 丢失时拒绝猜密码 |
 | 6 | 写入动态演示配置 | 只使用非 control-plane Node |
-| 7 | 验证完整数据链路 | 任一硬门失败则生成诊断 |
+| 7 | 验证完整数据链路 | 任一硬门失败则生成诊断；无 SimulationClock CR 的干净环境跳过收敛检查 |
 | 8 | 启动端口转发 | 端口冲突只警告，不推翻已成功部署 |
 
 
