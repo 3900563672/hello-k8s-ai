@@ -7,23 +7,20 @@ import (
 )
 
 // handleGetAIOpsSettings 返回 LLM 配置掩码状态（#110 阶段四）：只含是否已配置 key / 模型 / 地址，不回显明文。
+// 不走 requireAIOps：面板开关关闭时仍需可读，否则用户无法重新打开。
 func (server *Server) handleGetAIOpsSettings(writer http.ResponseWriter, request *http.Request) {
-	if !server.requireAIOps(writer, request) {
-		return
-	}
 	writeData(writer, request, http.StatusOK, server.aiops.Settings(), false, nil, nil)
 }
 
 // handleUpdateAIOpsSettings 面板写入 LLM 配置：key 仅存服务端内存（重启后由环境变量恢复），
 // 响应只返回掩码状态；apiKey 允许为空（只更新模型/地址），但至少提供一个字段。
+// 不走 requireAIOps：开关关闭时面板必须仍能写 enabled=true 恢复，否则无法再启用。
 func (server *Server) handleUpdateAIOpsSettings(writer http.ResponseWriter, request *http.Request) {
-	if !server.requireAIOps(writer, request) {
-		return
-	}
 	var payload struct {
 		APIKey  string `json:"apiKey"`
 		Model   string `json:"model"`
 		BaseURL string `json:"baseUrl"`
+		Enabled *bool  `json:"enabled"`
 	}
 	request.Body = http.MaxBytesReader(writer, request.Body, 32<<10)
 	decoder := json.NewDecoder(request.Body)
@@ -36,9 +33,9 @@ func (server *Server) handleUpdateAIOpsSettings(writer http.ResponseWriter, requ
 	apiKey := strings.TrimSpace(payload.APIKey)
 	model := strings.TrimSpace(payload.Model)
 	baseURL := strings.TrimSpace(payload.BaseURL)
-	if apiKey == "" && model == "" && baseURL == "" {
+	if apiKey == "" && model == "" && baseURL == "" && payload.Enabled == nil {
 		writeProblem(writer, request, http.StatusBadRequest, "EMPTY_SETTINGS",
-			"至少提供一个字段（apiKey / model / baseUrl）。", false, nil)
+			"至少提供一个字段（apiKey / model / baseUrl / enabled）。", false, nil)
 		return
 	}
 	if len(apiKey) > 0 && len(apiKey) < 8 {
@@ -47,6 +44,9 @@ func (server *Server) handleUpdateAIOpsSettings(writer http.ResponseWriter, requ
 		return
 	}
 	server.aiops.ConfigureLLM(baseURL, apiKey, model)
-	server.logger.Info("AIOps LLM settings updated via panel", "model", model, "baseURLChanged", baseURL != "")
+	if payload.Enabled != nil {
+		server.aiops.SetEnabled(*payload.Enabled)
+	}
+	server.logger.Info("AIOps LLM settings updated via panel", "model", model, "baseURLChanged", baseURL != "", "enabledChanged", payload.Enabled != nil)
 	writeData(writer, request, http.StatusOK, server.aiops.Settings(), false, nil, nil)
 }

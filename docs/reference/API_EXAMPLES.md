@@ -300,9 +300,9 @@ curl -sS "$API/aiops/chat/messages?sessionId=demo-session&limit=50"
 # 读取掩码状态（key 只显示是否已配置）
 curl -sS "$API/aiops/settings"
 
-# 运行时写入：至少一项；apiKey ≥8 字符，留空保持不变
+# 运行时写入：至少一项；apiKey ≥8 字符，留空保持不变；enabled=false 关闭 AI 分析（不入队新分析）
 curl -sS -X POST "$API/aiops/settings" -H 'Content-Type: application/json' \
-  -d '{"model":"gpt-4o-mini","apiKey":"sk-..."}'
+  -d '{"model":"gpt-4o-mini","apiKey":"sk-...","enabled":true}'
 ```
 
 **异步任务（#110 阶段一，状态/重试/失败原因可见）：**

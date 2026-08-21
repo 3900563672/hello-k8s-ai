@@ -84,9 +84,9 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 
 - 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](change-history/2026-08-21-frontend-redesign-merge/README.md)
 - 2026-08-21 [变更总览：AIOps 提示词与上下文工程——Schema 契约、Token 预算、温度分层与对话持久化（#112 全阶段）](change-history/2026-08-21-aiops-prompt-engineering/README.md)
+- 2026-08-21 [变更总览：AIOps 运行时开关（面板启用/停用分析入队）](change-history/2026-08-21-aiops-panel-toggle/README.md)
 - 2026-08-21 [变更总览：AIOps M2 意图执行 + M3 时间聚合警戒（#94/#95）](change-history/2026-08-21-aiops-m2m3-intent-window/README.md)
 - 2026-08-21 [变更总览：AIOps 分层总结后端骨架（M0+M1，Fixes #93）](change-history/2026-08-21-aiops-l1l2-backend/README.md)
-- 2026-08-21 [变更总览：AIOps 前端 M4——AI 洞察分区与契约先行（#98 前端部分）](change-history/2026-08-21-aiops-frontend-m4/README.md)
 
 <!-- docs-sync:timeline-end -->
 
