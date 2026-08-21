@@ -1,10 +1,18 @@
 # 术语表
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 | 术语 | 定义 | 不等于 |
 | --- | --- | --- |
 | Actual/Server Time | Backend 的真实 UTC 墙钟 | 可加速仿真时间 |
+| AIOps | Dashboard 上的可选智能分析层：分层总结、意图执行、时间聚合警戒与对话浮窗 | 控制面功能 / 事实源 |
+| Analysis | 一次实验切面的 L1+L2 分析记录（`aiops_analyses`，pending→running→aggregating→completed/failed） | 实验 CR 本身 |
+| Agent Verdict | 最新 completed 分析的 L1 实体总结注入气泡的 `agentVerdict` 分级（healthy/suspect/problem） | LLM 原始文本 |
+| L1/L2/L3/L4 | 实体总结（Pod/Node/Tenant）→ 切面分数与理由 → 窗口认知 → 日总结 | 单次 LLM 调用 |
+| 意图命令 | 一句话解析出的可执行步骤（parsed → confirm → done/failed） | 已生效的集群变更 |
+| 警戒（Alert） | 分数序列规则触发的事件（连续低分/趋势下滑，`aiops_alerts`） | 单次 L2 分数 |
+| 分析任务（Job） | `aiops_jobs` 即分析队列：attempts 重试、stale 回收、前端轮询 | 分析状态机本身 |
+| 运行时开关 | 面板写入的 AIOps 启用态（仅服务端内存，重启恢复部署级 `AIOPS_ENABLED`） | 部署级环境变量 |
 | Aggregator | 把多资源/Provider 组合成页面 DTO | Controller 决策器 |
 | Allow/Deny | Policy effect；Deny 通常覆盖 Allow | Kubernetes RBAC allow/deny |
 | Available Replicas | Deployment 可用副本，被 Instance Controller写入 CR | Spec 期望副本 |

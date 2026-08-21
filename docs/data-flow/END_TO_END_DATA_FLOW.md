@@ -1,6 +1,6 @@
 # 端到端数据流
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 ## 1. 完整闭环
 
@@ -20,6 +20,10 @@ flowchart TB
   K --> BA["Backend Informer/Aggregation"]
   OBS --> BA
   BA --> DB2["PostgreSQL Snapshot/Events"]
+  BA --> AIO["AIOps 分析（实验 complete/fail 入队）"]
+  AIO --> LLM["外部 LLM（可选）"]
+  AIO --> DB3["PostgreSQL aiops_* 结论"]
+  AIO --> F3["AI 洞察 / 警戒 / 对话浮窗"]
   BA --> F2["Frontend Visualization"]
 ```
 
@@ -44,6 +48,10 @@ flowchart TB
 | 13 | Backend Aggregation | Configuration/Traffic/Overview、source freshness、partial warnings | Aggregator + providers | Frontend、Snapshotter | 将多源技术对象转换为页面读模型。 |
 | 14 | Database（读侧） | resource_events、完整 snapshots、trace index | Recorder/Snapshotter/Provider | historical APIs | 在不复制当前事实的前提下支持历史浏览。 |
 | 15 | Frontend Visualization | 表格、状态、指标曲线、事件、Span tree | React Query + UI | 人类 | 解释 desired/observed、收敛、故障和历史。 |
+| 16 | 实验完成事件 | complete/fail 切面 ID | Simulator/ExperimentPanel | AIOps worker（开关开启时） | 触发分析入队的边界。 |
+| 17 | AIOps 分析 | `aiops_analyses`（L1 实体总结 + L2 分数/理由）、`aiops_jobs` 队列 | AIOps worker + LLM（规则兜底） | Frontend 洞察区/浮窗、L3/L4 聚合 | 把切面行为压缩成结构化结论。 |
+| 18 | 窗口/日总结与警戒 | `aiops_windows` / `aiops_alerts` | aggregator + 分数规则 | 浮窗上下文、警戒列表 | 跨切面、跨时段的可操作认知。 |
+| 19 | AI 对话 | SSE 流式回答 + `aiops_chat_messages` 历史 | Backend chat + LLM | 用户（浮窗） | 自然语言查询结论与引用证据。 |
 
 ## 3. 配置操作例：创建 Tenant
 
@@ -143,6 +151,7 @@ Prometheus/Jaeger 不直接参与 Controller 决策；控制输入来自 CR Stat
 | Jaeger down | Controller 不受影响 | Trace warning | Trace 区域退化 |
 | DB required down | Controller 不受影响 | Backend not ready、commands unavailable | 禁止写入/显示错误 |
 | SSE 丢事件 | 无 | stream 非持久 | 30s poll/REST resync 修复 |
+| LLM down | 控制面不受影响 | 规则兜底完成分析、对话失败提示 | AI 洞察显示兜底或失败，主界面不受影响 |
 
 ## 9. 数据链路验收问题
 

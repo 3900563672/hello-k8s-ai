@@ -1,10 +1,10 @@
 # 数据聚合
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/readmodel/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/readmodel/
 
 ## 1. 聚合目标
 
-前端不应理解 11 个 CRD、OwnerReference、Pod label、PromQL 和 Jaeger raw span。Aggregator 将这些来源转换为页面读模型，同时保留来源、新鲜度和不完整性。
+前端不应理解 11 个 CRD、OwnerReference、Pod label、PromQL 和 Jaeger raw span。Aggregator 将这些来源转换为页面读模型，同时保留来源、新鲜度和不完整性。AIOps 分析层是这些读模型的消费方之一：它以切面数据 + 硬指标为输入产出辅助结论（见 [AIOPS_OVERVIEW](../aiops/AIOPS_OVERVIEW.md)），不反向影响聚合。
 
 ## 2. 当前态聚合
 

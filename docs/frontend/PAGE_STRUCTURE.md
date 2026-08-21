@@ -44,6 +44,12 @@
 
 Backend 数据经 Query/同步 hook 更新；跨页面选择存入 `controlPlaneSlice` 与 `timeSlice`。`simulationRunSupported=false` 时运行控制必须禁用，不能伪造成功。
 
+### AI 助手浮窗（AiChatWidget）
+
+- MainLayout 全局挂载右下角浮窗；设置视图配置 API Key/模型/地址并开启运行时开关（`GET/POST /api/v1/aiops/settings`，key 不回显）。
+- chat 视图：SSE 流式回答（lifecycle/tool/text 事件）、工具步骤可见、打开时经 `GET /api/v1/aiops/chat/messages` 回填会话历史；会话记录仅存 localStorage，不含密钥。
+- 未配置或未开启时展示空态引导，不阻塞主界面；AIOps 全部经 Backend，不直连 LLM。
+
 ## 3. Config 页面
 
 ### 目的

@@ -1,6 +1,6 @@
 # 文档总索引
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 > 文档按读者分层：人类（本索引）、本地 Agent（`docs/agents/`）、远程 AI（`docs/remote-ai/`，包内入口 `CONTEXT_PACK.md`）。本索引面向人类阅读路径；分层说明见 [docs/README.md](README.md)。
 
@@ -40,6 +40,15 @@
 - [数据库设计](backend/DATABASE_DESIGN.md)
 - [数据聚合](backend/DATA_AGGREGATION.md)
 - [安全与 RBAC](operations/SECURITY_AND_RBAC.md)
+
+### 修改 AIOps
+
+- [AIOps 总览](aiops/AIOPS_OVERVIEW.md) - 功能域地图、分层总结与边界。
+- [Backend API 设计](backend/API_DESIGN.md) - `/aiops/*` 路由与契约。
+- [Backend 架构](backend/BACKEND_ARCHITECTURE.md) - 第 13 节 AIOps 模块。
+- [数据库设计](backend/DATABASE_DESIGN.md) - `aiops_*` 表。
+- [Frontend 数据流](frontend/DATA_FLOW.md) - 分析异步链与 SSE 对话。
+- [页面结构](frontend/PAGE_STRUCTURE.md) - 洞察分区与对话浮窗。
 
 ### 修改 CRD、Controller 或 Simulator
 
@@ -82,6 +91,7 @@
 | backend | [API_DESIGN](backend/API_DESIGN.md) | 路由、契约、错误和权限是什么？ |
 | backend | [DATABASE_DESIGN](backend/DATABASE_DESIGN.md) | PostgreSQL 保存什么、不保存什么？ |
 | backend | [DATA_AGGREGATION](backend/DATA_AGGREGATION.md) | Kubernetes/Prometheus/Jaeger 如何组合？ |
+| aiops | [AIOPS_OVERVIEW](aiops/AIOPS_OVERVIEW.md) | AIOps 分析层如何工作、如何开关与配置？ |
 | kubernetes | [CRD_DESIGN](kubernetes/CRD_DESIGN.md) | 11 个 CRD 的字段与生命周期是什么？ |
 | kubernetes | [CONTROLLER_ARCHITECTURE](kubernetes/CONTROLLER_ARCHITECTURE.md) | 7 个 Reconciler 如何工作？ |
 | kubernetes | [RESOURCE_LIFECYCLE](kubernetes/RESOURCE_LIFECYCLE.md) | 资源从配置到回收如何变化？ |
@@ -108,7 +118,7 @@
 
 ## 文档状态说明
 
-- 本体系基于 2026-08-18 源码审计与 [MAP.yaml](MAP.yaml) 所有权映射；机械门禁（`make docs-check` / `make docs-sync-check`）在 PR 与 CI 强制拦截源码-文档漂移。
+- 本体系基于 2026-08-21 源码审计与 [MAP.yaml](MAP.yaml) 所有权映射（AIOps 功能域 2026-08-18 后并入）；机械门禁（`make docs-check` / `make docs-sync-check`）在 PR 与 CI 强制拦截源码-文档漂移。
 - 文档按读者分层维护：人类（本索引）、本地 Agent（[agents/](agents/README.md)）、远程 AI（[remote-ai/](remote-ai/README.md)）；三层互不串读，变更历史统一归档在 [change-history/](../change-history/README.md)（时间线见根 README 与 [status.md](status.md)）。
 - 所有专题已统一 front-matter（`维护层 | last-reviewed | 事实源`）；与当前实现冲突的旧描述已删除或迁移至 [journal/](journal/README.md)（流水账）与 [lessons/](lessons/README.md)（蒸馏规则）。
 - 专题文档内容以当前源码、生成清单和可执行测试为准；未在本机验证的运行结论一律标注“未验证”。完整验证入口见 [VERIFICATION.md](getting-started/VERIFICATION.md)。

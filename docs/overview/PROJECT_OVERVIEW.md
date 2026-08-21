@@ -1,6 +1,6 @@
 # 项目总览
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：docs/MAP.yaml、源码、change-history/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：docs/MAP.yaml、源码、change-history/
 
 ## 1. 一句话定义
 
@@ -32,6 +32,7 @@ hello-k8s-ai 用 Kubernetes 自定义资源描述多租户 AI 推理调度问题
 | Orchestrator | 一个 Tenant 的扩缩容策略和最近决策。 |
 | Simulator | 代表推理实例池，模拟到达、排队、服务时间和冷启动。 |
 | Dashboard | 人类入口；不拥有控制面的真实状态。 |
+| AIOps | Dashboard 上的可选智能分析层：LLM + 硬指标规则总结调度行为、辅助操作与问答。 |
 
 ## 4. 项目范围
 
@@ -43,6 +44,7 @@ hello-k8s-ai 用 Kubernetes 自定义资源描述多租户 AI 推理调度问题
 - 自动扩缩容、QPS 分配、性能聚合。
 - 通过 Kubernetes 配置动态调整 Simulator 离散事件时间倍速。
 - 当前态、离散历史快照、指标、Trace 和事件可视化。
+- 可选 AIOps 智能分析：一句话起实验、切面/窗口/日分层总结、分数警戒与对话浮窗（默认关闭，结论不反向驱动控制面）。
 - 复用 Docker Desktop 已有 Kubernetes 的本地完整栈。
 
 ### 当前范围外
@@ -51,6 +53,7 @@ hello-k8s-ai 用 Kubernetes 自定义资源描述多租户 AI 推理调度问题
 - 真实 GPU 发现与设备插件；WorkerNode GPU 是业务配置和 Pod 派生使用量。
 - 跨集群调度、全局流量入口、计费、配额结算。
 - 生产级 IAM、租户数据隔离和合规存储。
+- 由 LLM 自动执行集群变更（意图执行必须经用户确认，并复用既有写通道）。
 - 确定性事件溯源和逻辑时钟驱动的完整仿真。
 
 ## 5. 成功标准

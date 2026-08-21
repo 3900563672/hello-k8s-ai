@@ -69,9 +69,9 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 | 8 | 启动端口转发 | 端口冲突只警告，不推翻已成功部署 |
 
 
-### AIOps 可选配置（M0+M1，#93）
+### AIOps 可选配置（#93/#94/#95/#110/#112/#118）
 
-`AIOPS_ENABLED` 默认 false：不启动 worker、不注册路由、不触发入队。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。预算/轮询参数：`AIOPS_POLL_INTERVAL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_STALE_REQUEUE_INTERVAL`。M3 时间聚合（#95）可选参数：`AIOPS_WINDOW_INTERVAL`（默认 15m）、`AIOPS_WINDOW_GRANULARITY`（默认 2h）、`AIOPS_ALERT_THRESHOLD`（默认 40）、`AIOPS_ALERT_CONSECUTIVE`（默认 3）。关闭即完全停用，不影响其它功能。
+`AIOPS_ENABLED` 默认 false：不启动 worker、不触发分析入队；`/aiops/settings` 路由始终注册，保证面板能重新打开运行时开关。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。核心参数：`AIOPS_MODEL`、`AIOPS_OPENAI_BASE_URL`、`AIOPS_TIMEOUT`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_ATTEMPTS_PER_ANALYSIS`、`AIOPS_POLL_INTERVAL`、`AIOPS_STALE_REQUEUE_INTERVAL`；M3 时间聚合（#95）：`AIOPS_WINDOW_INTERVAL`（默认 15m）、`AIOPS_WINDOW_GRANULARITY`（默认 2h）、`AIOPS_ALERT_THRESHOLD`（默认 40）、`AIOPS_ALERT_CONSECUTIVE`（默认 3）；对话浮窗（#110）：`AIOPS_CHAT_MODELS`、`AIOPS_CHAT_MAX_MESSAGE_LEN`（默认 4000）、`AIOPS_CHAT_RATE_PER_MINUTE`（默认 6）。运行时开关由面板 `POST /aiops/settings` 控制（仅服务端内存，重启恢复部署级配置）。关闭即完全停用，不影响其它功能。完整参数见 [CONFIGURATION_REFERENCE](../reference/CONFIGURATION_REFERENCE.md) 第 11 节。
 
 ## 5. 工作负载与存储
 

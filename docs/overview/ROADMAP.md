@@ -21,6 +21,7 @@
 - Traffic Overlay 闭环：PATCH 写入控制面（`Tenant.spec.qps`）**已完成（2026-08-19，#89）**；Preview -> Confirm 前端交互与差异预览待确认是否完整。
 - 验证 Jaeger 2.20 部署是否持续提供 Backend 使用的 legacy Query API。
 - 为 Backend mutation 记录真实调用者身份，而不是只记录请求。
+- AIOps 生产化：LLM 供应商多活与密钥托管、成本/配额监控、多副本 worker 认领与负载验证、切面数据出域政策评估。
 
 ### P2 - 架构增强
 
@@ -64,6 +65,7 @@ flowchart TB
 - Policy、Orchestrator 管理界面。
 - Dashboard landing、资源详情、调度解释和故障行动建议。
 - 正式 OpenAPI/客户端生成和兼容版本策略。
+- AIOps 对话与意图执行的撤销/回滚，以及切面级原始证据引用。
 
 完成标准：无需 kubectl 即可完成受支持的配置和诊断，同时不会越过字段所有权。
 
