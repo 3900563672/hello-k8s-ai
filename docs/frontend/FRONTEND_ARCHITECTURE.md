@@ -114,7 +114,7 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - Orchestrator 配置含单次扩容步长 maxScaleUpBatch（0=默认 10），表单/表格/预置模板与 Guide 页同步展示。
 - 历史模式禁用写按钮，而不只依赖 Backend 拒绝。
 - 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
-- AIOps（`src/types/aiops.types.ts` + `src/api/endpoints/aiopsApi.ts`）与后端 `internal/model/aiops.go` 字段对齐：分析/实体/分数（M0/M1）、命令与模板目录（M2）、窗口/警戒（M3）全部走真实 API；`AiInsightPanel` 顶部嵌入 `CommandInput`（一句话 → 解析预览 → 确认执行，确认前无写操作）。
+- AIOps（`src/types/aiops.types.ts` + `src/api/endpoints/aiopsApi.ts`）与后端 `internal/model/aiops.go` 字段对齐：分析/实体/分数（M0/M1）、命令与模板目录（M2）、窗口/警戒（M3）全部走真实 API；`AiInsightPanel` 顶部嵌入 `CommandInput`（一句话 → 解析预览 → 确认执行，确认前无写操作）。任务卡片展示重试计数（`attempts`）与失败原因，可经 `/aiops/jobs` 语义查询（#110 阶段一）。
 
 ## 8. 设计系统原则
 
