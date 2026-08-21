@@ -83,10 +83,10 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
 - 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](change-history/2026-08-21-frontend-redesign-merge/README.md)
+- 2026-08-21 [变更总览：环境一键自愈 make env-up（重启后一条命令恢复联调）](change-history/2026-08-21-env-up/README.md)
 - 2026-08-21 [变更总览：E2E 双触发并行 flake 修复（push 限 main + go test 超时放宽）](change-history/2026-08-21-e2e-trigger-fix/README.md)
 - 2026-08-21 [变更总览：AIOps 提示词与上下文工程——Schema 契约、Token 预算、温度分层与对话持久化（#112 全阶段）](change-history/2026-08-21-aiops-prompt-engineering/README.md)
 - 2026-08-21 [变更总览：AIOps 运行时开关（面板启用/停用分析入队）](change-history/2026-08-21-aiops-panel-toggle/README.md)
-- 2026-08-21 [变更总览：AIOps M2 意图执行 + M3 时间聚合警戒（#94/#95）](change-history/2026-08-21-aiops-m2m3-intent-window/README.md)
 
 <!-- docs-sync:timeline-end -->
 

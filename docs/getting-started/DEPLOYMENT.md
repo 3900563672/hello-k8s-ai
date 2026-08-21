@@ -87,6 +87,8 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 
 PostgreSQL 密码不再写死在 Git。首次部署生成随机密码，后续复用 Kubernetes Secret。
 
+Docker Desktop / WSL 重启后，跑 make env-up（hack/dev-env-up.sh，#109）一键自愈并拉起完整联调环境：apiserver/PV tmpfs 自愈、port-forward 幂等重建、本地后端（密钥从集群 Secret 注入，不入库）与前端 vite（代理到本地后端）。幂等，可反复执行。
+
 ## 5.1 数据备份与恢复（Kind 底座）
 
 底座迁移（`#50`）配套提供备份/恢复脚本，操作对象是当前集群（默认 `kind-hello-k8s-ai-dev`，迁移期用 `KUBE_CONTEXT=docker-desktop`）：
