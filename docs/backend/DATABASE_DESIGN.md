@@ -81,7 +81,7 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 
 | 表 | 作用 |
 | --- | --- |
-| `aiops_analyses` | 切面分析主记录：状态机 + L1 进度 + `scores`/`summary` JSONB。 |
+| `aiops_analyses` | 切面分析主记录：状态机 + L1 进度 + `scores`/`summary` JSONB；`006_aiops_jobs.sql` 补 `attempts`（重试计数）与 `kind`（任务类型，当前默认 `segment`）。 |
 | `aiops_entity_summaries` | L1 实体总结（analysis_id + entity_kind/entity_name 唯一）。 |
 | `aiops_window_summaries` | L3/L4 时间聚合（M3 启用，level 字段区分）。 |
 | `aiops_alerts` | 持续低分警戒（M3 启用）。 |

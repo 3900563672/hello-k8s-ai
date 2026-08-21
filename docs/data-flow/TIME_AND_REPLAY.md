@@ -154,6 +154,6 @@ Frontend 在已有 Clock 尚未收敛时禁用第二次提交，防止用户连�
 
 ## 10. AIOps 异步分析链
 
-AIOps 分析（#93）在实验终态后异步执行，与时间域无关：不推进模拟时钟、不阻塞 replay；分析进度/分数只读 `aiops_analyses`。前端轮询展示，不做本地推断。
+AIOps 分析（#93）在实验终态后异步执行，与时间域无关：不推进模拟时钟、不阻塞 replay；分析进度/分数只读 `aiops_analyses`（失败按 `attempts` 上限重试，`/aiops/jobs` 可查任务列表）。前端轮询展示，不做本地推断。
 
 M3 时间聚合（#95）按墙钟窗口聚合 L2 结果（L3 窗口 / L4 日总结，`aiops_window_summaries`），窗口粒度可配置（`AIOPS_WINDOW_GRANULARITY`）；粒度变更后按新粒度重新切分（window_id 含窗口起点，天然幂等）。警戒对分数序列跑规则（连续低分/趋势下滑），不依赖逻辑时间。

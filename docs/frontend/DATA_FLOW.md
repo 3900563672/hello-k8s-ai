@@ -84,7 +84,7 @@ sequenceDiagram
 | Experiment 面板 | `/experiments[?status]`、`/experiments/{id}` | `POST /experiments`、`/experiments/{id}/start|complete|fail` | 列表 10s 轮询；详情创建/结束后失效重取 |
 | Metrics detail | `/metrics/query` | 无 | 查询窗口/step 决定缓存 |
 | Trace list/detail | `/traces`、`/traces/{id}` | 无 | latest 可刷新；detail 按 traceId 缓存 |
-| AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/analyses?segmentId=` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止 |
+| AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/jobs`、`/aiops/analyses?segmentId=` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止；任务卡片显示「已试 N 次」与失败原因 |
 | 警戒（AlertList） | `/aiops/alerts` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
 | 窗口总结（WindowSummaryPanel） | `/aiops/windows` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
