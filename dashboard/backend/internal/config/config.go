@@ -92,6 +92,9 @@ type AIOpsConfig struct {
 	MaxTokensPerCall     int
 	MaxCallsPerAnalysis  int
 	MaxEntitiesPerCall   int
+	ChatModels           []string
+	ChatMaxMessageLen    int
+	ChatRatePerMinute    int
 	PollInterval         time.Duration
 	StaleRequeueInterval time.Duration
 	WindowInterval       time.Duration
@@ -178,6 +181,9 @@ func Load() (Config, error) {
 			MaxTokensPerCall:     integer("AIOPS_MAX_TOKENS_PER_CALL", 2000),
 			MaxCallsPerAnalysis:  integer("AIOPS_MAX_CALLS_PER_ANALYSIS", 8),
 			MaxEntitiesPerCall:   integer("AIOPS_MAX_ENTITIES_PER_CALL", 20),
+			ChatModels:           csv("AIOPS_CHAT_MODELS", nil),
+			ChatMaxMessageLen:    integer("AIOPS_CHAT_MAX_MESSAGE_LEN", 4000),
+			ChatRatePerMinute:    integer("AIOPS_CHAT_RATE_PER_MINUTE", 6),
 			PollInterval:         duration("AIOPS_POLL_INTERVAL", 5*time.Second),
 			StaleRequeueInterval: duration("AIOPS_STALE_REQUEUE_INTERVAL", 10*time.Minute),
 			WindowInterval:       duration("AIOPS_WINDOW_INTERVAL", 15*time.Minute),
@@ -240,6 +246,12 @@ func (cfg Config) validate() error {
 		}
 		if cfg.AIOps.MaxCallsPerAnalysis < 1 || cfg.AIOps.MaxEntitiesPerCall < 1 {
 			failures = append(failures, errors.New("AIOPS_MAX_CALLS_PER_ANALYSIS and AIOPS_MAX_ENTITIES_PER_CALL must be positive"))
+		}
+		if cfg.AIOps.ChatMaxMessageLen < 100 {
+			failures = append(failures, errors.New("AIOPS_CHAT_MAX_MESSAGE_LEN must be at least 100"))
+		}
+		if cfg.AIOps.ChatRatePerMinute < 1 {
+			failures = append(failures, errors.New("AIOPS_CHAT_RATE_PER_MINUTE must be positive"))
 		}
 	}
 	return errors.Join(failures...)

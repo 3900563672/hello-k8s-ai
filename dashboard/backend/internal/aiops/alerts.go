@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops/prompts"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 )
 
@@ -27,11 +28,6 @@ type alertInterpretation struct {
 	Analysis   string `json:"analysis"`
 	Suggestion string `json:"suggestion"`
 }
-
-// alertSystemPrompt 警戒解读提示词。
-const alertSystemPrompt = `你是 Kubernetes 调度实验的警戒解读器。给定触发条件与相关切面分数，
-输出简短解读 JSON：{"summary":"不超过60字的一句话概括","analysis":"不超过100字的分析","suggestion":"不超过80字的建议"}
-只输出 JSON。`
 
 // evaluateAlerts 对最近分数序列跑规则；每个 tick 幂等执行。
 func (service *Service) evaluateAlerts(ctx context.Context) error {
@@ -148,14 +144,19 @@ func (service *Service) emitAlert(ctx context.Context, rule, severity, analysisI
 		Analysis:   buildSequenceSummary(sequence),
 		Suggestion: "建议检查对应切面的调度决策与流量配置。",
 	}
-	// LLM 生成解读；失败用规则文本兜底。
+	// LLM 生成解读；schema 校验失败重试一次，仍失败用规则文本兜底（#112）。
 	payload, err := json.Marshal(sequence)
 	if err == nil {
-		if content, callErr := service.llm.CompleteJSON(ctx, alertSystemPrompt, string(payload), service.config.MaxTokensPerCall); callErr == nil {
-			var parsed alertInterpretation
-			if parseErr := json.Unmarshal([]byte(content), &parsed); parseErr == nil && parsed.Summary != "" {
-				interpretation = parsed
-			}
+		parsed, _, ok, reason := callStructured(ctx, service, prompts.AlertInterpretation, string(payload),
+			func(content string) (alertInterpretation, error) {
+				var parsed alertInterpretation
+				err := json.Unmarshal([]byte(content), &parsed)
+				return parsed, err
+			}, validateAlertInterpretation)
+		if ok {
+			interpretation = parsed
+		} else {
+			service.logger.Warn("AIOps alert interpretation falling back to rules", "reason", reason)
 		}
 	}
 	alert := model.AIOpsAlert{

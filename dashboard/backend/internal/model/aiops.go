@@ -109,6 +109,37 @@ type AIOpsWindowSummary struct {
 	CreatedAt   time.Time       `json:"createdAt"`
 }
 
+// AIOpsAuditLog 是 aiops_audit_log 表的一行：同步对话/分析调用审计（#110 阶段四）。
+type AIOpsAuditLog struct {
+	AuditID          string    `json:"auditId"`
+	SessionID        string    `json:"sessionId"`
+	Kind             string    `json:"kind"`
+	Model            string    `json:"model"`
+	DurationMS       int64     `json:"durationMs"`
+	MessageLen       int       `json:"messageLen"`
+	PromptTokens     int       `json:"promptTokens"`
+	CompletionTokens int       `json:"completionTokens"`
+	Status           string    `json:"status"`
+	Error            string    `json:"error,omitempty"`
+	CreatedAt        time.Time `json:"createdAt"`
+}
+
+// AIOpsJob 是 aiops_jobs 表的一行：任务级状态（#110 阶段一，异步可见性）。
+// DB 即队列：worker 用 SKIP LOCKED 认领 pending，状态/重试/失败原因可直接 SQL 查询。
+type AIOpsJob struct {
+	JobID       string     `json:"jobId"`
+	SegmentID   string     `json:"segmentId"`
+	Kind        string     `json:"kind"`
+	Status      string     `json:"status"`
+	Attempts    int        `json:"attempts"`
+	MaxAttempts int        `json:"maxAttempts"`
+	LastError   string     `json:"lastError,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	StartedAt   *time.Time `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time `json:"finishedAt,omitempty"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+}
+
 // AIOpsAlert 是 aiops_alerts 表的一行：分数序列规则触发的警戒（不进 Prometheus）。
 type AIOpsAlert struct {
 	AlertID        string          `json:"alertId"`
@@ -118,4 +149,18 @@ type AIOpsAlert struct {
 	AnalysisID     *string         `json:"analysisId,omitempty"`
 	Interpretation json.RawMessage `json:"interpretation,omitempty"`
 	AckedAt        *time.Time      `json:"ackedAt,omitempty"`
+}
+
+// AIOpsChatMessage 是 aiops_chat_messages 表的一行：同步对话的问答对（#112 阶段 D）。
+// window_ids / alert_ids / command_ids 记录回答生成时注入的结论型上下文引用
+// （窗口总结 / 警戒 / 意图命令的 ID 数组），用于事后回溯「这条回答当时引用了什么」。
+type AIOpsChatMessage struct {
+	MessageID  string          `json:"messageId"`
+	SessionID  string          `json:"sessionId"`
+	Role       string          `json:"role"`
+	Content    string          `json:"content"`
+	WindowIDs  json.RawMessage `json:"windowIds,omitempty"`
+	AlertIDs   json.RawMessage `json:"alertIds,omitempty"`
+	CommandIDs json.RawMessage `json:"commandIds,omitempty"`
+	CreatedAt  time.Time       `json:"createdAt"`
 }

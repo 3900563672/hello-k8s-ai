@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -214,6 +215,32 @@ func (database *Postgres) GetAIOpsCommand(ctx context.Context, commandID string)
 	return &command, nil
 }
 
+// ListAIOpsCommands 按创建时间倒序返回最近 limit 条意图命令（对话检索器用，#112 阶段 C）。
+func (database *Postgres) ListAIOpsCommands(ctx context.Context, limit int) ([]model.AIOpsCommand, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT command_id, raw_input, parsed, status, steps, error_text, created_at, updated_at
+		FROM aiops_commands
+		ORDER BY created_at DESC
+		LIMIT `, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops commands: %w", err)
+	}
+	defer rows.Close()
+	var commands []model.AIOpsCommand
+	for rows.Next() {
+		var command model.AIOpsCommand
+		if err := rows.Scan(&command.CommandID, &command.RawInput, &command.Parsed, &command.Status,
+			&command.Steps, &command.Error, &command.CreatedAt, &command.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops command: %w", err)
+		}
+		commands = append(commands, command)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops commands: %w", err)
+	}
+	return commands, nil
+}
+
 // UpdateAIOpsCommand 推进意图命令状态机，记录执行步骤与错误文本。
 func (database *Postgres) UpdateAIOpsCommand(ctx context.Context, commandID, status string, steps json.RawMessage, errorText string) error {
 	_, err := database.pool.Exec(ctx, `
@@ -334,4 +361,152 @@ func (database *Postgres) ListAIOpsAlerts(ctx context.Context, limit int) ([]mod
 		return nil, fmt.Errorf("iterate aiops alerts: %w", err)
 	}
 	return alerts, nil
+}
+
+// CreateAIOpsAuditLog 写入一条 AIOps 调用审计（#110 阶段四）。
+func (database *Postgres) CreateAIOpsAuditLog(ctx context.Context, audit model.AIOpsAuditLog) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_audit_log (audit_id, session_id, kind, model, duration_ms, message_len, prompt_tokens, completion_tokens, status, error_text)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		audit.AuditID, audit.SessionID, audit.Kind, audit.Model,
+		audit.DurationMS, audit.MessageLen, audit.PromptTokens, audit.CompletionTokens,
+		audit.Status, audit.Error)
+	if err != nil {
+		return fmt.Errorf("insert aiops audit log: %w", err)
+	}
+	return nil
+}
+
+// CreateAIOpsChatMessage 写入一条对话消息（#112 阶段 D）：问答对与回答的上下文引用 ID。
+func (database *Postgres) CreateAIOpsChatMessage(ctx context.Context, message model.AIOpsChatMessage) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_chat_messages (message_id, session_id, role, content, window_ids, alert_ids, command_ids)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		message.MessageID, message.SessionID, message.Role, message.Content,
+		message.WindowIDs, message.AlertIDs, message.CommandIDs)
+	if err != nil {
+		return fmt.Errorf("insert aiops chat message: %w", err)
+	}
+	return nil
+}
+
+// ListAIOpsChatMessages 按时间正序返回某会话最近 limit 条消息（对话历史回溯，#112 阶段 D）。
+func (database *Postgres) ListAIOpsChatMessages(ctx context.Context, sessionID string, limit int) ([]model.AIOpsChatMessage, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT message_id, session_id, role, content, window_ids, alert_ids, command_ids, created_at
+		FROM (
+			SELECT message_id, session_id, role, content, window_ids, alert_ids, command_ids, created_at
+			FROM aiops_chat_messages
+			WHERE session_id=$1
+			ORDER BY created_at DESC
+			LIMIT $2
+		) recent
+		ORDER BY created_at ASC`, sessionID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops chat messages: %w", err)
+	}
+	defer rows.Close()
+	var messages []model.AIOpsChatMessage
+	for rows.Next() {
+		var message model.AIOpsChatMessage
+		if err := rows.Scan(&message.MessageID, &message.SessionID, &message.Role, &message.Content,
+			&message.WindowIDs, &message.AlertIDs, &message.CommandIDs, &message.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops chat message: %w", err)
+		}
+		messages = append(messages, message)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops chat messages: %w", err)
+	}
+	return messages, nil
+}
+
+// CreateAIOpsJob 创建 pending 任务；同切面重复入队幂等（segment_id 唯一，job_id 复用 analysis_id）。
+func (database *Postgres) CreateAIOpsJob(ctx context.Context, job model.AIOpsJob) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_jobs (job_id, segment_id, kind, status, max_attempts)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (segment_id) DO NOTHING`,
+		job.JobID, job.SegmentID, job.Kind, job.Status, job.MaxAttempts)
+	if err != nil {
+		return fmt.Errorf("insert aiops job: %w", err)
+	}
+	return nil
+}
+
+// ClaimNextAIOpsJob 用 FOR UPDATE SKIP LOCKED 原子认领最早的 pending 任务并置 running
+// （attempts+1 / started_at），并发 worker 互不抢同一行；无任务时 ok=false。
+func (database *Postgres) ClaimNextAIOpsJob(ctx context.Context) (model.AIOpsJob, bool, error) {
+	claimed := database.pool.QueryRow(ctx, `
+		WITH pending AS (
+			SELECT job_id FROM aiops_jobs
+			WHERE status = 'pending'
+			ORDER BY created_at ASC
+			LIMIT 1
+			FOR UPDATE SKIP LOCKED
+		)
+		UPDATE aiops_jobs SET status='running', attempts=attempts+1,
+			started_at=clock_timestamp(), updated_at=clock_timestamp()
+		WHERE job_id IN (SELECT job_id FROM pending)
+		RETURNING job_id, segment_id, kind, status, attempts, max_attempts, last_error,
+			created_at, started_at, finished_at, updated_at`)
+	var job model.AIOpsJob
+	if err := claimed.Scan(&job.JobID, &job.SegmentID, &job.Kind, &job.Status, &job.Attempts,
+		&job.MaxAttempts, &job.LastError, &job.CreatedAt, &job.StartedAt, &job.FinishedAt, &job.UpdatedAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.AIOpsJob{}, false, nil
+		}
+		return model.AIOpsJob{}, false, fmt.Errorf("claim next aiops job: %w", err)
+	}
+	return job, true, nil
+}
+
+// CompleteAIOpsJob 收尾任务：done/failed + finished_at + last_error。
+func (database *Postgres) CompleteAIOpsJob(ctx context.Context, jobID, status, errorText string) error {
+	if _, err := database.pool.Exec(ctx, `
+		UPDATE aiops_jobs SET status=$2, last_error=$3,
+			finished_at=clock_timestamp(), updated_at=clock_timestamp()
+		WHERE job_id=$1`, jobID, status, errorText); err != nil {
+		return fmt.Errorf("complete aiops job: %w", err)
+	}
+	return nil
+}
+
+// ListAIOpsJobs 任务列表（status 可过滤，默认按创建倒序）。
+func (database *Postgres) ListAIOpsJobs(ctx context.Context, limit int, status string) ([]model.AIOpsJob, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT job_id, segment_id, kind, status, attempts, max_attempts, last_error,
+			created_at, started_at, finished_at, updated_at
+		FROM aiops_jobs
+		WHERE ($1 = '' OR status = $1)
+		ORDER BY created_at DESC
+		LIMIT $2`, status, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops jobs: %w", err)
+	}
+	defer rows.Close()
+	var jobs []model.AIOpsJob
+	for rows.Next() {
+		var job model.AIOpsJob
+		if err := rows.Scan(&job.JobID, &job.SegmentID, &job.Kind, &job.Status, &job.Attempts,
+			&job.MaxAttempts, &job.LastError, &job.CreatedAt, &job.StartedAt, &job.FinishedAt, &job.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops job: %w", err)
+		}
+		jobs = append(jobs, job)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops jobs: %w", err)
+	}
+	return jobs, nil
+}
+
+// RequeueStaleAIOpsJobs 启动时回收崩溃遗留的 running 任务（超时重置 pending），返回回收数量。
+func (database *Postgres) RequeueStaleAIOpsJobs(ctx context.Context, cutoff time.Time) (int, error) {
+	tag, err := database.pool.Exec(ctx, `
+		UPDATE aiops_jobs SET status='pending', updated_at=clock_timestamp()
+		WHERE status='running' AND updated_at < $1`, cutoff)
+	if err != nil {
+		return 0, fmt.Errorf("requeue stale aiops jobs: %w", err)
+	}
+	return int(tag.RowsAffected()), nil
 }

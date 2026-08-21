@@ -3,24 +3,12 @@ package aiops
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 )
-
-// L1 提示词：实体分析器，输入实体事实 JSON 数组，输出固定 schema 的 JSON 数组。
-const l1SystemPrompt = `你是 Kubernetes 调度实验的实体分析器。输入是一个实体事实数组（Pod/Node/Tenant），
-请逐个判断每个实体在本次调度实验中的表现。只输出一个 JSON 数组，每个元素严格为：
-{"entityKind":"Pod","entityName":"...","phenomenon":"不超过80字的现象描述","issueFlag":true或false,"classification":"healthy|suspect|problem","conclusion":"不超过80字的结论"}
-不要输出数组以外的任何文字。`
-
-// L2 提示词：切面评估器，输入 L1 摘要与硬指标，输出分数 JSON。
-const l2SystemPrompt = `你是 Kubernetes 调度实验的评估器。输入是一次实验的硬指标与实体摘要，
-请给出 0-100 的分数（越高越好）：goal 目标达成、stability 稳定性、efficiency 调度效率、anomaly 异常程度、
-overall 综合分，verdict 取 "success"|"attention"|"problem"，reason 不超过 120 字。
-只输出一个 JSON 对象：{"goal":0-100,"stability":0-100,"efficiency":0-100,"anomaly":0-100,"overall":0-100,"verdict":"...","reason":"..."}
-不要输出 JSON 以外的任何文字。`
 
 // entityFact 是喂给 L1 模型的单实体事实（紧凑、全字符串，控制 token）。
 type entityFact struct {
@@ -56,16 +44,18 @@ func l1UserPrompt(entities []entityFact) (string, error) {
 }
 
 // l2UserPrompt 组装 L2 输入：硬指标 + L1 摘要（只读摘要，不看原始数据）。
-func l2UserPrompt(hard hardMetrics, summaries []model.AIOpsEntitySummary) (string, error) {
+// #112 预算：摘要区超预算时按 分数>结论>现象>事件 优先级裁剪；返回是否发生裁剪。
+func l2UserPrompt(hard hardMetrics, summaries []model.AIOpsEntitySummary, budget int, logger *slog.Logger) (string, bool, error) {
+	trimmed, truncated := truncateSummaries(summaries, budget, logger)
 	type input struct {
 		Hard      hardMetrics                `json:"hard"`
 		Summaries []model.AIOpsEntitySummary `json:"summaries"`
 	}
-	payload, err := json.Marshal(input{Hard: hard, Summaries: summaries})
+	payload, err := json.Marshal(input{Hard: hard, Summaries: trimmed})
 	if err != nil {
-		return "", fmt.Errorf("marshal L2 input: %w", err)
+		return "", truncated, fmt.Errorf("marshal L2 input: %w", err)
 	}
-	return string(payload), nil
+	return string(payload), truncated, nil
 }
 
 // extractEntities 从起点/终点快照提取实体事实（L1 全量覆盖，不做健康过滤）。

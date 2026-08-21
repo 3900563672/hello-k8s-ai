@@ -1,6 +1,6 @@
 # 事件流
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/
 
 项目中“事件”有五种不同含义。把它们混在一起会造成错误的可靠性假设。
 
@@ -114,6 +114,6 @@ Backend informer 读取 core/v1 Event，限制/聚合后用于 Overview。关键
 
 ## 9. AIOps 分析事件（M0+M1）
 
-切面 complete/fail 时 Backend 将分析任务入队（`aiops_analyses`，幂等）；AIOps worker 按状态机推进（pending→running→aggregating→completed/failed），L1 实体总结与 L2 分数写入 `aiops_*` 表。该链路异步、只读切面数据，不阻塞实验生命周期；分析失败在 `error_text` 记录并落 failed 状态，前端可展示。
+切面 complete/fail 时 Backend 将分析任务入队（`aiops_analyses` 幂等 + `aiops_jobs` 任务队列，segment 唯一）；AIOps worker 用 `FOR UPDATE SKIP LOCKED` 认领任务（#110 阶段一），按状态机推进（pending→running→aggregating→completed/failed）并回写任务 done/failed（attempts/last_error/起止时间），L1 实体总结与 L2 分数写入 `aiops_*` 表。该链路异步、只读切面数据，不阻塞实验生命周期；失败原因前端可直接查看。
 
-M2（#94）：`POST /aiops/commands` 把一句话意图解析落库（`aiops_commands`，parsed），用户确认后执行编排产生实验创建/流量/倍速事件（steps 落库）。M3（#95）：定时器驱动 L3 窗口/L4 日总结（`aiops_window_summaries`）与分数序列警戒（`aiops_alerts`），均为异步只读聚合，不改变实验生命周期事件流。
+M2（#94）：`POST /aiops/commands` 把一句话意图解析落库（`aiops_commands`，parsed），用户确认后执行编排产生实验创建/流量/倍速事件（steps 落库）。M3（#95）：定时器驱动 L3 窗口/L4 日总结（`aiops_window_summaries`）与分数序列警戒（`aiops_alerts`），均为异步只读聚合，不改变实验生命周期事件流。M4（#110 阶段二）：`POST /aiops/chat` 按需读取结论型上下文（窗口总结/警戒/已完成分析）后流式生成回答，SSE 事件 `lifecycle → tool* → text* → lifecycle`，只读不写，不产生实验事件；流结束后写 `aiops_audit_log` 调用审计（模型/耗时/消息长度/token 用量/结果）。 #112 提示词工程化仅改变分析调用内部（提示词目录化+版本哈希、输出 schema 校验与重试兜底、token 预算裁剪与用量记录），事件流与数据面不变。阶段 C 收口（#112）：上下文组装器统一预算与截断、温度分层（分析 0.1 / 对话 0.5）；阶段 D：回答成功后把问答对与引用的 window/alert/command ID 落 `aiops_chat_messages`（墙钟 created_at），仍只读不产生实验事件；读侧 `GET /aiops/chat/messages` 按会话正序回读历史，同样只读、不产生事件。
