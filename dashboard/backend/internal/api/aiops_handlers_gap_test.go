@@ -1,12 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -221,12 +223,46 @@ func TestNewServerAndClockState(t *testing.T) {
 	server.currentClockState() // 存储可用时不应 panic/禁用写能力
 }
 
+// syncStreamBuffer 是并发安全的 httptest.ResponseRecorder 替代品：
+// handleStream 在独立 goroutine 中写入，测试主 goroutine 轮询读取，
+// 直接使用 ResponseRecorder 会被 -race 检测为数据竞争。
+type syncStreamBuffer struct {
+	mu     sync.Mutex
+	header http.Header
+	buf    bytes.Buffer
+}
+
+func (b *syncStreamBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncStreamBuffer) Header() http.Header {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.header == nil {
+		b.header = make(http.Header)
+	}
+	return b.header
+}
+
+func (b *syncStreamBuffer) WriteHeader(int) {}
+
+func (b *syncStreamBuffer) Flush() {}
+
+func (b *syncStreamBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
 func TestHandleStreamPublishesEvents(t *testing.T) {
 	bus := NewEventBus()
 	server := &Server{logger: slog.New(slog.NewTextHandler(io.Discard, nil)), events: bus}
 	ctx, cancel := context.WithCancel(context.Background())
 	request := httptest.NewRequest(http.MethodGet, "/api/v1/stream", nil).WithContext(ctx)
-	recorder := httptest.NewRecorder()
+	recorder := &syncStreamBuffer{}
 	done := make(chan struct{})
 	go func() {
 		server.handleStream(recorder, request)
@@ -238,7 +274,7 @@ func TestHandleStreamPublishesEvents(t *testing.T) {
 		Ref: model.ResourceRef{Kind: "Pod", Name: "pod-1"},
 	})
 	deadline := time.Now().Add(2 * time.Second)
-	for !strings.Contains(recorder.Body.String(), "resource.changed") {
+	for !strings.Contains(recorder.String(), "resource.changed") {
 		if time.Now().After(deadline) {
 			t.Fatal("stream did not emit published event")
 		}
