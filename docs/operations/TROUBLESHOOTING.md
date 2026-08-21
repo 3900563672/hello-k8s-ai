@@ -158,6 +158,10 @@ kubectl -n hello-k8s-ai-system get --raw \
 
 依次区分：Clock desired/applied 是否一致、observedGeneration 是否等于 generation、同步数是否等于总数、目标 Instance 字段是否正确、Simulator 是否已经经过下一真实 Tick。Clock Ready 只表示字段收敛；指标才证明运行进程已经读取。倍速变化不应改变 Pod UID，若发生 rollout，检查是否有人把 timeScale 注入了 Deployment template。
 
+部署脚本报「SimulationClock 配置收敛」超时：先确认是否存在 SimulationClock CR（kubectl get simulationclock）。干净环境无 CR 时脚本按 CR 存在性跳过该检查；若仍等待说明脚本版本过旧，更新后重跑。
+
+干净环境断言中 /replay 若含历史快照（保留的 PostgreSQL PVC 数据），脚本仅警告不失败：业务 CR 为空即视为数据面干净。
+
 ## 8. Score 为 0 / Traffic 不合理
 
 Score 可能为 0：
