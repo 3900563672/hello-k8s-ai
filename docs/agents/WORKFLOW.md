@@ -232,8 +232,10 @@ flowchart TD
 - 发现包内文档与源码不一致时，作为交付物列出差异，不静默按文档写代码。
 - 对 `docs/agents/`、`docs/remote-ai/`、`docs/journal/`、`docs/lessons/`、`change-history/` 的建议可以直接给；对 `docs/` 人类文档的建议单独标注"人类文档"，由用户转交。
 
-## 10. CI 轮询节奏（原 SYNC.md 第 7 节，2026-08-18 并入）
+## 10. CI 只看一眼（2026-08-21 起，替代旧「30s 轮询」策略）
 
-- 推送后每 30 秒轮询一次 run 结论（`gh run list` / `gh run view --json jobs`），**不要 sleep 到固定大间隔**（见 docs/lessons/process-ci-poll-30s.md）。
-- 预期耗时：普通 job 3-6 分钟；E2E / 镜像构建最慢，冷缓存首次更久；最多等到 10 分钟再停下排查。
-- 失败先取 `gh run view <run-id> --log-failed` 定位原因，不盲改重推；docs-only 提交只触发"文档检查"。
+- 推送后**只查一次**：`gh run list --limit 3`（或 `gh pr checks <n>`）确认 run 存在且状态正常即可。
+- 失败才处理：取 `gh run view <run-id> --log-failed` 定位原因并修复，不盲改重推。
+- 在跑 / 通过：**立即切回其他工作**，禁止轮询、禁止 sleep 死等（「一切皆异步」原则的延伸，见第 9 节）。
+- 预期耗时供安排其他工作参考：普通 job 3-6 分钟；E2E / 镜像构建最慢，冷缓存首次更久。
+- 完成其他工作后顺路再查一次结论即可；docs-only 提交只触发"文档检查"。
