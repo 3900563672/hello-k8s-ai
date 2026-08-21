@@ -56,16 +56,6 @@ function resolveFixture(pathname: string, params: URLSearchParams): string | nul
         if (status) return `experiments-status-${status}.json`
         return 'experiments.json'
     }
-    if (pathname === '/aiops/analyses') {
-        if (params.get('segmentId')) return 'aiops-analysis-ana-20260821-0001.json'
-        return 'aiops-analyses.json'
-    }
-    if (pathname.startsWith('/aiops/analyses/')) {
-        const analysisId = pathname.slice('/aiops/analyses/'.length)
-        return `aiops-analysis-${analysisId}.json`
-    }
-    if (pathname === '/aiops/alerts') return 'aiops-alerts.json'
-    if (pathname === '/aiops/windows') return 'aiops-windows.json'
     if (pathname === '/traces') {
         const start = params.get('start')
         return start === '2026-08-18T03:00:00Z' ? 'traces-late-window.json' : 'traces.json'
@@ -123,18 +113,6 @@ export function mockFixturesPlugin(): Plugin {
 
                 const fixture = resolveFixture(pathname, url.searchParams)
                 let body = fixture ? loadFixture(fixture) : null
-                if (body !== null && pathname === '/aiops/analyses' && url.searchParams.get('status')) {
-                    const status = url.searchParams.get('status')
-                    try {
-                        const parsed = JSON.parse(body)
-                        parsed.data = (parsed.data ?? []).filter(
-                            (item: { status?: string }) => item.status === status,
-                        )
-                        body = JSON.stringify(parsed)
-                    } catch {
-                        // 解析失败保持原样，由上层返回。
-                    }
-                }
                 if (body === null) {
                     res.statusCode = 404
                     res.setHeader('Content-Type', 'application/json')

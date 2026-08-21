@@ -156,4 +156,4 @@ flowchart LR
 - `src/lib/mocks/fixtures/` 保存 GET 端点真实响应快照，`scripts/record-fixtures.mjs` 幂等重录；manifest.json 记录来源与大小，供审计。
 - dev:mock 由 `plugins/mock-fixtures.ts`（vite `--mode mock` 插件）拦截 `/api/v1` GET 返回 fixtures，写请求 405（只读）；快照空数组用 `dev-fixtures/` 样例补齐（meta.devSamples），不写控制面。
 - overview 与 trace detail 分属不同录制窗口时 traceId 可能不匹配；dev:mock 对缺失 detail 用摘要合成单 span 兜底，生产 API 不做该处理。
-- AIOps 契约演示数据：`aiops-analyses.json`（支持 `?status=` 过滤）、`aiops-analysis-ana-20260821-0001.json`、`aiops-alerts.json`、`aiops-windows.json`（meta.warnings 标注"契约演示数据"）；实体名与 overview fixtures 的 Pod/Node 名对齐，用于气泡外圈分级演示。后端 M2/M3 就绪后删除对应 fixture，组件逻辑不变。
+- AIOps 契约演示数据已删除（后端 M2/M3 就绪，真实模式返回真实数据；dev:mock 下 aiops 接口 404，组件显示未启用/空态）。
