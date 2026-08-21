@@ -71,6 +71,7 @@ Grafana、Prometheus 与 Jaeger 不再单独暴露端口：Grafana 监控面板�
 make cluster-status  # 查看工作负载、CR、PVC 与 Backend 状态
 make cluster-open    # 端口转发中断后重新启动
 make cluster-urls    # 只打印访问地址
+make env-up          # 重启 Docker Desktop / WSL 后一键自愈并拉起完整联调环境（#109）
 make cluster-down    # 停止工作负载，保留集群、CRD、CR、Secret 与 PVC
 DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 ```
@@ -83,10 +84,10 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
 - 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](change-history/2026-08-21-frontend-redesign-merge/README.md)
+- 2026-08-21 [变更总览：环境一键自愈 make env-up（重启后一条命令恢复联调）](change-history/2026-08-21-env-up/README.md)
 - 2026-08-21 [变更总览：AIOps 提示词与上下文工程——Schema 契约、Token 预算、温度分层与对话持久化（#112 全阶段）](change-history/2026-08-21-aiops-prompt-engineering/README.md)
 - 2026-08-21 [变更总览：AIOps M2 意图执行 + M3 时间聚合警戒（#94/#95）](change-history/2026-08-21-aiops-m2m3-intent-window/README.md)
 - 2026-08-21 [变更总览：AIOps 分层总结后端骨架（M0+M1，Fixes #93）](change-history/2026-08-21-aiops-l1l2-backend/README.md)
-- 2026-08-21 [变更总览：AIOps 前端 M4——AI 洞察分区与契约先行（#98 前端部分）](change-history/2026-08-21-aiops-frontend-m4/README.md)
 
 <!-- docs-sync:timeline-end -->
 

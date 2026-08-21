@@ -312,6 +312,10 @@ cluster-open: ## 启动 Dashboard 本地端口（Grafana/Prometheus/Jaeger 经 D
 cluster-urls: ## 打印本地访问地址
 	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh urls
 
+.PHONY: env-up
+env-up: ## 一键自愈 + 联调拉起（#109）：apiserver/PV 自愈 + port-forward + 本地后端 + 前端 vite
+	@./hack/dev-env-up.sh
+
 .PHONY: cluster-down
 cluster-down: ## 停止项目工作负载并保留集群、CRD、CR 与数据库 PVC
 	@KUBE_CONTEXT="$(KUBE_CONTEXT)" NAMESPACE="$(NAMESPACE)" ./hack/local-cluster.sh down
