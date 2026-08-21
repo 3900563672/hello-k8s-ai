@@ -164,6 +164,25 @@ func (service *Service) ChatBuildContext(ctx context.Context) (*ChatContext, err
 	return &ChatContext{Text: text, Refs: refs}, nil
 }
 
+// ChatHistory 返回某会话最近的问答历史（#112 阶段 D 读侧）：按时间正序，最多 limit 条。
+// 存储不可用时返回错误，由调用方决定是否降级（前端历史拉取失败可静默，本地会话仍可用）。
+func (service *Service) ChatHistory(ctx context.Context, sessionID string, limit int) ([]model.AIOpsChatMessage, error) {
+	if sessionID == "" {
+		return nil, fmt.Errorf("sessionId 不能为空")
+	}
+	if limit < 1 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	messages, err := service.database.ListAIOpsChatMessages(ctx, sessionID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list chat history: %w", err)
+	}
+	return messages, nil
+}
+
 // ChatSystemPrompt 返回对话系统提示词（#112：模板渲染，带版本/哈希）。
 func (service *Service) ChatSystemPrompt() string {
 	prompt, err := prompts.ChatAssistant.Render(nil)

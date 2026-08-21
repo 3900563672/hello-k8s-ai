@@ -42,6 +42,7 @@
   `ListAIOpsChatMessages`（按会话倒序取最近 N 条再正序返回）；Service 层 `ChatRecord` 在
   SSE 回答成功后落库 user+assistant 两条（引用只在 assistant 消息上，失败只记日志）；
   API handler 累积流式增量并在审计后调用 `ChatRecord`。
+  读侧：新增 `GET /api/v1/aiops/chat/messages`（`sessionId` 必填、`limit` 1..200，按时间正序）与 Service `ChatHistory`，前端 `AiChatWidget` 打开面板时拉取服务端历史回填空会话（失败静默降级，不覆盖本地新消息）；前端契约新增 `AIOpsChatMessage` / `AIOpsChatMessagesEnvelope` 与 `fetchAIOpsChatMessages`。
 
 ## 测试与验证
 

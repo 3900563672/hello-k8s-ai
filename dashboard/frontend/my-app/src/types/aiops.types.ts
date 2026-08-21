@@ -139,6 +139,20 @@ export interface AIOpsChatEvent {
     durationMs?: number
 }
 
+/** aiops_chat_messages 一行：同步对话的问答对（#112 阶段 D 读侧）。 */
+export interface AIOpsChatMessage {
+    messageId: string
+    sessionId: string
+    role: 'user' | 'assistant'
+    content: string
+    windowIds?: string[]
+    alertIds?: string[]
+    commandIds?: string[]
+    createdAt: string
+}
+
+export type AIOpsChatMessagesEnvelope = ApiEnvelope<AIOpsChatMessage[]>
+
 /** 异步任务状态（#110 阶段一）：DB 即队列，pending→running→done/failed。 */
 export type AIOpsJobStatus = 'pending' | 'running' | 'done' | 'failed'
 

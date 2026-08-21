@@ -88,7 +88,7 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 | `aiops_commands` | 意图执行记录（M2 启用，状态机 parsed→confirmed→gate→executing→verified→done/rejected/failed）。 |
 | `aiops_audit_log` | 同步对话调用审计（#110 阶段四：模型/耗时/消息长度/token 用量/结果，009 迁移补 prompt/completion 列）。 |
 | `aiops_jobs` | 异步任务队列（#110 阶段一：segment 唯一、status/attempts/last_error/起止时间，SKIP LOCKED 认领）。 |
-| `aiops_chat_messages` | 对话问答对（#112 阶段 D，010 迁移：session_id + role + content + 引用的 window/alert/command ID JSONB，按会话倒序检索最近 N 条）。 |
+| `aiops_chat_messages` | 对话问答对（#112 阶段 D，010 迁移：session_id + role + content + 引用的 window/alert/command ID JSONB，按会话倒序检索最近 N 条）。API 读侧 `GET /aiops/chat/messages` 按时间正序返回最近 N 条（limit 1..200，默认 50）。 |
 
 写入方主要是 `internal/aiops/`（worker）；`aiops_audit_log` 由同步对话（M4）在流结束后写入；`aiops_chat_messages` 由对话回答成功后写入（`ChatRecord`，user+assistant 两条），`aiops_jobs` 由 worker 认领/回写（DB 即队列），API 其余只读。数据所有权见 FIELD_OWNERSHIP/总纲 #92：分析结果不反向驱动 Controller。M2 意图命令由用户确认后执行（steps JSONB 记录每步结果）；M3 窗口/警戒为定时产出，`aiops_alerts.alert_id` 幂等（同规则+切面+窗口不重复触发）。
 

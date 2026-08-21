@@ -5,6 +5,7 @@ import type {
     AIOpsAnalysisDetailEnvelope,
     AIOpsAlertsEnvelope,
     AIOpsChatEvent,
+    AIOpsChatMessagesEnvelope,
     AIOpsCommandEnvelope,
     AIOpsJobStatus,
     AIOpsJobsEnvelope,
@@ -138,6 +139,14 @@ export async function streamAIOpsChat(
             }
         }
     }
+}
+
+/** 某会话的问答历史（#112 阶段 D 读侧）：按时间正序，limit 1..200。 */
+export function fetchAIOpsChatMessages(sessionId: string, limit = 50): Promise<AIOpsChatMessagesEnvelope> {
+    const params = new URLSearchParams()
+    params.set('sessionId', sessionId)
+    params.set('limit', String(limit))
+    return apiRequest<AIOpsChatMessagesEnvelope>(`/aiops/chat/messages?${params.toString()}`)
 }
 
 /** 异步任务列表（#110 阶段一）：status 可过滤，默认倒序。 */

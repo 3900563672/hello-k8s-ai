@@ -287,6 +287,9 @@ curl -sS "$API/aiops/alerts?limit=10"
 # 流式回答：事件为 data: {json}（lifecycle/tool/text），curl -N 关闭缓冲；回答成功后服务端落库 aiops_chat_messages
 curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
   -d '{"message":"当前集群什么情况？","sessionId":"demo-session"}'
+
+# 问答历史（#112 阶段 D 读侧）：sessionId 必填、limit 1..200（默认 50），按时间正序；打开面板时前端用于回填
+curl -sS "$API/aiops/chat/messages?sessionId=demo-session&limit=50"
 ```
 
 **面板配置（#110 阶段四，key 不回显、仅存服务端内存）：**

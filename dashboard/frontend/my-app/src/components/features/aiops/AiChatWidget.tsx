@@ -11,7 +11,12 @@ import {
     Settings2,
     X,
 } from 'lucide-react'
-import { fetchAIOpsSettings, streamAIOpsChat, updateAIOpsSettings } from '@/api/endpoints/aiopsApi'
+import {
+    fetchAIOpsChatMessages,
+    fetchAIOpsSettings,
+    streamAIOpsChat,
+    updateAIOpsSettings,
+} from '@/api/endpoints/aiopsApi'
 import { ApiRequestError } from '@/api/client'
 import { cn } from '@/lib/utils'
 
@@ -91,6 +96,32 @@ export function AiChatWidget() {
         const list = listRef.current
         if (list) list.scrollTop = list.scrollHeight
     }, [session.messages, toolSteps, open])
+    // 打开面板时拉取服务端历史（#112 阶段 D 读侧）：只回填空会话，不覆盖本地新消息；
+    // 拉取失败静默降级（本地会话仍可用）。
+    useEffect(() => {
+        if (!open || view !== 'chat') return
+        let cancelled = false
+        void fetchAIOpsChatMessages(session.sessionId, 50)
+            .then((envelope) => {
+                if (cancelled || envelope.data.length === 0) return
+                setSession((current) => {
+                    if (current.messages.length > 0) return current
+                    return {
+                        ...current,
+                        messages: envelope.data.map((message) => ({
+                            role: message.role,
+                            content: message.content,
+                        })),
+                    }
+                })
+            })
+            .catch(() => {
+                // 历史拉取失败静默降级
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [open, view, session.sessionId])
 
     const appendAssistant = (delta: string) => {
         setSession((current) => {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops"
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/model"
 )
 
 // chatEvent 是 SSE 事件负载（#110 阶段二，AG-UI 轻量子集）：
@@ -56,6 +57,36 @@ func (server *Server) handleAIOpsChat(writer http.ResponseWriter, request *http.
 		return
 	}
 	server.streamChat(writer, request, payload.SessionID, payload.Message)
+}
+
+// handleListAIOpsChatMessages 返回某会话最近的问答历史（#112 阶段 D 读侧）：按时间正序。
+// 查询参数：sessionId 必填；limit 1..200（默认 50）。历史拉取失败时前端可静默降级。
+func (server *Server) handleListAIOpsChatMessages(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireAIOps(writer, request) {
+		return
+	}
+	sessionID := request.URL.Query().Get("sessionId")
+	if sessionID == "" {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_SESSION_ID",
+			"sessionId query parameter is required.", false, nil)
+		return
+	}
+	limit := queryInteger(request, "limit", 50)
+	if limit < 1 || limit > aiopsListMaxLimit {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_LIMIT",
+			"limit must be between 1 and 200.", false, nil)
+		return
+	}
+	messages, err := server.aiops.ChatHistory(request.Context(), sessionID, limit)
+	if err != nil {
+		writeProblem(writer, request, http.StatusInternalServerError, "CHAT_HISTORY_FAILED",
+			"查询对话历史失败。", false, nil)
+		return
+	}
+	if messages == nil {
+		messages = []model.AIOpsChatMessage{}
+	}
+	writeData(writer, request, http.StatusOK, messages, false, nil, nil)
 }
 
 // streamChat 发送 SSE 流；flush 失败（客户端断开）即终止。
