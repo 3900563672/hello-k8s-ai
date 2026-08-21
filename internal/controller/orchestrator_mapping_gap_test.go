@@ -159,7 +159,7 @@ func TestMapModelToOrchestrators(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "mnp-a"},
 		Spec:       platformv1.ModelNodePolicySpec{ModelRef: platformv1.ObjectRef{Name: "model-1"}},
 	})
-	if len(requests) != 1 || requests[0].NamespacedName.Name != "orch-a" {
+	if len(requests) != 1 || requests[0].Name != "orch-a" {
 		t.Fatalf("mapModelToOrchestrators = %+v", requests)
 	}
 
@@ -193,7 +193,7 @@ func TestMapWorkerNodeToOrchestrators(t *testing.T) {
 	requests := reconciler.mapWorkerNodeToOrchestrators(ctx, &platformv1.WorkerNode{
 		ObjectMeta: metav1.ObjectMeta{Name: "node-1"},
 	})
-	if len(requests) != 1 || requests[0].NamespacedName.Name != "orch-a" {
+	if len(requests) != 1 || requests[0].Name != "orch-a" {
 		t.Fatalf("mapWorkerNodeToOrchestrators = %+v", requests)
 	}
 
