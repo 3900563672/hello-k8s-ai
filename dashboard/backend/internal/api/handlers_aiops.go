@@ -82,9 +82,9 @@ func (server *Server) writeAIOpsAnalysis(writer http.ResponseWriter, request *ht
 
 // requireAIOps AIOps 未启用或存储不可用时返回 404。
 func (server *Server) requireAIOps(writer http.ResponseWriter, request *http.Request) bool {
-	if server.aiops == nil {
+	if server.aiops == nil || !server.aiops.Enabled() {
 		writeProblem(writer, request, http.StatusNotFound, "AI_OPS_DISABLED",
-			"AIOps 未启用（需要 AIOPS_ENABLED=true 且配置 API Key）。", false, nil)
+			"AIOps 未启用（需要 AIOPS_ENABLED=true 且配置 API Key；面板开关未关闭）。", false, nil)
 		return false
 	}
 	if !server.store.Available() {
