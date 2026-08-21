@@ -87,7 +87,7 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 | `aiops_alerts` | 持续低分警戒（M3 启用）。 |
 | `aiops_commands` | 意图执行记录（M2 启用，状态机 parsed→confirmed→gate→executing→verified→done/rejected/failed）。 |
 
-写入方只有 `internal/aiops/`（worker）；API 只读。数据所有权见 FIELD_OWNERSHIP/总纲 #92：分析结果不反向驱动 Controller。
+写入方只有 `internal/aiops/`（worker）；API 只读。数据所有权见 FIELD_OWNERSHIP/总纲 #92：分析结果不反向驱动 Controller。M2 意图命令由用户确认后执行（steps JSONB 记录每步结果）；M3 窗口/警戒为定时产出，`aiops_alerts.alert_id` 幂等（同规则+切面+窗口不重复触发）。
 
 ## 4. 写入路径
 

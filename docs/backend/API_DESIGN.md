@@ -134,6 +134,19 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 
 `AIOPS_ENABLED=false`（默认）时返回 404 `AI_OPS_DISABLED`；持久化存储不可用返回 503。分析由实验 complete/fail 自动入队，状态机与进度见 Backend 架构第 13 节。
 
+**M2 意图执行（#94）与 M3 时间聚合（#95）：**
+
+| Method | Path | 参数/语义 |
+| --- | --- | --- |
+| POST | `/aiops/commands` | 一句话意图：LLM 解析 + 模板目录校验，落库 `parsed`；`{"rawInput":"..."}`。 |
+| GET | `/aiops/commands/{id}` | 意图命令详情（解析结果 + 执行 steps）。 |
+| POST | `/aiops/commands/{id}/confirm` | 确认执行：gate 校验（节点/租户存在）→ 写流量/调倍速 → 创建并启动实验 → `done`/`failed`。 |
+| GET | `/aiops/templates` | 只读模板目录（model/node/tenant/orchestrator/traffic，LLM 只能选目录内 id）。 |
+| GET | `/aiops/windows` | 窗口/日总结；`level=L3|L4`、`limit` 1..200。 |
+| GET | `/aiops/alerts` | 警戒列表（分数序列规则触发）；`limit` 1..200。 |
+
+意图权限边界：AI 只能 create/start/complete/fail 实验、写流量、调倍速、选目录内模板/既有节点；不可改模板/节点/其他 CR。执行只走既有写通道（gateway/store/aggregator）。
+
 ### Stream
 
 | Method | Path | 语义 |

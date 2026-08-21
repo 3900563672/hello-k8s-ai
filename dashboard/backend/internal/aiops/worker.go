@@ -66,13 +66,33 @@ func (service *Service) Run(ctx context.Context) error {
 	}
 	ticker := time.NewTicker(service.config.PollInterval)
 	defer ticker.Stop()
+	windowTicker := time.NewTicker(service.config.WindowInterval)
+	defer windowTicker.Stop()
+	// 启动时先聚合一轮，避免开启后第一个窗口周期内无 L3/L4 产出。
+	service.aggregateWindows(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
 			service.poll(ctx)
+		case <-windowTicker.C:
+			service.aggregateWindows(ctx)
 		}
+	}
+}
+
+// aggregateWindows 执行 M3 时间聚合与警戒：L3 窗口 → L4 日总结 → 分数序列警戒。
+// 任一环节失败只记日志，不影响调度主流程与后续轮次。
+func (service *Service) aggregateWindows(ctx context.Context) {
+	if err := service.runWindowAggregation(ctx); err != nil {
+		service.logger.Warn("AIOps L3 window aggregation failed", "error", err)
+	}
+	if err := service.runDayAggregation(ctx); err != nil {
+		service.logger.Warn("AIOps L4 day aggregation failed", "error", err)
+	}
+	if err := service.evaluateAlerts(ctx); err != nil {
+		service.logger.Warn("AIOps alert evaluation failed", "error", err)
 	}
 }
 

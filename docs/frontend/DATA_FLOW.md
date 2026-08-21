@@ -129,6 +129,8 @@ Backend 的 SSE channel 每客户端有有限缓冲，慢客户端可能错过�
 
 切面实验 complete/fail 后，后端自动入队 AIOps 分析（`aiops_analyses`），状态机与 L1 进度可轮询；L2 分数/理由与 L1 实体总结经 `/aiops/analyses` 读取。前端只展示后端状态机结果，不做本地推断；`AIOPS_ENABLED=false` 时接口 404，前端显示未启用空态。
 
+M2 意图执行（#94）：AI 面板一句话 → `POST /aiops/commands` 返回解析预览（模板 id/流量/倍速/目标租户），用户确认后 `POST /aiops/commands/{id}/confirm` 执行；确认前不产生任何写操作。M3（#95）：`/aiops/windows`（L3/L4）与 `/aiops/alerts` 轮询展示窗口认知与警戒。
+
 ## 7. Traffic 叠加应用到真实命令
 
 当前链路：

@@ -260,6 +260,29 @@ curl -sS "$API/aiops/analyses?segmentId=<segmentId>"
 
 分析由实验 complete/fail 自动入队，状态机 pending→running→aggregating→completed/failed；`l1Done/l1Total` 为进度。`scores` 含 goal/stability/efficiency/anomaly/overall/verdict/reason。
 
+**M2 意图执行（#94）：**
+
+```bash
+# 模板目录（只读；LLM 只能选目录内 id）
+curl -sS "$API/aiops/templates"
+# 一句话 → 解析（落库 parsed，返回 commandId）
+curl -sS -X POST "$API/aiops/commands" -H 'Content-Type: application/json'   -d '{"rawInput":"美国时间 9 点开始，持续 2 小时，突发流量高峰"}'
+# 确认执行：gate 校验 → 写流量/调倍速 → 创建并启动实验 → done
+curl -sS -X POST "$API/aiops/commands/<commandId>/confirm"
+# 查询执行结果（含 steps）
+curl -sS "$API/aiops/commands/<commandId>"
+```
+
+**M3 时间聚合与警戒（#95）：**
+
+```bash
+curl -sS "$API/aiops/windows?level=L3&limit=10"
+curl -sS "$API/aiops/windows?level=L4"
+curl -sS "$API/aiops/alerts?limit=10"
+```
+
+窗口/日总结由定时器自动产出（粒度 `AIOPS_WINDOW_GRANULARITY` 可配）；警戒为分数序列规则触发（连续低分/趋势下滑），alert_id 幂等。
+
 ## 13. 错误处理脚本规则
 
 - 同时检查 HTTP status 和 envelope 的 `error.code`/`meta.partial`。

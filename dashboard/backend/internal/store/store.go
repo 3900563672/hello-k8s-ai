@@ -92,6 +92,14 @@ type Store interface {
 	ListAIOpsAnalyses(context.Context, int, string) ([]model.AIOpsAnalysis, error)
 	UpsertAIOpsEntitySummaries(context.Context, string, []model.AIOpsEntitySummary) error
 	ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error)
+	CreateAIOpsCommand(context.Context, model.AIOpsCommand) error
+	GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error)
+	UpdateAIOpsCommand(context.Context, string, string, json.RawMessage, string) error
+	UpsertAIOpsWindowSummary(context.Context, model.AIOpsWindowSummary) error
+	ListAIOpsWindowSummaries(context.Context, string, int) ([]model.AIOpsWindowSummary, error)
+	ListAIOpsAnalysesInWindow(context.Context, time.Time, time.Time) ([]model.AIOpsAnalysis, error)
+	CreateAIOpsAlert(context.Context, model.AIOpsAlert) error
+	ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error)
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -188,6 +196,30 @@ func (Disabled) UpsertAIOpsEntitySummaries(context.Context, string, []model.AIOp
 	return ErrUnavailable
 }
 func (Disabled) ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateAIOpsCommand(context.Context, model.AIOpsCommand) error {
+	return ErrUnavailable
+}
+func (Disabled) GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) UpdateAIOpsCommand(context.Context, string, string, json.RawMessage, string) error {
+	return ErrUnavailable
+}
+func (Disabled) UpsertAIOpsWindowSummary(context.Context, model.AIOpsWindowSummary) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsWindowSummaries(context.Context, string, int) ([]model.AIOpsWindowSummary, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListAIOpsAnalysesInWindow(context.Context, time.Time, time.Time) ([]model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateAIOpsAlert(context.Context, model.AIOpsAlert) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error) {
 	return nil, ErrUnavailable
 }
 func (Disabled) Prune(context.Context, time.Time) error { return ErrUnavailable }

@@ -80,6 +80,15 @@ spec:
           value: https://api.openai.com/v1
         - name: AIOPS_MODEL
           value: gpt-4o-mini
+        # M3 时间聚合与警戒（#95）可调参数（默认值见 config.go）：
+        # - name: AIOPS_WINDOW_INTERVAL
+        #   value: 15m
+        # - name: AIOPS_WINDOW_GRANULARITY
+        #   value: 2h
+        # - name: AIOPS_ALERT_THRESHOLD
+        #   value: "40"
+        # - name: AIOPS_ALERT_CONSECUTIVE
+        #   value: "3"
         # AIOPS_OPENAI_API_KEY 启用 AIOps 时必填，从 Secret 注入：
         # - name: AIOPS_OPENAI_API_KEY
         #   valueFrom:

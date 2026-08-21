@@ -62,3 +62,60 @@ type AIOpsScores struct {
 	Verdict    string `json:"verdict"`
 	Reason     string `json:"reason"`
 }
+
+// AIOpsCommandStatus 是 aiops_commands 表的状态机（#94 M2）：
+// parsed → confirmed → gate → executing → verified → done；拒绝/失败为 rejected/failed。
+type AIOpsCommandStatus string
+
+const (
+	AIOpsCommandParsed    AIOpsCommandStatus = "parsed"
+	AIOpsCommandConfirmed AIOpsCommandStatus = "confirmed"
+	AIOpsCommandGate      AIOpsCommandStatus = "gate"
+	AIOpsCommandExecuting AIOpsCommandStatus = "executing"
+	AIOpsCommandVerified  AIOpsCommandStatus = "verified"
+	AIOpsCommandDone      AIOpsCommandStatus = "done"
+	AIOpsCommandRejected  AIOpsCommandStatus = "rejected"
+	AIOpsCommandFailed    AIOpsCommandStatus = "failed"
+)
+
+// AIOpsCommand 是 aiops_commands 表的一行：一句话意图的解析、确认与执行记录。
+type AIOpsCommand struct {
+	CommandID string          `json:"commandId"`
+	RawInput  string          `json:"rawInput"`
+	Parsed    json.RawMessage `json:"parsed"`
+	Status    string          `json:"status"`
+	Steps     json.RawMessage `json:"steps"`
+	Error     string          `json:"error,omitempty"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
+}
+
+// AIOpsWindowLevel 是时间聚合层级（#95 M3）：L3 窗口总结 / L4 日总结。
+type AIOpsWindowLevel string
+
+const (
+	AIOpsWindowL3 AIOpsWindowLevel = "L3"
+	AIOpsWindowL4 AIOpsWindowLevel = "L4"
+)
+
+// AIOpsWindowSummary 是 aiops_window_summaries 表的一行：窗口/日级聚合认知。
+type AIOpsWindowSummary struct {
+	WindowID    string          `json:"windowId"`
+	Level       string          `json:"level"`
+	WindowStart time.Time       `json:"windowStart"`
+	WindowEnd   time.Time       `json:"windowEnd"`
+	Scores      json.RawMessage `json:"scores,omitempty"`
+	Summary     json.RawMessage `json:"summary,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
+}
+
+// AIOpsAlert 是 aiops_alerts 表的一行：分数序列规则触发的警戒（不进 Prometheus）。
+type AIOpsAlert struct {
+	AlertID        string          `json:"alertId"`
+	Rule           string          `json:"rule"`
+	Severity       string          `json:"severity"`
+	TriggeredAt    time.Time       `json:"triggeredAt"`
+	AnalysisID     *string         `json:"analysisId,omitempty"`
+	Interpretation json.RawMessage `json:"interpretation,omitempty"`
+	AckedAt        *time.Time      `json:"ackedAt,omitempty"`
+}

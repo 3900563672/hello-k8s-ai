@@ -115,3 +115,5 @@ Backend informer 读取 core/v1 Event，限制/聚合后用于 Overview。关键
 ## 9. AIOps 分析事件（M0+M1）
 
 切面 complete/fail 时 Backend 将分析任务入队（`aiops_analyses`，幂等）；AIOps worker 按状态机推进（pending→running→aggregating→completed/failed），L1 实体总结与 L2 分数写入 `aiops_*` 表。该链路异步、只读切面数据，不阻塞实验生命周期；分析失败在 `error_text` 记录并落 failed 状态，前端可展示。
+
+M2（#94）：`POST /aiops/commands` 把一句话意图解析落库（`aiops_commands`，parsed），用户确认后执行编排产生实验创建/流量/倍速事件（steps 落库）。M3（#95）：定时器驱动 L3 窗口/L4 日总结（`aiops_window_summaries`）与分数序列警戒（`aiops_alerts`），均为异步只读聚合，不改变实验生命周期事件流。
