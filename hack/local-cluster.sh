@@ -521,7 +521,7 @@ verify_data_flow() {
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/health/ready
   wait_for_text "Backend Simulator 倍速能力" '"simulatorAcceleration":true' 30 \
     service_proxy hello-k8s-ai-dashboard-backend http /api/v1/clock
-  if kube get simulationclock --no-headers >/dev/null 2>&1; then
+  if [[ -n "$(kube get simulationclock --no-headers 2>/dev/null)" ]]; then
     wait_for_text "SimulationClock 配置收敛" '1|1|True' 30 \
       kube get simulationclock/default \
       -o 'jsonpath={.spec.rate}{"|"}{.status.appliedRate}{"|"}{.status.conditions[?(@.type=="Ready")].status}'
