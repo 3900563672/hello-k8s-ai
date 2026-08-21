@@ -62,6 +62,33 @@ function saveSession(session: ChatSession) {
     }
 }
 
+/** 对话错误 → 用户可读文案（#124 降级预案）：区分配额/限流/未启用/网络，避免裸抛后端原文。 */
+function friendlyChatError(error: unknown): string {
+    if (error instanceof ApiRequestError) {
+        const code = error.problem?.code
+        if (error.status === 429) {
+            return code === 'DAILY_QUOTA_EXCEEDED'
+                ? '今日 AI 用量已达上限，明天再试，或联系管理员调整配额。'
+                : '操作太频繁了，稍等一分钟再问。'
+        }
+        if (error.status === 404 || code === 'AI_OPS_DISABLED') {
+            return 'AIOps 未启用：请在设置面板打开开关，并确认已配置 API Key。'
+        }
+        return `AI 暂时不可用（${error.status}），请稍后再试。`
+    }
+    if (error instanceof Error) {
+        return error.name === 'AbortError' ? '连接超时：请确认后端服务已启动。' : 'AI 暂时不可用，请稍后再试。'
+    }
+    return 'AI 暂时不可用，请稍后再试。'
+}
+
+/** 设置读写错误：后端校验文案原样展示，网络/超时转友好提示。 */
+function friendlySettingsError(error: unknown, fallback: string): string {
+    if (error instanceof ApiRequestError && error.problem?.message) return error.problem.message
+    if (error instanceof Error && error.name === 'AbortError') return '连接超时：请确认后端服务已启动。'
+    return error instanceof Error ? error.message : fallback
+}
+
 type PanelView = 'chat' | 'settings'
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -176,11 +203,7 @@ export function AiChatWidget() {
                 onText: (delta) => appendAssistant(delta),
             })
         } catch (error) {
-            if (error instanceof ApiRequestError && error.status === 404) {
-                setErrorText('AIOps 未启用：后端需配置 AIOPS_ENABLED=true 与 API Key。')
-            } else {
-                setErrorText(error instanceof Error ? error.message : '对话请求失败')
-            }
+            setErrorText(friendlyChatError(error))
             setBusy(false)
         }
     }
@@ -206,7 +229,7 @@ export function AiChatWidget() {
                 enabled: settings.enabled,
             }))
         } catch (error) {
-            setSettingsError(error instanceof Error ? error.message : '读取配置失败')
+            setSettingsError(friendlySettingsError(error, '读取配置失败'))
         } finally {
             setSettingsLoading(false)
         }
@@ -233,7 +256,7 @@ export function AiChatWidget() {
             setSaveState('saved')
         } catch (error) {
             setSaveState('error')
-            setSettingsError(error instanceof Error ? error.message : '保存失败')
+            setSettingsError(friendlySettingsError(error, '保存失败'))
         }
     }
 

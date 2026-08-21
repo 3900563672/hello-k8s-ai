@@ -306,6 +306,12 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **包内容过旧**：重新执行 `make context-pack`；以 `CONTEXT_PACK.md` 顶部的生成时间与最近提交为准，包不是实时仓库。
 - **磁盘空间**：`tar` 失败通常伴随磁盘不足，检查 `.runtime/` 所在分区。
 
+## 19. AIOps 无分析历史 / 对话异常
+
+- **演示前没有 AI 分析历史**：`bash hack/aiops-preseed.sh [数量]` 预生成（自动创建→完成实验并等待分析完成）；前置：AIOps 已启用且已配置 Key，否则脚本直接退出并提示。
+- **对话返回 429**：`DAILY_QUOTA_EXCEEDED` 表示当日次数/token 配额用尽（`AIOPS_DAILY_MAX_CALLS` / `AIOPS_DAILY_MAX_TOKENS`，默认 300 次/200 万 token 每 24h）；`CHAT_RATE_LIMITED` 是会话级限流（默认 6 次/分钟），前端会展示对应可读文案。
+- **分析一直为 0**：检查 AIOps 开关（面板设置或 `AIOPS_ENABLED`）、Key 是否有效、日配额是否用尽；后端日志关键字 `enqueue analysis failed` / `quota`。
+
 ## 18. 文档门禁检查失败（docs-check）
 
 `make docs-check`（即 `hack/check-docs.py`）是全仓库文档门禁，CI 同样执行。常见失败：

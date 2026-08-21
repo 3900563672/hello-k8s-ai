@@ -49,6 +49,7 @@ Backend 数据经 Query/同步 hook 更新；跨页面选择存入 `controlPlane
 - MainLayout 全局挂载右下角浮窗；设置视图配置 API Key/模型/地址并开启运行时开关（`GET/POST /api/v1/aiops/settings`，key 不回显）。
 - chat 视图：SSE 流式回答（lifecycle/tool/text 事件）、工具步骤可见、打开时经 `GET /api/v1/aiops/chat/messages` 回填会话历史；会话记录仅存 localStorage，不含密钥。
 - 未配置或未开启时展示空态引导，不阻塞主界面；AIOps 全部经 Backend，不直连 LLM。
+- 失败态（#124 降级预案）：对话错误区分配额超限（429）/限流（429）/未启用（404）/网络超时四类，展示用户可读文案，不裸抛后端原文；设置读写保留后端校验文案，仅网络/超时转友好提示。
 
 ## 3. Config 页面
 
