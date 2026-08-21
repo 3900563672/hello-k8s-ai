@@ -1,6 +1,6 @@
 # 本地运行
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：config/samples/、config/demo/ 等
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：config/samples/、config/demo/ 等
 
 ## 1. 完整系统
 
@@ -10,7 +10,7 @@
 bash setup.sh
 ```
 
-`setup.sh` 先运行安全的旧文件清理，再调用 `make cluster-up`。部署全程使用当前 `docker-desktop` Context，不创建新集群。
+`setup.sh` 先运行安全的旧文件清理，再调用 `make cluster-up`。部署使用固定 Kind 开发集群 `hello-k8s-ai-dev`（`make cluster-up` 幂等创建/复用，默认 context `kind-hello-k8s-ai-dev`），不再使用 Docker Desktop 内置 Kubernetes。
 
 完整流程包括：
 
@@ -47,6 +47,14 @@ make cluster-urls
 make cluster-open
 ```
 
+WSL / Docker Desktop 重启后（apiserver 不可达、PV tmpfs 遮罩、转发中断、本地后端与前端未起），一条命令自愈并拉起完整联调环境：
+
+```bash
+make env-up
+```
+
+`env-up` 幂等可反复执行：自愈（apiserver 重启、PV umount）+ port-forward 重建 + 本地后端（密钥从集群 Secret 注入，不入库）+ 前端 vite（代理到本地后端）。
+
 ## 3. 重复执行
 
 `make cluster-up` 可以重复执行：
@@ -64,7 +72,7 @@ make cluster-down
 
 该命令停止端口转发并把项目工作负载缩到 0。它不会删除：
 
-- `docker-desktop` 集群或任何 Node；
+- Kind 开发集群 `hello-k8s-ai-dev` 或任何 Node；
 - 项目 CRD 与 CR；
 - PostgreSQL Secret 与 PVC；
 - 旁边的 `minikserve-demo`。
