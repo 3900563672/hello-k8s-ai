@@ -137,10 +137,18 @@ if command -v dmesg >/dev/null 2>&1; then
   fi
 fi
 
-echo "----------------------------------------"
-echo "[doctor] 结果：$PASS 通过 / $FAIL 失败 / $WARN 警告"
-if (( FAIL > 0 )); then
-  echo "[doctor] 存在失败项，先修复再继续。"
-  exit 1
+# ---------- 8. kind apiserver 可达性（kind create 后端口映射注册丢失，docker restart 自愈，见 docs/journal/2026-08-21-kind-pv-rootfix.md） ----------
+if command -v kubectl >/dev/null 2>&1 && command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  CP=$(docker ps --filter "name=hello-k8s-ai-dev-control-plane" --format '{{.Names}}' 2>/dev/null | head -1)
+  if [[ -n "$CP" ]]; then
+    if kubectl get --raw /healthz >/dev/null 2>&1; then
+      ok "kind apiserver 可达"
+    else
+      bad "kind apiserver 不可达（节点容器在跑）——自愈：docker restart hello-k8s-ai-dev-control-plane"
+    fi
+  else
+    warn "kind 集群未运行，跳过 apiserver 可达性检查"
+  fi
 fi
-exit 0
+
+echo "----------------------------------------"
