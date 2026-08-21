@@ -45,7 +45,7 @@ func TestOpenAICompleteJSON(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0)
 	if err != nil {
 		t.Fatalf("CompleteJSON: %v", err)
 	}
@@ -68,7 +68,7 @@ func TestOpenAIRetry(t *testing.T) {
 	defer server.Close()
 	client := newTestClient(server.URL)
 	start := time.Now()
-	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0)
 	if err != nil {
 		t.Fatalf("CompleteJSON after retry: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestOpenAIErrorResponse(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	if _, err := client.CompleteJSON(context.Background(), "sys", "user", 500); err == nil {
+	if _, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0); err == nil {
 		t.Fatalf("expected error")
 	}
 	if calls.Load() != 1 {
@@ -129,7 +129,7 @@ func TestOpenAIStreamComplete(t *testing.T) {
 	client := newTestClient(server.URL)
 	var deltas []string
 	var gotUsage TokenUsage
-	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(delta string) {
+	if err := client.StreamComplete(context.Background(), "sys", "user", 500, 0, func(delta string) {
 		deltas = append(deltas, delta)
 	}, func(usage TokenUsage) { gotUsage = usage }); err != nil {
 		t.Fatalf("StreamComplete: %v", err)
@@ -153,7 +153,7 @@ func TestOpenAIStreamCompleteHTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(string) {}, nil); err == nil {
+	if err := client.StreamComplete(context.Background(), "sys", "user", 500, 0, func(string) {}, nil); err == nil {
 		t.Fatal("stream should fail on HTTP error")
 	}
 }
@@ -166,7 +166,7 @@ func TestOpenAICompleteJSONUsage(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0)
 	if err != nil {
 		t.Fatalf("CompleteJSON: %v", err)
 	}
@@ -186,11 +186,79 @@ func TestOpenAICompleteJSONNoUsage(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500)
+	completion, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0)
 	if err != nil {
 		t.Fatalf("CompleteJSON: %v", err)
 	}
 	if completion.Usage.PromptTokens != 0 || completion.Usage.CompletionTokens != 0 {
 		t.Fatalf("expected zero usage, got %+v", completion.Usage)
+	}
+}
+
+// TestOptionalTemperature 验证温度参数：0 不发送，非 0 发送指针。
+func TestOptionalTemperature(t *testing.T) {
+	if optionalTemperature(0) != nil {
+		t.Fatalf("temperature 0 should be nil")
+	}
+	value := optionalTemperature(0.1)
+	if value == nil || *value != 0.1 {
+		t.Fatalf("temperature 0.1 should be pointer, got %v", value)
+	}
+}
+
+// TestOpenAITemperaturePayload 验证 temperature 分层真实进入请求体：
+// 分析层 0.1 显式发送；0 省略（服务端默认），不覆盖服务端配置。
+func TestOpenAITemperaturePayload(t *testing.T) {
+	var payloads []map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		var payload map[string]any
+		if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
+			t.Errorf("decode payload: %v", err)
+		}
+		payloads = append(payloads, payload)
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"choices":[{"message":{"content":"{}"}}]}`))
+	}))
+	defer server.Close()
+	client := newTestClient(server.URL)
+	if _, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0.1); err != nil {
+		t.Fatalf("CompleteJSON: %v", err)
+	}
+	if len(payloads) != 1 {
+		t.Fatalf("want 1 call, got %d", len(payloads))
+	}
+	temperature, ok := payloads[0]["temperature"].(float64)
+	if !ok || temperature != 0.1 {
+		t.Fatalf("temperature = %v, want 0.1", payloads[0]["temperature"])
+	}
+	if _, err := client.CompleteJSON(context.Background(), "sys", "user", 500, 0); err != nil {
+		t.Fatalf("CompleteJSON with zero temperature: %v", err)
+	}
+	if _, exists := payloads[1]["temperature"]; exists {
+		t.Fatalf("temperature should be omitted when 0, got %v", payloads[1]["temperature"])
+	}
+}
+
+// TestOpenAIStreamTemperaturePayload 验证流式调用同样携带 temperature（对话层 0.5）。
+func TestOpenAIStreamTemperaturePayload(t *testing.T) {
+	var got float64
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		var payload struct {
+			Temperature *float64 `json:"temperature"`
+		}
+		_ = json.NewDecoder(request.Body).Decode(&payload)
+		if payload.Temperature != nil {
+			got = *payload.Temperature
+		}
+		writer.Header().Set("Content-Type", "text/event-stream")
+		_, _ = writer.Write([]byte("data: {\"choices\":[{\"delta\":{\"content\":\"好\"}}]}\n\ndata: [DONE]\n\n"))
+	}))
+	defer server.Close()
+	client := newTestClient(server.URL)
+	if err := client.StreamComplete(context.Background(), "sys", "user", 500, 0.5, func(string) {}, func(TokenUsage) {}); err != nil {
+		t.Fatalf("StreamComplete: %v", err)
+	}
+	if got != 0.5 {
+		t.Fatalf("stream temperature = %v, want 0.5", got)
 	}
 }

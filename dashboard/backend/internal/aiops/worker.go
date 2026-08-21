@@ -183,7 +183,7 @@ func (service *Service) processAnalysis(ctx context.Context, analysis model.AIOp
 		return fmt.Errorf("load segment traces: %w", err)
 	}
 	startSnapshot, endSnapshot := parseSnapshots(segment)
-	entities := extractEntities(startSnapshot, endSnapshot)
+	entities := assembleEntityFacts(startSnapshot, endSnapshot)
 
 	if err := service.database.UpdateAIOpsAnalysisProgress(ctx, analysis.AnalysisID, string(model.AIOpsRunning), len(entities), 0, ""); err != nil {
 		return fmt.Errorf("update analysis progress: %w", err)
@@ -265,7 +265,7 @@ func (service *Service) summarizeEntities(ctx context.Context, analysisID string
 // judgeSegment L2 打分：LLM 可用且预算内时调用，否则规则兜底。
 func (service *Service) judgeSegment(ctx context.Context, hard hardMetrics, summaries []model.AIOpsEntitySummary, llmAvailable bool) model.AIOpsScores {
 	if llmAvailable {
-		userPrompt, truncated, err := l2UserPrompt(hard, summaries, budgetL2Summaries, service.logger)
+		userPrompt, truncated, err := service.assembleL2Input(hard, summaries)
 		if err == nil {
 			if truncated {
 				service.logger.Warn("AIOps L2 input truncated by budget", "budgetRunes", budgetL2Summaries)

@@ -19,18 +19,22 @@ import (
 // fakeStore 只实现 worker 需要的 store 方法，其余走 Disabled 兜底。
 type fakeStore struct {
 	store.Disabled
-	mu           sync.Mutex
-	analyses     map[string]model.AIOpsAnalysis
-	summaries    map[string][]model.AIOpsEntitySummary
-	segment      *store.SegmentRecord
-	segmentErr   error
-	events       []model.SegmentEvent
-	metrics      []model.MetricBucket
-	traces       []model.TraceSummary
-	pendingOrder []string
-	requeued     int
-	jobs         map[string]model.AIOpsJob
-	jobOrder     []string
+	mu              sync.Mutex
+	analyses        map[string]model.AIOpsAnalysis
+	summaries       map[string][]model.AIOpsEntitySummary
+	segment         *store.SegmentRecord
+	segmentErr      error
+	events          []model.SegmentEvent
+	metrics         []model.MetricBucket
+	traces          []model.TraceSummary
+	pendingOrder    []string
+	requeued        int
+	jobs            map[string]model.AIOpsJob
+	jobOrder        []string
+	chatMessages    []model.AIOpsChatMessage
+	windowSummaries []model.AIOpsWindowSummary
+	alerts          []model.AIOpsAlert
+	commands        []model.AIOpsCommand
 }
 
 func newFakeStore(segment *store.SegmentRecord) *fakeStore {
@@ -40,6 +44,61 @@ func newFakeStore(segment *store.SegmentRecord) *fakeStore {
 		jobs:      make(map[string]model.AIOpsJob),
 		segment:   segment,
 	}
+}
+
+func (store *fakeStore) ListAIOpsWindowSummaries(_ context.Context, level string, limit int) ([]model.AIOpsWindowSummary, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	var summaries []model.AIOpsWindowSummary
+	for _, summary := range store.windowSummaries {
+		if summary.Level == level {
+			summaries = append(summaries, summary)
+		}
+	}
+	if len(summaries) > limit {
+		summaries = summaries[len(summaries)-limit:]
+	}
+	return summaries, nil
+}
+
+func (store *fakeStore) ListAIOpsAlerts(_ context.Context, limit int) ([]model.AIOpsAlert, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	if len(store.alerts) > limit {
+		return append([]model.AIOpsAlert(nil), store.alerts[len(store.alerts)-limit:]...), nil
+	}
+	return append([]model.AIOpsAlert(nil), store.alerts...), nil
+}
+
+func (store *fakeStore) ListAIOpsCommands(_ context.Context, limit int) ([]model.AIOpsCommand, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	if len(store.commands) > limit {
+		return append([]model.AIOpsCommand(nil), store.commands[len(store.commands)-limit:]...), nil
+	}
+	return append([]model.AIOpsCommand(nil), store.commands...), nil
+}
+
+func (store *fakeStore) CreateAIOpsChatMessage(_ context.Context, message model.AIOpsChatMessage) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	store.chatMessages = append(store.chatMessages, message)
+	return nil
+}
+
+func (store *fakeStore) ListAIOpsChatMessages(_ context.Context, sessionID string, limit int) ([]model.AIOpsChatMessage, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	var messages []model.AIOpsChatMessage
+	for _, message := range store.chatMessages {
+		if message.SessionID == sessionID {
+			messages = append(messages, message)
+		}
+	}
+	if len(messages) > limit {
+		messages = messages[len(messages)-limit:]
+	}
+	return messages, nil
 }
 
 func (store *fakeStore) Available() bool { return true }
@@ -127,14 +186,6 @@ func (store *fakeStore) FailAIOpsAnalysis(_ context.Context, analysisID, errorTe
 		}
 	}
 	return errors.New("analysis not found")
-}
-
-func (store *fakeStore) ListAIOpsWindowSummaries(_ context.Context, _ string, _ int) ([]model.AIOpsWindowSummary, error) {
-	return nil, nil
-}
-
-func (store *fakeStore) ListAIOpsAlerts(_ context.Context, _ int) ([]model.AIOpsAlert, error) {
-	return nil, nil
 }
 
 func (store *fakeStore) CreateAIOpsJob(_ context.Context, job model.AIOpsJob) error {
@@ -300,7 +351,7 @@ func newFakeLLM(responses []string, errs []error) *fakeLLM {
 	return &fakeLLM{responses: responses, errs: errs}
 }
 
-func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int, onDelta func(string), _ func(TokenUsage)) error {
+func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int, _ float64, onDelta func(string), _ func(TokenUsage)) error {
 	llm.mu.Lock()
 	defer llm.mu.Unlock()
 	if len(llm.responses) == 0 {
@@ -326,7 +377,7 @@ func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int
 	return nil
 }
 
-func (llm *fakeLLM) CompleteJSON(context.Context, string, string, int) (Completion, error) {
+func (llm *fakeLLM) CompleteJSON(context.Context, string, string, int, float64) (Completion, error) {
 	llm.mu.Lock()
 	defer llm.mu.Unlock()
 	index := llm.calls

@@ -147,18 +147,12 @@ func (service *Service) runDayAggregation(ctx context.Context) error {
 
 // aggregateChildren 用 LLM 聚合子级摘要；LLM 失败用规则兜底（平均分 + 问题抽取）。
 func (service *Service) aggregateChildren(ctx context.Context, systemPrompt prompts.Definition, children any, analyses []model.AIOpsAnalysis) (windowAggregation, error) {
-	// 输入预算：超过窗口数上限只保留最近 N 个（#112 阶段 B，裁剪记日志）。
-	switch items := children.(type) {
-	case []l3Child:
-		if trimmed := trimChildLists(items, budgetL3Children); len(trimmed) != len(items) {
-			service.logger.Warn("AIOps L3 input trimmed by budget", "before", len(items), "after", len(trimmed))
-			children = trimmed
-		}
-	case []l4Child:
-		if trimmed := trimChildLists(items, budgetL4Children); len(trimmed) != len(items) {
-			service.logger.Warn("AIOps L4 input trimmed by budget", "before", len(items), "after", len(trimmed))
-			children = trimmed
-		}
+	// 输入预算：超过窗口数上限只保留最近 N 个（#112 阶段 C，统一走 assembler）。
+	trimmed, truncated := assembleAggregationInput(children, aggregationBudget(systemPrompt.ID))
+	if truncated {
+		service.logger.Warn("AIOps aggregation input trimmed by budget",
+			"layer", systemPrompt.ID, "before", childCount(children), "after", childCount(trimmed))
+		children = trimmed
 	}
 	payload, err := json.Marshal(children)
 	if err != nil {
@@ -175,6 +169,25 @@ func (service *Service) aggregateChildren(ctx context.Context, systemPrompt prom
 	}
 	service.logger.Warn("AIOps window aggregation falling back to rules", "reason", reason)
 	return service.ruleWindowAggregation(children, analyses), nil
+}
+
+// aggregationBudget 返回 L3/L4 的输入窗口数预算（#112 阶段 B）。
+func aggregationBudget(promptID string) int {
+	if promptID == "l4-day" {
+		return budgetL4Children
+	}
+	return budgetL3Children
+}
+
+// childCount 统计 L3/L4 输入子级数量（用于裁剪日志）。
+func childCount(children any) int {
+	switch items := children.(type) {
+	case []l3Child:
+		return len(items)
+	case []l4Child:
+		return len(items)
+	}
+	return 0
 }
 
 // ruleWindowAggregation 规则兜底：overall 取子级平均，trend 由平均比较，问题从 verdict 抽取。

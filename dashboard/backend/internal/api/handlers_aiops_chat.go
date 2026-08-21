@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -90,14 +91,18 @@ func (server *Server) streamChat(writer http.ResponseWriter, request *http.Reque
 	onTool := func(name, phase string) {
 		writeSSE(chatEvent{Type: "tool", Name: name, Phase: phase, SessionID: sessionID})
 	}
+	var answer strings.Builder
 	onDelta := func(delta string) {
-		if delta != "" {
-			writeSSE(chatEvent{Type: "text", Delta: delta, SessionID: sessionID})
+		if delta == "" {
+			return
 		}
+		answer.WriteString(delta)
+		writeSSE(chatEvent{Type: "text", Delta: delta, SessionID: sessionID})
 	}
+	var refs aiops.ChatContextRefs
 	var answerErr error
 	if server.aiops != nil {
-		answerErr = server.aiops.ChatStream(request.Context(), message, onTool, onDelta, func(usage aiops.TokenUsage) {
+		refs, answerErr = server.aiops.ChatStream(request.Context(), message, onTool, onDelta, func(usage aiops.TokenUsage) {
 			usageMu.Lock()
 			auditUsage = usage
 			usageMu.Unlock()
@@ -109,6 +114,12 @@ func (server *Server) streamChat(writer http.ResponseWriter, request *http.Reque
 	auditContext, cancel := context.WithTimeout(request.Context(), 5*time.Second)
 	server.aiops.AuditChat(auditContext, sessionID, duration, len([]rune(message)), auditUsage, answerErr)
 	cancel()
+	// 阶段 D：回答生成成功后持久化问答对（带上下文引用 ID），失败只记日志不影响响应。
+	if answerErr == nil && strings.TrimSpace(answer.String()) != "" {
+		recordContext, recordCancel := context.WithTimeout(request.Context(), 5*time.Second)
+		server.aiops.ChatRecord(recordContext, sessionID, message, answer.String(), refs)
+		recordCancel()
+	}
 	if answerErr != nil {
 		writeSSE(chatEvent{Type: "lifecycle", Phase: "end", SessionID: sessionID,
 			Error: answerErr.Error(), Duration: duration.Milliseconds()})

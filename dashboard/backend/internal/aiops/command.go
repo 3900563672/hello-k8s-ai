@@ -109,7 +109,7 @@ func ParseCommand(ctx context.Context, rawInput string, llm LLM, maxTokens int) 
 	if err != nil {
 		return nil, fmt.Errorf("render command prompt: %w", err)
 	}
-	completion, err := llm.CompleteJSON(ctx, prompt.System, rawInput, maxTokens)
+	completion, err := llm.CompleteJSON(ctx, prompt.System, rawInput, maxTokens, prompt.Temperature)
 	if err != nil {
 		return nil, fmt.Errorf("parse command intent: %w", err)
 	}

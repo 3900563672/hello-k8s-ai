@@ -215,6 +215,32 @@ func (database *Postgres) GetAIOpsCommand(ctx context.Context, commandID string)
 	return &command, nil
 }
 
+// ListAIOpsCommands 按创建时间倒序返回最近 limit 条意图命令（对话检索器用，#112 阶段 C）。
+func (database *Postgres) ListAIOpsCommands(ctx context.Context, limit int) ([]model.AIOpsCommand, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT command_id, raw_input, parsed, status, steps, error_text, created_at, updated_at
+		FROM aiops_commands
+		ORDER BY created_at DESC
+		LIMIT `, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops commands: %w", err)
+	}
+	defer rows.Close()
+	var commands []model.AIOpsCommand
+	for rows.Next() {
+		var command model.AIOpsCommand
+		if err := rows.Scan(&command.CommandID, &command.RawInput, &command.Parsed, &command.Status,
+			&command.Steps, &command.Error, &command.CreatedAt, &command.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops command: %w", err)
+		}
+		commands = append(commands, command)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops commands: %w", err)
+	}
+	return commands, nil
+}
+
 // UpdateAIOpsCommand 推进意图命令状态机，记录执行步骤与错误文本。
 func (database *Postgres) UpdateAIOpsCommand(ctx context.Context, commandID, status string, steps json.RawMessage, errorText string) error {
 	_, err := database.pool.Exec(ctx, `
@@ -349,6 +375,50 @@ func (database *Postgres) CreateAIOpsAuditLog(ctx context.Context, audit model.A
 		return fmt.Errorf("insert aiops audit log: %w", err)
 	}
 	return nil
+}
+
+// CreateAIOpsChatMessage 写入一条对话消息（#112 阶段 D）：问答对与回答的上下文引用 ID。
+func (database *Postgres) CreateAIOpsChatMessage(ctx context.Context, message model.AIOpsChatMessage) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_chat_messages (message_id, session_id, role, content, window_ids, alert_ids, command_ids)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		message.MessageID, message.SessionID, message.Role, message.Content,
+		message.WindowIDs, message.AlertIDs, message.CommandIDs)
+	if err != nil {
+		return fmt.Errorf("insert aiops chat message: %w", err)
+	}
+	return nil
+}
+
+// ListAIOpsChatMessages 按时间正序返回某会话最近 limit 条消息（对话历史回溯，#112 阶段 D）。
+func (database *Postgres) ListAIOpsChatMessages(ctx context.Context, sessionID string, limit int) ([]model.AIOpsChatMessage, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT message_id, session_id, role, content, window_ids, alert_ids, command_ids, created_at
+		FROM (
+			SELECT message_id, session_id, role, content, window_ids, alert_ids, command_ids, created_at
+			FROM aiops_chat_messages
+			WHERE session_id=$1
+			ORDER BY created_at DESC
+			LIMIT $2
+		) recent
+		ORDER BY created_at ASC`, sessionID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops chat messages: %w", err)
+	}
+	defer rows.Close()
+	var messages []model.AIOpsChatMessage
+	for rows.Next() {
+		var message model.AIOpsChatMessage
+		if err := rows.Scan(&message.MessageID, &message.SessionID, &message.Role, &message.Content,
+			&message.WindowIDs, &message.AlertIDs, &message.CommandIDs, &message.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops chat message: %w", err)
+		}
+		messages = append(messages, message)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops chat messages: %w", err)
+	}
+	return messages, nil
 }
 
 // CreateAIOpsJob 创建 pending 任务；同切面重复入队幂等（segment_id 唯一，job_id 复用 analysis_id）。

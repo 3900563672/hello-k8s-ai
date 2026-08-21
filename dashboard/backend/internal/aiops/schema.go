@@ -129,7 +129,7 @@ func callStructured[T any](ctx context.Context, service *Service, definition pro
 		if err != nil {
 			return zero, TokenUsage{}, fmt.Errorf("render prompt: %w", err)
 		}
-		completion, err := service.llm.CompleteJSON(ctx, prompt.System, user, service.config.MaxTokensPerCall)
+		completion, err := service.llm.CompleteJSON(ctx, prompt.System, user, service.config.MaxTokensPerCall, prompt.Temperature)
 		if err != nil {
 			return zero, TokenUsage{}, err
 		}

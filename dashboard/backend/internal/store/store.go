@@ -94,6 +94,9 @@ type Store interface {
 	ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error)
 	CreateAIOpsCommand(context.Context, model.AIOpsCommand) error
 	GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error)
+	ListAIOpsCommands(context.Context, int) ([]model.AIOpsCommand, error)
+	CreateAIOpsChatMessage(context.Context, model.AIOpsChatMessage) error
+	ListAIOpsChatMessages(context.Context, string, int) ([]model.AIOpsChatMessage, error)
 	UpdateAIOpsCommand(context.Context, string, string, json.RawMessage, string) error
 	UpsertAIOpsWindowSummary(context.Context, model.AIOpsWindowSummary) error
 	ListAIOpsWindowSummaries(context.Context, string, int) ([]model.AIOpsWindowSummary, error)
@@ -207,6 +210,17 @@ func (Disabled) ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOps
 func (Disabled) CreateAIOpsCommand(context.Context, model.AIOpsCommand) error {
 	return ErrUnavailable
 }
+func (Disabled) ListAIOpsCommands(context.Context, int) ([]model.AIOpsCommand, error) {
+	return nil, nil
+}
+
+func (Disabled) CreateAIOpsChatMessage(context.Context, model.AIOpsChatMessage) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsChatMessages(context.Context, string, int) ([]model.AIOpsChatMessage, error) {
+	return nil, nil
+}
+
 func (Disabled) GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error) {
 	return nil, ErrUnavailable
 }

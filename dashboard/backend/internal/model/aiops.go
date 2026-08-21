@@ -150,3 +150,17 @@ type AIOpsAlert struct {
 	Interpretation json.RawMessage `json:"interpretation,omitempty"`
 	AckedAt        *time.Time      `json:"ackedAt,omitempty"`
 }
+
+// AIOpsChatMessage 是 aiops_chat_messages 表的一行：同步对话的问答对（#112 阶段 D）。
+// window_ids / alert_ids / command_ids 记录回答生成时注入的结论型上下文引用
+// （窗口总结 / 警戒 / 意图命令的 ID 数组），用于事后回溯「这条回答当时引用了什么」。
+type AIOpsChatMessage struct {
+	MessageID  string          `json:"messageId"`
+	SessionID  string          `json:"sessionId"`
+	Role       string          `json:"role"`
+	Content    string          `json:"content"`
+	WindowIDs  json.RawMessage `json:"windowIds,omitempty"`
+	AlertIDs   json.RawMessage `json:"alertIds,omitempty"`
+	CommandIDs json.RawMessage `json:"commandIds,omitempty"`
+	CreatedAt  time.Time       `json:"createdAt"`
+}

@@ -19,10 +19,11 @@ import (
 // LLM 是分析 worker 依赖的模型接口，便于单元测试注入假模型。
 type LLM interface {
 	// CompleteJSON 调用模型并返回纯 JSON 文本（响应格式强制 json_object）与 token 用量。
-	CompleteJSON(ctx context.Context, system, user string, maxTokens int) (Completion, error)
+	// temperature 为 0 时使用服务端默认（各层推荐值见 prompts.Definition）。
+	CompleteJSON(ctx context.Context, system, user string, maxTokens int, temperature float64) (Completion, error)
 	// StreamComplete 流式调用模型（stream=true），每个增量回调 onDelta；无增量时也要调用一次 onDelta("")。
 	// onUsage 在流结束后回调 token 用量（prompt/completion，服务端返回 usage 时；无 usage 时回调零值）。
-	StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string), onUsage func(TokenUsage)) error
+	StreamComplete(ctx context.Context, system, user string, maxTokens int, temperature float64, onDelta func(string), onUsage func(TokenUsage)) error
 }
 
 // OpenAI 是 OpenAI 兼容 chat completions 客户端（M0 Provider 抽象）。
@@ -103,6 +104,7 @@ type chatRequest struct {
 	Model          string             `json:"model"`
 	Messages       []chatMessage      `json:"messages"`
 	MaxTokens      int                `json:"max_tokens"`
+	Temperature    *float64           `json:"temperature,omitempty"`
 	Stream         bool               `json:"stream,omitempty"`
 	StreamOptions  *chatStreamOptions `json:"stream_options,omitempty"`
 	ResponseFormat *responseFormat    `json:"response_format,omitempty"`
@@ -141,7 +143,7 @@ type chatStreamChunk struct {
 }
 
 // CompleteJSON 调用 chat completions，最多重试 2 次（429/5xx/网络错误），指数退避。
-func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, maxTokens int) (Completion, error) {
+func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, maxTokens int, temperature float64) (Completion, error) {
 	client.mu.RLock()
 	model, baseURL := client.model, client.baseURL
 	client.mu.RUnlock()
@@ -152,6 +154,7 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 			{Role: "user", Content: user},
 		},
 		MaxTokens:      maxTokens,
+		Temperature:    optionalTemperature(temperature),
 		ResponseFormat: &responseFormat{Type: "json_object"},
 	})
 	if err != nil {
@@ -183,7 +186,7 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 
 // StreamComplete 流式调用 chat completions；错误语义与 CompleteJSON 一致（无重试，流一旦开始不重试）。
 // include_usage=true 让兼容服务端在最后一个 chunk 返回 usage，流结束后回调 onUsage（无 usage 时回调零值）。
-func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string), onUsage func(TokenUsage)) error {
+func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, maxTokens int, temperature float64, onDelta func(string), onUsage func(TokenUsage)) error {
 	client.mu.RLock()
 	model, baseURL, apiKey := client.model, client.baseURL, client.apiKey
 	client.mu.RUnlock()
@@ -191,6 +194,7 @@ func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, m
 		Model:         model,
 		Messages:      []chatMessage{{Role: "system", Content: system}, {Role: "user", Content: user}},
 		MaxTokens:     maxTokens,
+		Temperature:   optionalTemperature(temperature),
 		Stream:        true,
 		StreamOptions: &chatStreamOptions{IncludeUsage: true},
 	})
@@ -295,6 +299,14 @@ func (client *OpenAI) do(ctx context.Context, endpoint string, payload []byte) (
 		completion.Usage = TokenUsage{PromptTokens: decoded.Usage.PromptTokens, CompletionTokens: decoded.Usage.CompletionTokens}
 	}
 	return completion, response.StatusCode, nil
+}
+
+// optionalTemperature 返回可选的 temperature 指针；0 表示不设置（服务端默认）。
+func optionalTemperature(temperature float64) *float64 {
+	if temperature == 0 {
+		return nil
+	}
+	return &temperature
 }
 
 func truncate(text string, max int) string {

@@ -63,20 +63,40 @@ func (service *Service) ChatAllowSession(sessionID string, now time.Time) bool {
 	return true
 }
 
-// ChatBuildContext 组装对话上下文：最近 L3/L4 窗口总结 + 最近警戒 + 最近已完成分析分数。
+// ChatContextRefs 是回答生成时注入上下文的结论型引用 ID（#112 阶段 D 持久化用）：
+// 窗口总结 / 警戒 / 意图命令，用于事后回溯「这条回答当时引用了什么」。
+type ChatContextRefs struct {
+	WindowIDs  []string `json:"windowIds,omitempty"`
+	AlertIDs   []string `json:"alertIds,omitempty"`
+	CommandIDs []string `json:"commandIds,omitempty"`
+}
+
+// ChatContext 是对话上下文组装结果：截断后的文本 + 引用 ID（引用与文本截断无关，始终完整收集）。
+type ChatContext struct {
+	Text string
+	Refs ChatContextRefs
+}
+
+// ChatBuildContext 组装对话上下文：最近 L3/L4 窗口总结 + 最近警戒 + 最近已完成分析分数 + 最近意图命令。
 // 任一读取失败只跳过对应块，不让对话整体失败；全空时返回空对象。
-func (service *Service) ChatBuildContext(ctx context.Context) (string, error) {
+func (service *Service) ChatBuildContext(ctx context.Context) (*ChatContext, error) {
 	contextMap := map[string]any{
 		"windowSummaries": nil,
 		"alerts":          nil,
 		"recentAnalyses":  nil,
+		"recentCommands":  nil,
 	}
+
+	var refs ChatContextRefs
 	// L3 窗口总结（最近 3 条，含 scores/summary）。
 	windows, err := service.database.ListAIOpsWindowSummaries(ctx, string(model.AIOpsWindowL3), 3)
 	if err != nil {
 		service.logger.Warn("AIOps chat context: list windows failed", "error", err)
 	} else if len(windows) > 0 {
 		contextMap["windowSummaries"] = windows
+		for _, window := range windows {
+			refs.WindowIDs = append(refs.WindowIDs, window.WindowID)
+		}
 	}
 	// 最近警戒（含未确认；后端按 triggered_at 倒序）。
 	alerts, err := service.database.ListAIOpsAlerts(ctx, 5)
@@ -84,6 +104,32 @@ func (service *Service) ChatBuildContext(ctx context.Context) (string, error) {
 		service.logger.Warn("AIOps chat context: list alerts failed", "error", err)
 	} else if len(alerts) > 0 {
 		contextMap["alerts"] = alerts
+		for _, alert := range alerts {
+			refs.AlertIDs = append(refs.AlertIDs, alert.AlertID)
+		}
+	}
+	// 最近意图命令（#112 阶段 C：结论型——raw_input/status/parsed 摘要，供回答引用执行结果）。
+	commands, err := service.database.ListAIOpsCommands(ctx, 3)
+	if err != nil {
+		service.logger.Warn("AIOps chat context: list commands failed", "error", err)
+	} else if len(commands) > 0 {
+		type commandBrief struct {
+			CommandID string          `json:"commandId"`
+			RawInput  string          `json:"rawInput"`
+			Status    string          `json:"status"`
+			Parsed    json.RawMessage `json:"parsed,omitempty"`
+		}
+		briefs := make([]commandBrief, 0, len(commands))
+		for _, command := range commands {
+			briefs = append(briefs, commandBrief{
+				CommandID: command.CommandID,
+				RawInput:  command.RawInput,
+				Status:    command.Status,
+				Parsed:    command.Parsed,
+			})
+			refs.CommandIDs = append(refs.CommandIDs, command.CommandID)
+		}
+		contextMap["recentCommands"] = briefs
 	}
 	// 最近已完成分析的分数与结论。
 	analyses, err := service.database.ListAIOpsAnalyses(ctx, 5, string(model.AIOpsCompleted))
@@ -109,13 +155,13 @@ func (service *Service) ChatBuildContext(ctx context.Context) (string, error) {
 	}
 	encoded, err := json.Marshal(contextMap)
 	if err != nil {
-		return "", fmt.Errorf("marshal chat context: %w", err)
+		return nil, fmt.Errorf("marshal chat context: %w", err)
 	}
 	text, truncated := truncateChatContext(string(encoded), budgetChatContextRun)
 	if truncated {
 		service.logger.Warn("AIOps chat context truncated by budget", "budgetRunes", budgetChatContextRun)
 	}
-	return text, nil
+	return &ChatContext{Text: text, Refs: refs}, nil
 }
 
 // ChatSystemPrompt 返回对话系统提示词（#112：模板渲染，带版本/哈希）。
@@ -169,6 +215,46 @@ func (service *Service) Settings() SettingsState {
 	return state
 }
 
+// ChatRecord 持久化一次问答对（#112 阶段 D）：user 消息 + assistant 回答 + 上下文引用。
+// 引用 ID 只落在 assistant 消息上；失败只记日志（与审计同策略），不影响对话主流程。
+func (service *Service) ChatRecord(ctx context.Context, sessionID, message, answer string, refs ChatContextRefs) {
+	if sessionID == "" {
+		sessionID = "anonymous"
+	}
+	windowIDs, err := json.Marshal(refs.WindowIDs)
+	if err != nil {
+		service.logger.Warn("AIOps chat record: marshal window ids failed", "error", err)
+		return
+	}
+	alertIDs, err := json.Marshal(refs.AlertIDs)
+	if err != nil {
+		service.logger.Warn("AIOps chat record: marshal alert ids failed", "error", err)
+		return
+	}
+	commandIDs, err := json.Marshal(refs.CommandIDs)
+	if err != nil {
+		service.logger.Warn("AIOps chat record: marshal command ids failed", "error", err)
+		return
+	}
+	emptyIDs := json.RawMessage("[]")
+	now := time.Now().UTC()
+	userMessage := model.AIOpsChatMessage{
+		MessageID: randomAnalysisID(), SessionID: sessionID, Role: "user",
+		Content: message, WindowIDs: emptyIDs, AlertIDs: emptyIDs, CommandIDs: emptyIDs, CreatedAt: now,
+	}
+	if err := service.database.CreateAIOpsChatMessage(ctx, userMessage); err != nil {
+		service.logger.Warn("AIOps chat record: save user message failed", "error", err)
+		return
+	}
+	assistantMessage := model.AIOpsChatMessage{
+		MessageID: randomAnalysisID(), SessionID: sessionID, Role: "assistant",
+		Content: answer, WindowIDs: windowIDs, AlertIDs: alertIDs, CommandIDs: commandIDs, CreatedAt: now,
+	}
+	if err := service.database.CreateAIOpsChatMessage(ctx, assistantMessage); err != nil {
+		service.logger.Warn("AIOps chat record: save assistant message failed", "error", err)
+	}
+}
+
 // AuditChat 记录一次同步对话调用（#110 阶段四）：模型 / 耗时 / 消息长度 / token 用量 / 结果。
 // 审计失败只记日志，不影响对话主流程。
 func (service *Service) AuditChat(ctx context.Context, sessionID string, duration time.Duration, messageLen int, usage TokenUsage, err error) {
@@ -200,27 +286,27 @@ func (service *Service) AuditChat(ctx context.Context, sessionID string, duratio
 
 // ChatStream 流式生成回答：先校验消息，再组装上下文（工具步骤回调），最后流式调 LLM。
 // onTool 用于上报工具步骤（start/end + 名称）；onDelta 接收文本增量；onUsage 接收 token 用量（审计）。
-func (service *Service) ChatStream(ctx context.Context, message string, onTool func(name, phase string), onDelta func(string), onUsage func(TokenUsage)) error {
+func (service *Service) ChatStream(ctx context.Context, message string, onTool func(name, phase string), onDelta func(string), onUsage func(TokenUsage)) (ChatContextRefs, error) {
 	if err := service.ChatValidateMessage(message); err != nil {
-		return err
+		return ChatContextRefs{}, err
 	}
 	onTool("读取切面总结", "start")
-	contextText, err := service.ChatBuildContext(ctx)
+	chatContext, err := service.ChatBuildContext(ctx)
 	if err != nil {
-		return fmt.Errorf("build chat context: %w", err)
+		return ChatContextRefs{}, fmt.Errorf("build chat context: %w", err)
 	}
 	onTool("读取切面总结", "end")
 
-	userPrompt := fmt.Sprintf("用户问题：%s\n\n当前上下文：\n%s", message, contextText)
+	userPrompt := fmt.Sprintf("用户问题：%s\n\n当前上下文：\n%s", message, chatContext.Text)
 	prompt, renderErr := prompts.ChatAssistant.Render(nil)
 	if renderErr != nil {
-		return fmt.Errorf("render chat prompt: %w", renderErr)
+		return ChatContextRefs{}, fmt.Errorf("render chat prompt: %w", renderErr)
 	}
 	onTool("生成回答", "start")
-	err = service.llm.StreamComplete(ctx, prompt.System, userPrompt, service.config.MaxTokensPerCall, onDelta, onUsage)
+	err = service.llm.StreamComplete(ctx, prompt.System, userPrompt, service.config.MaxTokensPerCall, prompt.Temperature, onDelta, onUsage)
 	onTool("生成回答", "end")
 	if err != nil {
-		return fmt.Errorf("stream chat answer: %w", err)
+		return ChatContextRefs{}, fmt.Errorf("stream chat answer: %w", err)
 	}
-	return nil
+	return chatContext.Refs, nil
 }
