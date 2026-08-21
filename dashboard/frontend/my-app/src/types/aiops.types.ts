@@ -183,6 +183,7 @@ export interface AIOpsSettings {
     model: string
     baseUrl: string
     keyConfigured: boolean
+    enabled: boolean
 }
 
 export type AIOpsSettingsEnvelope = ApiEnvelope<AIOpsSettings>

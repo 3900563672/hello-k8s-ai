@@ -85,8 +85,8 @@ export function AiChatWidget() {
     const [settingsLoading, setSettingsLoading] = useState(false)
     const [settingsError, setSettingsError] = useState<string | null>(null)
     const [saveState, setSaveState] = useState<SaveState>('idle')
-    const [configured, setConfigured] = useState({ keyConfigured: false, model: '', baseUrl: '' })
-    const [form, setForm] = useState({ model: '', baseUrl: '', apiKey: '' })
+    const [configured, setConfigured] = useState({ keyConfigured: false, model: '', baseUrl: '', enabled: false })
+    const [form, setForm] = useState({ model: '', baseUrl: '', apiKey: '', enabled: false })
 
     useEffect(() => {
         saveSession(session)
@@ -197,11 +197,13 @@ export function AiChatWidget() {
                 keyConfigured: settings.keyConfigured,
                 model: settings.model,
                 baseUrl: settings.baseUrl,
+                enabled: settings.enabled,
             })
             setForm((current) => ({
                 ...current,
                 model: current.model || settings.model,
                 baseUrl: current.baseUrl || settings.baseUrl,
+                enabled: settings.enabled,
             }))
         } catch (error) {
             setSettingsError(error instanceof Error ? error.message : '读取配置失败')
@@ -213,10 +215,11 @@ export function AiChatWidget() {
     const saveSettings = async () => {
         setSaveState('saving')
         setSettingsError(null)
-        const payload: { apiKey?: string; model?: string; baseUrl?: string } = {}
+        const payload: { apiKey?: string; model?: string; baseUrl?: string; enabled?: boolean } = {}
         if (form.apiKey.trim()) payload.apiKey = form.apiKey.trim()
         if (form.model.trim()) payload.model = form.model.trim()
         if (form.baseUrl.trim()) payload.baseUrl = form.baseUrl.trim()
+        payload.enabled = form.enabled
         try {
             const envelope = await updateAIOpsSettings(payload)
             const settings = envelope.data
@@ -224,6 +227,7 @@ export function AiChatWidget() {
                 keyConfigured: settings.keyConfigured,
                 model: settings.model,
                 baseUrl: settings.baseUrl,
+                enabled: settings.enabled,
             })
             setForm((current) => ({ ...current, apiKey: '' }))
             setSaveState('saved')
@@ -402,6 +406,31 @@ export function AiChatWidget() {
                                             className="h-9 w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-[12px] text-[#E8EEF7] outline-none placeholder:text-[#5A6778] focus:border-[#5B8CFF]/50"
                                         />
                                     </label>
+                                    <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+                                        <div>
+                                            <span className="block text-[11px] text-[#8C99AC]">AI 分析开关</span>
+                                            <span className="block text-[10px] text-[#5A6778]">
+                                                关闭后实验照常完成，但不入队 AI 分析
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={form.enabled}
+                                            onClick={() => setForm({ ...form, enabled: !form.enabled })}
+                                            className={cn(
+                                                'relative h-5 w-9 shrink-0 rounded-full transition-colors',
+                                                form.enabled ? 'bg-[#5B8CFF]' : 'bg-white/[0.12]',
+                                            )}
+                                        >
+                                            <span
+                                                className={cn(
+                                                    'absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all',
+                                                    form.enabled ? 'left-[18px]' : 'left-0.5',
+                                                )}
+                                            />
+                                        </button>
+                                    </div>
                                     {settingsError && (
                                         <p className="rounded-lg border border-red-400/20 bg-red-400/[0.06] px-3 py-2 text-[11px] leading-5 text-red-200/90">
                                             {settingsError}

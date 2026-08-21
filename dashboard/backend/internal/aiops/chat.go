@@ -198,6 +198,7 @@ type SettingsState struct {
 	Model         string `json:"model"`
 	BaseURL       string `json:"baseUrl"`
 	KeyConfigured bool   `json:"keyConfigured"`
+	Enabled       bool   `json:"enabled"`
 }
 
 // ConfigureLLM 运行时更新 LLM 配置（面板写入，仅服务端内存；重启后由环境变量恢复）。
@@ -231,7 +232,22 @@ func (service *Service) Settings() SettingsState {
 		KeyConfigured: strings.TrimSpace(service.config.OpenAIAPIKey) != "",
 	}
 	state.Configured = state.KeyConfigured
+	state.Enabled = service.enabled
 	return state
+}
+
+// SetEnabled 运行时开关（面板写入，仅服务端内存；重启后恢复为部署级启用态）。
+func (service *Service) SetEnabled(enabled bool) {
+	service.configMu.Lock()
+	defer service.configMu.Unlock()
+	service.enabled = enabled
+}
+
+// Enabled 返回运行时开关状态。
+func (service *Service) Enabled() bool {
+	service.configMu.Lock()
+	defer service.configMu.Unlock()
+	return service.enabled
 }
 
 // ChatRecord 持久化一次问答对（#112 阶段 D）：user 消息 + assistant 回答 + 上下文引用。

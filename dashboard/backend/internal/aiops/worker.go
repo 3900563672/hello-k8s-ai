@@ -34,11 +34,14 @@ type Service struct {
 
 	// 运行时配置（面板写入，#110 阶段四）保护锁。
 	configMu sync.Mutex
+
+	// enabled 运行时开关（面板写入，仅服务端内存；重启后恢复为部署级启用态）。
+	enabled bool
 }
 
 // NewService 构造分析服务；database 必须可用（调用方已判断）。
 func NewService(cfg config.AIOpsConfig, database store.Store, llm LLM, logger *slog.Logger) *Service {
-	return &Service{database: database, llm: llm, logger: logger, config: cfg, chatRate: make(map[string][]time.Time)}
+	return &Service{database: database, llm: llm, logger: logger, config: cfg, chatRate: make(map[string][]time.Time), enabled: true}
 }
 
 func randomAnalysisID() string {
@@ -52,6 +55,10 @@ func randomAnalysisID() string {
 // EnqueueAnalysis 为切面创建 pending 分析 + 任务记录（#110 阶段一）；
 // 同切面重复入队幂等（analyses 与 jobs 都以 segment_id 唯一）。
 func (service *Service) EnqueueAnalysis(ctx context.Context, segmentID string) error {
+	if !service.Enabled() {
+		// 运行时开关关闭时不产生新分析（实验仍可正常完成，只是不入队）。
+		return nil
+	}
 	analysisID := randomAnalysisID()
 	analysis := model.AIOpsAnalysis{
 		AnalysisID: analysisID,

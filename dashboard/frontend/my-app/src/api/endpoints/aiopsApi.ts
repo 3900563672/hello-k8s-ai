@@ -167,6 +167,7 @@ export function updateAIOpsSettings(payload: {
     apiKey?: string
     model?: string
     baseUrl?: string
+    enabled?: boolean
 }): Promise<AIOpsSettingsEnvelope> {
     return apiRequest<AIOpsSettingsEnvelope>('/aiops/settings', {
         method: 'POST',
