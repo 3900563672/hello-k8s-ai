@@ -192,4 +192,5 @@ DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 
 - M3 时间聚合（#95）：`aggregator.go` 定时把窗口内切面 L2 总结聚合为 L3 窗口认知、当日 L3 聚合为 L4 日总结（LLM + 规则兜底，Upsert 幂等，已结束窗口跳过）；`alerts.go` 对分数序列跑规则（连续低分/趋势下滑），触发写 `aiops_alerts`（alert_id 由规则+切面+窗口派生，幂等）。粒度/阈值可配置：`AIOPS_WINDOW_GRANULARITY`、`AIOPS_ALERT_THRESHOLD`、`AIOPS_ALERT_CONSECUTIVE`。
 - 同步对话（#110 阶段二）：`chat.go` 组装「结论型」上下文（最近 L3 窗口总结 / 最近警戒 / 最近已完成分析分数，目标 ≤6000 字符），`POST /aiops/chat` SSE 流式返回（lifecycle/tool/text 事件，AG-UI 轻量子集）；`llm.go` 新增流式调用（stream=true 逐 delta 回调）。限制：消息 ≤ `AIOPS_CHAT_MAX_MESSAGE_LEN`（默认 4000）、按会话限流 `AIOPS_CHAT_RATE_PER_MINUTE`（默认 6 次/分钟）、模型白名单 `AIOPS_CHAT_MODELS`（默认仅 `AIOPS_MODEL`）。
 - 面板配置与调用审计（#110 阶段四）：`Settings`/`ConfigureLLM` 提供掩码状态与运行时写入（`configMu` 保护，key 仅存内存，重启由环境变量恢复）；`GET/POST /aiops/settings` 暴露掩码态，key 不落库不回显。`AuditChat` 在流式对话结束后写 `aiops_audit_log`（模型/耗时/消息长度/结果），审计失败只记日志，不影响对话主流程。
+- 异步任务可见性（#110 阶段一）：`aiops_jobs` 表即队列（segment 唯一、幂等入队，job_id 复用 analysis_id），worker 每轮用 `FOR UPDATE SKIP LOCKED` 认领 pending（attempts+1/started_at），收尾回写 done/failed + finished_at + last_error；启动时 `RequeueStaleAIOpsJobs` 回收崩溃遗留。`GET /aiops/jobs` 暴露状态，前端「异步任务」区块 10s 轮询。
 

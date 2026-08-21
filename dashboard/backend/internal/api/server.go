@@ -110,6 +110,7 @@ func (server *Server) Handler() http.Handler {
 		mux.HandleFunc("GET /api/v1/aiops/alerts", server.handleListAIOpsAlerts)
 		mux.HandleFunc("POST /api/v1/aiops/chat", server.handleAIOpsChat)
 		mux.HandleFunc("GET /api/v1/aiops/settings", server.handleGetAIOpsSettings)
+		mux.HandleFunc("GET /api/v1/aiops/jobs", server.handleListAIOpsJobs)
 		mux.HandleFunc("POST /api/v1/aiops/settings", server.handleUpdateAIOpsSettings)
 	}
 	mux.HandleFunc("GET /api/v1/clock", server.handleClock)

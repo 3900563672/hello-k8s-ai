@@ -118,6 +118,10 @@ PVC 数据落在节点容器 `/var` named volume（Docker 数据盘 vhdx，WSL/D
 | Frontend | Service 代理返回页面 HTML |
 | 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
 
+| 文档 | `make docs-check`（全仓库文档门禁：MAP 映射 / 链接 / front-matter）；`make docs-sync-check`（README 时间线段、`docs/status.md`、`llms.txt`、所有权表必须与已提交内容一致） |
+
+派生文档生成器（`hack/gen-docs.py`）只统计 git 已跟踪的 `change-history/` 条目：未提交目录不会进入 README 时间线段与 `docs/status.md`，多会话共享工作树时互不污染；`make docs-sync-check` 失败先检查工作树是否有未提交变更（含其它会话的批次），提交后重新生成即可。
+
 这些检查通过后，脚本才输出“完整系统部署并验收通过”。
 
 ## 7. 生产边界

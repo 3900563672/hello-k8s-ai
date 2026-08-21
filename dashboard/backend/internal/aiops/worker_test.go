@@ -23,17 +23,21 @@ type fakeStore struct {
 	analyses     map[string]model.AIOpsAnalysis
 	summaries    map[string][]model.AIOpsEntitySummary
 	segment      *store.SegmentRecord
+	segmentErr   error
 	events       []model.SegmentEvent
 	metrics      []model.MetricBucket
 	traces       []model.TraceSummary
 	pendingOrder []string
 	requeued     int
+	jobs         map[string]model.AIOpsJob
+	jobOrder     []string
 }
 
 func newFakeStore(segment *store.SegmentRecord) *fakeStore {
 	return &fakeStore{
 		analyses:  make(map[string]model.AIOpsAnalysis),
 		summaries: make(map[string][]model.AIOpsEntitySummary),
+		jobs:      make(map[string]model.AIOpsJob),
 		segment:   segment,
 	}
 }
@@ -133,6 +137,82 @@ func (store *fakeStore) ListAIOpsAlerts(_ context.Context, _ int) ([]model.AIOps
 	return nil, nil
 }
 
+func (store *fakeStore) CreateAIOpsJob(_ context.Context, job model.AIOpsJob) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	for _, existing := range store.jobs {
+		if existing.SegmentID == job.SegmentID {
+			return nil
+		}
+	}
+	job.CreatedAt = time.Now().UTC()
+	job.UpdatedAt = job.CreatedAt
+	store.jobs[job.JobID] = job
+	store.jobOrder = append(store.jobOrder, job.JobID)
+	return nil
+}
+
+func (store *fakeStore) ClaimNextAIOpsJob(_ context.Context) (model.AIOpsJob, bool, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	for _, jobID := range store.jobOrder {
+		job, exists := store.jobs[jobID]
+		if exists && job.Status == "pending" {
+			job.Status = "running"
+			job.Attempts++
+			now := time.Now().UTC()
+			job.StartedAt = &now
+			job.UpdatedAt = now
+			store.jobs[jobID] = job
+			return job, true, nil
+		}
+	}
+	return model.AIOpsJob{}, false, nil
+}
+
+func (store *fakeStore) CompleteAIOpsJob(_ context.Context, jobID, status, errorText string) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	job, exists := store.jobs[jobID]
+	if !exists {
+		return errors.New("job not found")
+	}
+	job.Status = status
+	job.LastError = errorText
+	now := time.Now().UTC()
+	job.FinishedAt = &now
+	job.UpdatedAt = now
+	store.jobs[jobID] = job
+	return nil
+}
+
+func (store *fakeStore) ListAIOpsJobs(_ context.Context, _ int, status string) ([]model.AIOpsJob, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	var result []model.AIOpsJob
+	for _, jobID := range store.jobOrder {
+		job := store.jobs[jobID]
+		if status == "" || job.Status == status {
+			result = append(result, job)
+		}
+	}
+	return result, nil
+}
+
+func (store *fakeStore) RequeueStaleAIOpsJobs(_ context.Context, _ time.Time) (int, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	count := 0
+	for jobID, job := range store.jobs {
+		if job.Status == "running" {
+			job.Status = "pending"
+			store.jobs[jobID] = job
+			count++
+		}
+	}
+	return count, nil
+}
+
 func (store *fakeStore) ListAIOpsAnalyses(_ context.Context, limit int, status string) ([]model.AIOpsAnalysis, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
@@ -190,6 +270,9 @@ func (store *fakeStore) ListAIOpsEntitySummaries(_ context.Context, analysisID s
 }
 
 func (store *fakeStore) GetSegment(_ context.Context, _ string) (*store.SegmentRecord, error) {
+	if store.segmentErr != nil {
+		return nil, store.segmentErr
+	}
 	return store.segment, nil
 }
 
@@ -435,5 +518,66 @@ func TestExtractEntities(t *testing.T) {
 	}
 	if pod == nil || pod.Restarts != 2 || pod.Changes != "phase Running→Failed" {
 		t.Fatalf("unexpected pod fact: %+v", pod)
+	}
+}
+
+// TestPollProcessesJob 验证任务队列驱动：Enqueue 建 pending job → poll 认领 →
+// 复用 analyses 状态机完成 → job 收尾 done；失败路径回写 failed + last_error。
+func TestPollProcessesJob(t *testing.T) {
+	database := newFakeStore(segmentWithSnapshots())
+	llm := newFakeLLM(nil, []error{errors.New("down"), errors.New("down")})
+	service := testService(database, llm)
+
+	if err := service.EnqueueAnalysis(context.Background(), "segment-1"); err != nil {
+		t.Fatalf("enqueue: %v", err)
+	}
+	jobs, err := database.ListAIOpsJobs(context.Background(), 10, "")
+	if err != nil || len(jobs) != 1 || jobs[0].Status != "pending" {
+		t.Fatalf("jobs = %+v, err = %v; want 1 pending", jobs, err)
+	}
+
+	service.poll(context.Background())
+
+	jobs, _ = database.ListAIOpsJobs(context.Background(), 10, "")
+	if len(jobs) != 1 {
+		t.Fatalf("jobs = %d, want 1", len(jobs))
+	}
+	if jobs[0].Status != "done" {
+		t.Fatalf("job status = %s, want done (fallback completes)", jobs[0].Status)
+	}
+	if jobs[0].Attempts != 1 {
+		t.Fatalf("job attempts = %d, want 1", jobs[0].Attempts)
+	}
+	analysis, err := database.GetAIOpsAnalysisBySegment(context.Background(), "segment-1")
+	if err != nil || analysis == nil {
+		t.Fatalf("get analysis: %v", err)
+	}
+	if analysis.Status != string(model.AIOpsCompleted) {
+		t.Fatalf("analysis status = %s, want completed", analysis.Status)
+	}
+}
+
+// TestJobFailedRecordsError 验证处理失败时任务回写 failed + last_error，attempts 递增。
+func TestJobFailedRecordsError(t *testing.T) {
+	database := newFakeStore(segmentWithSnapshots())
+	llm := newFakeLLM(nil, []error{errors.New("down"), errors.New("down")})
+	service := testService(database, llm)
+	// 让 GetSegment 失败，processAnalysis 在 claim 后直接报错。
+	database.segmentErr = errors.New("segment gone")
+
+	if err := service.EnqueueAnalysis(context.Background(), "segment-1"); err != nil {
+		t.Fatalf("enqueue: %v", err)
+	}
+	service.poll(context.Background())
+
+	jobs, _ := database.ListAIOpsJobs(context.Background(), 10, "")
+	if len(jobs) != 1 || jobs[0].Status != "failed" {
+		t.Fatalf("job = %+v, want failed", jobs)
+	}
+	if jobs[0].LastError == "" {
+		t.Fatalf("last_error empty, want reason")
+	}
+	if jobs[0].Attempts != 1 {
+		t.Fatalf("attempts = %d, want 1", jobs[0].Attempts)
 	}
 }

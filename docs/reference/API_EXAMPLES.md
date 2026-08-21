@@ -300,6 +300,13 @@ curl -sS -X POST "$API/aiops/settings" -H 'Content-Type: application/json' \
   -d '{"model":"gpt-4o-mini","apiKey":"sk-..."}'
 ```
 
+**异步任务（#110 阶段一，状态/重试/失败原因可见）：**
+
+```bash
+# 最近任务（status 可过滤 pending/running/done/failed）
+curl -sS "$API/aiops/jobs?limit=20"
+```
+
 窗口/日总结由定时器自动产出（粒度 `AIOPS_WINDOW_GRANULARITY` 可配）；警戒为分数序列规则触发（连续低分/趋势下滑），alert_id 幂等。
 
 ## 13. 错误处理脚本规则

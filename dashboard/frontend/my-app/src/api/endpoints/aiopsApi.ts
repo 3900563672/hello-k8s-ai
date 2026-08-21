@@ -6,6 +6,8 @@ import type {
     AIOpsAlertsEnvelope,
     AIOpsChatEvent,
     AIOpsCommandEnvelope,
+    AIOpsJobStatus,
+    AIOpsJobsEnvelope,
     AIOpsSettingsEnvelope,
     AIOpsWindowLevel,
     AIOpsWindowsEnvelope,
@@ -136,6 +138,14 @@ export async function streamAIOpsChat(
             }
         }
     }
+}
+
+/** 异步任务列表（#110 阶段一）：status 可过滤，默认倒序。 */
+export function fetchAIOpsJobs(status?: AIOpsJobStatus, limit = 20): Promise<AIOpsJobsEnvelope> {
+    const params = new URLSearchParams()
+    if (status) params.set('status', status)
+    params.set('limit', String(limit))
+    return apiRequest<AIOpsJobsEnvelope>(`/aiops/jobs?${params.toString()}`)
 }
 
 /** 读取 LLM 配置掩码状态（key 不回显）。 */

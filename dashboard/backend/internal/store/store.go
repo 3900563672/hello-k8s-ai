@@ -101,6 +101,11 @@ type Store interface {
 	CreateAIOpsAlert(context.Context, model.AIOpsAlert) error
 	ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error)
 	CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error
+	CreateAIOpsJob(context.Context, model.AIOpsJob) error
+	ClaimNextAIOpsJob(context.Context) (model.AIOpsJob, bool, error)
+	CompleteAIOpsJob(context.Context, string, string, string) error
+	ListAIOpsJobs(context.Context, int, string) ([]model.AIOpsJob, error)
+	RequeueStaleAIOpsJobs(context.Context, time.Time) (int, error)
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -222,6 +227,21 @@ func (Disabled) CreateAIOpsAlert(context.Context, model.AIOpsAlert) error {
 }
 func (Disabled) CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error {
 	return ErrUnavailable
+}
+func (Disabled) CreateAIOpsJob(context.Context, model.AIOpsJob) error {
+	return ErrUnavailable
+}
+func (Disabled) ClaimNextAIOpsJob(context.Context) (model.AIOpsJob, bool, error) {
+	return model.AIOpsJob{}, false, ErrUnavailable
+}
+func (Disabled) CompleteAIOpsJob(context.Context, string, string, string) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsJobs(context.Context, int, string) ([]model.AIOpsJob, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) RequeueStaleAIOpsJobs(context.Context, time.Time) (int, error) {
+	return 0, ErrUnavailable
 }
 func (Disabled) ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error) {
 	return nil, ErrUnavailable

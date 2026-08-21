@@ -166,11 +166,45 @@ func (server *Server) handleListAIOpsAlerts(writer http.ResponseWriter, request 
 	writeData(writer, request, http.StatusOK, nonNilAIOpsAlerts(alerts), false, nil, nil)
 }
 
+// handleListAIOpsJobs 列出异步任务（#110 阶段一：状态/重试/失败原因可见）。
+func (server *Server) handleListAIOpsJobs(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireAIOps(writer, request) {
+		return
+	}
+	limit := queryInteger(request, "limit", 50)
+	if limit < 1 || limit > aiopsListMaxLimit {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_LIMIT",
+			"limit must be between 1 and 200.", false, nil)
+		return
+	}
+	status := strings.TrimSpace(request.URL.Query().Get("status"))
+	switch status {
+	case "", "pending", "running", "done", "failed":
+	default:
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_STATUS",
+			"status must be pending|running|done|failed.", false, nil)
+		return
+	}
+	jobs, err := server.store.ListAIOpsJobs(request.Context(), limit, status)
+	if err != nil {
+		server.writeExperimentStoreError(writer, request, "查询 AIOps 任务失败", err)
+		return
+	}
+	writeData(writer, request, http.StatusOK, nonNilAIOpsJobs(jobs), false, nil, nil)
+}
+
 func nonNilAIOpsWindowSummaries(summaries []model.AIOpsWindowSummary) []model.AIOpsWindowSummary {
 	if summaries == nil {
 		return []model.AIOpsWindowSummary{}
 	}
 	return summaries
+}
+
+func nonNilAIOpsJobs(jobs []model.AIOpsJob) []model.AIOpsJob {
+	if jobs == nil {
+		return []model.AIOpsJob{}
+	}
+	return jobs
 }
 
 func nonNilAIOpsAlerts(alerts []model.AIOpsAlert) []model.AIOpsAlert {

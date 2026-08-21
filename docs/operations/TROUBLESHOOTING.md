@@ -288,3 +288,4 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **MAP 门禁豁免（2026-08-19 起）**：纯测试文件（`*_test.go`、`*.test.ts(x)`、`*.spec.ts(x)`）不改变行为契约，豁免文档同步要求；行为变更必然同时触碰非测试代码，门禁仍会生效。
 - **链接/行数限制**：所有 Markdown 链接必须指向现有文件；README 等有行数上限，超限需精简内容。
 - **本地与 CI 差异**：CI 用 PR base 计算 diff（`DOCS_CHECK_BASE`），本地默认 `HEAD~1`；合并前 base 变化时可能需要在分支内先同步目标文档再推。
+- **派生文件漂移（多会话工作树）**：`hack/gen-docs.py` 只统计 git 已跟踪的 `change-history/` 条目（未提交目录不会混入 README 时间线段与 `docs/status.md`）。若 `docs-sync-check` 仍报差异：先确认工作树无未提交变更（含其它会话的批次），再 `make docs-sync` 生成后一并提交；不要把未提交条目对应的链接提交进去。

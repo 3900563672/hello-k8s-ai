@@ -139,6 +139,26 @@ export interface AIOpsChatEvent {
     durationMs?: number
 }
 
+/** 异步任务状态（#110 阶段一）：DB 即队列，pending→running→done/failed。 */
+export type AIOpsJobStatus = 'pending' | 'running' | 'done' | 'failed'
+
+/** 异步任务（#110 阶段一）：任务级状态 / 重试次数 / 失败原因。 */
+export interface AIOpsJob {
+    jobId: string
+    segmentId: string
+    kind: string
+    status: AIOpsJobStatus
+    attempts: number
+    maxAttempts: number
+    lastError?: string
+    createdAt: string
+    startedAt?: string
+    finishedAt?: string
+    updatedAt: string
+}
+
+export type AIOpsJobsEnvelope = ApiEnvelope<AIOpsJob[]>
+
 /** LLM 配置掩码状态（#110 阶段四）：key 只显示是否配置，不回显明文。 */
 export interface AIOpsSettings {
     configured: boolean

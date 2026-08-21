@@ -48,15 +48,27 @@ func randomAnalysisID() string {
 	return fmt.Sprintf("aiops-%d", time.Now().UnixNano())
 }
 
-// EnqueueAnalysis 为切面创建 pending 分析；同切面重复入队幂等。
+// EnqueueAnalysis 为切面创建 pending 分析 + 任务记录（#110 阶段一）；
+// 同切面重复入队幂等（analyses 与 jobs 都以 segment_id 唯一）。
 func (service *Service) EnqueueAnalysis(ctx context.Context, segmentID string) error {
+	analysisID := randomAnalysisID()
 	analysis := model.AIOpsAnalysis{
-		AnalysisID: randomAnalysisID(),
+		AnalysisID: analysisID,
 		SegmentID:  segmentID,
 		Status:     string(model.AIOpsPending),
 	}
 	if err := service.database.CreateAIOpsAnalysis(ctx, analysis); err != nil {
 		return fmt.Errorf("enqueue aiops analysis for segment %s: %w", segmentID, err)
+	}
+	job := model.AIOpsJob{
+		JobID:       analysisID,
+		SegmentID:   segmentID,
+		Kind:        "analysis",
+		Status:      "pending",
+		MaxAttempts: 3,
+	}
+	if err := service.database.CreateAIOpsJob(ctx, job); err != nil {
+		return fmt.Errorf("enqueue aiops job for segment %s: %w", segmentID, err)
 	}
 	return nil
 }
@@ -71,6 +83,14 @@ func (service *Service) Run(ctx context.Context) error {
 		service.logger.Warn("AIOps stale analysis requeue failed", "error", err)
 	} else if requeued > 0 {
 		service.logger.Info("AIOps requeued stale analyses", "count", requeued)
+	}
+	requeueContext, cancel = context.WithTimeout(ctx, 30*time.Second)
+	requeuedJobs, requeueErr := service.database.RequeueStaleAIOpsJobs(requeueContext, time.Now().UTC().Add(-service.config.StaleRequeueInterval))
+	cancel()
+	if requeueErr != nil {
+		service.logger.Warn("AIOps stale job requeue failed", "error", requeueErr)
+	} else if requeuedJobs > 0 {
+		service.logger.Info("AIOps requeued stale jobs", "count", requeuedJobs)
 	}
 	ticker := time.NewTicker(service.config.PollInterval)
 	defer ticker.Stop()
@@ -105,20 +125,34 @@ func (service *Service) aggregateWindows(ctx context.Context) {
 }
 
 func (service *Service) poll(ctx context.Context) {
-	analyses, err := service.database.ListAIOpsAnalyses(ctx, analysisBatchSize, string(model.AIOpsPending))
-	if err != nil {
-		service.logger.Warn("AIOps poll pending analyses failed", "error", err)
-		return
-	}
-	for _, analysis := range analyses {
-		if err := service.processAnalysis(ctx, analysis); err != nil {
-			service.logger.Error("AIOps analysis failed", "analysisId", analysis.AnalysisID, "segmentId", analysis.SegmentID, "error", err)
-			failContext, cancel := context.WithTimeout(ctx, 15*time.Second)
-			if failErr := service.database.FailAIOpsAnalysis(failContext, analysis.AnalysisID, err.Error()); failErr != nil {
-				service.logger.Error("AIOps mark analysis failed", "analysisId", analysis.AnalysisID, "error", failErr)
-			}
-			cancel()
+	// 任务队列驱动（#110 阶段一）：FOR UPDATE SKIP LOCKED 认领，一次最多一批。
+	for i := 0; i < analysisBatchSize; i++ {
+		job, ok, err := service.database.ClaimNextAIOpsJob(ctx)
+		if err != nil {
+			service.logger.Warn("AIOps poll claim job failed", "error", err)
+			return
 		}
+		if !ok {
+			return
+		}
+		service.processJob(ctx, job)
+	}
+}
+
+// processJob 执行单个任务：复用 analyses 状态机（claim 幂等，analysis_id=job_id），
+// 收尾统一回写任务状态（done/failed + finished_at + last_error）。
+func (service *Service) processJob(ctx context.Context, job model.AIOpsJob) {
+	analysis := model.AIOpsAnalysis{AnalysisID: job.JobID, SegmentID: job.SegmentID}
+	processErr := service.processAnalysis(ctx, analysis)
+	finishContext, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	status, errorText := "done", ""
+	if processErr != nil {
+		status, errorText = "failed", processErr.Error()
+		service.logger.Error("AIOps analysis failed", "jobId", job.JobID, "segmentId", job.SegmentID, "error", processErr)
+	}
+	if completeErr := service.database.CompleteAIOpsJob(finishContext, job.JobID, status, errorText); completeErr != nil {
+		service.logger.Error("AIOps complete job failed", "jobId", job.JobID, "error", completeErr)
 	}
 }
 

@@ -122,6 +122,22 @@ type AIOpsAuditLog struct {
 	CreatedAt  time.Time `json:"createdAt"`
 }
 
+// AIOpsJob 是 aiops_jobs 表的一行：任务级状态（#110 阶段一，异步可见性）。
+// DB 即队列：worker 用 SKIP LOCKED 认领 pending，状态/重试/失败原因可直接 SQL 查询。
+type AIOpsJob struct {
+	JobID       string     `json:"jobId"`
+	SegmentID   string     `json:"segmentId"`
+	Kind        string     `json:"kind"`
+	Status      string     `json:"status"`
+	Attempts    int        `json:"attempts"`
+	MaxAttempts int        `json:"maxAttempts"`
+	LastError   string     `json:"lastError,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	StartedAt   *time.Time `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time `json:"finishedAt,omitempty"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+}
+
 // AIOpsAlert 是 aiops_alerts 表的一行：分数序列规则触发的警戒（不进 Prometheus）。
 type AIOpsAlert struct {
 	AlertID        string          `json:"alertId"`
