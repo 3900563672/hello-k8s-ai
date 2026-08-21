@@ -27,6 +27,7 @@ hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度�
 本项目深度使用 AI 协作开发——设计、编码、测试、文档与复盘均有 AI 参与，并沉淀了可复用的工程化体系（文档按读者分层、变更全归档、CI 强制同步、提示词协议化）。这不是需要隐藏的辅助，而是我的工程方法：**人负责决策与质量，AI 负责执行与探索**。让 AI 生成代码并不稀奇；真正值得研究的是与 AI 协作维护大型项目、参与社区治理、高质量建设并持续扩展自己的项目。
 
 想参与 AI 协作开发，先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)；更多 AI×Human 协作研究见 [我的主页](https://github.com/3900563672)。
+
 ## 最省事的部署方式
 
 本地开发/演示默认使用独立的 Kind 多节点集群（`hello-k8s-ai-dev`，1 control-plane + 4 worker），由 `make cluster-up` 自动创建并切换 Context；不再依赖 Docker Desktop 内置 Kubernetes。PVC 数据持久化在节点 `/var/lib/hello-k8s-ai-pv`（Docker 数据盘 vhdx，WSL/Docker 重启不丢）；删除集群重建后需按 `hack/kind/restore-data.sh` 从备份显式恢复。
