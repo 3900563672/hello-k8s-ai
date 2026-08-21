@@ -115,3 +115,11 @@
 - 必须动作：`make doctor` / preflight 内置 `hack/wsl-loopback-probe`；环境性失败先自连一次完成端口注册再判。
 - 证据链：docs/lessons/process-wsl-loopback-fresh-listen-refused.md、docs/operations/WSL_LOOPBACK_CASE_STUDY.md
 - 状态：guarded（probe 已接入 doctor/preflight/selfcheck）
+
+### FR-014 默认关闭的功能路径未被 CI/部署执行，启用即爆（2026-08-21 建档）
+- 现象：AIOPS_ENABLED=false（默认）时 /aiops 路由块整体不注册；#113/#114 先后合入残留同一 pattern 重复注册（git 无冲突、测试未覆盖），启用 AIOps 后后端启动直接 panic。
+- 触发条件：修改带开关/默认关闭的功能块（AIOPS_ENABLED、DEMO_ENABLED 等）；两个 PR 先后合入、改动同一函数/文件。
+- 根因：启用路径无 CI 覆盖；默认关闭分支的代码路径是盲区。
+- 必须动作：开关型功能的启用路径必须有一条最小测试（路由注册不 panic + 关键端点 200）；合并后本地跑一次 make test 全量；部署默认关闭的功能时先在测试环境启用验证一轮。
+- 证据链：docs/lessons/2026-08-21-aiops-enable-deploy-chain.md、PR #116
+- 状态：guarded（server_routes_test.go 已加回归测试）
