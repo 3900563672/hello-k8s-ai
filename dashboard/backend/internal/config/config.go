@@ -84,20 +84,21 @@ type PersistenceConfig struct {
 
 // AIOpsConfig 智能分析层配置；AIOps 默认关闭，开启时必须提供 API Key。
 type AIOpsConfig struct {
-	Enabled              bool
-	OpenAIBaseURL        string
-	OpenAIAPIKey         string
-	Model                string
-	Timeout              time.Duration
-	MaxTokensPerCall     int
-	MaxCallsPerAnalysis  int
-	MaxEntitiesPerCall   int
-	PollInterval         time.Duration
-	StaleRequeueInterval time.Duration
-	WindowInterval       time.Duration
-	WindowGranularity    time.Duration
-	AlertThreshold       int
-	AlertConsecutive     int
+	Enabled                bool
+	OpenAIBaseURL          string
+	OpenAIAPIKey           string
+	Model                  string
+	Timeout                time.Duration
+	MaxTokensPerCall       int
+	MaxCallsPerAnalysis    int
+	MaxEntitiesPerCall     int
+	MaxAttemptsPerAnalysis int
+	PollInterval           time.Duration
+	StaleRequeueInterval   time.Duration
+	WindowInterval         time.Duration
+	WindowGranularity      time.Duration
+	AlertThreshold         int
+	AlertConsecutive       int
 }
 
 func Load() (Config, error) {
@@ -170,20 +171,21 @@ func Load() (Config, error) {
 			SegmentTTFTThresholdMS:    decimal("SEGMENT_TTFT_THRESHOLD_MS", 2000),
 		},
 		AIOps: AIOpsConfig{
-			Enabled:              boolean("AIOPS_ENABLED", false),
-			OpenAIBaseURL:        env("AIOPS_OPENAI_BASE_URL", "https://api.openai.com/v1"),
-			OpenAIAPIKey:         env("AIOPS_OPENAI_API_KEY", ""),
-			Model:                env("AIOPS_MODEL", "gpt-4o-mini"),
-			Timeout:              duration("AIOPS_TIMEOUT", 60*time.Second),
-			MaxTokensPerCall:     integer("AIOPS_MAX_TOKENS_PER_CALL", 2000),
-			MaxCallsPerAnalysis:  integer("AIOPS_MAX_CALLS_PER_ANALYSIS", 8),
-			MaxEntitiesPerCall:   integer("AIOPS_MAX_ENTITIES_PER_CALL", 20),
-			PollInterval:         duration("AIOPS_POLL_INTERVAL", 5*time.Second),
-			StaleRequeueInterval: duration("AIOPS_STALE_REQUEUE_INTERVAL", 10*time.Minute),
-			WindowInterval:       duration("AIOPS_WINDOW_INTERVAL", 15*time.Minute),
-			WindowGranularity:    duration("AIOPS_WINDOW_GRANULARITY", 2*time.Hour),
-			AlertThreshold:       integer("AIOPS_ALERT_THRESHOLD", 40),
-			AlertConsecutive:     integer("AIOPS_ALERT_CONSECUTIVE", 3),
+			Enabled:                boolean("AIOPS_ENABLED", false),
+			OpenAIBaseURL:          env("AIOPS_OPENAI_BASE_URL", "https://api.openai.com/v1"),
+			OpenAIAPIKey:           env("AIOPS_OPENAI_API_KEY", ""),
+			Model:                  env("AIOPS_MODEL", "gpt-4o-mini"),
+			Timeout:                duration("AIOPS_TIMEOUT", 60*time.Second),
+			MaxTokensPerCall:       integer("AIOPS_MAX_TOKENS_PER_CALL", 2000),
+			MaxCallsPerAnalysis:    integer("AIOPS_MAX_CALLS_PER_ANALYSIS", 8),
+			MaxEntitiesPerCall:     integer("AIOPS_MAX_ENTITIES_PER_CALL", 20),
+			MaxAttemptsPerAnalysis: integer("AIOPS_MAX_ATTEMPTS_PER_ANALYSIS", 2),
+			PollInterval:           duration("AIOPS_POLL_INTERVAL", 5*time.Second),
+			StaleRequeueInterval:   duration("AIOPS_STALE_REQUEUE_INTERVAL", 10*time.Minute),
+			WindowInterval:         duration("AIOPS_WINDOW_INTERVAL", 15*time.Minute),
+			WindowGranularity:      duration("AIOPS_WINDOW_GRANULARITY", 2*time.Hour),
+			AlertThreshold:         integer("AIOPS_ALERT_THRESHOLD", 40),
+			AlertConsecutive:       integer("AIOPS_ALERT_CONSECUTIVE", 3),
 		},
 		LogLevel:    *logLevel,
 		ClusterName: env("K8S_CLUSTER_NAME", "default"),

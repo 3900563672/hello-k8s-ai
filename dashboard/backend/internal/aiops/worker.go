@@ -106,10 +106,15 @@ func (service *Service) poll(ctx context.Context) {
 		if err := service.processAnalysis(ctx, analysis); err != nil {
 			service.logger.Error("AIOps analysis failed", "analysisId", analysis.AnalysisID, "segmentId", analysis.SegmentID, "error", err)
 			failContext, cancel := context.WithTimeout(ctx, 15*time.Second)
-			if failErr := service.database.FailAIOpsAnalysis(failContext, analysis.AnalysisID, err.Error()); failErr != nil {
-				service.logger.Error("AIOps mark analysis failed", "analysisId", analysis.AnalysisID, "error", failErr)
-			}
+			retried, failErr := service.database.FailOrRetryAIOpsAnalysis(
+				failContext, analysis.AnalysisID, err.Error(), service.config.MaxAttemptsPerAnalysis)
 			cancel()
+			if failErr != nil {
+				service.logger.Error("AIOps mark analysis failed", "analysisId", analysis.AnalysisID, "error", failErr)
+			} else if retried {
+				service.logger.Warn("AIOps analysis will retry", "analysisId", analysis.AnalysisID,
+					"attempts", analysis.Attempts+1, "error", err)
+			}
 		}
 	}
 }

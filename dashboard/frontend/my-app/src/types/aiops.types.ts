@@ -41,6 +41,10 @@ export interface AIOpsAnalysis {
     scores?: AIOpsScores
     summary?: unknown
     error?: string
+    /** 失败重试计数（#110 阶段一：claim 时 +1，达上限转 failed）。 */
+    attempts?: number
+    /** 任务类型（segment=切面 L1/L2 分析，预留后续类型）。 */
+    kind?: string
     createdAt: string
     updatedAt: string
 }

@@ -62,6 +62,7 @@ func (store *fakeStore) ClaimAIOpsAnalysis(_ context.Context, analysisID string)
 				return false, nil
 			}
 			analysis.Status = string(model.AIOpsRunning)
+			analysis.Attempts++
 			analysis.UpdatedAt = time.Now().UTC()
 			store.analyses[segmentID] = analysis
 			return true, nil
@@ -108,6 +109,25 @@ func (store *fakeStore) CompleteAIOpsAnalysis(_ context.Context, analysisID stri
 		}
 	}
 	return errors.New("analysis not found")
+}
+
+func (store *fakeStore) FailOrRetryAIOpsAnalysis(_ context.Context, analysisID, errorText string, maxAttempts int) (bool, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	for segmentID, analysis := range store.analyses {
+		if analysis.AnalysisID == analysisID {
+			analysis.Error = errorText
+			analysis.UpdatedAt = time.Now().UTC()
+			if analysis.Attempts >= maxAttempts {
+				analysis.Status = string(model.AIOpsFailed)
+			} else {
+				analysis.Status = string(model.AIOpsPending)
+			}
+			store.analyses[segmentID] = analysis
+			return analysis.Status == string(model.AIOpsPending), nil
+		}
+	}
+	return false, errors.New("analysis not found")
 }
 
 func (store *fakeStore) FailAIOpsAnalysis(_ context.Context, analysisID, errorText string) error {

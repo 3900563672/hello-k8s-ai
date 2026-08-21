@@ -26,7 +26,8 @@ func (database *Postgres) CreateAIOpsAnalysis(ctx context.Context, analysis mode
 // ClaimAIOpsAnalysis 原子认领 pending 分析（pending→running），返回是否抢到。
 func (database *Postgres) ClaimAIOpsAnalysis(ctx context.Context, analysisID string) (bool, error) {
 	tag, err := database.pool.Exec(ctx, `
-		UPDATE aiops_analyses SET status='running', updated_at=clock_timestamp()
+		UPDATE aiops_analyses
+		SET status='running', attempts=attempts+1, updated_at=clock_timestamp()
 		WHERE analysis_id=$1 AND status='pending'`, analysisID)
 	if err != nil {
 		return false, fmt.Errorf("claim aiops analysis: %w", err)
@@ -82,11 +83,28 @@ func (database *Postgres) FailAIOpsAnalysis(ctx context.Context, analysisID, err
 	return nil
 }
 
+// FailOrRetryAIOpsAnalysis 分析失败后按重试上限流转：attempts 未达 maxAttempts 回 pending
+// （下次轮询重试），达到上限置 failed 终态；返回是否回退重试。
+func (database *Postgres) FailOrRetryAIOpsAnalysis(ctx context.Context, analysisID, errorText string, maxAttempts int) (bool, error) {
+	var status string
+	if err := database.pool.QueryRow(ctx, `
+		UPDATE aiops_analyses
+		SET status = CASE WHEN attempts >= $2 THEN 'failed' ELSE 'pending' END,
+		    error_text = $3,
+		    updated_at = clock_timestamp()
+		WHERE analysis_id = $1
+		RETURNING status`, analysisID, maxAttempts, errorText).Scan(&status); err != nil {
+		return false, fmt.Errorf("fail or retry aiops analysis: %w", err)
+	}
+	return status == string(model.AIOpsPending), nil
+}
+
 func scanAIOpsAnalysis(row pgx.Row) (*model.AIOpsAnalysis, error) {
 	var analysis model.AIOpsAnalysis
 	err := row.Scan(&analysis.AnalysisID, &analysis.SegmentID, &analysis.Status,
 		&analysis.L1Total, &analysis.L1Done, &analysis.Scores, &analysis.Summary,
-		&analysis.Error, &analysis.CreatedAt, &analysis.UpdatedAt)
+		&analysis.Error, &analysis.Attempts, &analysis.Kind,
+		&analysis.CreatedAt, &analysis.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +113,7 @@ func scanAIOpsAnalysis(row pgx.Row) (*model.AIOpsAnalysis, error) {
 
 func (database *Postgres) GetAIOpsAnalysis(ctx context.Context, analysisID string) (*model.AIOpsAnalysis, error) {
 	analysis, err := scanAIOpsAnalysis(database.pool.QueryRow(ctx, `
-		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, created_at, updated_at
+		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, attempts, kind, created_at, updated_at
 		FROM aiops_analyses WHERE analysis_id=$1`, analysisID))
 	if err != nil {
 		return nil, fmt.Errorf("get aiops analysis: %w", err)
@@ -105,7 +123,7 @@ func (database *Postgres) GetAIOpsAnalysis(ctx context.Context, analysisID strin
 
 func (database *Postgres) GetAIOpsAnalysisBySegment(ctx context.Context, segmentID string) (*model.AIOpsAnalysis, error) {
 	analysis, err := scanAIOpsAnalysis(database.pool.QueryRow(ctx, `
-		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, created_at, updated_at
+		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, attempts, kind, created_at, updated_at
 		FROM aiops_analyses WHERE segment_id=$1`, segmentID))
 	if err != nil {
 		return nil, fmt.Errorf("get aiops analysis by segment: %w", err)
@@ -115,7 +133,7 @@ func (database *Postgres) GetAIOpsAnalysisBySegment(ctx context.Context, segment
 
 func (database *Postgres) ListAIOpsAnalyses(ctx context.Context, limit int, status string) ([]model.AIOpsAnalysis, error) {
 	rows, err := database.pool.Query(ctx, `
-		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, created_at, updated_at
+		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, attempts, kind, created_at, updated_at
 		FROM aiops_analyses
 		WHERE ($1 = '' OR status = $1)
 		ORDER BY created_at DESC
@@ -129,7 +147,8 @@ func (database *Postgres) ListAIOpsAnalyses(ctx context.Context, limit int, stat
 		var analysis model.AIOpsAnalysis
 		if err := rows.Scan(&analysis.AnalysisID, &analysis.SegmentID, &analysis.Status,
 			&analysis.L1Total, &analysis.L1Done, &analysis.Scores, &analysis.Summary,
-			&analysis.Error, &analysis.CreatedAt, &analysis.UpdatedAt); err != nil {
+			&analysis.Error, &analysis.Attempts, &analysis.Kind,
+			&analysis.CreatedAt, &analysis.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan aiops analysis: %w", err)
 		}
 		analyses = append(analyses, analysis)
@@ -267,7 +286,7 @@ func (database *Postgres) ListAIOpsWindowSummaries(ctx context.Context, level st
 // ListAIOpsAnalysesInWindow 列出窗口内已完成的切面分析（L3 聚合输入：只读 L2 结果）。
 func (database *Postgres) ListAIOpsAnalysesInWindow(ctx context.Context, start, end time.Time) ([]model.AIOpsAnalysis, error) {
 	rows, err := database.pool.Query(ctx, `
-		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, created_at, updated_at
+		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, attempts, kind, created_at, updated_at
 		FROM aiops_analyses
 		WHERE status='completed' AND created_at >= $1 AND created_at < $2
 		ORDER BY created_at ASC`, start, end)
@@ -280,7 +299,8 @@ func (database *Postgres) ListAIOpsAnalysesInWindow(ctx context.Context, start, 
 		var analysis model.AIOpsAnalysis
 		if err := rows.Scan(&analysis.AnalysisID, &analysis.SegmentID, &analysis.Status,
 			&analysis.L1Total, &analysis.L1Done, &analysis.Scores, &analysis.Summary,
-			&analysis.Error, &analysis.CreatedAt, &analysis.UpdatedAt); err != nil {
+			&analysis.Error, &analysis.Attempts, &analysis.Kind,
+			&analysis.CreatedAt, &analysis.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan aiops analysis in window: %w", err)
 		}
 		analyses = append(analyses, analysis)
