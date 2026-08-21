@@ -16,6 +16,7 @@ hello-k8s-ai 是一个以 Kubernetes API 为当前事实源的 AI 推理调度�
 | 能操作本机的 Agent（Codex、Claude Code） | [AGENTS.md](AGENTS.md) + [docs/agents/README.md](docs/agents/README.md) |
 | 只在自己工作区、收打包内容的远程 AI | [docs/remote-ai/llms.txt](docs/remote-ai/llms.txt)，包内先读 `CONTEXT_PACK.md` |
 | 全部读者 | 变更历史 [change-history/README.md](change-history/README.md)；最近 5 条见下方时间线 |
+| 想读完整技术阐述 | [技术白皮书](docs/whitepaper/COMPLETE_OVERVIEW.md)（含 [PDF 构建说明](docs/whitepaper/BUILD_PDF.md)） |
 
 想用 AI 协作开发，人类可先读 [AI 协作与提示词手册](docs/getting-started/AI_COLLABORATION.md)。参与贡献见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
@@ -64,6 +65,8 @@ bash setup.sh
 | Dashboard（唯一入口） | `http://localhost:8080` |
 
 Grafana、Prometheus 与 Jaeger 不再单独暴露端口：Grafana 监控面板在 Dashboard「监控面板」页内嵌，Prometheus 与 Jaeger 数据在「数据回显」页展示。
+
+> 若 Windows 浏览器访问 `localhost:8080` 打不开（WSL localhost 转发中继偶发卡死，见 [docs/operations/WSL_LOOPBACK_CASE_STUDY.md](docs/operations/WSL_LOOPBACK_CASE_STUDY.md)），改用局域网 IP 访问：`http://<WSL-IP>:8080`（`make cluster-urls` 可打印）。
 
 常用命令：
 
@@ -116,7 +119,8 @@ Kubernetes API Server 拥有配置与最新收敛状态；PostgreSQL 只保存�
 | 11 个 CRD、7 个 Controller、Simulator | 已实现 |
 | Simulator 运行时倍速（1x..20x） | 已实现；只加速离散事件引擎，不改变 Controller 冷却、数据新鲜度或历史时间 |
 | Backend Kubernetes cache、PostgreSQL、Prometheus、Jaeger 聚合 | 已实现 |
-| React Config、Traffic、Data Overview | 已接真实 Backend；Traffic Overlay 提交仍是部分实现 |
+| React Config、Traffic、Data Overview | 已接真实 Backend；Traffic 叠加已写入控制面（`Tenant.spec.qps`） |
+| AIOps 浮窗（分层总结 / 意图执行 / 时间聚合警戒 / 运行时开关） | 已实现；Dashboard 右下角浮窗，设置面板配置 API Key 并开启 AI 分析开关后可用 |
 | 预置配置模板与"从模板新建" | 已实现；模板只预填表单，提交与运行由用户决定 |
 | Monitor（Grafana 内嵌）与 Guide（填写指南） | 已实现；Grafana 经 Dashboard `/grafana/` 单入口访问，`/guide` 集中展示字段含义与系统常量 |
 | 参数与填写指南（/guide） | 已实现；集中展示字段含义、默认值与系统常量 |
