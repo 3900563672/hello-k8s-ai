@@ -133,7 +133,7 @@ selfcheck: lint-sh lint-md ## 工具链自检：shell/markdown 静态检查 + No
 verify: fmt-check test test-backend test-e2e-compile test-frontend verify-deploy selfcheck lint ## 执行提交前完整静态验证
 
 .PHONY: doctor
-doctor: ## 环境自检：磁盘 / Docker / WSL 回环 / 端口 / 内存 / tmpfs / dmesg（开工与长跑前先跑）
+doctor: ## 环境自检：磁盘 / Docker / 宿主 VM 残留 / WSL 回环 / 端口 / 内存 / tmpfs / dmesg（开工与长跑前先跑）
 	bash hack/doctor.sh
 
 # e2e 使用独立集群，避免测试清理误删日常开发集群。

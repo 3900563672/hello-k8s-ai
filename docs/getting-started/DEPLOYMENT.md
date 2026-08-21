@@ -105,6 +105,13 @@ PVC 数据落在节点容器 `/var` named volume（Docker 数据盘 vhdx，WSL/D
 - 恢复解包前会清空目标目录，避免与新集群初始化数据混合（否则 Prometheus TSDB 报 `segments are not sequential`）。
 - 恢复完成后验证：`make preflight`、Grafana 面板有历史数据、`/api/v1/replay` 可查旧切面。
 
+## 5.2 宿主层重启与自检（WSL/Docker）
+
+PVC 数据在节点容器 `/var` named volume（Docker 数据盘 vhdx），WSL/Docker 重启不丢；但宿主层重启有安全顺序与残留检查要求（孤儿 vmwp/vmmemWSL 锁 vhdx 会导致引擎起不来，系统服务卡死时强杀会崩系统）。完整 SOP 见 [docs/operations/WSL_DOCKER_RESTART_SOP.md](../operations/WSL_DOCKER_RESTART_SOP.md)，要点：
+
+1. 先优雅退出 Docker Desktop，再 `wsl --shutdown`，最后重新启动 Docker Desktop 并拉起 Ubuntu。
+2. 重启后先 `make doctor`（含宿主 VM 残留检查）再继续业务链路。
+
 ## 6. 自动验收门
 
 | 门 | 自动检查 |

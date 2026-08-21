@@ -17,7 +17,7 @@ flowchart TD
 
 先确认页面是 Latest 还是 Historical。历史快照里的 Pending 不会因为当前集群已恢复而变化。
 
-任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查环境自检）。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。
+任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 9 类检查环境自检（含宿主 VM 残留））。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。
 
 环境故障确认后，一键自愈与拉起联调用 make env-up（#109）：apiserver 不可达自动 docker restart control-plane、Kind 节点 PV tmpfs 遮罩自动 umount 并重建 PVC 工作负载、port-forward / 本地后端 / 前端 vite 幂等拉起（密钥从集群 Secret 注入 .runtime/，不入库）。
 
@@ -36,6 +36,17 @@ kubectl --context "$CTX" -n "$NS" get events --sort-by=.lastTimestamp
 ```
 
 不要把 `CTX`/`NS` 未展开的命令用于删除；排障阶段只读。
+
+## 2.1 宿主层（WSL/Docker）故障速查
+
+先分清症状属于宿主层还是集群层：`wsl` 命令挂死、Docker Desktop 起不来、Docker 引擎 503、`ERROR_SHARING_VIOLATION`、服务停在 StopPending 都是宿主层问题，与业务无关。完整处置（安全重启顺序 / 僵尸识别 / 可杀与不可杀边界 / 每步验证点）见 [WSL/Docker 宿主层安全重启与残留检查 SOP](WSL_DOCKER_RESTART_SOP.md)，核心规则：
+
+| 症状 | 判定 | 处置 |
+| --- | --- | --- |
+| `wsl` 命令挂死 | `timeout 8 wsl.exe -l -v` 无响应 | wslservice 疑似僵尸化 → 按 SOP 处置，先停手评估 |
+| Docker 引擎起不来 + `ERROR_SHARING_VIOLATION` | `Get-Process vmwp,vmmemWSL` 有孤儿进程 | vhdx 被孤儿 VM 锁 → 优先正常重启 Windows（最干净） |
+| 服务卡 StopPending（wslservice/vmcompute） | `sc query <服务>` 超过 2 分钟仍 STOP_PENDING | 不强杀进程（vmcompute 强杀实测导致系统崩溃）→ 优雅停服务或重启系统 |
+| `make doctor` 报孤儿 vmwp/vmmemWSL | doctor 第 2.1 节自动判定 | 引擎可达则是正常 VM；引擎不可达才需要处置 |
 
 ## 3. Controller Manager 不 Ready
 

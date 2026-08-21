@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 环境自检：开工 / 长跑前 30 秒检查环境层健康（磁盘 / Docker / WSL 回环 / 端口 / 内存 / tmpfs / dmesg）。
+# 环境自检：开工 / 长跑前 30 秒检查环境层健康（磁盘 / Docker / 宿主 VM 残留 / WSL 回环 / 端口 / 内存 / tmpfs / dmesg）。
 # 与 hack/preflight.sh 分工：doctor 不依赖集群可达（Docker 挂了也能给出明确 FAIL 项），
 # preflight 在 doctor 通过后做集群与工作负载深度体检。
 # 用法: bash hack/doctor.sh  ｜ 配套：make doctor
@@ -53,6 +53,24 @@ else
     warn "kind 节点容器部分在跑（$NODE_CONTAINERS/5），恢复：docker start hello-k8s-ai-dev-*"
   else
     warn "kind 节点容器未运行（0/5）——集群当前处于关闭态；长跑前需启动"
+  fi
+fi
+
+# ---------- 2.1 宿主 VM 残留（孤儿 vmwp/vmmemWSL 锁 vhdx，见 docs/operations/WSL_DOCKER_RESTART_SOP.md） ----------
+if command -v powershell.exe >/dev/null 2>&1 && command -v wsl.exe >/dev/null 2>&1; then
+  VMWP=$(powershell.exe -NoProfile -Command "(Get-Process vmwp -ErrorAction SilentlyContinue | Measure-Object).Count" 2>/dev/null | tr -d '\r' | tail -1)
+  VMMEM=$(powershell.exe -NoProfile -Command "(Get-Process vmmemWSL -ErrorAction SilentlyContinue | Measure-Object).Count" 2>/dev/null | tr -d '\r' | tail -1)
+  if timeout 8 wsl.exe -l -v >/dev/null 2>&1; then
+    RUNNING=$(wsl.exe -l --running -q 2>/dev/null | tr -d '\0' | grep -c . || true)
+    if [[ "$VMWP" =~ ^[0-9]+$ ]] && (( VMWP > 0 )) && ! docker info >/dev/null 2>&1; then
+      bad "孤儿 vmwp 进程 ${VMWP} 个且 Docker 引擎不可达（疑似锁 ext4.vhdx）——先看 SOP：docs/operations/WSL_DOCKER_RESTART_SOP.md"
+    elif [[ "$VMMEM" =~ ^[0-9]+$ ]] && (( VMMEM > 0 )) && (( RUNNING == 0 )) && ! docker info >/dev/null 2>&1; then
+      bad "孤儿 vmmemWSL 进程 ${VMMEM} 个（无运行中 distro 且引擎不可达）——先看 SOP：docs/operations/WSL_DOCKER_RESTART_SOP.md"
+    else
+      ok "宿主 VM 进程正常（vmwp=${VMWP:-0}，vmmemWSL=${VMMEM:-0}，运行中 distro=${RUNNING}）"
+    fi
+  else
+    bad "wsl.exe 无响应（wslservice 疑似僵尸化）——先看 SOP：docs/operations/WSL_DOCKER_RESTART_SOP.md"
   fi
 fi
 
