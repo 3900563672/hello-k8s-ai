@@ -149,7 +149,7 @@ func (server *Server) handleConfirmAIOpsCommand(writer http.ResponseWriter, requ
 	writeData(writer, request, http.StatusOK, updated, false, nil, nil)
 }
 
-// gateAIOpsCommand 执行前校验：节点必须存在于集群、目标租户必须存在（模板 id 已由解析校验）。
+// gateAIOpsCommand 执行前校验：节点必须存在于集群（真实 Node 或 WorkerNode CR）、目标租户必须存在（模板 id 已由解析校验）。
 func (server *Server) gateAIOpsCommand(ctx context.Context, commandID string, intent *aiops.CommandIntent) error {
 	for _, name := range intent.TemplateSelection.NodeNames {
 		if !server.nodeExists(name) {
@@ -165,8 +165,14 @@ func (server *Server) gateAIOpsCommand(ctx context.Context, commandID string, in
 }
 
 func (server *Server) nodeExists(name string) bool {
+	// 真实 Node 或抽象 WorkerNode CR 均视为可调度目标（模板节点与 CR 同名）。
 	for _, node := range server.cache.ListNodes() {
 		if node.Name == name {
+			return true
+		}
+	}
+	for _, object := range server.cache.ListPlatform("WorkerNode") {
+		if object.GetName() == name {
 			return true
 		}
 	}
