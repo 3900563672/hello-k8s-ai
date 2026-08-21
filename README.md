@@ -86,7 +86,7 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 - 2026-08-21 [变更总览：AIOps M2 意图执行 + M3 时间聚合警戒（#94/#95）](change-history/2026-08-21-aiops-m2m3-intent-window/README.md)
 - 2026-08-21 [变更总览：AIOps 分层总结后端骨架（M0+M1，Fixes #93）](change-history/2026-08-21-aiops-l1l2-backend/README.md)
 - 2026-08-21 [变更总览：AIOps 前端 M4——AI 洞察分区与契约先行（#98 前端部分）](change-history/2026-08-21-aiops-frontend-m4/README.md)
-- 2026-08-20 [浏览器自动化与人工分工经验沉淀（Notion 中枢搭建复盘）](change-history/2026-08-20-notion-agent-collab-lesson/README.md)
+- 2026-08-21 [变更总览：AIOps 助手浮窗 + 异步任务可见性 + 配置审计（#110 全阶段）](change-history/2026-08-21-aiops-chat-jobs-audit/README.md)
 
 <!-- docs-sync:timeline-end -->
 
