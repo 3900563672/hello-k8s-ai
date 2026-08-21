@@ -26,6 +26,29 @@ func chatTestService(t *testing.T, cfg config.AIOpsConfig) *Service {
 	return NewService(cfg, newFakeStore(nil), newFakeLLM([]string{"你好，我是 AIOps 助手"}, nil), testLogger())
 }
 
+func TestCheckDailyQuota(t *testing.T) {
+	database := newFakeStore(nil)
+	database.usageCalls = 5
+	database.usageTokens = 500
+	service := NewService(config.AIOpsConfig{DailyMaxCalls: 10, DailyMaxTokens: 1000}, database, newFakeLLM(nil, nil), testLogger())
+	if err := service.CheckDailyQuota(context.Background()); err != nil {
+		t.Fatalf("within quota should pass: %v", err)
+	}
+	database.usageCalls = 10
+	if err := service.CheckDailyQuota(context.Background()); err == nil {
+		t.Fatal("call quota exceeded should fail")
+	}
+	database.usageCalls = 0
+	database.usageTokens = 1000
+	if err := service.CheckDailyQuota(context.Background()); err == nil {
+		t.Fatal("token quota exceeded should fail")
+	}
+	service.config.DailyMaxCalls = 0
+	service.config.DailyMaxTokens = 0
+	if err := service.CheckDailyQuota(context.Background()); err != nil {
+		t.Fatalf("quota disabled should pass: %v", err)
+	}
+}
 func TestChatValidateMessage(t *testing.T) {
 	service := chatTestService(t, config.AIOpsConfig{})
 	if err := service.ChatValidateMessage(""); err == nil {

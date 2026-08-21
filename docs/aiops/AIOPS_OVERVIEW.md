@@ -42,6 +42,7 @@ AIOps 是 Dashboard 上的可选智能分析层：用 LLM + 硬指标规则把�
 
 - `AIOPS_ENABLED` 默认 false；开启需 `AIOPS_OPENAI_API_KEY`。关闭时不启动 worker、不触发入队；`/aiops/settings` 路由始终注册，保证面板能重新打开开关。
 - 面板写入的 key 仅存 Backend 进程内存，重启恢复部署级环境变量；不落 PostgreSQL、不进日志与 Trace。
+- 日配额保护（#124）：AIOPS_DAILY_MAX_CALLS（默认 300 次/24h）与 AIOPS_DAILY_MAX_TOKENS（默认 200 万/24h）统计 iops_audit_log 用量，超限时对话返回 429、分析不再入队——防止 key 被刷爆；0 表示不限。
 - 单向依赖：只读 segments 数据 + 写 `aiops_*` 表；LLM 输出不反向驱动控制面。
 - 完整 env 参数见 [配置参考](../reference/CONFIGURATION_REFERENCE.md) 第 11 节；部署见 [DEPLOYMENT](../getting-started/DEPLOYMENT.md)。
 

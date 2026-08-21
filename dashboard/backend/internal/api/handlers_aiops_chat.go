@@ -56,6 +56,12 @@ func (server *Server) handleAIOpsChat(writer http.ResponseWriter, request *http.
 			"对话请求过于频繁，请稍后再试。", true, nil)
 		return
 	}
+
+	if err := server.aiops.CheckDailyQuota(request.Context()); err != nil {
+		writeProblem(writer, request, http.StatusTooManyRequests, "DAILY_QUOTA_EXCEEDED",
+			err.Error(), true, nil)
+		return
+	}
 	server.streamChat(writer, request, payload.SessionID, payload.Message)
 }
 

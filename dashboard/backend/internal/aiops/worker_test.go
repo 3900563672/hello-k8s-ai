@@ -35,6 +35,15 @@ type fakeStore struct {
 	windowSummaries []model.AIOpsWindowSummary
 	alerts          []model.AIOpsAlert
 	commands        []model.AIOpsCommand
+	usageCalls      int
+	usageTokens     int64
+}
+
+// SumAIOpsUsageSince 返回可配置的日配额用量（#124 测试用）。
+func (fake *fakeStore) SumAIOpsUsageSince(_ context.Context, _ time.Time) (int, int64, error) {
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	return fake.usageCalls, fake.usageTokens, nil
 }
 
 func newFakeStore(segment *store.SegmentRecord) *fakeStore {
@@ -631,6 +640,20 @@ func TestPollProcessesJob(t *testing.T) {
 // TestJobFailedRecordsError 验证处理失败时任务回写 last_error，attempts 递增并重试到上限（#110 阶段一）。
 // 一次 poll 最多消耗一批（analysisBatchSize=8）：同一 job 失败后回 pending 继续被认领，
 // 直到 attempts 达上限（job.MaxAttempts=3）转 failed。
+func TestEnqueueQuotaExceeded(t *testing.T) {
+	database := newFakeStore(segmentWithSnapshots())
+	database.usageCalls = 999
+	llm := newFakeLLM(nil, nil)
+	service := testService(database, llm)
+	service.config.DailyMaxCalls = 100
+	if err := service.EnqueueAnalysis(context.Background(), "segment-1"); err != nil {
+		t.Fatalf("enqueue should be skipped, got error: %v", err)
+	}
+	if len(database.analyses) != 0 {
+		t.Fatalf("analysis should not be enqueued when quota exceeded")
+	}
+}
+
 func TestJobFailedRecordsError(t *testing.T) {
 	database := newFakeStore(segmentWithSnapshots())
 	llm := newFakeLLM(nil, []error{errors.New("down"), errors.New("down")})

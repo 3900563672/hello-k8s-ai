@@ -144,7 +144,7 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 | GET | `/aiops/templates` | 只读模板目录（model/node/tenant/orchestrator/traffic，LLM 只能选目录内 id）。 |
 | GET | `/aiops/windows` | 窗口/日总结；`level=L3|L4`、`limit` 1..200。 |
 | GET | `/aiops/alerts` | 警戒列表（分数序列规则触发）；`limit` 1..200。 |
-| POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话；回答成功后问答对与引用的 window/alert/command ID 落 `aiops_chat_messages`（失败不影响响应）。 |
+| POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话；回答成功后问答对与引用的 window/alert/command ID 落 `aiops_chat_messages`（失败不影响响应）；日配额超限（24h 滚动，默认 300 次/200 万 token，`AIOPS_DAILY_MAX_CALLS`/`AIOPS_DAILY_MAX_TOKENS`）返回 429 `DAILY_QUOTA_EXCEEDED`。 |
 | GET | `/aiops/chat/messages` | 某会话问答历史（#112 阶段 D 读侧）：`sessionId` 必填、`limit` 1..200（默认 50），按时间正序；前端打开面板时拉取，失败静默降级。 |
 | GET | `/aiops/jobs` | 异步任务列表（`status=pending\|running\|done\|failed`、`limit` 1..200）。 |
 | GET | `/aiops/settings` | LLM 配置掩码状态（模型/地址/key 是否已配置 + 运行时开关 `enabled`，不回显明文）。 |
