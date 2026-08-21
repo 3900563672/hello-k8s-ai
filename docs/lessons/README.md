@@ -28,6 +28,7 @@
 | Docker 数据盘迁移 / docker 显示为空 | [deploy-docker-data-junction.md](deploy-docker-data-junction.md) |
 | Docker Desktop / 整机重启后恢复内置 K8s | [deploy-docker-desktop-k8s-recovery.md](deploy-docker-desktop-k8s-recovery.md) |
 | 任何涉及 WSL 整体重启 / 网络重置 | [deploy-no-wsl-shutdown.md](deploy-no-wsl-shutdown.md) |
+| wsl 命令挂死 / Docker Desktop 起不来（vhdx 占用）/ 系统服务 StopPending 卡死 | [deploy-wsl-zombie-vhdx-lock.md](deploy-wsl-zombie-vhdx-lock.md) |
 | kind PVC 异常 / Permission denied / tmpfs 覆盖 | [kind-hostpath-docker-desktop-rootfs.md](kind-hostpath-docker-desktop-rootfs.md) |
 | Grafana 嵌入 / 反代 / WS 400 / 面板 404 | [observability-grafana-embed.md](observability-grafana-embed.md) |
 | Prometheus 内存告警 / 新增容器 limit | [observability-prom-memory-alert.md](observability-prom-memory-alert.md) |
