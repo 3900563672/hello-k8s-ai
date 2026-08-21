@@ -340,10 +340,11 @@ func (database *Postgres) ListAIOpsAlerts(ctx context.Context, limit int) ([]mod
 // CreateAIOpsAuditLog 写入一条 AIOps 调用审计（#110 阶段四）。
 func (database *Postgres) CreateAIOpsAuditLog(ctx context.Context, audit model.AIOpsAuditLog) error {
 	_, err := database.pool.Exec(ctx, `
-		INSERT INTO aiops_audit_log (audit_id, session_id, kind, model, duration_ms, message_len, status, error_text)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		INSERT INTO aiops_audit_log (audit_id, session_id, kind, model, duration_ms, message_len, prompt_tokens, completion_tokens, status, error_text)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 		audit.AuditID, audit.SessionID, audit.Kind, audit.Model,
-		audit.DurationMS, audit.MessageLen, audit.Status, audit.Error)
+		audit.DurationMS, audit.MessageLen, audit.PromptTokens, audit.CompletionTokens,
+		audit.Status, audit.Error)
 	if err != nil {
 		return fmt.Errorf("insert aiops audit log: %w", err)
 	}

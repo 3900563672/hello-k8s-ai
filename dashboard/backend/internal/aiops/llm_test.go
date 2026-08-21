@@ -116,6 +116,7 @@ func TestOpenAIStreamComplete(t *testing.T) {
 	streamBody := "data: {\"choices\":[{\"delta\":{\"content\":\"你\"}}]}\n\n" +
 		"data: {\"choices\":[{\"delta\":{\"content\":\"好\"}}]}\n\n" +
 		"data: {\"choices\":[{\"delta\":{\"content\":\"！\"}}]}\n\n" +
+		"data: {\"usage\":{\"prompt_tokens\":11,\"completion_tokens\":3}}\n\n" +
 		"data: [DONE]\n\n"
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if request.URL.Path != "/chat/completions" {
@@ -127,9 +128,10 @@ func TestOpenAIStreamComplete(t *testing.T) {
 	defer server.Close()
 	client := newTestClient(server.URL)
 	var deltas []string
+	var gotUsage TokenUsage
 	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(delta string) {
 		deltas = append(deltas, delta)
-	}); err != nil {
+	}, func(usage TokenUsage) { gotUsage = usage }); err != nil {
 		t.Fatalf("StreamComplete: %v", err)
 	}
 	joined := ""
@@ -138,6 +140,9 @@ func TestOpenAIStreamComplete(t *testing.T) {
 	}
 	if joined != "你好！" {
 		t.Fatalf("streamed content = %q, want 你好！", joined)
+	}
+	if gotUsage.PromptTokens != 11 || gotUsage.CompletionTokens != 3 {
+		t.Fatalf("usage = %+v, want prompt=11 completion=3", gotUsage)
 	}
 }
 
@@ -148,7 +153,7 @@ func TestOpenAIStreamCompleteHTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 	client := newTestClient(server.URL)
-	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(string) {}); err == nil {
+	if err := client.StreamComplete(context.Background(), "sys", "user", 500, func(string) {}, nil); err == nil {
 		t.Fatal("stream should fail on HTTP error")
 	}
 }

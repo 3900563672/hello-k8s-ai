@@ -111,15 +111,17 @@ type AIOpsWindowSummary struct {
 
 // AIOpsAuditLog 是 aiops_audit_log 表的一行：同步对话/分析调用审计（#110 阶段四）。
 type AIOpsAuditLog struct {
-	AuditID    string    `json:"auditId"`
-	SessionID  string    `json:"sessionId"`
-	Kind       string    `json:"kind"`
-	Model      string    `json:"model"`
-	DurationMS int64     `json:"durationMs"`
-	MessageLen int       `json:"messageLen"`
-	Status     string    `json:"status"`
-	Error      string    `json:"error,omitempty"`
-	CreatedAt  time.Time `json:"createdAt"`
+	AuditID          string    `json:"auditId"`
+	SessionID        string    `json:"sessionId"`
+	Kind             string    `json:"kind"`
+	Model            string    `json:"model"`
+	DurationMS       int64     `json:"durationMs"`
+	MessageLen       int       `json:"messageLen"`
+	PromptTokens     int       `json:"promptTokens"`
+	CompletionTokens int       `json:"completionTokens"`
+	Status           string    `json:"status"`
+	Error            string    `json:"error,omitempty"`
+	CreatedAt        time.Time `json:"createdAt"`
 }
 
 // AIOpsJob 是 aiops_jobs 表的一行：任务级状态（#110 阶段一，异步可见性）。

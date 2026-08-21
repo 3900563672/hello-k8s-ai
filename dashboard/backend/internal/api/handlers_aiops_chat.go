@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops"
@@ -80,6 +81,8 @@ func (server *Server) streamChat(writer http.ResponseWriter, request *http.Reque
 		return true
 	}
 
+	var auditUsage aiops.TokenUsage
+	usageMu := sync.Mutex{}
 	started := time.Now()
 	if !writeSSE(chatEvent{Type: "lifecycle", Phase: "start", SessionID: sessionID}) {
 		return
@@ -94,13 +97,17 @@ func (server *Server) streamChat(writer http.ResponseWriter, request *http.Reque
 	}
 	var answerErr error
 	if server.aiops != nil {
-		answerErr = server.aiops.ChatStream(request.Context(), message, onTool, onDelta)
+		answerErr = server.aiops.ChatStream(request.Context(), message, onTool, onDelta, func(usage aiops.TokenUsage) {
+			usageMu.Lock()
+			auditUsage = usage
+			usageMu.Unlock()
+		})
 	} else {
 		answerErr = aiops.ErrChatUnavailable
 	}
 	duration := time.Since(started)
 	auditContext, cancel := context.WithTimeout(request.Context(), 5*time.Second)
-	server.aiops.AuditChat(auditContext, sessionID, duration, len([]rune(message)), answerErr)
+	server.aiops.AuditChat(auditContext, sessionID, duration, len([]rune(message)), auditUsage, answerErr)
 	cancel()
 	if answerErr != nil {
 		writeSSE(chatEvent{Type: "lifecycle", Phase: "end", SessionID: sessionID,

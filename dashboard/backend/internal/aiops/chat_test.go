@@ -76,9 +76,11 @@ func TestChatStreamEvents(t *testing.T) {
 	service := chatTestService(t, config.AIOpsConfig{})
 	var tools []string
 	var deltas []string
+	var usage TokenUsage
 	err := service.ChatStream(context.Background(), "当前集群什么情况？",
 		func(name, phase string) { tools = append(tools, name+":"+phase) },
-		func(delta string) { deltas = append(deltas, delta) })
+		func(delta string) { deltas = append(deltas, delta) },
+		func(value TokenUsage) { usage = value })
 	if err != nil {
 		t.Fatalf("chat stream: %v", err)
 	}
@@ -90,6 +92,9 @@ func TestChatStreamEvents(t *testing.T) {
 		if tools[i] != want {
 			t.Fatalf("tool[%d] = %s, want %s", i, tools[i], want)
 		}
+	}
+	if usage.PromptTokens != 0 || usage.CompletionTokens != 0 {
+		t.Fatalf("fake LLM should not report usage, got %+v", usage)
 	}
 	joined := strings.Join(deltas, "")
 	if joined != "你好，我是 AIOps 助手" {
@@ -122,6 +127,6 @@ func TestChatConfigureAndSettings(t *testing.T) {
 func TestChatAuditLog(t *testing.T) {
 	service := chatTestService(t, config.AIOpsConfig{})
 	// 不 panic、不报错（fakeStore 审计成功路径）。
-	service.AuditChat(context.Background(), "session-x", 123*time.Millisecond, 42, nil)
-	service.AuditChat(context.Background(), "session-x", 55*time.Millisecond, 40, errors.New("boom"))
+	service.AuditChat(context.Background(), "session-x", 123*time.Millisecond, 42, TokenUsage{PromptTokens: 10, CompletionTokens: 20}, nil)
+	service.AuditChat(context.Background(), "session-x", 55*time.Millisecond, 40, TokenUsage{}, errors.New("boom"))
 }

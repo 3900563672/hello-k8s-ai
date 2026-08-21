@@ -179,9 +179,9 @@ func (service *Service) Settings() SettingsState {
 	return state
 }
 
-// AuditChat 记录一次同步对话调用（#110 阶段四）：模型 / 耗时 / 消息长度 / 结果。
+// AuditChat 记录一次同步对话调用（#110 阶段四）：模型 / 耗时 / 消息长度 / token 用量 / 结果。
 // 审计失败只记日志，不影响对话主流程。
-func (service *Service) AuditChat(ctx context.Context, sessionID string, duration time.Duration, messageLen int, err error) {
+func (service *Service) AuditChat(ctx context.Context, sessionID string, duration time.Duration, messageLen int, usage TokenUsage, err error) {
 	status := "ok"
 	errorText := ""
 	if err != nil {
@@ -192,14 +192,16 @@ func (service *Service) AuditChat(ctx context.Context, sessionID string, duratio
 	modelName := service.config.Model
 	service.configMu.Unlock()
 	audit := model.AIOpsAuditLog{
-		AuditID:    randomAnalysisID(),
-		SessionID:  sessionID,
-		Kind:       "chat",
-		Model:      modelName,
-		DurationMS: duration.Milliseconds(),
-		MessageLen: messageLen,
-		Status:     status,
-		Error:      errorText,
+		AuditID:          randomAnalysisID(),
+		SessionID:        sessionID,
+		Kind:             "chat",
+		Model:            modelName,
+		DurationMS:       duration.Milliseconds(),
+		MessageLen:       messageLen,
+		PromptTokens:     usage.PromptTokens,
+		CompletionTokens: usage.CompletionTokens,
+		Status:           status,
+		Error:            errorText,
 	}
 	if auditErr := service.database.CreateAIOpsAuditLog(ctx, audit); auditErr != nil {
 		service.logger.Warn("AIOps audit log failed", "error", auditErr)
@@ -207,8 +209,8 @@ func (service *Service) AuditChat(ctx context.Context, sessionID string, duratio
 }
 
 // ChatStream 流式生成回答：先校验消息，再组装上下文（工具步骤回调），最后流式调 LLM。
-// onTool 用于上报工具步骤（start/end + 名称）；onDelta 接收文本增量。
-func (service *Service) ChatStream(ctx context.Context, message string, onTool func(name, phase string), onDelta func(string)) error {
+// onTool 用于上报工具步骤（start/end + 名称）；onDelta 接收文本增量；onUsage 接收 token 用量（审计）。
+func (service *Service) ChatStream(ctx context.Context, message string, onTool func(name, phase string), onDelta func(string), onUsage func(TokenUsage)) error {
 	if err := service.ChatValidateMessage(message); err != nil {
 		return err
 	}
@@ -221,7 +223,7 @@ func (service *Service) ChatStream(ctx context.Context, message string, onTool f
 
 	userPrompt := fmt.Sprintf("用户问题：%s\n\n当前上下文：\n%s", message, contextText)
 	onTool("生成回答", "start")
-	err = service.llm.StreamComplete(ctx, chatSystemPrompt, userPrompt, service.config.MaxTokensPerCall, onDelta)
+	err = service.llm.StreamComplete(ctx, chatSystemPrompt, userPrompt, service.config.MaxTokensPerCall, onDelta, onUsage)
 	onTool("生成回答", "end")
 	if err != nil {
 		return fmt.Errorf("stream chat answer: %w", err)

@@ -21,7 +21,8 @@ type LLM interface {
 	// CompleteJSON 调用模型并返回纯 JSON 文本（响应格式强制 json_object）。
 	CompleteJSON(ctx context.Context, system, user string, maxTokens int) (string, error)
 	// StreamComplete 流式调用模型（stream=true），每个增量回调 onDelta；无增量时也要调用一次 onDelta("")。
-	StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string)) error
+	// onUsage 在流结束后回调 token 用量（prompt/completion，服务端返回 usage 时；无 usage 时回调零值）。
+	StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string), onUsage func(TokenUsage)) error
 }
 
 // OpenAI 是 OpenAI 兼容 chat completions 客户端（M0 Provider 抽象）。
@@ -82,12 +83,23 @@ type responseFormat struct {
 	Type string `json:"type"`
 }
 
+// TokenUsage 是单次模型调用的 token 用量（OpenAI usage 字段，审计 #110 阶段四）。
+type TokenUsage struct {
+	PromptTokens     int
+	CompletionTokens int
+}
+
+type chatStreamOptions struct {
+	IncludeUsage bool `json:"include_usage"`
+}
+
 type chatRequest struct {
-	Model          string          `json:"model"`
-	Messages       []chatMessage   `json:"messages"`
-	MaxTokens      int             `json:"max_tokens"`
-	Stream         bool            `json:"stream,omitempty"`
-	ResponseFormat *responseFormat `json:"response_format,omitempty"`
+	Model          string             `json:"model"`
+	Messages       []chatMessage      `json:"messages"`
+	MaxTokens      int                `json:"max_tokens"`
+	Stream         bool               `json:"stream,omitempty"`
+	StreamOptions  *chatStreamOptions `json:"stream_options,omitempty"`
+	ResponseFormat *responseFormat    `json:"response_format,omitempty"`
 }
 
 type chatChoice struct {
@@ -109,6 +121,10 @@ type chatStreamChunk struct {
 			Content string `json:"content"`
 		} `json:"delta"`
 	} `json:"choices"`
+	Usage *struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+	} `json:"usage,omitempty"`
 	Error *struct {
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
@@ -156,15 +172,17 @@ func (client *OpenAI) CompleteJSON(ctx context.Context, system, user string, max
 }
 
 // StreamComplete 流式调用 chat completions；错误语义与 CompleteJSON 一致（无重试，流一旦开始不重试）。
-func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string)) error {
+// include_usage=true 让兼容服务端在最后一个 chunk 返回 usage，流结束后回调 onUsage（无 usage 时回调零值）。
+func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, maxTokens int, onDelta func(string), onUsage func(TokenUsage)) error {
 	client.mu.RLock()
 	model, baseURL, apiKey := client.model, client.baseURL, client.apiKey
 	client.mu.RUnlock()
 	payload, err := json.Marshal(chatRequest{
-		Model:     model,
-		Messages:  []chatMessage{{Role: "system", Content: system}, {Role: "user", Content: user}},
-		MaxTokens: maxTokens,
-		Stream:    true,
+		Model:         model,
+		Messages:      []chatMessage{{Role: "system", Content: system}, {Role: "user", Content: user}},
+		MaxTokens:     maxTokens,
+		Stream:        true,
+		StreamOptions: &chatStreamOptions{IncludeUsage: true},
 	})
 	if err != nil {
 		return fmt.Errorf("marshal stream chat request: %w", err)
@@ -189,6 +207,7 @@ func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, m
 	scanner := bufio.NewScanner(response.Body)
 	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
 	emitted := false
+	usage := TokenUsage{}
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if !strings.HasPrefix(line, "data:") {
@@ -206,6 +225,10 @@ func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, m
 		if chunk.Error != nil {
 			return fmt.Errorf("LLM stream error: %s", chunk.Error.Message)
 		}
+		if chunk.Usage != nil {
+			usage.PromptTokens = chunk.Usage.PromptTokens
+			usage.CompletionTokens = chunk.Usage.CompletionTokens
+		}
 		if len(chunk.Choices) > 0 {
 			delta := chunk.Choices[0].Delta.Content
 			onDelta(delta)
@@ -217,6 +240,9 @@ func (client *OpenAI) StreamComplete(ctx context.Context, system, user string, m
 	}
 	if !emitted {
 		onDelta("")
+	}
+	if onUsage != nil {
+		onUsage(usage)
 	}
 	return nil
 }

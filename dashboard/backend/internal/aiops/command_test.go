@@ -16,7 +16,7 @@ func (llm fakeCommandLLM) CompleteJSON(_ context.Context, _, _ string, _ int) (s
 	return llm.content, llm.err
 }
 
-func (llm fakeCommandLLM) StreamComplete(_ context.Context, _ string, _ string, _ int, onDelta func(string)) error {
+func (llm fakeCommandLLM) StreamComplete(_ context.Context, _ string, _ string, _ int, onDelta func(string), _ func(TokenUsage)) error {
 	if llm.err != nil {
 		return llm.err
 	}

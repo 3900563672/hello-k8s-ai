@@ -300,7 +300,7 @@ func newFakeLLM(responses []string, errs []error) *fakeLLM {
 	return &fakeLLM{responses: responses, errs: errs}
 }
 
-func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int, onDelta func(string)) error {
+func (llm *fakeLLM) StreamComplete(_ context.Context, system, user string, _ int, onDelta func(string), _ func(TokenUsage)) error {
 	llm.mu.Lock()
 	defer llm.mu.Unlock()
 	if len(llm.responses) == 0 {
