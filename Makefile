@@ -159,7 +159,7 @@ setup-test-e2e: ## 创建 Kind 集群（没有才建）
 .PHONY: test-e2e
 test-e2e: setup-test-e2e vet ## 跑 e2e 测试（使用仓库中已有 CRD）
 	@status=0; \
-	KIND=$(KIND) KIND_CLUSTER=$(E2E_KIND_CLUSTER) go test -tags=e2e ./test/e2e/ -v -ginkgo.v || status=$$?; \
+	KIND=$(KIND) KIND_CLUSTER=$(E2E_KIND_CLUSTER) go test -tags=e2e ./test/e2e/ -v -ginkgo.v -timeout 20m || status=$$?; \
 	cleanup_status=0; \
 	$(MAKE) cleanup-test-e2e || cleanup_status=$$?; \
 	if [ "$$status" -ne 0 ]; then exit "$$status"; fi; \
