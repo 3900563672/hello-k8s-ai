@@ -94,11 +94,13 @@ export const clampViewport = (
     minimumSpan = SECOND,
 ): TimelineViewport => {
     const fullSpan = Math.max(minimumSpan, bounds.end - bounds.start)
+    const requestedStart = Number.isFinite(viewport.start) ? viewport.start : bounds.start
+    const requestedEnd = Number.isFinite(viewport.end) ? viewport.end : bounds.end
     const requestedSpan = Math.max(
         minimumSpan,
-        Math.min(fullSpan, viewport.end - viewport.start),
+        Math.min(fullSpan, requestedEnd - requestedStart),
     )
-    let start = Number.isFinite(viewport.start) ? viewport.start : bounds.start
+    let start = requestedStart
     let end = start + requestedSpan
 
     if (start < bounds.start) {
@@ -234,7 +236,8 @@ export const findNearestSnapshot = (
 }
 
 /**
- * 回放语义使用“目标时刻之前的最后一个切面”，避免读取到未来状态。
+ * 回放语义使用“目标时刻之前的最后一个切面”，避免读取到未来状态；
+ * 目标早于最早切面时返回 null（与后端 unavailable 语义一致，由调用方决定 no-op/提示）。
  */
 export const findSnapshotAtOrBefore = (
     snapshots: Snapshot[],
@@ -256,7 +259,7 @@ export const findSnapshotAtOrBefore = (
         }
     }
 
-    return answer >= 0 ? snapshots[answer] : snapshots[0]
+    return answer >= 0 ? snapshots[answer] : null
 }
 
 export const countSnapshotsInViewport = (

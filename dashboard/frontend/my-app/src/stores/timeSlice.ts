@@ -192,8 +192,8 @@ export const useTimeStore = create<TimeState>()(
                 const selected = state.mode === 'latest'
                     ? ordered.at(-1) ?? null
                     : ordered.find((snapshot) => snapshot.id === state.selectedSnapshotId)
+                        // 历史态不回退到最新快照（PRINCIPLES：历史不能冒充当前），无可用快照时保持历史模式指向原时间点，由查询层返回 unavailable。
                         ?? findSnapshotAtOrBefore(ordered, state.timestamp)
-                        ?? ordered.at(-1)
                         ?? null
                 const bounds = getTimelineBounds(ordered)
                 const previousBounds = getTimelineBounds(state.snapshots)
