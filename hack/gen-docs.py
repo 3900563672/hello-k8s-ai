@@ -12,6 +12,7 @@
 4. docs/README.md 所有权表（<!-- docs-sync:ownership-start/end --> 之间，由 MAP.yaml 反向渲染）
 """
 import os
+import subprocess
 import re
 import sys
 
@@ -36,9 +37,17 @@ def write(path, text):
 
 
 def latest_entries(limit=LIMIT):
+    """只统计 git 已跟踪的 change-history 条目（与文件头契约一致：输出只依赖已提交内容）。
+
+    多会话共享同一工作树时，未提交目录（如其它会话新建的条目）不能混入派生文件，
+    否则 README 时间线段 / docs/status.md 会引用不存在的链接，docs-sync-check 漂移。
+    """
+    tracked = _tracked_change_dirs()
     entries = []
     for name in os.listdir(CH_DIR):
         if not re.match(r"^\d{4}-\d{2}-\d{2}-", name):
+            continue
+        if tracked is not None and name not in tracked:
             continue
         readme = os.path.join(CH_DIR, name, "README.md")
         if not os.path.isfile(readme):
@@ -51,6 +60,24 @@ def latest_entries(limit=LIMIT):
         entries.append((name[:10], name, title or name))
     entries.sort(reverse=True)
     return entries[:limit]
+
+
+def _tracked_change_dirs():
+    """返回 git 已跟踪的 change-history 顶层条目集合；git 不可用时返回 None（退化为全目录扫描）。"""
+    try:
+        output = subprocess.check_output(
+            ["git", "-C", ROOT, "ls-files", "change-history"], text=True, stderr=subprocess.DEVNULL
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    tracked = set()
+    prefix = "change-history/"
+    for line in output.splitlines():
+        if line.startswith(prefix):
+            name = line[len(prefix):].split("/", 1)[0]
+            if re.match(r"^\d{4}-\d{2}-\d{2}-", name):
+                tracked.add(name)
+    return tracked
 
 
 def timeline_block(entries):

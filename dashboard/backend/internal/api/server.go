@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/clock"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/kubernetes"
@@ -27,6 +28,7 @@ type Dependencies struct {
 	Grafana    config.ProviderConfig
 	Clock      *clock.Clock
 	Events     *EventBus
+	AIOps      *aiops.Service
 }
 
 type Server struct {
@@ -41,6 +43,7 @@ type Server struct {
 	grafana    config.ProviderConfig
 	clock      *clock.Clock
 	events     *EventBus
+	aiops      *aiops.Service
 }
 
 func NewServer(dependencies Dependencies) *Server {
@@ -56,6 +59,7 @@ func NewServer(dependencies Dependencies) *Server {
 		grafana:    dependencies.Grafana,
 		clock:      dependencies.Clock,
 		events:     dependencies.Events,
+		aiops:      dependencies.AIOps,
 	}
 }
 
@@ -95,6 +99,21 @@ func (server *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/v1/experiments/{id}/fail", server.handleFailExperiment)
 	mux.HandleFunc("GET /api/v1/experiments", server.handleListExperiments)
 	mux.HandleFunc("GET /api/v1/experiments/{id}", server.handleExperimentDetail)
+	if server.aiops != nil {
+		mux.HandleFunc("GET /api/v1/aiops/analyses", server.handleListAIOpsAnalyses)
+		mux.HandleFunc("GET /api/v1/aiops/analyses/{id}", server.handleGetAIOpsAnalysis)
+		mux.HandleFunc("GET /api/v1/aiops/templates", server.handleListAIOpsTemplates)
+		mux.HandleFunc("POST /api/v1/aiops/commands", server.handleCreateAIOpsCommand)
+		mux.HandleFunc("GET /api/v1/aiops/commands/{id}", server.handleGetAIOpsCommand)
+		mux.HandleFunc("POST /api/v1/aiops/commands/{id}/confirm", server.handleConfirmAIOpsCommand)
+		mux.HandleFunc("GET /api/v1/aiops/windows", server.handleListAIOpsWindows)
+		mux.HandleFunc("GET /api/v1/aiops/alerts", server.handleListAIOpsAlerts)
+		mux.HandleFunc("POST /api/v1/aiops/chat", server.handleAIOpsChat)
+		mux.HandleFunc("GET /api/v1/aiops/chat/messages", server.handleListAIOpsChatMessages)
+		mux.HandleFunc("GET /api/v1/aiops/settings", server.handleGetAIOpsSettings)
+		mux.HandleFunc("GET /api/v1/aiops/jobs", server.handleListAIOpsJobs)
+		mux.HandleFunc("POST /api/v1/aiops/settings", server.handleUpdateAIOpsSettings)
+	}
 	mux.HandleFunc("GET /api/v1/clock", server.handleClock)
 	mux.HandleFunc("PATCH /api/v1/clock/rate", server.handleSimulationRate)
 	mux.HandleFunc("GET /api/v1/stream", server.handleStream)

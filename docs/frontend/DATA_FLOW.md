@@ -1,6 +1,6 @@
 # Frontend 数据流
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/traffic/、dashboard/frontend/my-app/src/components/features/trace/ 等
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/frontend/my-app/src/components/features/traffic/、dashboard/frontend/my-app/src/components/features/trace/ 等
 
 ## 1. 读取链路
 
@@ -84,6 +84,10 @@ sequenceDiagram
 | Experiment 面板 | `/experiments[?status]`、`/experiments/{id}` | `POST /experiments`、`/experiments/{id}/start|complete|fail` | 列表 10s 轮询；详情创建/结束后失效重取 |
 | Metrics detail | `/metrics/query` | 无 | 查询窗口/step 决定缓存 |
 | Trace list/detail | `/traces`、`/traces/{id}` | 无 | latest 可刷新；detail 按 traceId 缓存 |
+| AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/analyses?segmentId=`、`/aiops/jobs` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止；异步任务（`/aiops/jobs` 独立接口）10s 轮询；任务卡片显示「已试 N 次」与失败原因 |
+| 警戒（AlertList） | `/aiops/alerts` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
+| 窗口总结（WindowSummaryPanel） | `/aiops/windows` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
+| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE）、`GET /aiops/chat/messages`、`GET/POST /aiops/settings` | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储；回答同时落库服务端 `aiops_chat_messages`（#112 阶段 D，可追溯引用来源）；打开面板时拉取历史回填空会话（失败静默降级） |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
 
 编排策略表单字段与 CRD/Backend 白名单一致：含 scaleUpCooldownSeconds、scaleDownCooldownSeconds、min/maxReplicas、maxScaleUpBatch（扩容步长）与 allowScaleToZero。
@@ -121,6 +125,13 @@ Backend 的 SSE channel 每客户端有有限缓冲，慢客户端可能错过�
 | idempotent replay | 接受 Backend 已缓存响应，可提示命令未重复执行。 |
 | SSE 断开 | 显示连接退化，依靠轮询并自动重连。 |
 
+
+## 6.1 AIOps 分析异步链（#93）
+
+切面实验 complete/fail 后，后端自动入队 AIOps 分析（`aiops_analyses`），状态机与 L1 进度可轮询；L2 分数/理由与 L1 实体总结经 `/aiops/analyses` 读取。前端只展示后端状态机结果，不做本地推断；`AIOPS_ENABLED=false` 时接口 404，前端显示未启用空态。
+
+M2 意图执行（#94）：AI 面板一句话 → `POST /aiops/commands` 返回解析预览（模板 id/流量/倍速/目标租户），用户确认后 `POST /aiops/commands/{id}/confirm` 执行；确认前不产生任何写操作。M3（#95）：`/aiops/windows`（L3/L4）与 `/aiops/alerts` 轮询展示窗口认知与警戒。
+
 ## 7. Traffic 叠加应用到真实命令
 
 当前链路：
@@ -140,3 +151,10 @@ flowchart LR
 - ClusterStatus 初始态应是 unknown/loading，不是 connected。
 - 无 Backend 时展示 error/empty，不生成默认 Worker/Tenant。
 - Storybook/组件测试若使用 fixture，UI 明确测试环境，不能进入生产 bundle 的数据选择逻辑。
+
+## 9. 录制快照（fixtures）与 dev:mock
+
+- `src/lib/mocks/fixtures/` 保存 GET 端点真实响应快照，`scripts/record-fixtures.mjs` 幂等重录；manifest.json 记录来源与大小，供审计。
+- dev:mock 由 `plugins/mock-fixtures.ts`（vite `--mode mock` 插件）拦截 `/api/v1` GET 返回 fixtures，写请求 405（只读）；快照空数组用 `dev-fixtures/` 样例补齐（meta.devSamples），不写控制面。
+- overview 与 trace detail 分属不同录制窗口时 traceId 可能不匹配；dev:mock 对缺失 detail 用摘要合成单 span 兜底，生产 API 不做该处理。
+- AIOps 契约演示数据已删除（后端 M2/M3 就绪，真实模式返回真实数据；dev:mock 下 aiops 接口 404，组件显示未启用/空态）。

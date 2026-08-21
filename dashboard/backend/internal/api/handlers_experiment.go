@@ -151,6 +151,11 @@ func (server *Server) finishExperiment(writer http.ResponseWriter, request *http
 		return
 	}
 	warnings := server.linkSegmentTraces(request.Context(), record)
+	if server.aiops != nil {
+		if enqueueErr := server.aiops.EnqueueAnalysis(request.Context(), segmentID); enqueueErr != nil {
+			server.logger.Error("AIOps enqueue analysis failed", "segmentId", segmentID, "error", enqueueErr)
+		}
+	}
 	server.writeExperimentDetail(writer, request, http.StatusOK, segmentID, warnings)
 }
 

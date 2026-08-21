@@ -12,6 +12,7 @@ import {
     ConfigNumberField,
     ConfigTextField,
     FormSaveBar,
+    LiveImpactSummary,
     TemplateActions,
     useConfigForm,
 } from './ConfigFormParts'
@@ -56,6 +57,7 @@ export const ModelForm = memo(function ModelForm({
                     onDelete={removeModelTemplate}
                     getPreview={getModelPreview}
                 />
+                <LiveImpactSummary fields={getModelPreview(form.watch())} />
 
                 <ConfigFormSection
                     title="基础配置"
@@ -99,9 +101,9 @@ export const ModelForm = memo(function ModelForm({
                                 延时参数只参与本地调度模拟，可按实测数据持续校准。
                             </div>
                             <div className="grid gap-4 sm:grid-cols-3">
-                                <ConfigNumberField control={form.control} name="performance.prefillBaseMs" label="Prefill 基础延时" unit="ms" inputClass="pr-11" unitClass="text-[11px]"/>
-                                <ConfigNumberField control={form.control} name="performance.prefillPerTokenUs" label="Prefill / Token" unit="µs" inputClass="pr-9" unitClass="text-[11px]"/>
-                                <ConfigNumberField control={form.control} name="performance.decodePerTokenMs" label="Decode / Token" unit="ms" inputClass="pr-11" unitClass="text-[11px]"/>
+                                <ConfigNumberField control={form.control} name="performance.prefillBaseMs" label="Prefill 基础延时" unit="ms" inputClass="pr-11" unitClass="text-[14px]"/>
+                                <ConfigNumberField control={form.control} name="performance.prefillPerTokenUs" label="Prefill / Token" unit="µs" inputClass="pr-9" unitClass="text-[14px]"/>
+                                <ConfigNumberField control={form.control} name="performance.decodePerTokenMs" label="Decode / Token" unit="ms" inputClass="pr-11" unitClass="text-[14px]"/>
                             </div>
                         </CollapsibleContent>
                     </ConfigFormSection>

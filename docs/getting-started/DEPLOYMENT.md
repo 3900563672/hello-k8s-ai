@@ -65,8 +65,13 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 | 4 | apply CRD、RBAC、Controller、可观测性 | 等待 CRD Established 和全部 rollout |
 | 5 | 创建/复用 PostgreSQL Secret，部署 Dashboard | PVC 存在但 Secret 丢失时拒绝猜密码 |
 | 6 | 写入动态演示配置 | 只使用非 control-plane Node |
-| 7 | 验证完整数据链路 | 任一硬门失败则生成诊断 |
+| 7 | 验证完整数据链路 | 任一硬门失败则生成诊断；无 SimulationClock CR 的干净环境跳过收敛检查；复用保留 PVC 时历史快照仅警告 |
 | 8 | 启动端口转发 | 端口冲突只警告，不推翻已成功部署 |
+
+
+### AIOps 可选配置（M0+M1，#93）
+
+`AIOPS_ENABLED` 默认 false：不启动 worker、不注册路由、不触发入队。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。预算/轮询参数：`AIOPS_POLL_INTERVAL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_STALE_REQUEUE_INTERVAL`。M3 时间聚合（#95）可选参数：`AIOPS_WINDOW_INTERVAL`（默认 15m）、`AIOPS_WINDOW_GRANULARITY`（默认 2h）、`AIOPS_ALERT_THRESHOLD`（默认 40）、`AIOPS_ALERT_CONSECUTIVE`（默认 3）。关闭即完全停用，不影响其它功能。
 
 ## 5. 工作负载与存储
 
@@ -111,7 +116,13 @@ PVC 数据落在节点容器 `/var` named volume（Docker 数据盘 vhdx，WSL/D
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
 | Backend | `/configuration` 返回 `tenant-sample` |
 | Frontend | Service 代理返回页面 HTML |
-| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg 共 11 项）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
+| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
+
+| 文档 | `make docs-check`（全仓库文档门禁：MAP 映射 / 链接 / front-matter / change-history 门禁）；`make docs-sync-check`（README 时间线段、`docs/status.md`、`llms.txt`、所有权表必须与已提交内容一致） |
+
+派生文档生成器（`hack/gen-docs.py`）只统计 git 已跟踪的 `change-history/` 条目：未提交目录不会进入 README 时间线段与 `docs/status.md`，多会话共享工作树时互不污染；`make docs-sync-check` 失败先检查工作树是否有未提交变更（含其它会话的批次），提交后重新生成即可。
+
+change-history 门禁：非文档源码改动（后端/前端/脚本/CI/测试）必须在同一次提交中新增 `change-history/YYYY-MM-DD-*/README.md`，或在提交信息显式引用既有条目（`change-history: <条目名>`）；纯文档提交（`docs/`、`change-history/`、根文档）豁免。
 
 这些检查通过后，脚本才输出“完整系统部署并验收通过”。
 

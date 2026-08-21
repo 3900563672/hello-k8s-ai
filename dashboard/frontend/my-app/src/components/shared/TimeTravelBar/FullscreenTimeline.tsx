@@ -149,21 +149,21 @@ export function FullscreenTimeline({
                                         variant="outline"
                                         className={
                                             mode === 'latest'
-                                                ? 'h-5 border-emerald-400/20 bg-emerald-400/10 px-1.5 text-[9px] font-medium text-emerald-300'
-                                                : 'h-5 border-[#6E8BFF]/20 bg-[#6E8BFF]/10 px-1.5 text-[9px] font-medium text-[#AFC0FF]'
+                                                ? 'h-5 border-emerald-400/20 bg-emerald-400/10 px-1.5 text-[13px] font-medium text-emerald-300'
+                                                : 'h-5 border-[#6E8BFF]/20 bg-[#6E8BFF]/10 px-1.5 text-[13px] font-medium text-[#AFC0FF]'
                                         }
                                     >
                                         {mode === 'latest' ? '最新切面' : '历史回放'}
                                     </Badge>
                                 </div>
-                                <SheetDescription className="mt-1 truncate text-[11px] text-[#667286]">
+                                <SheetDescription className="mt-1 truncate text-[14px] text-[#667286]">
                                     缩放范围可从数月收敛到秒级；选中切面将成为全站数据回显时间。
                                 </SheetDescription>
                             </div>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="mr-1 hidden items-center gap-3 text-[10px] text-[#6D7889] xl:flex">
+                            <div className="mr-1 flex flex-wrap items-center gap-3 text-[12px] text-[#6D7889]">
                                 <span>
                                     全量 <strong className="font-mono font-medium text-[#B9C4D3]">{snapshots.length}</strong>
                                 </span>
@@ -180,7 +180,7 @@ export function FullscreenTimeline({
                                 size="sm"
                                 onClick={() => stepSnapshot(-1)}
                                 disabled={selectedIndex <= 0}
-                                className="h-8 border-white/[0.08] bg-white/[0.025] px-2.5 text-[11px] text-[#9AA6B6] hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
+                                className="h-8 border-white/[0.08] bg-white/[0.025] px-2.5 text-[14px] text-[#9AA6B6] hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
                             >
                                 <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                                 上一切面
@@ -194,7 +194,7 @@ export function FullscreenTimeline({
                                     selectedIndex < 0 ||
                                     selectedIndex >= snapshots.length - 1
                                 }
-                                className="h-8 border-white/[0.08] bg-white/[0.025] px-2.5 text-[11px] text-[#9AA6B6] hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
+                                className="h-8 border-white/[0.08] bg-white/[0.025] px-2.5 text-[14px] text-[#9AA6B6] hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
                             >
                                 下一切面
                                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
@@ -204,7 +204,7 @@ export function FullscreenTimeline({
                                     type="button"
                                     size="sm"
                                     onClick={returnToLatest}
-                                    className="h-8 bg-[#E8EDF5] px-3 text-[11px] font-medium text-[#0B0E13] hover:bg-white"
+                                    className="h-8 bg-[#E8EDF5] px-3 text-[14px] font-medium text-[#0B0E13] hover:bg-white"
                                 >
                                     <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                                     回到最新
@@ -223,7 +223,7 @@ export function FullscreenTimeline({
                                         <Activity className="h-3.5 w-3.5 text-[#7F96EF]" />
                                         调度活动密度
                                     </div>
-                                    <div className="mt-1 font-mono text-[9px] text-[#566174]">
+                                    <div className="mt-1 font-mono text-[13px] text-[#566174]">
                                         {formatUtc(viewport.start)} — {formatUtc(viewport.end)} UTC
                                     </div>
                                 </div>
@@ -245,7 +245,7 @@ export function FullscreenTimeline({
                                                     focusDuration(preset.duration)
                                                 }
                                                 className={
-                                                    'h-6 rounded-md px-2 text-[9px] transition-colors ' +
+                                                    'h-6 rounded-md px-2 text-[13px] transition-colors ' +
                                                     (active
                                                         ? 'bg-white/[0.09] text-[#E8EDF5]'
                                                         : 'text-[#667286] hover:bg-white/[0.045] hover:text-[#AEB9C8]')
@@ -262,7 +262,7 @@ export function FullscreenTimeline({
                                 <TimelineChart variant="explorer" />
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.055] px-4 py-3 text-[9px] text-[#596579]">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.055] px-4 py-3 text-[13px] text-[#596579]">
                                 <div className="flex items-center gap-4">
                                     <LegendDot color="#6E8BFF" label={'时间驱动 ' + timeCount} />
                                     <LegendDot color="#F0A33B" label={'事件驱动 ' + eventCount} />
@@ -280,7 +280,7 @@ export function FullscreenTimeline({
                                     <CalendarClock className="h-3.5 w-3.5 text-[#7F96EF]" />
                                     精确跳转
                                 </div>
-                                <p className="mt-1.5 text-[10px] leading-4 text-[#657184]">
+                                <p className="mt-1.5 text-[12px] leading-4 text-[#657184]">
                                     输入 UTC 时间后，定位到该时刻之前最后一个有效切面。
                                 </p>
                                 <form onSubmit={submitJump} className="mt-3 space-y-2">
@@ -294,15 +294,15 @@ export function FullscreenTimeline({
                                         disabled={!hasAuthoritativeTime}
                                         placeholder={hasAuthoritativeTime ? undefined : '等待数据…'}
                                         aria-label="UTC 精确跳转时间"
-                                        className="h-9 border-white/[0.08] bg-white/[0.025] font-mono text-[10px] text-[#DCE4EE] placeholder:text-[#596579] [color-scheme:dark] focus-visible:border-[#6E8BFF]/50 focus-visible:ring-[#6E8BFF]/15 disabled:opacity-50"
+                                        className="h-9 border-white/[0.08] bg-white/[0.025] font-mono text-[12px] text-[#DCE4EE] placeholder:text-[#596579] [color-scheme:dark] focus-visible:border-[#6E8BFF]/50 focus-visible:ring-[#6E8BFF]/15 disabled:opacity-50"
                                     />
                                     {!hasAuthoritativeTime && (
-                                        <p className="text-[10px] text-[#596579]">
+                                        <p className="text-[12px] text-[#596579]">
                                             等待 Backend 权威时间后可用精确跳转
                                         </p>
                                     )}
                                     {jumpError && (
-                                        <p className="text-[10px] text-amber-300">
+                                        <p className="text-[12px] text-amber-300">
                                             {jumpError}
                                         </p>
                                     )}
@@ -310,7 +310,7 @@ export function FullscreenTimeline({
                                         type="submit"
                                         variant="outline"
                                         disabled={!hasAuthoritativeTime}
-                                        className="h-8 w-full border-white/[0.08] bg-white/[0.03] text-[10px] text-[#B7C2D0] hover:bg-white/[0.07] hover:text-white disabled:opacity-40"
+                                        className="h-8 w-full border-white/[0.08] bg-white/[0.03] text-[12px] text-[#B7C2D0] hover:bg-white/[0.07] hover:text-white disabled:opacity-40"
                                     >
                                         <Clock3 className="mr-1.5 h-3.5 w-3.5" />
                                         定位并回放
@@ -329,7 +329,7 @@ export function FullscreenTimeline({
                                             <Badge
                                                 variant="outline"
                                                 className={
-                                                    'h-5 px-1.5 text-[9px] ' +
+                                                    'h-5 px-1.5 text-[13px] ' +
                                                     severityStyles[
                                                         selectedSnapshot.severity
                                                     ]
@@ -345,7 +345,7 @@ export function FullscreenTimeline({
 
                                 {selectedSnapshot ? (
                                     <div className="p-4">
-                                        <div className="font-mono text-[10px] text-[#8FA2B9]">
+                                        <div className="font-mono text-[12px] text-[#8FA2B9]">
                                             {formatUtc(
                                                 selectedSnapshot.timestamp,
                                                 true,
@@ -355,7 +355,7 @@ export function FullscreenTimeline({
                                         <h3 className="mt-2 text-sm font-semibold leading-5 text-[#EDF2F8]">
                                             {selectedSnapshot.title}
                                         </h3>
-                                        <p className="mt-2 text-[11px] leading-[1.65] text-[#758195]">
+                                        <p className="mt-2 text-[14px] leading-[1.65] text-[#758195]">
                                             {selectedSnapshot.summary}
                                         </p>
 
@@ -382,7 +382,7 @@ export function FullscreenTimeline({
                                             />
                                         </div>
 
-                                        <div className="mt-4 space-y-2 border-t border-white/[0.055] pt-3 text-[10px]">
+                                        <div className="mt-4 space-y-2 border-t border-white/[0.055] pt-3 text-[12px]">
                                             <DetailRow
                                                 label="领域"
                                                 value={
@@ -411,7 +411,7 @@ export function FullscreenTimeline({
                                             {selectedSnapshot.tags.map((tag) => (
                                                 <span
                                                     key={tag}
-                                                    className="rounded-md border border-white/[0.06] bg-white/[0.025] px-1.5 py-1 text-[9px] text-[#718096]"
+                                                    className="rounded-md border border-white/[0.06] bg-white/[0.025] px-1.5 py-1 text-[13px] text-[#718096]"
                                                 >
                                                     {tag}
                                                 </span>
@@ -419,33 +419,33 @@ export function FullscreenTimeline({
                                         </div>
 
                                         <div className="mt-4 rounded-xl border border-[#6E8BFF]/15 bg-[#6E8BFF]/[0.055] p-3">
-                                            <div className="text-[9px] font-medium text-[#9CAFFF]">
+                                            <div className="text-[13px] font-medium text-[#9CAFFF]">
                                                 全站回放锚点
                                             </div>
-                                            <code className="mt-1.5 block break-all text-[9px] leading-4 text-[#7587A1]">
+                                            <code className="mt-1.5 block break-all text-[13px] leading-4 text-[#7587A1]">
                                                 {selectedSnapshot.id}
                                             </code>
-                                            <p className="mt-2 text-[9px] leading-4 text-[#637189]">
+                                            <p className="mt-2 text-[13px] leading-4 text-[#637189]">
                                                 后续页面可使用 effectiveAt 与此切面 ID
                                                 获取一致的历史数据。
                                             </p>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="px-4 py-10 text-center text-[10px] text-[#596579]">
+                                    <div className="px-4 py-10 text-center text-[12px] text-[#596579]">
                                         暂无可回放切面
                                     </div>
                                 )}
                             </section>
 
                             <section className="rounded-2xl border border-white/[0.07] bg-[#090C12] p-4">
-                                <div className="flex items-center justify-between text-[10px]">
+                                <div className="flex items-center justify-between text-[12px]">
                                     <span className="text-[#657184]">当前视窗跨度</span>
                                     <span className="font-mono text-[#AAB6C5]">
                                         {formatDuration(visibleSpan)}
                                     </span>
                                 </div>
-                                <div className="mt-2 flex items-center justify-between text-[10px]">
+                                <div className="mt-2 flex items-center justify-between text-[12px]">
                                     <span className="text-[#657184]">完整数据跨度</span>
                                     <span className="font-mono text-[#AAB6C5]">
                                         {formatDuration(totalSpan)}
@@ -487,7 +487,7 @@ function DetailRow({
             <span
                 className={
                     'break-all text-right text-[#9EABBC] ' +
-                    (mono ? 'font-mono text-[9px]' : '')
+                    (mono ? 'font-mono text-[13px]' : '')
                 }
             >
                 {value}
@@ -507,7 +507,7 @@ function ImpactMetric({
 }) {
     return (
         <div className="rounded-xl border border-white/[0.055] bg-white/[0.018] p-2.5">
-            <div className="flex items-center gap-1.5 text-[9px] text-[#5F6B7E]">
+            <div className="flex items-center gap-1.5 text-[13px] text-[#5F6B7E]">
                 <Icon className="h-3 w-3" />
                 {label}
             </div>

@@ -28,14 +28,14 @@ export function OverlayList() {
                 <div className="flex h-9 shrink-0 items-center justify-between border-b border-white/[0.05] px-4">
                     <div className="flex items-center gap-2">
                         <Layers3 className="h-3.5 w-3.5 text-[#647186]" />
-                        <span className="text-[10px] font-medium text-[#8B97A9]">已布置叠加</span>
-                        <span className="rounded-full bg-white/[0.035] px-1.5 py-0.5 text-[9px] text-[#637085]">{overlays.length}</span>
+                        <span className="text-[12px] font-medium text-[#8B97A9]">已布置叠加</span>
+                        <span className="rounded-full bg-white/[0.035] px-1.5 py-0.5 text-[13px] text-[#637085]">{overlays.length}</span>
                     </div>
-                    <span className="text-[9px] text-[#4F5B6D]">每个叠加只属于一个租户</span>
+                    <span className="text-[13px] text-[#4F5B6D]">每个叠加只属于一个租户</span>
                 </div>
 
                 {overlays.length === 0 ? (
-                    <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[10px] text-[#536073]">
+                    <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[12px] text-[#536073]">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#5B8CFF]/55" />
                         暂无叠加，点击模板即可配置
                     </div>
@@ -56,8 +56,8 @@ export function OverlayList() {
                                     >
                                         <span className="h-8 w-1 shrink-0 rounded-full" style={{ backgroundColor: overlay.color }} />
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[11px] font-medium text-[#DCE5F0]">{overlay.templateName}</span>
-                                            <span className="mt-1 flex items-center gap-1.5 text-[9px] text-[#657184]">
+                                            <span className="block truncate text-[14px] font-medium text-[#DCE5F0]">{overlay.templateName}</span>
+                                            <span className="mt-1 flex items-center gap-1.5 text-[13px] text-[#657184]">
                                                 <span className="max-w-[98px] truncate">{overlay.tenantName}</span>
                                                 <span>·</span>
                                                 <Clock3 className="h-2.5 w-2.5" />
@@ -110,7 +110,7 @@ export function OverlayList() {
                         <>
                             <DialogHeader className="border-b border-white/[0.06] px-6 pb-4 pt-5">
                                 <DialogTitle className="text-base text-[#EDF3FA]">{detailOverlay.templateName}</DialogTitle>
-                                <p className="mt-1 text-[11px] text-[#657184]">叠加实例详情</p>
+                                <p className="mt-1 text-[14px] text-[#657184]">叠加实例详情</p>
                             </DialogHeader>
                             <div className="px-6 py-5">
                                 <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -119,7 +119,7 @@ export function OverlayList() {
                                     <Info label="状态" value={detailOverlay.enabled ? '已启用' : '已禁用'} />
                                     <Info label="基准切面（UTC）" value={formatUtcTimestamp(detailOverlay.effectiveAt)} />
                                 </div>
-                                <div className="mb-4 truncate rounded-lg border border-[#5B8CFF]/12 bg-[#5B8CFF]/[0.035] px-3 py-2 font-mono text-[9px] text-[#68799A]">
+                                <div className="mb-4 truncate rounded-lg border border-[#5B8CFF]/12 bg-[#5B8CFF]/[0.035] px-3 py-2 font-mono text-[13px] text-[#68799A]">
                                     snapshot: {detailOverlay.snapshotId ?? 'legacy / unavailable'}
                                 </div>
                                 <div className="h-[270px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#070B11]">
@@ -169,8 +169,8 @@ export function OverlayList() {
 function Info({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-            <div className="text-[9px] text-[#5F6B7E]">{label}</div>
-            <div className="mt-1 truncate text-[11px] font-medium text-[#CBD6E4]">{value}</div>
+            <div className="text-[13px] text-[#5F6B7E]">{label}</div>
+            <div className="mt-1 truncate text-[14px] font-medium text-[#CBD6E4]">{value}</div>
         </div>
     )
 }

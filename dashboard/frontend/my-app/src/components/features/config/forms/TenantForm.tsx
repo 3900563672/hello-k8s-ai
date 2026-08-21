@@ -12,6 +12,7 @@ import {
     ConfigNumberField,
     ConfigTextField,
     FormSaveBar,
+    LiveImpactSummary,
     TemplateActions,
     configInputClass,
     configLabelClass,
@@ -69,6 +70,7 @@ export const TenantForm = memo(function TenantForm({
                     onDelete={removeTenantTemplate}
                     getPreview={getTenantPreview}
                 />
+                <LiveImpactSummary fields={getTenantPreview(form.watch())} />
 
                 <ConfigFormSection
                     title="身份与流量"
@@ -128,7 +130,7 @@ export const TenantForm = memo(function TenantForm({
                                 </div>
                                 <div>
                                     <p className="text-xs font-medium text-[#D7D7D7]">扩容触发</p>
-                                    <p className="text-[11px] text-[#596579]">超过阈值时增加容量</p>
+                                    <p className="text-[14px] text-[#596579]">超过阈值时增加容量</p>
                                 </div>
                             </div>
                             <div className="space-y-4">
@@ -144,7 +146,7 @@ export const TenantForm = memo(function TenantForm({
                                 </div>
                                 <div>
                                     <p className="text-xs font-medium text-[#D7D7D7]">缩容触发</p>
-                                    <p className="text-[11px] text-[#596579]">回落至阈值时释放容量</p>
+                                    <p className="text-[14px] text-[#596579]">回落至阈值时释放容量</p>
                                 </div>
                             </div>
                             <div className="space-y-4">

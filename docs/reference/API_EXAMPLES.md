@@ -1,6 +1,6 @@
 # API 示例
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/api/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/api/
 
 示例假设 Backend 在 `http://localhost:8080`。生产环境必须通过认证/TLS；不要复制开发凭据。
 
@@ -245,6 +245,74 @@ curl -N -H 'Accept: text/event-stream' "$API/stream"
 ```
 
 收到事件后调用 REST refetch。不要把 SSE 当历史日志，也不要依赖 Last-Event-ID 精确重放。
+
+
+## 12.1 AIOps 分析（M0+M1，#93）
+
+```bash
+# 列表（AIOPS_ENABLED=false 时返回 404 AI_OPS_DISABLED）
+curl -sS "$API/aiops/analyses?limit=10"
+curl -sS "$API/aiops/analyses?status=completed&limit=10"
+# 任务队列列表（attempts/kind 字段）
+curl -sS "$API/aiops/jobs?limit=10"
+# 详情：主记录 + L1 实体总结；支持按切面查询
+curl -sS "$API/aiops/analyses/<analysisId>"
+curl -sS "$API/aiops/analyses?segmentId=<segmentId>"
+```
+
+分析由实验 complete/fail 自动入队，状态机 pending→running→aggregating→completed/failed；`l1Done/l1Total` 为进度。`scores` 含 goal/stability/efficiency/anomaly/overall/verdict/reason。
+
+**M2 意图执行（#94）：**
+
+```bash
+# 模板目录（只读；LLM 只能选目录内 id）
+curl -sS "$API/aiops/templates"
+# 一句话 → 解析（落库 parsed，返回 commandId）
+curl -sS -X POST "$API/aiops/commands" -H 'Content-Type: application/json'   -d '{"rawInput":"美国时间 9 点开始，持续 2 小时，突发流量高峰"}'
+# 确认执行：gate 校验 → 写流量/调倍速 → 创建并启动实验 → done
+curl -sS -X POST "$API/aiops/commands/<commandId>/confirm"
+# 查询执行结果（含 steps）
+curl -sS "$API/aiops/commands/<commandId>"
+```
+
+**M3 时间聚合与警戒（#95）：**
+
+```bash
+curl -sS "$API/aiops/windows?level=L3&limit=10"
+curl -sS "$API/aiops/windows?level=L4"
+curl -sS "$API/aiops/alerts?limit=10"
+```
+
+**同步对话（#110 阶段二，SSE 流式）：**
+
+```bash
+# 流式回答：事件为 data: {json}（lifecycle/tool/text），curl -N 关闭缓冲；回答成功后服务端落库 aiops_chat_messages
+curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
+  -d '{"message":"当前集群什么情况？","sessionId":"demo-session"}'
+
+# 问答历史（#112 阶段 D 读侧）：sessionId 必填、limit 1..200（默认 50），按时间正序；打开面板时前端用于回填
+curl -sS "$API/aiops/chat/messages?sessionId=demo-session&limit=50"
+```
+
+**面板配置（#110 阶段四，key 不回显、仅存服务端内存）：**
+
+```bash
+# 读取掩码状态（key 只显示是否已配置）
+curl -sS "$API/aiops/settings"
+
+# 运行时写入：至少一项；apiKey ≥8 字符，留空保持不变
+curl -sS -X POST "$API/aiops/settings" -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-4o-mini","apiKey":"sk-..."}'
+```
+
+**异步任务（#110 阶段一，状态/重试/失败原因可见）：**
+
+```bash
+# 最近任务（status 可过滤 pending/running/done/failed）
+curl -sS "$API/aiops/jobs?limit=20"
+```
+
+窗口/日总结由定时器自动产出（粒度 `AIOPS_WINDOW_GRANULARITY` 可配）；警戒为分数序列规则触发（连续低分/趋势下滑），alert_id 幂等。
 
 ## 13. 错误处理脚本规则
 

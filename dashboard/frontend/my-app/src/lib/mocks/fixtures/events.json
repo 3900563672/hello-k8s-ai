@@ -1,0 +1,260 @@
+{
+  "data": {
+    "items": [
+      {
+        "id": "12a1e39b-617a-4eca-a8c8-42e61f516930",
+        "eventTime": "2026-08-20T00:45:08Z",
+        "type": "Warning",
+        "reason": "Unhealthy",
+        "message": "Readiness probe failed: Get \"http://10.244.1.4:8080/api/v1/health/ready\": dial tcp 10.244.1.4:8080: connect: connection refused",
+        "count": 3,
+        "firstSeen": "2026-08-20T00:44:58Z",
+        "lastSeen": "2026-08-20T00:45:08Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-674976686d-cl89q",
+          "uid": "6995d125-ca4d-4fc4-92e3-1f6887ffb032"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker"
+      },
+      {
+        "id": "18024f17-f091-4e4a-b552-778c08af5e37",
+        "eventTime": "2026-08-20T00:44:53Z",
+        "type": "Normal",
+        "reason": "Killing",
+        "message": "Stopping container backend",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:53Z",
+        "lastSeen": "2026-08-20T00:44:53Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-674976686d-cl89q",
+          "uid": "6995d125-ca4d-4fc4-92e3-1f6887ffb032"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker"
+      },
+      {
+        "id": "06ee15fe-816b-4d96-aff9-8e0edf237de3",
+        "eventTime": "2026-08-20T00:44:53Z",
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled down replica set hello-k8s-ai-dashboard-backend-674976686d from 1 to 0",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:53Z",
+        "lastSeen": "2026-08-20T00:44:53Z",
+        "regarding": {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend",
+          "uid": "395f2ea4-4914-427e-bd8f-9f29b34bc335"
+        },
+        "reportingController": "deployment-controller"
+      },
+      {
+        "id": "d6fbcd4f-bf39-4a97-9e72-a2749db329c9",
+        "eventTime": "2026-08-20T00:44:53Z",
+        "type": "Normal",
+        "reason": "SuccessfulDelete",
+        "message": "Deleted pod: hello-k8s-ai-dashboard-backend-674976686d-cl89q",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:53Z",
+        "lastSeen": "2026-08-20T00:44:53Z",
+        "regarding": {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-674976686d",
+          "uid": "ce608b2c-1cd4-4484-8d20-b2a875078633"
+        },
+        "reportingController": "replicaset-controller"
+      },
+      {
+        "id": "2b929789-4684-4843-a068-866fab601de3",
+        "eventTime": "2026-08-20T00:44:51Z",
+        "type": "Normal",
+        "reason": "Started",
+        "message": "Container started",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:51Z",
+        "lastSeen": "2026-08-20T00:44:51Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker3"
+      },
+      {
+        "id": "74b6bd11-a758-4f2f-b299-31dd6938484d",
+        "eventTime": "2026-08-20T00:44:51Z",
+        "type": "Normal",
+        "reason": "Created",
+        "message": "Container created",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:51Z",
+        "lastSeen": "2026-08-20T00:44:51Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker3"
+      },
+      {
+        "id": "673bfa4b-0c3c-4c36-841a-2e2d971d6cb6",
+        "eventTime": "2026-08-20T00:44:51Z",
+        "type": "Normal",
+        "reason": "Pulled",
+        "message": "Container image \"hello-k8s-ai-dashboard-backend:dev\" already present on machine and can be accessed by the pod",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:51Z",
+        "lastSeen": "2026-08-20T00:44:51Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker3"
+      },
+      {
+        "id": "59bda0a6-f1a7-4bb0-97ad-9d6aabe8a66a",
+        "eventTime": "2026-08-20T00:44:51Z",
+        "type": "Normal",
+        "reason": "Started",
+        "message": "Container started",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:51Z",
+        "lastSeen": "2026-08-20T00:44:51Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker3"
+      },
+      {
+        "id": "29a22462-e540-424a-9d4a-e2f0ec7e16bb",
+        "eventTime": "2026-08-20T00:44:51Z",
+        "type": "Normal",
+        "reason": "Created",
+        "message": "Container created",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:51Z",
+        "lastSeen": "2026-08-20T00:44:51Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker3"
+      },
+      {
+        "id": "dda6ce3e-41ba-4948-a594-178c5c200307",
+        "eventTime": "2026-08-20T00:44:51Z",
+        "type": "Normal",
+        "reason": "Pulled",
+        "message": "Container image \"postgres:17-alpine\" already present on machine and can be accessed by the pod",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:51Z",
+        "lastSeen": "2026-08-20T00:44:51Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "kubelet",
+        "source": "hello-k8s-ai-dev-worker3"
+      },
+      {
+        "id": "bc0d58c4-ad56-4949-a9c5-f4fc59d4eb3d",
+        "eventTime": "2026-08-20T00:44:50Z",
+        "type": "Normal",
+        "reason": "SuccessfulCreate",
+        "message": "Created pod: hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:50Z",
+        "lastSeen": "2026-08-20T00:44:50Z",
+        "regarding": {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79",
+          "uid": "907804a3-b51e-4f88-9131-dfb34712213a"
+        },
+        "reportingController": "replicaset-controller"
+      },
+      {
+        "id": "d2bdbd6e-495f-4c30-b9e0-6deec9ccf10c",
+        "eventTime": "2026-08-20T00:44:50Z",
+        "type": "Normal",
+        "reason": "ScalingReplicaSet",
+        "message": "Scaled up replica set hello-k8s-ai-dashboard-backend-77f555bf79 from 0 to 1",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:50Z",
+        "lastSeen": "2026-08-20T00:44:50Z",
+        "regarding": {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend",
+          "uid": "395f2ea4-4914-427e-bd8f-9f29b34bc335"
+        },
+        "reportingController": "deployment-controller"
+      },
+      {
+        "id": "7efc7bed-06d0-4511-9639-57a753879e61",
+        "eventTime": "2026-08-20T00:44:50Z",
+        "type": "Normal",
+        "reason": "Scheduled",
+        "message": "Successfully assigned hello-k8s-ai-system/hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk to hello-k8s-ai-dev-worker3",
+        "count": 1,
+        "firstSeen": "2026-08-20T00:44:50Z",
+        "lastSeen": "2026-08-20T00:44:50Z",
+        "regarding": {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "namespace": "hello-k8s-ai-system",
+          "name": "hello-k8s-ai-dashboard-backend-77f555bf79-kbrhk",
+          "uid": "31a7bad2-9d17-47ff-82a0-a57faad4606f"
+        },
+        "reportingController": "default-scheduler"
+      }
+    ],
+    "page": {
+      "next": null
+    }
+  },
+  "meta": {
+    "requestId": "813eb4e190c249cdf6b77ddc6e6cf544",
+    "servedAt": "2026-08-20T00:48:22.146346072Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

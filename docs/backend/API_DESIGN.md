@@ -1,6 +1,6 @@
 # API 设计
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/api/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/api/
 
 Base path：`/api/v1`。当前 API 是面向 Dashboard 的内部稳定契约；尚未生成正式 OpenAPI 文档，也没有公开版本兼容承诺。
 
@@ -123,6 +123,34 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 `replay` 名称表示历史浏览，不代表事件重新执行。无 `at` 时读 live；旧 `at` 仅使用最后一个不晚于该时间的 snapshot。`/segment` 是时间段切面（起点/终点快照 + 区间数据），与点查询互补；任一端无快照返回 `unavailable` + 告警，不伪造数据。
 
 `/experiments` 是切面的生命周期入口（issue #51）：实验创建后为 `pending`（配置快照已定格），开始后进入 `running` 由后台混合采样器持续写入 `segment_events` / `segment_metrics` / `trace_index.segment_id`，完成后封存为不可变归档。写接口走既有写认证与幂等链路；详情接口在存储不可用时返回 503，不降级为假数据。
+
+
+### AIOps（M0+M1，#93）
+
+| Method | Path | 参数/语义 |
+| --- | --- | --- |
+| GET | `/aiops/analyses` | 分析列表；`status=pending|running|aggregating|completed|failed`、`limit` 1..200。 |
+| GET | `/aiops/analyses/{id}` | 单条分析（主记录 + L1 实体总结）；`?segmentId=` 按切面查询。 |
+
+`AIOPS_ENABLED=false`（默认）时返回 404 `AI_OPS_DISABLED`；持久化存储不可用返回 503。分析由实验 complete/fail 自动入队，状态机与进度见 Backend 架构第 13 节。
+
+**M2 意图执行（#94）与 M3 时间聚合（#95）：**
+
+| Method | Path | 参数/语义 |
+| --- | --- | --- |
+| POST | `/aiops/commands` | 一句话意图：LLM 解析 + 模板目录校验，落库 `parsed`；`{"rawInput":"..."}`。 |
+| GET | `/aiops/commands/{id}` | 意图命令详情（解析结果 + 执行 steps）。 |
+| POST | `/aiops/commands/{id}/confirm` | 确认执行：gate 校验（节点/租户存在）→ 写流量/调倍速 → 创建并启动实验 → `done`/`failed`。 |
+| GET | `/aiops/templates` | 只读模板目录（model/node/tenant/orchestrator/traffic，LLM 只能选目录内 id）。 |
+| GET | `/aiops/windows` | 窗口/日总结；`level=L3|L4`、`limit` 1..200。 |
+| GET | `/aiops/alerts` | 警戒列表（分数序列规则触发）；`limit` 1..200。 |
+| POST | `/aiops/chat` | 同步对话（SSE 流）：`{"message":"...","sessionId":"..."}`；事件 lifecycle/tool/text；限流 6 次/分钟/会话；回答成功后问答对与引用的 window/alert/command ID 落 `aiops_chat_messages`（失败不影响响应）。 |
+| GET | `/aiops/chat/messages` | 某会话问答历史（#112 阶段 D 读侧）：`sessionId` 必填、`limit` 1..200（默认 50），按时间正序；前端打开面板时拉取，失败静默降级。 |
+| GET | `/aiops/jobs` | 异步任务列表（`status=pending\|running\|done\|failed`、`limit` 1..200）。 |
+| GET | `/aiops/settings` | LLM 配置掩码状态（模型/地址/key 是否已配置，不回显明文）。 |
+| POST | `/aiops/settings` | 面板写入 LLM 配置：`{"apiKey"?,"model"?,"baseUrl"?}` 至少一项；apiKey ≥8 字符，仅存服务端内存。 |
+
+意图权限边界：AI 只能 create/start/complete/fail 实验、写流量、调倍速、选目录内模板/既有节点；不可改模板/节点/其他 CR。执行只走既有写通道（gateway/store/aggregator）。
 
 ### Stream
 

@@ -1,0 +1,298 @@
+{
+  "data": {
+    "items": [
+      {
+        "traceId": "c71f2a57df2f35201e09c4558f082e47",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:19.723066Z",
+        "durationMs": 2.998,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "ed5cbd3cba0d389a168f44ab608a9b93",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:17.719536Z",
+        "durationMs": 2.489,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "1eac7c0050c45fe84dfb3e3a8ef89481",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:15.717427Z",
+        "durationMs": 2.327,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "e635d16cd3c91d65f262cc3b0cf008a3",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:13.713983Z",
+        "durationMs": 2.751,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "78281b1dfd59a310291655f347b28561",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:11.707602Z",
+        "durationMs": 5.357,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "5817b3732098585e62cb4574f4b04b4b",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:09.701117Z",
+        "durationMs": 5.359,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "1874e4eb74a94736f24925d1d4d29d74",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP POST",
+        "startTime": "2026-08-20T00:48:08.612989Z",
+        "durationMs": 2.579,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "0e71700e5061116b6f2c71a415f4315d",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:07.695223Z",
+        "durationMs": 5.608,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "d9261e8a5c0c2529659646ce83a31882",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:05.69051Z",
+        "durationMs": 4.273,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "86006fff1eb7f22424d4795d51172b57",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:03.685316Z",
+        "durationMs": 4.127,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "3b6da9093ed69f3940567184a3e14870",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:48:01.680828Z",
+        "durationMs": 3.193,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "8bb26040b593e56dddee48115570a60f",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:59.676318Z",
+        "durationMs": 3.286,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "74ff034b2d628f82f628d76bc39c9e22",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:57.670856Z",
+        "durationMs": 4.791,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "e9594d6f882dfbe75ebf6251e05a02e3",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:55.666129Z",
+        "durationMs": 3.911,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "53dc8349814ed446782bc6995b211240",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:53.661313Z",
+        "durationMs": 4.073,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "d4038e18f701e84c075b779f5c50f61f",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:51.656413Z",
+        "durationMs": 4.143,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "4e09445e327b59d32b5fbc58d3cf4ba1",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:49.650362Z",
+        "durationMs": 5.553,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "588c1ee1f8d44b5599f8f8334ef3c022",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:47.643629Z",
+        "durationMs": 5.718,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "7f5106505063fb2f00288c77ccc8edac",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:45.641977Z",
+        "durationMs": 2.816,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      },
+      {
+        "traceId": "1bf24a95cc6c84593ba15adc2f610409",
+        "rootService": "hello-k8s-ai-controller",
+        "rootOperation": "HTTP PUT",
+        "startTime": "2026-08-20T00:47:43.637669Z",
+        "durationMs": 3.138,
+        "spanCount": 1,
+        "errorSpanCount": 0,
+        "entities": {
+          "model": "",
+          "simulatorInstance": "",
+          "tenant": ""
+        }
+      }
+    ],
+    "page": {
+      "next": null
+    }
+  },
+  "meta": {
+    "requestId": "29bbbdb863f033f54236473b6e124ec0",
+    "servedAt": "2026-08-20T00:48:22.673202499Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "jaeger": "2026-08-20T00:48:22.673189589Z"
+    }
+  }
+}

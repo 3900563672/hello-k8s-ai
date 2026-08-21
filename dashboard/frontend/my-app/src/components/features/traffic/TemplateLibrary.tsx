@@ -144,17 +144,17 @@ function TemplateCard({ template, onApply, onDelete, onView }: TemplateCardProps
                 </div>
 
                 <div className="mt-2.5 flex items-center gap-1.5">
-                    <Badge variant="outline" className="h-5 gap-1 border-white/[0.07] bg-white/[0.025] px-1.5 text-[9px] font-normal text-[#778397]">
+                    <Badge variant="outline" className="h-5 gap-1 border-white/[0.07] bg-white/[0.025] px-1.5 text-[13px] font-normal text-[#778397]">
                         <Clock3 className="h-2.5 w-2.5" />
                         {formatLogicalTime(duration)}
                     </Badge>
-                    <Badge variant="outline" className="h-5 border-white/[0.07] bg-white/[0.025] px-1.5 text-[9px] font-normal text-[#778397]">
+                    <Badge variant="outline" className="h-5 border-white/[0.07] bg-white/[0.025] px-1.5 text-[13px] font-normal text-[#778397]">
                         峰值 {formatQps(peak)}
                     </Badge>
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="ml-auto h-5 px-1.5 text-[9px] text-[#647186] hover:bg-white/[0.05] hover:text-white"
+                        className="ml-auto h-5 px-1.5 text-[13px] text-[#647186] hover:bg-white/[0.05] hover:text-white"
                         onPointerDown={stopDrag}
                         onClick={(event: MouseEvent<HTMLButtonElement>) => {
                             event.stopPropagation()
@@ -181,18 +181,18 @@ export function TemplateLibrary({ onApply }: TemplateLibraryProps) {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xs font-semibold text-[#E1E8F2]">流量模板</h2>
-                            <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-1.5 py-0.5 text-[9px] text-[#6F7C90]">
+                            <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-1.5 py-0.5 text-[13px] text-[#6F7C90]">
                                 {templates.length}
                             </span>
                         </div>
-                        <p className="mt-1 text-[10px] leading-4 text-[#5E6A7D]">点击配置 · 拖到画布 · 查看真实坐标</p>
+                        <p className="mt-1 text-[12px] leading-4 text-[#5E6A7D]">点击配置 · 拖到画布 · 查看真实坐标</p>
                     </div>
                     <Sparkles className="mt-0.5 h-4 w-4 text-[#5B8CFF]/70" />
                 </div>
                 <Button
                     size="sm"
                     onClick={() => setMode('draw')}
-                    className="h-9 w-full rounded-lg bg-[#5B8CFF] text-[11px] font-medium text-white shadow-[0_10px_26px_rgba(91,140,255,.18)] hover:bg-[#70A0FF]"
+                    className="h-9 w-full rounded-lg bg-[#5B8CFF] text-[14px] font-medium text-white shadow-[0_10px_26px_rgba(91,140,255,.18)] hover:bg-[#70A0FF]"
                 >
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
                     绘制新模板
@@ -207,10 +207,10 @@ export function TemplateLibrary({ onApply }: TemplateLibraryProps) {
                                 <PencilLine className="h-4 w-4" />
                             </div>
                             <div className="text-xs font-medium text-[#8995A8]">模板库为空</div>
-                            <p className="mt-1.5 text-[10px] leading-4 text-[#566174]">从真实的秒 / QPS 坐标开始绘制第一条流量曲线</p>
+                            <p className="mt-1.5 text-[12px] leading-4 text-[#566174]">从真实的秒 / QPS 坐标开始绘制第一条流量曲线</p>
                             <Link
                                 to="/guide"
-                                className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.025] px-3 text-[10px] text-[#8995A8] transition-colors hover:bg-white/[0.06] hover:text-white"
+                                className="mt-3 inline-flex h-7 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.025] px-3 text-[12px] text-[#8995A8] transition-colors hover:bg-white/[0.06] hover:text-white"
                             >
                                 <BookOpen className="h-3.5 w-3.5" />
                                 查看填写指南
@@ -239,7 +239,7 @@ export function TemplateLibrary({ onApply }: TemplateLibraryProps) {
                                 <DialogTitle className="text-base font-semibold text-[#EDF3FA]">
                                     {detailTemplate.name}
                                 </DialogTitle>
-                                <p className="mt-1 text-[11px] text-[#657184]">模板原始坐标 · 未归一化</p>
+                                <p className="mt-1 text-[14px] text-[#657184]">模板原始坐标 · 未归一化</p>
                             </DialogHeader>
                             <div className="px-6 py-5">
                                 <div className="h-[300px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#070B11]">
@@ -280,7 +280,7 @@ export function TemplateLibrary({ onApply }: TemplateLibraryProps) {
 function Stat({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-            <div className="text-[10px] text-[#667286]">{label}</div>
+            <div className="text-[12px] text-[#667286]">{label}</div>
             <div className="mt-1 font-mono text-sm font-medium text-[#DCE6F2]">{value}</div>
         </div>
     )

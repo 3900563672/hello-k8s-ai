@@ -1,6 +1,6 @@
 # Backend 架构
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/backend/internal/kubernetes/、dashboard/backend/internal/api/ 等
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/backend/internal/kubernetes/、dashboard/backend/internal/api/ 等
 
 ## 1. Backend 的角色
 
@@ -172,9 +172,26 @@ DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 
 - SSE 不使用普通 write timeout；其他请求受配置 timeout 中间件约束。
 - 冲突、幂等键重用但 payload 不同、未知 Kind、非法历史窗口必须是可区分错误。
 
+
 ## 12. 扩展规则
 
 - 新页面先定义 Read Model，再决定来源；不要直接把 unstructured CR 暴露给 React。
 - 新 metric 先加入服务端 catalog 与单位/维度，再开放 API。
 - 新 mutation 先确认字段所有者、RBAC、dry-run、幂等、审计、冲突和恢复语义。
 - 新 DB 表先写数据所有权、保留、备份和删除策略；不要用表绕过 Kubernetes。
+## 13. AIOps 智能分析层（#92/#93，M0+M1）
+
+- 模块 `internal/aiops/`：Service（worker 轮询 pending 分析）+ OpenAI 兼容 LLM Provider（json_object 强制、429/5xx 重试、4xx 不重试、预算硬限制）+ 硬指标打分/规则兜底。
+- 触发：实验 complete/fail 时 `EnqueueAnalysis(segmentID)`，`aiops_analyses.segment_id` 唯一保证幂等。
+- 状态机：`pending → running(L1) → aggregating(L2) → completed/failed`，`l1_done/l1_total` 进度落库（前端可显示）；失败按 `attempts` 重试（`AIOPS_MAX_ATTEMPTS_PER_ANALYSIS` 默认 2，claim 时 +1），未达上限回 `pending` 下轮重试，达上限落 `failed`。
+- L1 全量覆盖：实体批量一次 LLM 调用（固定 JSON schema），LLM 失败用规则兜底补齐，单实体失败不影响其它。
+- L2 混合打分：硬指标（错误率/TTFT p95/QPS 达成/事件数/重启数）规则先算，LLM 基于 L1 摘要 + 硬指标出分；分维度 goal/stability/efficiency/anomaly + overall + verdict + reason。
+- 预算：单次分析 LLM 调用 ≤ `AIOPS_MAX_CALLS_PER_ANALYSIS`（默认 8）、单次 ≤ `AIOPS_MAX_TOKENS_PER_CALL`；启动回收 stale（`AIOPS_STALE_REQUEUE_INTERVAL` 默认 10min）。
+- 单向依赖：只读 segments 数据 + 写 `aiops_*` 表，不反向依赖其它模块。
+- M2 意图执行（#94）：`internal/aiops/command.go` 解析一句话 → 结构化意图（LLM 严格 JSON + 模板目录校验，编造 id 拒绝）；`POST /aiops/commands` 落库 parsed，`confirm` 时 gate 校验（节点/租户必须存在）后按序执行：写流量（`SetTenantQPS`）→ 调倍速（`SetSimulationRate`）→ 创建并启动实验（store + aggregator 快照），每步追加 `steps`，任一失败整体 `failed`。执行编排在 api 层复用既有写通道，不新增越权入口。
+- M3 时间聚合（#95）：`aggregator.go` 定时把窗口内切面 L2 总结聚合为 L3 窗口认知、当日 L3 聚合为 L4 日总结（LLM + 规则兜底，Upsert 幂等，已结束窗口跳过）；`alerts.go` 对分数序列跑规则（连续低分/趋势下滑），触发写 `aiops_alerts`（alert_id 由规则+切面+窗口派生，幂等）。粒度/阈值可配置：`AIOPS_WINDOW_GRANULARITY`、`AIOPS_ALERT_THRESHOLD`、`AIOPS_ALERT_CONSECUTIVE`。
+- 同步对话（#110 阶段二）：`chat.go` 组装「结论型」上下文（最近 L3 窗口总结 / 最近警戒 / 最近已完成分析分数，目标 ≤6000 字符），`POST /aiops/chat` SSE 流式返回（lifecycle/tool/text 事件，AG-UI 轻量子集）；`llm.go` 新增流式调用（stream=true 逐 delta 回调）。限制：消息 ≤ `AIOPS_CHAT_MAX_MESSAGE_LEN`（默认 4000）、按会话限流 `AIOPS_CHAT_RATE_PER_MINUTE`（默认 6 次/分钟）、模型白名单 `AIOPS_CHAT_MODELS`（默认仅 `AIOPS_MODEL`）。
+- 面板配置与调用审计（#110 阶段四）：`Settings`/`ConfigureLLM` 提供掩码状态与运行时写入（`configMu` 保护，key 仅存内存，重启由环境变量恢复）；`GET/POST /aiops/settings` 暴露掩码态，key 不落库不回显。`AuditChat` 在流式对话结束后写 `aiops_audit_log`（模型/耗时/消息长度/token 用量/结果；流式请求带 `stream_options.include_usage`，从末 chunk usage 解析），审计失败只记日志，不影响对话主流程。
+- 异步任务可见性（#110 阶段一）：`aiops_jobs` 表即队列（segment 唯一、幂等入队，job_id 复用 analysis_id），worker 每轮用 `FOR UPDATE SKIP LOCKED` 认领 pending（attempts+1/started_at），收尾回写 done/failed + finished_at + last_error；启动时 `RequeueStaleAIOpsJobs` 回收崩溃遗留。`GET /aiops/jobs`（独立 handler，与 analyses 列表解耦）暴露状态，前端「异步任务」区块 10s 轮询。
+- 提示词工程化（#112 阶段 A/B）：提示词模板迁入 `internal/aiops/prompts/`（go:embed + 每层版本 + 渲染 sha256 哈希，调用日志记录版本/哈希）；每层输出过运行时 schema 校验（枚举/范围/长度，`schema.go`），解析或校验失败重试 1 次再规则兜底，失败原因记日志；`CompleteJSON` 返回非流式 usage（token 用量），每次调用结构化日志记录；每层输入预算与截断优先级「分数 > 结论 > 现象 > 事件」（L2 摘要区 4000 rune、L3 ≤24 子级、L4 ≤96 窗口、对话上下文 6000 rune，裁剪记日志）。阶段 C 收口：上下文组装器统一收口（`assembler.go`，L1/L2/聚合/对话都走预算与截断），对话检索器补充最近意图命令（`recentCommands`）；生成参数分层（分析层 temperature 0.1、对话层 0.5，0 省略走服务端默认）。阶段 D 对话追溯：`POST /aiops/chat` 回答成功后写 `aiops_chat_messages`（user+assistant 两条，assistant 携带引用的 window/alert/command ID 数组，失败只记日志不影响响应）；读侧 `GET /aiops/chat/messages`（sessionId 必填 + limit 1..200，按时间正序）供前端打开面板时回填历史，存储不可用时不阻塞对话主流程。
+

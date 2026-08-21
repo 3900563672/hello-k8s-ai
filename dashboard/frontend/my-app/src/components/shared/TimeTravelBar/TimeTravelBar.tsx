@@ -22,6 +22,7 @@ import {
     getTimelineBounds,
 } from './timelineMath'
 import { useFullscreenTimeline } from '@/hooks/useFullscreenTimeline'
+import { useControlPlaneStore } from '@/stores/controlPlaneSlice'
 
 export function TimeTravelBar() {
     const fullscreen = useFullscreenTimeline()
@@ -46,20 +47,30 @@ export function TimeTravelBar() {
         ? snapshots.findIndex((snapshot) => snapshot.id === selectedSnapshot.id)
         : -1
     const hasAuthoritativeTime = Date.parse(timestamp) > 0
+    const cluster = useControlPlaneStore((state) => state.cluster)
+    const readyNodes = cluster.workers.filter(
+        (worker) => worker.ready && worker.status === 'running',
+    ).length
+    const connectionDot =
+        cluster.connectionStatus === 'connected'
+            ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.5)]'
+            : cluster.connectionStatus === 'connecting'
+                ? 'bg-amber-400 signal-pulse'
+                : 'bg-red-400'
 
     return (
         <>
-            <header className="relative z-30 shrink-0 border-b border-white/[0.07] bg-[#07090D]/95 px-3 py-2.5 shadow-[0_10px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl md:h-[92px] md:px-4 md:py-3">
+            <header className="relative z-30 shrink-0 border-b border-white/[0.07] bg-[#07090D]/95 px-3 py-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl md:h-[60px] md:px-4 md:py-1.5">
                 <div className="flex h-full min-w-0 items-center gap-3 lg:gap-4">
                     <button
                         type="button"
                         onClick={fullscreen.show}
-                        className="group flex w-[132px] min-w-0 shrink-0 items-center gap-2.5 rounded-xl px-1.5 py-1 text-left transition-colors hover:bg-white/[0.035] sm:w-[195px] md:w-[236px] lg:w-[270px]"
+                        className="group flex w-[148px] min-w-0 shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 text-left transition-colors hover:bg-white/[0.035] sm:w-[188px] lg:w-[210px]"
                         aria-label="打开时间切面探索器"
                     >
-                        <div
+                        <span
                             className={
-                                'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-colors ' +
+                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-colors ' +
                                 (mode === 'latest'
                                     ? 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300'
                                     : 'border-[#6E8BFF]/20 bg-[#6E8BFF]/10 text-[#9EB2FF]')
@@ -70,16 +81,26 @@ export function TimeTravelBar() {
                             ) : (
                                 <History className="h-3.5 w-3.5" />
                             )}
-                        </div>
+                        </span>
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                                <span className="hidden text-[9px] font-medium uppercase tracking-[0.14em] text-[#596579] sm:inline">
-                                    时间上下文
+                                <span className="flex items-center gap-1.5 text-[13px] text-[#596579]">
+                                    <span className={connectionDot + ' h-1.5 w-1.5 rounded-full'} />
+                                    <span className="hidden sm:inline">
+                                        {cluster.connectionStatus === 'connected'
+                                            ? '已连接'
+                                            : cluster.connectionStatus === 'connecting'
+                                                ? '连接中'
+                                                : '未连接'}
+                                    </span>
+                                    <span className="font-mono text-[#748196]">
+                                        {readyNodes} 节点
+                                    </span>
                                 </span>
                                 <Badge
                                     variant="outline"
                                     className={
-                                        'h-[18px] px-1.5 text-[8px] font-medium ' +
+                                        'h-[18px] px-1.5 text-[12px] font-medium ' +
                                         (mode === 'latest'
                                             ? 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300'
                                             : 'border-[#6E8BFF]/20 bg-[#6E8BFF]/10 text-[#AFC0FF]')
@@ -88,26 +109,23 @@ export function TimeTravelBar() {
                                     {mode === 'latest' ? '最新' : '历史'}
                                 </Badge>
                             </div>
-                            <div className="mt-1 truncate font-mono text-[10px] font-medium tracking-[-0.01em] text-[#DDE4ED] sm:text-[11px] lg:text-xs">
+                            <div className="mt-1 truncate font-mono text-[12px] font-medium tracking-[-0.01em] text-[#DDE4ED] sm:text-[14px] lg:text-xs">
                                 {hasAuthoritativeTime ? formatUtc(timestamp, true) : '等待 Backend 权威时间'}
                                 {hasAuthoritativeTime && (
-                                    <span className="ml-1.5 text-[8px] font-normal text-[#596579]">
+                                    <span className="ml-1.5 text-[12px] font-normal text-[#596579]">
                                         UTC
                                     </span>
                                 )}
-                            </div>
-                            <div className="mt-0.5 hidden truncate text-[9px] text-[#657184] md:block">
-                                {selectedSnapshot?.title ?? '等待可回放切面'}
                             </div>
                         </div>
                     </button>
 
                     <div className="min-w-0 flex-1">
-                        <div className="mb-1.5 flex items-center justify-between gap-3 px-0.5 text-[8px] text-[#536074] sm:text-[9px]">
+                        <div className="mb-1 flex items-center justify-between gap-3 px-0.5 text-[12px] text-[#536074] sm:text-[13px]">
                             <span className="truncate font-mono">
                                 {formatUtc(viewport.start)}
                             </span>
-                            <span className="hidden items-center gap-2 sm:flex">
+                            <span className="flex flex-wrap items-center gap-2">
                                 <span>
                                     视窗 <strong className="font-mono font-medium text-[#8D9AAD]">{visibleCount}</strong>
                                 </span>
@@ -126,10 +144,10 @@ export function TimeTravelBar() {
                                 {formatUtc(viewport.end)}
                             </span>
                         </div>
-                        <div className="h-9 overflow-hidden rounded-lg border border-white/[0.055] bg-black/25 px-1 py-0.5 md:h-10">
+                        <div className="h-8 overflow-hidden rounded-md border border-white/[0.055] bg-black/25 px-1 py-0.5">
                             <MiniTimeline />
                         </div>
-                        <div className="mt-1 hidden items-center justify-center gap-1 text-[8px] text-[#465267] xl:flex">
+                        <div className="mt-0.5 hidden items-center justify-center gap-1 text-[12px] text-[#465267] xl:flex">
                             滚轮缩放
                             <span>·</span>
                             拖动平移
@@ -173,7 +191,7 @@ export function TimeTravelBar() {
                                 size="sm"
                                 onClick={returnToLatest}
                                 title="回到最新切面"
-                                className="hidden h-8 px-2 text-[9px] text-[#93A1B5] hover:bg-white/[0.055] hover:text-white xl:flex"
+                                className="hidden h-8 px-2 text-[13px] text-[#93A1B5] hover:bg-white/[0.055] hover:text-white xl:flex"
                             >
                                 <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                                 最新

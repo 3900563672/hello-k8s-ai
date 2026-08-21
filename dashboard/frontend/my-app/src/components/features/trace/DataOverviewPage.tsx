@@ -20,6 +20,8 @@ import { useOverview, useTraceDetail } from '@/api/queries/traceQueries'
 import { useReplayTimeContext, useTimeStore } from '@/stores/timeSlice'
 import { SegmentPanel } from '@/components/features/trace/SegmentPanel'
 import { ExperimentPanel } from '@/components/features/trace/ExperimentPanel'
+import { TraceWorkbench } from '@/components/features/trace/TraceWorkbench'
+import { CollapsibleSection } from '@/components/shared/CollapsibleSection'
 import type {
     BackendDeployment,
     BackendEvent,
@@ -141,7 +143,7 @@ export function DataOverviewPage() {
             <main className="relative mx-auto w-full max-w-[1500px] px-5 py-6 lg:px-8 lg:py-8">
                 <header className="flex flex-col gap-4 border-b border-white/[0.07] pb-5 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.16em] text-[#6B788C]">
+                        <div className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.16em] text-[#6B788C]">
                             <Database className="h-3.5 w-3.5 text-[#7CAEFF]" />
                             Data replay / overview
                             <SourceBadge historical={replay.mode === 'historical'} />
@@ -149,7 +151,7 @@ export function DataOverviewPage() {
                         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.025em] text-[#F0F5FB]">
                             Kubernetes 真实状态回显
                         </h1>
-                        <p className="mt-1.5 text-[11px] text-[#657286]">
+                        <p className="mt-1.5 text-[14px] text-[#657286]">
                             Informer cache、Prometheus、Jaeger 与 PostgreSQL 时间切面的统一读模型
                         </p>
                     </div>
@@ -159,7 +161,7 @@ export function DataOverviewPage() {
                                 type="button"
                                 variant="outline"
                                 onClick={returnToLatest}
-                                className="h-8 gap-2 border-[#5B8CFF]/25 bg-[#5B8CFF]/[0.06] px-3 text-[10px] text-[#AFCBFF] hover:bg-[#5B8CFF]/[0.12] hover:text-white"
+                                className="h-8 gap-2 border-[#5B8CFF]/25 bg-[#5B8CFF]/[0.06] px-3 text-[12px] text-[#AFCBFF] hover:bg-[#5B8CFF]/[0.12] hover:text-white"
                             >
                                 <History className="h-3.5 w-3.5" />
                                 回到最新状态
@@ -170,7 +172,7 @@ export function DataOverviewPage() {
                             variant="outline"
                             disabled={query.isFetching}
                             onClick={() => void query.refetch()}
-                            className="h-8 gap-2 border-white/[0.08] bg-white/[0.025] px-3 text-[10px] text-[#AAB6C8] hover:bg-white/[0.06] hover:text-white"
+                            className="h-8 gap-2 border-white/[0.08] bg-white/[0.025] px-3 text-[12px] text-[#AAB6C8] hover:bg-white/[0.06] hover:text-white"
                         >
                             <RefreshCw className={`h-3.5 w-3.5 ${query.isFetching ? 'animate-spin' : ''}`} />
                             刷新
@@ -178,17 +180,36 @@ export function DataOverviewPage() {
                     </div>
                 </header>
 
-                <SegmentPanel />
-                <ExperimentPanel />
+                <TraceWorkbench />
 
-                {query.isPending && <LoadingState />}
-                {query.isError && <ErrorState message={query.error.message} retry={() => void query.refetch()} />}
-                {overview && (
-                    <OverviewContent
-                        overview={overview}
-                        warnings={query.data?.meta.warnings ?? []}
-                    />
-                )}
+                <div className="mt-6 space-y-3">
+                    <CollapsibleSection
+                        title="时间段切面分析"
+                        subtitle="选择起点与终点快照，聚合区间指标与 Trace"
+                    >
+                        <SegmentPanel />
+                    </CollapsibleSection>
+                    <CollapsibleSection
+                        title="实验管理"
+                        subtitle="创建 / 启动 / 完成 / 失败实验（写操作需连接真实 Backend）"
+                    >
+                        <ExperimentPanel />
+                    </CollapsibleSection>
+                    <CollapsibleSection
+                        title="集群状态"
+                        subtitle="Informer cache / Prometheus / Jaeger 聚合读模型"
+                        defaultOpen
+                    >
+                        {query.isPending && <LoadingState />}
+                        {query.isError && <ErrorState message={query.error.message} retry={() => void query.refetch()} />}
+                        {overview && (
+                            <OverviewContent
+                                overview={overview}
+                                warnings={query.data?.meta.warnings ?? []}
+                            />
+                        )}
+                    </CollapsibleSection>
+                </div>
             </main>
         </div>
     )
@@ -233,7 +254,7 @@ function OverviewContent({ overview, warnings }: { overview: OverviewData; warni
                 {currentStatus.map((item) => (
                     <div key={item.label} className="rounded-xl border border-white/[0.07] bg-[#0A0E15]/90 p-3.5">
                         <div className="flex items-center justify-between">
-                            <span className="text-[9px] uppercase tracking-[0.1em] text-[#607086]">{item.label}</span>
+                            <span className="text-[13px] uppercase tracking-[0.1em] text-[#607086]">{item.label}</span>
                             <item.icon className="h-3.5 w-3.5 text-[#6EA3F8]" />
                         </div>
                         <div className="mt-3 font-mono text-xl font-medium text-[#E9F1FB]">{item.value}</div>
@@ -250,12 +271,12 @@ function OverviewContent({ overview, warnings }: { overview: OverviewData; warni
                         return (
                             <div key={card.id} className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0A0E15]/90 p-3.5">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-medium text-[#9AA8BC]">{card.label}</span>
+                                    <span className="text-[12px] font-medium text-[#9AA8BC]">{card.label}</span>
                                     <ProviderDot ready={Boolean(metric)} />
                                 </div>
                                 <div className="mt-2.5 flex items-baseline gap-1.5">
                                     <span className="font-mono text-xl text-[#EAF2FC]">{display.value}</span>
-                                    <span className="text-[9px] text-[#5E6D81]">{display.unit}</span>
+                                    <span className="text-[13px] text-[#5E6D81]">{display.unit}</span>
                                 </div>
                                 <Sparkline points={display.points} />
                             </div>
@@ -328,17 +349,17 @@ function OverviewContent({ overview, warnings }: { overview: OverviewData; warni
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <div className="truncate text-[11px] font-medium text-[#D8E2EF]">
+                                                <div className="truncate text-[14px] font-medium text-[#D8E2EF]">
                                                     {trace.rootService} · {trace.rootOperation}
                                                 </div>
-                                                <div className="mt-1 truncate font-mono text-[8px] text-[#506077]">{trace.traceId}</div>
+                                                <div className="mt-1 truncate font-mono text-[12px] text-[#506077]">{trace.traceId}</div>
                                             </div>
                                             <StatusPill
                                                 label={trace.errorSpanCount > 0 ? `${trace.errorSpanCount} error` : 'OK'}
                                                 ready={trace.errorSpanCount === 0}
                                             />
                                         </div>
-                                        <div className="mt-2 flex gap-3 text-[9px] text-[#68768A]">
+                                        <div className="mt-2 flex gap-3 text-[13px] text-[#68768A]">
                                             <span>{number.format(trace.durationMs)} ms</span>
                                             <span>{trace.spanCount} spans</span>
                                             <span>{formatTime(trace.startTime)}</span>
@@ -416,13 +437,13 @@ function TraceDetailPanel({
         <div className="mt-3 overflow-hidden rounded-xl border border-[#5B8CFF]/15 bg-[#090E17]">
             <div className="flex items-start justify-between gap-3 border-b border-white/[0.06] p-3.5">
                 <div className="min-w-0">
-                    <div className="text-[10px] font-medium text-[#C8D7EA]">Span 调用链</div>
-                    <div className="mt-1 truncate font-mono text-[8px] text-[#52627A]">{traceId}</div>
+                    <div className="text-[12px] font-medium text-[#C8D7EA]">Span 调用链</div>
+                    <div className="mt-1 truncate font-mono text-[12px] text-[#52627A]">{traceId}</div>
                 </div>
-                <button type="button" onClick={close} className="text-[9px] text-[#68778B] hover:text-white">关闭</button>
+                <button type="button" onClick={close} className="text-[13px] text-[#68778B] hover:text-white">关闭</button>
             </div>
             {loading && <EmptyRow text="正在读取 Jaeger Span…" />}
-            {error && <div className="p-3.5 text-[9px] leading-4 text-red-300">{error}</div>}
+            {error && <div className="p-3.5 text-[13px] leading-4 text-red-300">{error}</div>}
             {!loading && !error && ordered.length === 0 && <EmptyRow text="Trace 中没有 Span" />}
             {ordered.length > 0 && (
                 <div className="max-h-[360px] overflow-auto divide-y divide-white/[0.045]">
@@ -433,8 +454,8 @@ function TraceDetailPanel({
                                 {depth > 0 && <span className="absolute top-0 bottom-0 border-l border-[#5B8CFF]/15" style={{ left: `${8 + (depth - 1) * 13}px` }} />}
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                        <div className="truncate text-[9px] text-[#C6D2E2]">{span.service} · {span.operation}</div>
-                                        <div className="mt-1 truncate font-mono text-[7px] text-[#4E5E75]">{span.spanId}</div>
+                                        <div className="truncate text-[13px] text-[#C6D2E2]">{span.service} · {span.operation}</div>
+                                        <div className="mt-1 truncate font-mono text-[12px] text-[#4E5E75]">{span.spanId}</div>
                                     </div>
                                     <StatusPill label={`${number.format(span.durationMs)} ms`} ready={span.status !== 'error'} />
                                 </div>
@@ -449,7 +470,7 @@ function TraceDetailPanel({
                                     />
                                 </div>
                                 {span.events.length > 0 && (
-                                    <div className="mt-1.5 text-[8px] text-[#65748A]">{span.events.length} span events</div>
+                                    <div className="mt-1.5 text-[12px] text-[#65748A]">{span.events.length} span events</div>
                                 )}
                             </div>
                         )
@@ -459,7 +480,7 @@ function TraceDetailPanel({
             {links.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 border-t border-white/[0.055] p-3">
                     {links.map((link) => (
-                        <span key={`${link.kind}/${link.name}`} className="rounded border border-[#5B8CFF]/15 bg-[#5B8CFF]/[0.05] px-1.5 py-0.5 text-[8px] text-[#92B9F5]">
+                        <span key={`${link.kind}/${link.name}`} className="rounded border border-[#5B8CFF]/15 bg-[#5B8CFF]/[0.05] px-1.5 py-0.5 text-[12px] text-[#92B9F5]">
                             {link.kind}/{link.name}
                         </span>
                     ))}
@@ -480,11 +501,11 @@ function ClockPanel({ overview }: { overview: OverviewData }) {
         <section className="grid overflow-hidden rounded-xl border border-white/[0.07] bg-[#090D14]/90 md:grid-cols-4">
             {items.map((item, index) => (
                 <div key={item.label} className={`p-3.5 ${index > 0 ? 'border-t border-white/[0.06] md:border-l md:border-t-0' : ''}`}>
-                    <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.1em] text-[#59687D]">
+                    <div className="flex items-center gap-1.5 text-[13px] uppercase tracking-[0.1em] text-[#59687D]">
                         <Clock3 className="h-3 w-3 text-[#658DD0]" />
                         {item.label}
                     </div>
-                    <div className="mt-2 font-mono text-[10px] text-[#BECBDD]">
+                    <div className="mt-2 font-mono text-[12px] text-[#BECBDD]">
                         {item.label === 'Data Freshness' ? item.value : formatTime(item.value)}
                     </div>
                 </div>
@@ -499,7 +520,7 @@ function TrafficTable({ tenants }: { tenants: OverviewData['traffic']['tenants']
             {tenants.length === 0 ? <EmptyRow text="Kubernetes 中没有 Tenant Traffic 读模型" /> : (
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[900px] text-left">
-                        <thead className="border-b border-white/[0.055] text-[8px] uppercase tracking-[0.12em] text-[#4F5D71]">
+                        <thead className="border-b border-white/[0.055] text-[12px] uppercase tracking-[0.12em] text-[#4F5D71]">
                             <tr>
                                 <th className="px-3.5 py-2 font-medium">Tenant</th>
                                 <th className="px-3.5 py-2 font-medium">Requested / Allocated</th>
@@ -512,16 +533,16 @@ function TrafficTable({ tenants }: { tenants: OverviewData['traffic']['tenants']
                         </thead>
                         <tbody className="divide-y divide-white/[0.045]">
                             {tenants.map((tenant) => (
-                                <tr key={tenant.tenant.name} className="text-[10px] text-[#9BA9BC]">
+                                <tr key={tenant.tenant.name} className="text-[12px] text-[#9BA9BC]">
                                     <td className="px-3.5 py-2.5">
                                         <div className="text-[#D7E1ED]">{tenant.displayName || tenant.tenant.name}</div>
-                                        <div className="mt-0.5 font-mono text-[8px] text-[#536178]">{tenant.tenant.name} · {tenant.priority}</div>
+                                        <div className="mt-0.5 font-mono text-[12px] text-[#536178]">{tenant.tenant.name} · {tenant.priority}</div>
                                     </td>
                                     <td className="px-3.5 py-2.5 font-mono">
                                         <span className="text-[#CFDAE8]">{tenant.requestedQPS}</span>
                                         <span className="mx-1.5 text-[#465267]">/</span>
                                         <span className={tenant.allocationBalanced ? 'text-emerald-300' : 'text-amber-200'}>{tenant.allocatedQPS}</span>
-                                        <span className="ml-1 text-[8px] text-[#59687D]">QPS</span>
+                                        <span className="ml-1 text-[12px] text-[#59687D]">QPS</span>
                                     </td>
                                     <td className="px-3.5 py-2.5 font-mono">{tenant.performance.avgTTFT ? `${number.format(tenant.performance.avgTTFT.value)} ${tenant.performance.avgTTFT.unit}` : '—'}</td>
                                     <td className="px-3.5 py-2.5 font-mono">{tenant.performance.avgQueue ? `${number.format(tenant.performance.avgQueue.value)} ${tenant.performance.avgQueue.unit}` : '—'}</td>
@@ -529,7 +550,7 @@ function TrafficTable({ tenants }: { tenants: OverviewData['traffic']['tenants']
                                     <td className="px-3.5 py-2.5">
                                         <div className="flex max-w-[280px] flex-wrap gap-1">
                                             {tenant.instances.length === 0 ? <span className="text-[#4F5D71]">None</span> : tenant.instances.map((instance) => (
-                                                <span key={instance.name} title={`${instance.model} · ${instance.assignedQPS} QPS · ${instance.pods.length} Pods`} className="rounded border border-[#5B8CFF]/15 bg-[#5B8CFF]/[0.045] px-1.5 py-0.5 font-mono text-[8px] text-[#92B9F5]">
+                                                <span key={instance.name} title={`${instance.model} · ${instance.assignedQPS} QPS · ${instance.pods.length} Pods`} className="rounded border border-[#5B8CFF]/15 bg-[#5B8CFF]/[0.045] px-1.5 py-0.5 font-mono text-[12px] text-[#92B9F5]">
                                                     {instance.name} · {instance.availableReplicas}/{instance.desiredReplicas}
                                                 </span>
                                             ))}
@@ -550,13 +571,13 @@ function ResourceTable({ title, resources }: { title: string; resources: Backend
     return (
         <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0A0E15]/90">
             <div className="flex items-center justify-between border-b border-white/[0.06] px-3.5 py-2.5">
-                <span className="text-[10px] font-medium text-[#98A7BB]">{title}</span>
-                <span className="font-mono text-[9px] text-[#546277]">{resources.length}</span>
+                <span className="text-[12px] font-medium text-[#98A7BB]">{title}</span>
+                <span className="font-mono text-[13px] text-[#546277]">{resources.length}</span>
             </div>
             {resources.length === 0 ? <EmptyRow text="Informer cache 中没有该类资源" /> : (
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[620px] text-left">
-                        <thead className="border-b border-white/[0.055] text-[8px] uppercase tracking-[0.12em] text-[#4F5D71]">
+                        <thead className="border-b border-white/[0.055] text-[12px] uppercase tracking-[0.12em] text-[#4F5D71]">
                             <tr>
                                 <th className="px-3.5 py-2 font-medium">Kind / Name</th>
                                 <th className="px-3.5 py-2 font-medium">Phase</th>
@@ -567,10 +588,10 @@ function ResourceTable({ title, resources }: { title: string; resources: Backend
                         </thead>
                         <tbody className="divide-y divide-white/[0.045]">
                             {resources.map((resource) => (
-                                <tr key={`${resource.ref.kind}/${resource.ref.name}`} className="text-[10px] text-[#9BA9BC]">
+                                <tr key={`${resource.ref.kind}/${resource.ref.name}`} className="text-[12px] text-[#9BA9BC]">
                                     <td className="px-3.5 py-2.5">
                                         <div className="text-[#D7E1ED]">{resource.ref.name}</div>
-                                        <div className="mt-0.5 text-[8px] text-[#536178]">{resource.ref.kind}</div>
+                                        <div className="mt-0.5 text-[12px] text-[#536178]">{resource.ref.kind}</div>
                                     </td>
                                     <td className="px-3.5 py-2.5"><StatusPill label={resourcePhase(resource)} ready={isResourceReady(resource)} /></td>
                                     <td className="max-w-[280px] px-3.5 py-2.5"><ConditionSummary conditions={resource.conditions} /></td>
@@ -608,13 +629,13 @@ function WorkloadTable({ pods, deployments }: { pods: BackendPod[]; deployments:
     return (
         <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0A0E15]/90">
             <div className="flex items-center justify-between border-b border-white/[0.06] px-3.5 py-2.5">
-                <span className="text-[10px] font-medium text-[#98A7BB]">Deployment / Pod</span>
-                <span className="font-mono text-[9px] text-[#546277]">{rows.length}</span>
+                <span className="text-[12px] font-medium text-[#98A7BB]">Deployment / Pod</span>
+                <span className="font-mono text-[13px] text-[#546277]">{rows.length}</span>
             </div>
             {rows.length === 0 ? <EmptyRow text="Informer cache 中没有工作负载" /> : (
                 <div className="max-h-[330px] overflow-auto">
                     <table className="w-full min-w-[620px] text-left">
-                        <thead className="sticky top-0 border-b border-white/[0.055] bg-[#0A0E15] text-[8px] uppercase tracking-[0.12em] text-[#4F5D71]">
+                        <thead className="sticky top-0 border-b border-white/[0.055] bg-[#0A0E15] text-[12px] uppercase tracking-[0.12em] text-[#4F5D71]">
                             <tr>
                                 <th className="px-3.5 py-2 font-medium">Kind / Name</th>
                                 <th className="px-3.5 py-2 font-medium">Ready / Phase</th>
@@ -624,10 +645,10 @@ function WorkloadTable({ pods, deployments }: { pods: BackendPod[]; deployments:
                         </thead>
                         <tbody className="divide-y divide-white/[0.045]">
                             {rows.map((row) => (
-                                <tr key={row.key} className="text-[10px] text-[#9BA9BC]">
+                                <tr key={row.key} className="text-[12px] text-[#9BA9BC]">
                                     <td className="px-3.5 py-2.5"><RefName ref={row.ref} /></td>
                                     <td className="px-3.5 py-2.5"><StatusPill label={row.phase} ready={row.ready} /></td>
-                                    <td className="px-3.5 py-2.5 font-mono text-[9px]">{row.owner}</td>
+                                    <td className="px-3.5 py-2.5 font-mono text-[13px]">{row.owner}</td>
                                     <td className="max-w-[280px] px-3.5 py-2.5"><ConditionSummary conditions={row.conditions} /></td>
                                 </tr>
                             ))}
@@ -674,13 +695,13 @@ function InfrastructureTable({
     return (
         <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0A0E15]/90">
             <div className="flex items-center justify-between border-b border-white/[0.06] px-3.5 py-2.5">
-                <span className="text-[10px] font-medium text-[#98A7BB]">Node / Service / Lease</span>
-                <span className="font-mono text-[9px] text-[#546277]">{rows.length}</span>
+                <span className="text-[12px] font-medium text-[#98A7BB]">Node / Service / Lease</span>
+                <span className="font-mono text-[13px] text-[#546277]">{rows.length}</span>
             </div>
             {rows.length === 0 ? <EmptyRow text="Informer cache 中没有基础设施资源" /> : (
                 <div className="max-h-[320px] overflow-auto">
                     <table className="w-full min-w-[620px] text-left">
-                        <thead className="sticky top-0 border-b border-white/[0.055] bg-[#0A0E15] text-[8px] uppercase tracking-[0.12em] text-[#4F5D71]">
+                        <thead className="sticky top-0 border-b border-white/[0.055] bg-[#0A0E15] text-[12px] uppercase tracking-[0.12em] text-[#4F5D71]">
                             <tr>
                                 <th className="px-3.5 py-2 font-medium">Kind / Name</th>
                                 <th className="px-3.5 py-2 font-medium">State</th>
@@ -689,10 +710,10 @@ function InfrastructureTable({
                         </thead>
                         <tbody className="divide-y divide-white/[0.045]">
                             {rows.map((row) => (
-                                <tr key={row.key} className="text-[10px] text-[#9BA9BC]">
+                                <tr key={row.key} className="text-[12px] text-[#9BA9BC]">
                                     <td className="px-3.5 py-2.5"><RefName ref={row.ref} /></td>
                                     <td className="px-3.5 py-2.5"><StatusPill label={row.status} ready={row.ready} /></td>
-                                    <td className="max-w-[320px] truncate px-3.5 py-2.5 font-mono text-[9px] text-[#66768D]">{row.detail}</td>
+                                    <td className="max-w-[320px] truncate px-3.5 py-2.5 font-mono text-[13px] text-[#66768D]">{row.detail}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -710,12 +731,12 @@ function EventTable({ events }: { events: BackendEvent[] }) {
                 <div className="divide-y divide-white/[0.05]">
                     {events.map((event) => (
                         <div key={event.id} className="grid gap-2 p-3.5 sm:grid-cols-[100px_120px_minmax(0,1fr)]">
-                            <div className="font-mono text-[9px] text-[#65748A]">{formatTime(event.eventTime)}</div>
+                            <div className="font-mono text-[13px] text-[#65748A]">{formatTime(event.eventTime)}</div>
                             <div>
                                 <StatusPill label={event.reason || event.type} ready={event.type !== 'Warning'} />
-                                <div className="mt-1.5 truncate text-[8px] text-[#536177]">{event.regarding.kind}/{event.regarding.name}</div>
+                                <div className="mt-1.5 truncate text-[12px] text-[#536177]">{event.regarding.kind}/{event.regarding.name}</div>
                             </div>
-                            <p className="text-[10px] leading-4 text-[#9AA8BA]">{event.message || 'No message'}</p>
+                            <p className="text-[12px] leading-4 text-[#9AA8BA]">{event.message || 'No message'}</p>
                         </div>
                     ))}
                 </div>
@@ -731,12 +752,12 @@ function ProviderTable({ providers, serverTime }: { providers: Record<string, Pr
             {entries.length === 0 ? <EmptyRow text="没有 Provider 状态" /> : entries.map(([name, provider]) => (
                 <div key={name} className="flex items-start justify-between gap-4 border-b border-white/[0.05] p-3.5 last:border-b-0">
                     <div className="min-w-0">
-                        <div className="text-[10px] font-medium capitalize text-[#CAD5E3]">{name}</div>
-                        <div className="mt-1 truncate text-[8px] text-[#536178]">{provider.error || provider.storage || 'current state provider'}</div>
+                        <div className="text-[12px] font-medium capitalize text-[#CAD5E3]">{name}</div>
+                        <div className="mt-1 truncate text-[12px] text-[#536178]">{provider.error || provider.storage || 'current state provider'}</div>
                     </div>
                     <div className="shrink-0 text-right">
                         <StatusPill label={provider.state} ready={provider.state === 'ready'} />
-                        <div className="mt-1.5 font-mono text-[8px] text-[#506078]">{relativeAge(provider.observedAt, serverTime)}</div>
+                        <div className="mt-1.5 font-mono text-[12px] text-[#506078]">{relativeAge(provider.observedAt, serverTime)}</div>
                     </div>
                 </div>
             ))}
@@ -747,7 +768,7 @@ function ProviderTable({ providers, serverTime }: { providers: Record<string, Pr
 function Sparkline({ points }: { points: MetricPoint[] }) {
     const finite = points.map((point) => point.value).filter(Number.isFinite)
     if (finite.length < 2) {
-        return <div className="mt-3 h-8 border-t border-dashed border-white/[0.06] pt-2 text-[8px] text-[#455267]">No samples</div>
+        return <div className="mt-3 h-8 border-t border-dashed border-white/[0.06] pt-2 text-[12px] text-[#455267]">No samples</div>
     }
     const min = Math.min(...finite)
     const max = Math.max(...finite)
@@ -826,8 +847,8 @@ function MetricTrendChart({
     return (
         <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0A0E15]/90 p-3.5">
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium text-[#9AA8BC]">{label}</span>
-                <span className="text-[8px] text-[#536177]">{metric?.unit ?? '—'}</span>
+                <span className="text-[12px] font-medium text-[#9AA8BC]">{label}</span>
+                <span className="text-[12px] text-[#536177]">{metric?.unit ?? '—'}</span>
             </div>
             <div className="mt-2 h-[110px]">
                 <ReactECharts option={option} notMerge style={{ height: '100%', width: '100%' }} />
@@ -851,7 +872,7 @@ function ConditionSummary({ conditions }: { conditions: KubernetesCondition[] })
                 <span
                     key={`${condition.type}/${condition.status}`}
                     title={[condition.reason, condition.message].filter(Boolean).join(': ')}
-                    className={`rounded border px-1.5 py-0.5 text-[8px] ${
+                    className={`rounded border px-1.5 py-0.5 text-[12px] ${
                         condition.status === 'True'
                             ? 'border-emerald-400/15 bg-emerald-400/[0.055] text-emerald-300'
                             : 'border-amber-400/15 bg-amber-400/[0.055] text-amber-200'
@@ -866,7 +887,7 @@ function ConditionSummary({ conditions }: { conditions: KubernetesCondition[] })
 
 function StatusPill({ label, ready }: { label: string; ready: boolean }) {
     return (
-        <span className={`inline-flex max-w-[180px] items-center gap-1 rounded-full border px-2 py-0.5 text-[8px] font-medium ${
+        <span className={`inline-flex max-w-[180px] items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-medium ${
             ready
                 ? 'border-emerald-400/15 bg-emerald-400/[0.055] text-emerald-300'
                 : 'border-amber-400/15 bg-amber-400/[0.055] text-amber-200'
@@ -885,7 +906,7 @@ function RefName({ ref }: { ref: ResourceRef }) {
     return (
         <div>
             <div className="max-w-[260px] truncate text-[#D7E1ED]">{ref.name}</div>
-            <div className="mt-0.5 text-[8px] text-[#536178]">{ref.kind} · {ref.namespace || 'cluster'}</div>
+            <div className="mt-0.5 text-[12px] text-[#536178]">{ref.kind} · {ref.namespace || 'cluster'}</div>
         </div>
     )
 }
@@ -895,16 +916,16 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: typeof Activity; 
         <div className="flex items-end justify-between gap-4">
             <div className="flex items-center gap-2">
                 <Icon className="h-3.5 w-3.5 text-[#73A7FA]" />
-                <h2 className="text-[11px] font-semibold text-[#CFDAE8]">{title}</h2>
+                <h2 className="text-[14px] font-semibold text-[#CFDAE8]">{title}</h2>
             </div>
-            <span className="text-[8px] text-[#536177]">{subtitle}</span>
+            <span className="text-[12px] text-[#536177]">{subtitle}</span>
         </div>
     )
 }
 
 function SourceBadge({ historical }: { historical: boolean }) {
     return (
-        <span className={`rounded-full border px-2 py-0.5 text-[8px] normal-case tracking-normal ${
+        <span className={`rounded-full border px-2 py-0.5 text-[12px] normal-case tracking-normal ${
             historical
                 ? 'border-[#9EAEFF]/20 bg-[#9EAEFF]/[0.07] text-[#AEB9FF]'
                 : 'border-emerald-400/15 bg-emerald-400/[0.055] text-emerald-300'
@@ -916,7 +937,7 @@ function SourceBadge({ historical }: { historical: boolean }) {
 
 function Notice({ text, tone }: { text: string; tone: 'warning' }) {
     return (
-        <div data-tone={tone} className="flex items-start gap-2 rounded-lg border border-amber-300/10 bg-amber-300/[0.035] px-3 py-2 text-[9px] leading-4 text-amber-100/75">
+        <div data-tone={tone} className="flex items-start gap-2 rounded-lg border border-amber-300/10 bg-amber-300/[0.035] px-3 py-2 text-[13px] leading-4 text-amber-100/75">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-300/70" />
             {text}
         </div>
@@ -924,12 +945,12 @@ function Notice({ text, tone }: { text: string; tone: 'warning' }) {
 }
 
 function EmptyRow({ text }: { text: string }) {
-    return <div className="px-4 py-8 text-center text-[9px] text-[#536177]">{text}</div>
+    return <div className="px-4 py-8 text-center text-[13px] text-[#536177]">{text}</div>
 }
 
 function LoadingState() {
     return (
-        <div className="flex min-h-[420px] items-center justify-center gap-2 text-[10px] text-[#66758A]">
+        <div className="flex min-h-[420px] items-center justify-center gap-2 text-[12px] text-[#66758A]">
             <RefreshCw className="h-4 w-4 animate-spin text-[#6EA3F8]" />
             正在聚合 Kubernetes、Prometheus 与 Jaeger 数据…
         </div>
@@ -942,9 +963,9 @@ function ErrorState({ message, retry }: { message: string; retry: () => void }) 
             <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
                 <div>
-                    <div className="text-[11px] font-medium text-red-100">Overview API 请求失败</div>
-                    <p className="mt-1 text-[10px] leading-5 text-red-100/60">{message}</p>
-                    <Button type="button" variant="outline" onClick={retry} className="mt-3 h-7 border-red-300/15 bg-transparent px-3 text-[9px] text-red-100 hover:bg-red-300/[0.07]">
+                    <div className="text-[14px] font-medium text-red-100">Overview API 请求失败</div>
+                    <p className="mt-1 text-[12px] leading-5 text-red-100/60">{message}</p>
+                    <Button type="button" variant="outline" onClick={retry} className="mt-3 h-7 border-red-300/15 bg-transparent px-3 text-[13px] text-red-100 hover:bg-red-300/[0.07]">
                         重试
                     </Button>
                 </div>

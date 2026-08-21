@@ -173,8 +173,8 @@ function MetricCurve({ label, metric, aggregation }: {
     return (
         <div className="rounded-xl border border-white/[0.07] bg-[#0A0E15]/90 p-3.5">
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium text-[#9AA8BC]">{label}</span>
-                <span className="font-mono text-[10px] text-[#D7E1ED]">
+                <span className="text-[12px] font-medium text-[#9AA8BC]">{label}</span>
+                <span className="font-mono text-[12px] text-[#D7E1ED]">
                     {latest === undefined ? '—' : number.format(latest)}
                 </span>
             </div>
@@ -187,12 +187,12 @@ function TraceRow({ trace }: { trace: TraceSummary }) {
     return (
         <div className="flex items-start justify-between gap-3 border-b border-white/[0.04] px-3.5 py-2.5 last:border-0">
             <div className="min-w-0">
-                <div className="truncate text-[10px] font-medium text-[#D8E2EF]">
+                <div className="truncate text-[12px] font-medium text-[#D8E2EF]">
                     {trace.rootService} · {trace.rootOperation}
                 </div>
-                <div className="mt-1 truncate font-mono text-[8px] text-[#506077]">{trace.traceId}</div>
+                <div className="mt-1 truncate font-mono text-[12px] text-[#506077]">{trace.traceId}</div>
             </div>
-            <div className="shrink-0 text-right text-[9px] text-[#68768A]">
+            <div className="shrink-0 text-right text-[13px] text-[#68768A]">
                 <div>{number.format(trace.durationMs)} ms · {trace.spanCount} spans</div>
                 <div className="mt-0.5">{formatTime(trace.startTime)}</div>
             </div>
@@ -236,14 +236,14 @@ export function SegmentPanel() {
         <section className="rounded-xl border border-[#5B8CFF]/12 bg-[#0A0E15]/70">
             <div className="flex flex-col gap-3 border-b border-white/[0.06] p-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-[#9AA8BC]">
+                    <div className="flex items-center gap-2 text-[12px] font-medium text-[#9AA8BC]">
                         <Clock3 className="h-3.5 w-3.5 text-[#7CAEFF]" />
                         时间段切面（Run Segment）
-                        <span className="rounded-full border border-[#9EAEFF]/20 bg-[#9EAEFF]/[0.07] px-2 py-0.5 text-[8px] text-[#AEB9FF]">
+                        <span className="rounded-full border border-[#9EAEFF]/20 bg-[#9EAEFF]/[0.07] px-2 py-0.5 text-[12px] text-[#AEB9FF]">
                             起点 + 终点快照 + 区间指标 / Trace
                         </span>
                     </div>
-                    <p className="mt-1 text-[9px] text-[#657286]">
+                    <p className="mt-1 text-[13px] text-[#657286]">
                         选择起点与终点快照，分析一次调度/实验从什么状态开始、到什么状态结束、中间发生了什么
                     </p>
                 </div>
@@ -251,7 +251,7 @@ export function SegmentPanel() {
                     <select
                         value={startId}
                         onChange={(event) => setStartId(event.target.value)}
-                        className="h-8 rounded-lg border border-white/[0.08] bg-[#0D1420] px-2 text-[10px] text-[#C7D3E2] outline-none focus:border-[#5B8CFF]/40"
+                        className="h-8 rounded-lg border border-white/[0.08] bg-[#0D1420] px-2 text-[12px] text-[#C7D3E2] outline-none focus:border-[#5B8CFF]/40"
                     >
                         <option value="">起点快照…</option>
                         {ordered.slice(0, Math.max(1, ordered.length - 1)).map((item) => (
@@ -264,7 +264,7 @@ export function SegmentPanel() {
                     <select
                         value={endId}
                         onChange={(event) => setEndId(event.target.value)}
-                        className="h-8 rounded-lg border border-white/[0.08] bg-[#0D1420] px-2 text-[10px] text-[#C7D3E2] outline-none focus:border-[#5B8CFF]/40"
+                        className="h-8 rounded-lg border border-white/[0.08] bg-[#0D1420] px-2 text-[12px] text-[#C7D3E2] outline-none focus:border-[#5B8CFF]/40"
                     >
                         <option value="">终点快照…</option>
                         {ordered.slice(Math.max(0, startIndex + 1)).map((item) => (
@@ -278,7 +278,7 @@ export function SegmentPanel() {
                         variant="outline"
                         disabled={!valid || result.isFetching}
                         onClick={runAnalysis}
-                        className="h-8 gap-2 border-[#5B8CFF]/25 bg-[#5B8CFF]/[0.06] px-3 text-[10px] text-[#AFCBFF] hover:bg-[#5B8CFF]/[0.12] hover:text-white"
+                        className="h-8 gap-2 border-[#5B8CFF]/25 bg-[#5B8CFF]/[0.06] px-3 text-[12px] text-[#AFCBFF] hover:bg-[#5B8CFF]/[0.12] hover:text-white"
                     >
                         <GitBranch className="h-3.5 w-3.5" />
                         分析时间段
@@ -287,32 +287,32 @@ export function SegmentPanel() {
             </div>
 
             {ordered.length === 0 && (
-                <div className="px-4 py-6 text-center text-[9px] text-[#536177]">
+                <div className="px-4 py-6 text-center text-[13px] text-[#536177]">
                     时间轴暂无快照——运行流量后即可使用段分析
                 </div>
             )}
 
             {!query && ordered.length > 0 && (
-                <div className="px-4 py-6 text-center text-[9px] text-[#536177]">
+                <div className="px-4 py-6 text-center text-[13px] text-[#536177]">
                     选择一个时间段后查看起点 → 终点状态对比、区间指标与 Trace
                 </div>
             )}
 
             {result.isPending && query && (
-                <div className="flex items-center justify-center gap-2 px-4 py-10 text-[10px] text-[#66758A]">
+                <div className="flex items-center justify-center gap-2 px-4 py-10 text-[12px] text-[#66758A]">
                     <RefreshCw className="h-4 w-4 animate-spin text-[#6EA3F8]" />
                     正在聚合段数据…
                 </div>
             )}
             {result.isError && query && (
-                <div className="px-4 py-5 text-[9px] leading-4 text-red-300">
+                <div className="px-4 py-5 text-[13px] leading-4 text-red-300">
                     Segment API 请求失败：{result.error.message}
                 </div>
             )}
 
             {segment && (
                 <div className="space-y-4 p-4">
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] text-[#68768A]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[#68768A]">
                         <span>
                             <span className="text-[#9AA8BC]">起点</span>{' '}
                             {formatTime(segment.startSnapshot?.capturedAt ?? segment.start)}
@@ -324,20 +324,20 @@ export function SegmentPanel() {
                         </span>
                         <span>时长 {durationLabel}</span>
                         {segment.startSnapshot?.snapshotId && (
-                            <span className="font-mono text-[8px]">
+                            <span className="font-mono text-[12px]">
                                 {segment.startSnapshot.snapshotId} → {segment.endSnapshot?.snapshotId}
                             </span>
                         )}
                     </div>
 
                     {segment.availability !== 'available' && (
-                        <div className="flex items-start gap-2 rounded-lg border border-amber-300/10 bg-amber-300/[0.035] px-3 py-2 text-[9px] leading-4 text-amber-100/75">
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-300/10 bg-amber-300/[0.035] px-3 py-2 text-[13px] leading-4 text-amber-100/75">
                             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-300/70" />
                             起点或终点之前没有持久化快照，无法构成完整段切面。
                         </div>
                     )}
                     {(result.data?.meta.warnings ?? []).map((warning) => (
-                        <div key={warning} className="flex items-start gap-2 rounded-lg border border-amber-300/10 bg-amber-300/[0.035] px-3 py-2 text-[9px] leading-4 text-amber-100/75">
+                        <div key={warning} className="flex items-start gap-2 rounded-lg border border-amber-300/10 bg-amber-300/[0.035] px-3 py-2 text-[13px] leading-4 text-amber-100/75">
                             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-300/70" />
                             {warning}
                         </div>
@@ -346,9 +346,9 @@ export function SegmentPanel() {
                     {startSummary && endSummary && (
                         <div className="grid gap-2">
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                                <span className="text-[8px] uppercase tracking-[0.1em] text-[#607086]">起点状态</span>
+                                <span className="text-[12px] uppercase tracking-[0.1em] text-[#607086]">起点状态</span>
                                 <ArrowRight className="h-3 w-3 text-[#465267]" />
-                                <span className="text-right text-[8px] uppercase tracking-[0.1em] text-[#607086]">终点状态</span>
+                                <span className="text-right text-[12px] uppercase tracking-[0.1em] text-[#607086]">终点状态</span>
                             </div>
                             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                                 {comparisonRows.map((row) => {
@@ -358,7 +358,7 @@ export function SegmentPanel() {
                                     return (
                                         <div key={row.key} className="rounded-xl border border-white/[0.07] bg-[#0A0E15]/90 p-3">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-[9px] uppercase tracking-[0.08em] text-[#607086]">{row.label}</span>
+                                                <span className="text-[13px] uppercase tracking-[0.08em] text-[#607086]">{row.label}</span>
                                                 <row.icon className="h-3 w-3 text-[#6EA3F8]" />
                                             </div>
                                             <div className="mt-2 flex items-baseline gap-1.5">
@@ -374,8 +374,8 @@ export function SegmentPanel() {
                     )}
 
                     <div>
-                        <div className="mb-2 text-[10px] font-medium text-[#9AA8BC]">
-                            区间指标 <span className="text-[8px] font-normal text-[#536177]">Prometheus · 整个时间段</span>
+                        <div className="mb-2 text-[12px] font-medium text-[#9AA8BC]">
+                            区间指标 <span className="text-[12px] font-normal text-[#536177]">Prometheus · 整个时间段</span>
                         </div>
                         <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
                             {segmentMetricCards.map((card) => (
@@ -390,11 +390,11 @@ export function SegmentPanel() {
                     </div>
 
                     <div>
-                        <div className="mb-2 text-[10px] font-medium text-[#9AA8BC]">
-                            区间 Trace <span className="text-[8px] font-normal text-[#536177]">Jaeger · {segment.traces.length} 条</span>
+                        <div className="mb-2 text-[12px] font-medium text-[#9AA8BC]">
+                            区间 Trace <span className="text-[12px] font-normal text-[#536177]">Jaeger · {segment.traces.length} 条</span>
                         </div>
                         {segment.traces.length === 0 ? (
-                            <div className="rounded-xl border border-white/[0.06] px-4 py-6 text-center text-[9px] text-[#536177]">
+                            <div className="rounded-xl border border-white/[0.06] px-4 py-6 text-center text-[13px] text-[#536177]">
                                 该时间段内没有 Trace
                             </div>
                         ) : (

@@ -1,6 +1,6 @@
 # Agent 工作流
 
-> 维护层：agent | last-reviewed：2026-08-19 | 事实源：源码与 docs/agents/
+> 维护层：agent | last-reviewed：2026-08-21 | 事实源：源码与 docs/agents/
 > 本文件是能操作当前机器与仓库的 Agent 的默认流程。每次任务从"开工"走到"汇报"，不跳步。
 > 只收打包内容的远程 AI 走 [docs/remote-ai/README.md](../remote-ai/README.md)。
 
@@ -43,6 +43,8 @@ flowchart TD
 | 行为异常、集群问题 | 建 bug issue |
 
 判断标准：是否改变对外契约（CRD 字段、API 路由、数据库结构、字段所有权）。不确定时先问用户，不擅自建 issue。
+
+- **小问题不放过（2026-08-21 起）**：遇到环境起不来、报错、页面错位这类小问题，当场能根治的（含验证与沉淀）立即修；当场不方便修（要动大环境、缺权限、缺数据、需用户拍板）的立即建 issue（bug: / design:）并挂 Project Review 看板，写明触发条件、影响与修复方向。禁止只留一句「以后再说」的口头欠账——面试/演示场景下，任何未闭环的小问题都会变成当场翻车点。修复完成的标准是「换台机器、换个人也能按文档一步复现与验证」，不是「这次碰巧跑通了」。
 
 - issue 用仓库模板创建（标题前缀 `bug:` / `feat:` / `design:`，正文按模板填写）。
 - 开发提交时用 `Fixes #N` 关联，让 issue 随合并自动关闭。
@@ -230,8 +232,10 @@ flowchart TD
 - 发现包内文档与源码不一致时，作为交付物列出差异，不静默按文档写代码。
 - 对 `docs/agents/`、`docs/remote-ai/`、`docs/journal/`、`docs/lessons/`、`change-history/` 的建议可以直接给；对 `docs/` 人类文档的建议单独标注"人类文档"，由用户转交。
 
-## 10. CI 轮询节奏（原 SYNC.md 第 7 节，2026-08-18 并入）
+## 10. CI 只看一眼（2026-08-21 起，替代旧「30s 轮询」策略）
 
-- 推送后每 30 秒轮询一次 run 结论（`gh run list` / `gh run view --json jobs`），**不要 sleep 到固定大间隔**（见 docs/lessons/process-ci-poll-30s.md）。
-- 预期耗时：普通 job 3-6 分钟；E2E / 镜像构建最慢，冷缓存首次更久；最多等到 10 分钟再停下排查。
-- 失败先取 `gh run view <run-id> --log-failed` 定位原因，不盲改重推；docs-only 提交只触发"文档检查"。
+- 推送后**只查一次**：`gh run list --limit 3`（或 `gh pr checks <n>`）确认 run 存在且状态正常即可。
+- 失败才处理：取 `gh run view <run-id> --log-failed` 定位原因并修复，不盲改重推。
+- 在跑 / 通过：**立即切回其他工作**，禁止轮询、禁止 sleep 死等（「一切皆异步」原则的延伸，见第 9 节）。
+- 预期耗时供安排其他工作参考：普通 job 3-6 分钟；E2E / 镜像构建最慢，冷缓存首次更久。
+- 完成其他工作后顺路再查一次结论即可；docs-only 提交只触发"文档检查"。

@@ -81,6 +81,35 @@ type Store interface {
 	ListSegmentEvents(context.Context, string, int) ([]SegmentEvent, error)
 	ListSegmentMetrics(context.Context, string, int) ([]MetricBucket, error)
 	ListSegmentTraces(context.Context, string) ([]model.TraceSummary, error)
+	CreateAIOpsAnalysis(context.Context, model.AIOpsAnalysis) error
+	ClaimAIOpsAnalysis(context.Context, string) (bool, error)
+	RequeueStaleAIOpsAnalyses(context.Context, time.Time) (int, error)
+	UpdateAIOpsAnalysisProgress(context.Context, string, string, int, int, string) error
+	CompleteAIOpsAnalysis(context.Context, string, json.RawMessage, json.RawMessage) error
+	FailAIOpsAnalysis(context.Context, string, string) error
+	FailOrRetryAIOpsAnalysis(context.Context, string, string, int) (bool, error)
+	GetAIOpsAnalysis(context.Context, string) (*model.AIOpsAnalysis, error)
+	GetAIOpsAnalysisBySegment(context.Context, string) (*model.AIOpsAnalysis, error)
+	ListAIOpsAnalyses(context.Context, int, string) ([]model.AIOpsAnalysis, error)
+	UpsertAIOpsEntitySummaries(context.Context, string, []model.AIOpsEntitySummary) error
+	ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error)
+	CreateAIOpsCommand(context.Context, model.AIOpsCommand) error
+	GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error)
+	ListAIOpsCommands(context.Context, int) ([]model.AIOpsCommand, error)
+	CreateAIOpsChatMessage(context.Context, model.AIOpsChatMessage) error
+	ListAIOpsChatMessages(context.Context, string, int) ([]model.AIOpsChatMessage, error)
+	UpdateAIOpsCommand(context.Context, string, string, json.RawMessage, string) error
+	UpsertAIOpsWindowSummary(context.Context, model.AIOpsWindowSummary) error
+	ListAIOpsWindowSummaries(context.Context, string, int) ([]model.AIOpsWindowSummary, error)
+	ListAIOpsAnalysesInWindow(context.Context, time.Time, time.Time) ([]model.AIOpsAnalysis, error)
+	CreateAIOpsAlert(context.Context, model.AIOpsAlert) error
+	ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error)
+	CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error
+	CreateAIOpsJob(context.Context, model.AIOpsJob) error
+	ClaimNextAIOpsJob(context.Context) (model.AIOpsJob, bool, error)
+	CompleteAIOpsJob(context.Context, string, string, string) error
+	ListAIOpsJobs(context.Context, int, string) ([]model.AIOpsJob, error)
+	RequeueStaleAIOpsJobs(context.Context, time.Time) (int, error)
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -146,6 +175,93 @@ func (Disabled) ListSegmentMetrics(context.Context, string, int) ([]MetricBucket
 	return nil, ErrUnavailable
 }
 func (Disabled) ListSegmentTraces(context.Context, string) ([]model.TraceSummary, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateAIOpsAnalysis(context.Context, model.AIOpsAnalysis) error {
+	return ErrUnavailable
+}
+func (Disabled) ClaimAIOpsAnalysis(context.Context, string) (bool, error) {
+	return false, ErrUnavailable
+}
+func (Disabled) RequeueStaleAIOpsAnalyses(context.Context, time.Time) (int, error) {
+	return 0, ErrUnavailable
+}
+func (Disabled) UpdateAIOpsAnalysisProgress(context.Context, string, string, int, int, string) error {
+	return ErrUnavailable
+}
+func (Disabled) CompleteAIOpsAnalysis(context.Context, string, json.RawMessage, json.RawMessage) error {
+	return ErrUnavailable
+}
+func (Disabled) FailAIOpsAnalysis(context.Context, string, string) error { return ErrUnavailable }
+func (Disabled) FailOrRetryAIOpsAnalysis(context.Context, string, string, int) (bool, error) {
+	return false, ErrUnavailable
+}
+func (Disabled) GetAIOpsAnalysis(context.Context, string) (*model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) GetAIOpsAnalysisBySegment(context.Context, string) (*model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListAIOpsAnalyses(context.Context, int, string) ([]model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) UpsertAIOpsEntitySummaries(context.Context, string, []model.AIOpsEntitySummary) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateAIOpsCommand(context.Context, model.AIOpsCommand) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsCommands(context.Context, int) ([]model.AIOpsCommand, error) {
+	return nil, nil
+}
+
+func (Disabled) CreateAIOpsChatMessage(context.Context, model.AIOpsChatMessage) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsChatMessages(context.Context, string, int) ([]model.AIOpsChatMessage, error) {
+	return nil, nil
+}
+
+func (Disabled) GetAIOpsCommand(context.Context, string) (*model.AIOpsCommand, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) UpdateAIOpsCommand(context.Context, string, string, json.RawMessage, string) error {
+	return ErrUnavailable
+}
+func (Disabled) UpsertAIOpsWindowSummary(context.Context, model.AIOpsWindowSummary) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsWindowSummaries(context.Context, string, int) ([]model.AIOpsWindowSummary, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListAIOpsAnalysesInWindow(context.Context, time.Time, time.Time) ([]model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateAIOpsAlert(context.Context, model.AIOpsAlert) error {
+	return ErrUnavailable
+}
+func (Disabled) CreateAIOpsAuditLog(context.Context, model.AIOpsAuditLog) error {
+	return ErrUnavailable
+}
+func (Disabled) CreateAIOpsJob(context.Context, model.AIOpsJob) error {
+	return ErrUnavailable
+}
+func (Disabled) ClaimNextAIOpsJob(context.Context) (model.AIOpsJob, bool, error) {
+	return model.AIOpsJob{}, false, ErrUnavailable
+}
+func (Disabled) CompleteAIOpsJob(context.Context, string, string, string) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsJobs(context.Context, int, string) ([]model.AIOpsJob, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) RequeueStaleAIOpsJobs(context.Context, time.Time) (int, error) {
+	return 0, ErrUnavailable
+}
+func (Disabled) ListAIOpsAlerts(context.Context, int) ([]model.AIOpsAlert, error) {
 	return nil, ErrUnavailable
 }
 func (Disabled) Prune(context.Context, time.Time) error { return ErrUnavailable }

@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { useWorkspaceCoordinator } from '@/hooks/useWorkspaceContext'
 import { useBackendSync } from '@/hooks/useBackendSync'
+import { AiChatWidget } from '@/components/features/aiops/AiChatWidget'
 import { AppSidebar } from './AppSidebar'
 import { TimeTravelBar } from '../TimeTravelBar/TimeTravelBar'
 
@@ -31,6 +32,7 @@ export function MainLayout() {
                     <Outlet />
                 </main>
             </div>
+            <AiChatWidget />
         </div>
     )
 }

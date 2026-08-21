@@ -18,6 +18,9 @@
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
 | 2026-08-19 | WSL GitHub 代理配置沉淀：检测脚本 + 蒸馏规则 | P1 | [查看记录](2026-08-19-wsl-github-proxy/README.md) |
+| 2026-08-20 | 前端重构第四轮：设计打磨 + 配置样例数据 + 模板加载真实 bug（#101） | P2 | [查看记录](2026-08-20-frontend-redesign-round4/README.md) |
+| 2026-08-20 | 浏览器自动化与人工分工经验沉淀（Notion 中枢搭建复盘） | P3 | [查看记录](2026-08-20-notion-agent-collab-lesson/README.md) |
+| 2026-08-20 | 真实 API fixtures 录制：前端免后端迭代的素材底座 | P2 | [查看记录](2026-08-20-fixtures-recording/README.md) |
 | 2026-08-19 | Traffic 叠加应用写入租户目标 QPS（Fixes #89） | P2 | [查看记录](2026-08-19-traffic-apply-control-plane/README.md) |
 | 2026-08-19 | Kind 集群移除 extraMounts：PVC 数据改存节点 /var 数据卷（Fixes #54） | P0 | [查看记录](2026-08-19-kind-extra-mounts-removed/README.md) |
 | 2026-08-19 | Agent 对外协作规则落地：AI 产出自查 + 披露 trailer + lessons 触发式升级 | P2 | [查看记录](2026-08-19-ai-collab-rulebook/README.md) |

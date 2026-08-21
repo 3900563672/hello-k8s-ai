@@ -1,0 +1,93 @@
+{
+  "data": {
+    "traceId": "c47a285459cce25b6f2e2722e796404c",
+    "spans": [
+      {
+        "spanId": "cff7619f3cdac72b",
+        "service": "hello-k8s-ai-controller",
+        "operation": "controller.traffic.reconcile",
+        "startTime": "2026-08-18T03:59:58.387426Z",
+        "durationMs": 0.076,
+        "status": "ok",
+        "attributes": {
+          "controller.name": "traffic",
+          "deployment.environment.name": "docker-desktop",
+          "host.name": "hello-k8s-ai-controller-manager-7b4899c44d-mstwl",
+          "k8s.cluster.name": "docker-desktop",
+          "k8s.namespace.name": "hello-k8s-ai-system",
+          "k8s.node.name": "desktop-worker6",
+          "k8s.pod.name": "hello-k8s-ai-controller-manager-7b4899c44d-mstwl",
+          "k8s.resource.generation": 37,
+          "k8s.resource.name": "tenant-core",
+          "otel.scope.name": "github.com/3900563672/hello-k8s-ai/controller",
+          "platform.tenant.name": "tenant-core",
+          "process.command_args": "[\"/manager\",\"--leader-elect\",\"--health-probe-bind-address=:8081\",\"--metrics-bind-address=:8443\",\"--simulator-metrics-port=9090\"]",
+          "process.executable.name": "manager",
+          "process.executable.path": "/manager",
+          "process.owner": "nonroot",
+          "process.pid": 1,
+          "process.runtime.description": "go version go1.26.6 linux/amd64",
+          "process.runtime.name": "go",
+          "process.runtime.version": "go1.26.6",
+          "reconcile.outcome": "requeue",
+          "reconcile.requeue_after_ms": 10000,
+          "service.instance.id": "hello-k8s-ai-controller-manager-7b4899c44d-mstwl",
+          "service.version": "dev",
+          "span.kind": "internal",
+          "telemetry.sdk.language": "go",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.45.0",
+          "traffic.requested_qps": 35
+        },
+        "events": []
+      },
+      {
+        "spanId": "98f1f7aaeef19ed0",
+        "parentSpanId": "cff7619f3cdac72b",
+        "service": "hello-k8s-ai-controller",
+        "operation": "traffic.allocate",
+        "startTime": "2026-08-18T03:59:58.387442Z",
+        "durationMs": 0.05,
+        "status": "ok",
+        "attributes": {
+          "deployment.environment.name": "docker-desktop",
+          "host.name": "hello-k8s-ai-controller-manager-7b4899c44d-mstwl",
+          "k8s.cluster.name": "docker-desktop",
+          "k8s.namespace.name": "hello-k8s-ai-system",
+          "k8s.node.name": "desktop-worker6",
+          "k8s.pod.name": "hello-k8s-ai-controller-manager-7b4899c44d-mstwl",
+          "otel.scope.name": "github.com/3900563672/hello-k8s-ai/traffic",
+          "platform.tenant.name": "tenant-core",
+          "process.command_args": "[\"/manager\",\"--leader-elect\",\"--health-probe-bind-address=:8081\",\"--metrics-bind-address=:8443\",\"--simulator-metrics-port=9090\"]",
+          "process.executable.name": "manager",
+          "process.executable.path": "/manager",
+          "process.owner": "nonroot",
+          "process.pid": 1,
+          "process.runtime.description": "go version go1.26.6 linux/amd64",
+          "process.runtime.name": "go",
+          "process.runtime.version": "go1.26.6",
+          "service.instance.id": "hello-k8s-ai-controller-manager-7b4899c44d-mstwl",
+          "service.version": "dev",
+          "span.kind": "internal",
+          "telemetry.sdk.language": "go",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.45.0",
+          "traffic.allocated_qps": 35,
+          "traffic.mode": "score_weighted",
+          "traffic.requested_qps": 35
+        },
+        "events": []
+      }
+    ],
+    "entityLinks": []
+  },
+  "meta": {
+    "requestId": "6d766914c4c763eb50cea51bb06ddb96",
+    "servedAt": "2026-08-20T00:48:22.927919411Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "jaeger": "2026-08-20T00:48:22.927913004Z"
+    }
+  }
+}

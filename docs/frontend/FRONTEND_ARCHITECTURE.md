@@ -1,6 +1,6 @@
 # Frontend 架构
 
-> 维护层：human | last-reviewed：2026-08-18 | 事实源：dashboard/frontend/my-app/src/components/features/config/、dashboard/frontend/my-app/src/
+> 维护层：human | last-reviewed：2026-08-21 | 事实源：dashboard/frontend/my-app/src/components/features/config/、dashboard/frontend/my-app/src/
 
 ## 1. 定位
 
@@ -114,6 +114,10 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - Orchestrator 配置含单次扩容步长 maxScaleUpBatch（0=默认 10），表单/表格/预置模板与 Guide 页同步展示。
 - 历史模式禁用写按钮，而不只依赖 Backend 拒绝。
 - 对 partial response 保留 warnings，避免有一个 provider 失败就清空全部页面。
+- AIOps（`src/types/aiops.types.ts` + `src/api/endpoints/aiopsApi.ts`）与后端 `internal/model/aiops.go` 字段对齐：分析/实体/分数（M0/M1）、命令与模板目录（M2）、窗口/警戒（M3）全部走真实 API；`AiInsightPanel` 顶部嵌入 `CommandInput`（一句话 → 解析预览 → 确认执行，确认前无写操作）。
+- 全局浮窗（#110 阶段三）：`AiChatWidget` 挂在 `MainLayout`，右下角气泡 → 对话面板；`POST /aiops/chat` SSE 流式渲染，工具步骤（读取切面总结/生成回答）以指示器展示；会话存 localStorage（仅聊天记录与会话 id，不含密钥），未启用时 404 显示提示；打开面板时经 `GET /aiops/chat/messages` 拉取服务端历史回填空会话（#112 阶段 D 读侧，失败静默降级）。
+- 面板配置（#110 阶段四）：`AiChatWidget` 头部「设置」入口切换对话/配置视图；`GET/POST /aiops/settings` 读写掩码状态（key 不回显、不落前端存储），保存后刷新「已配置」标识。
+- 异步任务可见性（#110 阶段一）：`AIOpsJobList` 挂 `AiInsightPanel` 顶部（CommandInput 之下），10s 轮询 `/aiops/jobs`；进行中计数 + 状态徽章 + 重试次数 + 失败原因；任务失败原因前端可直接查看（attempts/last_error 经 `/aiops/jobs` 语义查询）。
 
 ## 8. 设计系统原则
 
@@ -123,7 +127,14 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 - 历史模式使用明显只读标识；危险删除和流量提交需要确认。
 - 大型对象列表优先表格/筛选，Trace 使用树，指标使用时间序列；不要用同一种卡片承载所有信息。
 
-## 9. 已知前端技术债
+## 9. dev:mock 与录制快照
+
+- `src/lib/mocks/fixtures/` 是真实 Backend 响应快照（只读），由 `scripts/record-fixtures.mjs` 遍历 GET 端点重录，不手工改内容。
+- `dev:mock`（vite `--mode mock`）由 `plugins/mock-fixtures.ts` 拦截 `/api/v1` GET 提供预览（写请求 405）；录制快照中的空资源数组用 `dev-fixtures/` 样例补齐，`meta.devSamples` 标注仅预览。
+- Trace detail 与 overview 快照录制窗口不一致时，dev:mock 用摘要合成单 span 兜底；生产链路不受影响。
+- AIOps 契约演示 fixtures 已删除（后端 M2/M3 就绪）：dev:mock 下 `/aiops/*` 返回 404，组件显示未启用/空态；真实模式直连后端。
+
+## 10. 已知前端技术债
 
 - Traffic Overlay 应用后已写 Backend（常量目标 QPS）；未应用的模板/Overlay 仍是内存草稿，刷新会丢失，页面保留 Draft 标识。
 - Traffic QPS 当前趋势更接近单点/本地曲线，尚未完整使用 Prometheus 历史曲线。

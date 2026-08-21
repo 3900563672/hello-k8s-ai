@@ -125,7 +125,7 @@ export function ClusterStatus() {
                     </span>
                     <span
                         className={cn(
-                            'font-mono text-[10px] font-medium tabular-nums tracking-tight',
+                            'font-mono text-[12px] font-medium tabular-nums tracking-tight',
                             onlineWorkers === 0 ? 'text-red-300' : 'text-[#8D9AAD]',
                         )}
                     >
@@ -149,15 +149,15 @@ export function ClusterStatus() {
                                 <span className={cn('h-2 w-2 rounded-full', connection.dot)} />
                                 {connection.label}
                             </div>
-                            <p className="mt-1 truncate font-mono text-[9px] text-[#667286]">
+                            <p className="mt-1 truncate font-mono text-[13px] text-[#667286]">
                                 {cluster.context} · {cluster.version}
                             </p>
                         </div>
                         <div className="min-w-0 text-right">
-                            <div className="truncate text-[10px] font-medium text-[#9AA7B9]">
+                            <div className="truncate text-[12px] font-medium text-[#9AA7B9]">
                                 {cluster.name}
                             </div>
-                            <div className="mt-1 truncate text-[9px] text-[#596579]">
+                            <div className="mt-1 truncate text-[13px] text-[#596579]">
                                 {cluster.provider}
                             </div>
                         </div>
@@ -181,10 +181,10 @@ export function ClusterStatus() {
 
                 <div className="px-2 py-2">
                     <div className="flex items-center justify-between px-2 pb-1.5 pt-0.5">
-                        <span className="text-[9px] font-medium uppercase tracking-[0.14em] text-[#566174]">
+                        <span className="text-[13px] font-medium uppercase tracking-[0.14em] text-[#566174]">
                             Worker nodes
                         </span>
-                        <span className="font-mono text-[8px] text-[#465267]">
+                        <span className="font-mono text-[12px] text-[#465267]">
                             {formatCheckedAt(cluster.checkedAt)} UTC
                         </span>
                     </div>
@@ -198,13 +198,13 @@ export function ClusterStatus() {
                                         className="group/node flex h-8 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-white/[0.035]"
                                     >
                                         <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} />
-                                        <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-[#B7C2D1]">
+                                        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-[#B7C2D1]">
                                             {node.name}
                                         </span>
-                                        <span className="hidden font-mono text-[8px] text-[#4E5A6C] group-hover/node:inline">
+                                        <span className="hidden font-mono text-[12px] text-[#4E5A6C] group-hover/node:inline">
                                             {node.zone}
                                         </span>
-                                        <span className={cn('shrink-0 text-[9px]', status.text)}>
+                                        <span className={cn('shrink-0 text-[13px]', status.text)}>
                                             {status.label}
                                         </span>
                                     </div>
@@ -217,14 +217,14 @@ export function ClusterStatus() {
                 {lastError && (
                     <div
                         role="alert"
-                        className="mx-4 mb-3 rounded-lg border border-red-400/15 bg-red-400/[0.06] px-3 py-2 text-[10px] leading-4 text-red-200"
+                        className="mx-4 mb-3 rounded-lg border border-red-400/15 bg-red-400/[0.06] px-3 py-2 text-[12px] leading-4 text-red-200"
                     >
                         {lastError}
                     </div>
                 )}
 
                 {timeMode === 'historical' && (
-                    <div className="mx-4 mb-3 rounded-lg border border-[#7D8FFF]/15 bg-[#7D8FFF]/[0.055] px-3 py-2 text-[10px] leading-4 text-[#9DA9DB]">
+                    <div className="mx-4 mb-3 rounded-lg border border-[#7D8FFF]/15 bg-[#7D8FFF]/[0.055] px-3 py-2 text-[12px] leading-4 text-[#9DA9DB]">
                         历史回放为只读；回到最新切面后才能核验当前配置。
                     </div>
                 )}
@@ -236,7 +236,7 @@ export function ClusterStatus() {
                         size="sm"
                         onClick={() => void refreshCluster()}
                         disabled={refreshPhase === 'pending'}
-                        className="h-8 gap-1.5 px-2.5 text-[10px] text-[#8793A5] hover:bg-white/[0.05] hover:text-white"
+                        className="h-8 gap-1.5 px-2.5 text-[12px] text-[#8793A5] hover:bg-white/[0.05] hover:text-white"
                     >
                         <RefreshCw
                             className={cn(
@@ -253,7 +253,7 @@ export function ClusterStatus() {
                         disabled={!canDistribute || distributionPhase === 'pending'}
                         title={timeMode === 'historical' ? '历史回放模式下不可核验当前配置' : undefined}
                         className={cn(
-                            'h-8 min-w-0 flex-1 gap-1.5 bg-[#5B8CFF] px-3 text-[10px] text-white shadow-[0_0_24px_rgba(91,140,255,.14)] hover:bg-[#70A0FF] disabled:bg-[#222A36] disabled:text-[#596477]',
+                            'h-8 min-w-0 flex-1 gap-1.5 bg-[#5B8CFF] px-3 text-[12px] text-white shadow-[0_0_24px_rgba(91,140,255,.14)] hover:bg-[#70A0FF] disabled:bg-[#222A36] disabled:text-[#596477]',
                             distributionPhase === 'success' &&
                                 'bg-emerald-500 hover:bg-emerald-500',
                         )}
@@ -287,7 +287,7 @@ function ClusterSummaryRow({
     accent: string
 }) {
     return (
-        <div className="flex h-7 items-center gap-2 text-[10px]">
+        <div className="flex h-7 items-center gap-2 text-[12px]">
             <span className={cn('flex w-4 justify-center', accent)}>{icon}</span>
             <span className="flex-1 text-[#778397]">{label}</span>
             <span className={cn('font-mono font-medium tabular-nums', accent)}>{value}</span>

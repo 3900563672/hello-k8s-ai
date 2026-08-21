@@ -122,6 +122,8 @@ Controller、Simulator 与 Backend 的本地清单统一使用 `docker-desktop`�
 
 Nginx listen 8080，`/api/` proxy Backend service，read timeout 1h、buffering/cache off；SPA fallback `index.html`；assets immutable 1y。
 
+前端开发模式：`npm run dev` 走 `/api` proxy 到 Backend；`npm run dev:mock`（vite `--mode mock`）启用 `plugins/mock-fixtures.ts`，从 `src/lib/mocks/fixtures/` 提供本地 mock 数据并关闭 HMR，仅用于无 Backend 时的 UI 预览。
+
 ## 9. CRD 默认
 
 | CRD/字段 | 默认 |

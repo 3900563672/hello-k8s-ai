@@ -56,7 +56,7 @@ export function NameCell({ displayName, name }: { displayName: string; name: str
     return (
         <div className="min-w-0">
             <TruncatedCell className="font-medium text-[#F0F0F0]">{displayName}</TruncatedCell>
-            <TruncatedCell className="mt-0.5 font-mono text-[11px] text-[#596579]">{name}</TruncatedCell>
+            <TruncatedCell className="mt-0.5 font-mono text-[14px] text-[#596579]">{name}</TruncatedCell>
         </div>
     )
 }
@@ -243,7 +243,7 @@ export function ConfigTable<T extends { name: string; displayName: string }>({
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        className="h-9 px-3 text-[11px] font-medium uppercase tracking-[0.08em] text-[#747474]"
+                                        className="h-9 px-3 text-[14px] font-medium uppercase tracking-[0.08em] text-[#747474]"
                                         style={{ width: getWidth(header.column.id) }}
                                     >
                                         {header.isPlaceholder

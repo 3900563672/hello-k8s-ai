@@ -12,6 +12,7 @@ import {
     ConfigNumberField,
     ConfigRefSelect,
     FormSaveBar,
+    LiveImpactSummary,
     TemplateActions,
     useConfigForm,
 } from './ConfigFormParts'
@@ -55,6 +56,7 @@ export const OrchestratorForm = memo(function OrchestratorForm({
                     onDelete={removeOrchestratorTemplate}
                     getPreview={getOrchestratorPreview}
                 />
+                <LiveImpactSummary fields={getOrchestratorPreview(form.watch())} />
 
                 <ConfigFormSection
                     title="关联与冷却"
@@ -106,7 +108,7 @@ export const OrchestratorForm = memo(function OrchestratorForm({
                                             <FormLabel className="text-xs font-medium text-[#D7D7D7]">
                                                 允许缩容到零
                                             </FormLabel>
-                                            <FormDescription className="text-[11px] leading-5 text-[#596579]">
+                                            <FormDescription className="text-[14px] leading-5 text-[#596579]">
                                                 仅当租户无流量时生效；关闭时至少保留最小副本数。
                                             </FormDescription>
                                         </div>

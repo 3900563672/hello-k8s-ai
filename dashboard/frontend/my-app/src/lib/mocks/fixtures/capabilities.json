@@ -1,0 +1,86 @@
+{
+  "data": {
+    "clock": {
+      "canSetRate": true,
+      "canPause": false,
+      "canSeek": false,
+      "simulatorAcceleration": true
+    },
+    "commands": {
+      "configurationApply": true,
+      "configurationDelete": true,
+      "idempotency": true,
+      "simulationRate": true,
+      "simulationRun": false,
+      "tenantQPS": true
+    },
+    "replay": {
+      "kubernetesSnapshots": true,
+      "simulatorAcceleration": false
+    },
+    "sources": {
+      "jaeger": {
+        "enabled": true
+      },
+      "kubernetes": {
+        "currentState": true,
+        "enabled": true,
+        "history": true
+      },
+      "postgresql": {
+        "enabled": true,
+        "role": "persistent-current-and-history"
+      },
+      "prometheus": {
+        "enabled": true,
+        "metrics": [
+          {
+            "metricId": "controller.errorRate",
+            "unit": "ratio"
+          },
+          {
+            "metricId": "controller.reconcileLatency",
+            "unit": "ms"
+          },
+          {
+            "metricId": "simulator.errorRate",
+            "unit": "ratio"
+          },
+          {
+            "metricId": "simulator.qps",
+            "unit": "requests/s"
+          },
+          {
+            "metricId": "simulator.queue",
+            "unit": "requests"
+          },
+          {
+            "metricId": "simulator.tickLatency",
+            "unit": "ms"
+          },
+          {
+            "metricId": "simulator.timeScale",
+            "unit": "x"
+          },
+          {
+            "metricId": "simulator.ttft",
+            "unit": "ms"
+          },
+          {
+            "metricId": "worker.gpuUsed",
+            "unit": "gpu-units"
+          }
+        ]
+      }
+    }
+  },
+  "meta": {
+    "requestId": "1ac2b502d4a9bdcda1da2ffe4565c245",
+    "servedAt": "2026-08-20T00:48:22.003932267Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "kubernetes": "2026-08-20T00:44:52.098818259Z"
+    }
+  }
+}

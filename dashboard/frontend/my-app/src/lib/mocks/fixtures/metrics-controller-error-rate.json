@@ -1,0 +1,22 @@
+{
+  "data": {
+    "metricId": "controller.errorRate",
+    "unit": "ratio",
+    "start": "2026-08-17T00:00:00Z",
+    "end": "2026-08-17T01:00:00Z",
+    "stepSeconds": 60,
+    "series": [],
+    "resultType": "matrix",
+    "warnings": [],
+    "queriedAt": "2026-08-20T00:48:22.736463249Z"
+  },
+  "meta": {
+    "requestId": "4a174989a0939d48056c838c8f0fc9f3",
+    "servedAt": "2026-08-20T00:48:22.737033769Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "prometheus": "2026-08-20T00:48:22.736463249Z"
+    }
+  }
+}

@@ -18,6 +18,7 @@ type Config struct {
 	Jaeger      ProviderConfig
 	Grafana     ProviderConfig
 	Persistence PersistenceConfig
+	AIOps       AIOpsConfig
 	LogLevel    slog.Level
 	ClusterName string
 	Environment string
@@ -79,6 +80,28 @@ type PersistenceConfig struct {
 	SegmentBurstReplicaDelta  int
 	SegmentErrorRateThreshold float64
 	SegmentTTFTThresholdMS    float64
+}
+
+// AIOpsConfig 智能分析层配置；AIOps 默认关闭，开启时必须提供 API Key。
+type AIOpsConfig struct {
+	Enabled                bool
+	OpenAIBaseURL          string
+	OpenAIAPIKey           string
+	Model                  string
+	Timeout                time.Duration
+	MaxTokensPerCall       int
+	MaxCallsPerAnalysis    int
+	MaxEntitiesPerCall     int
+	MaxAttemptsPerAnalysis int
+	ChatModels             []string
+	ChatMaxMessageLen      int
+	ChatRatePerMinute      int
+	PollInterval           time.Duration
+	StaleRequeueInterval   time.Duration
+	WindowInterval         time.Duration
+	WindowGranularity      time.Duration
+	AlertThreshold         int
+	AlertConsecutive       int
 }
 
 func Load() (Config, error) {
@@ -150,6 +173,26 @@ func Load() (Config, error) {
 			SegmentErrorRateThreshold: decimal("SEGMENT_ERROR_RATE_THRESHOLD", 0.05),
 			SegmentTTFTThresholdMS:    decimal("SEGMENT_TTFT_THRESHOLD_MS", 2000),
 		},
+		AIOps: AIOpsConfig{
+			Enabled:                boolean("AIOPS_ENABLED", false),
+			OpenAIBaseURL:          env("AIOPS_OPENAI_BASE_URL", "https://api.openai.com/v1"),
+			OpenAIAPIKey:           env("AIOPS_OPENAI_API_KEY", ""),
+			Model:                  env("AIOPS_MODEL", "gpt-4o-mini"),
+			Timeout:                duration("AIOPS_TIMEOUT", 60*time.Second),
+			MaxTokensPerCall:       integer("AIOPS_MAX_TOKENS_PER_CALL", 2000),
+			MaxCallsPerAnalysis:    integer("AIOPS_MAX_CALLS_PER_ANALYSIS", 8),
+			MaxEntitiesPerCall:     integer("AIOPS_MAX_ENTITIES_PER_CALL", 20),
+			MaxAttemptsPerAnalysis: integer("AIOPS_MAX_ATTEMPTS_PER_ANALYSIS", 2),
+			ChatModels:             csv("AIOPS_CHAT_MODELS", nil),
+			ChatMaxMessageLen:      integer("AIOPS_CHAT_MAX_MESSAGE_LEN", 4000),
+			ChatRatePerMinute:      integer("AIOPS_CHAT_RATE_PER_MINUTE", 6),
+			PollInterval:           duration("AIOPS_POLL_INTERVAL", 5*time.Second),
+			StaleRequeueInterval:   duration("AIOPS_STALE_REQUEUE_INTERVAL", 10*time.Minute),
+			WindowInterval:         duration("AIOPS_WINDOW_INTERVAL", 15*time.Minute),
+			WindowGranularity:      duration("AIOPS_WINDOW_GRANULARITY", 2*time.Hour),
+			AlertThreshold:         integer("AIOPS_ALERT_THRESHOLD", 40),
+			AlertConsecutive:       integer("AIOPS_ALERT_CONSECUTIVE", 3),
+		},
 		LogLevel:    *logLevel,
 		ClusterName: env("K8S_CLUSTER_NAME", "default"),
 		Environment: env("DEPLOYMENT_ENVIRONMENT", "development"),
@@ -189,6 +232,29 @@ func (cfg Config) validate() error {
 	}
 	if cfg.Persistence.SegmentTTFTThresholdMS <= 0 {
 		failures = append(failures, errors.New("SEGMENT_TTFT_THRESHOLD_MS must be positive"))
+	}
+	if cfg.AIOps.Enabled && strings.TrimSpace(cfg.AIOps.OpenAIAPIKey) == "" {
+		failures = append(failures, errors.New("AIOPS_OPENAI_API_KEY is required when AIOPS_ENABLED=true"))
+	}
+	if cfg.AIOps.Enabled {
+		if cfg.AIOps.MaxTokensPerCall < 256 {
+			failures = append(failures, errors.New("AIOPS_MAX_TOKENS_PER_CALL must be at least 256"))
+		}
+		if cfg.AIOps.WindowGranularity < time.Minute {
+			failures = append(failures, errors.New("AIOPS_WINDOW_GRANULARITY must be at least 1m"))
+		}
+		if cfg.AIOps.AlertThreshold < 0 || cfg.AIOps.AlertThreshold > 100 || cfg.AIOps.AlertConsecutive < 1 {
+			failures = append(failures, errors.New("AIOPS_ALERT_THRESHOLD must be 0-100 and AIOPS_ALERT_CONSECUTIVE must be positive"))
+		}
+		if cfg.AIOps.MaxCallsPerAnalysis < 1 || cfg.AIOps.MaxEntitiesPerCall < 1 {
+			failures = append(failures, errors.New("AIOPS_MAX_CALLS_PER_ANALYSIS and AIOPS_MAX_ENTITIES_PER_CALL must be positive"))
+		}
+		if cfg.AIOps.ChatMaxMessageLen < 100 {
+			failures = append(failures, errors.New("AIOPS_CHAT_MAX_MESSAGE_LEN must be at least 100"))
+		}
+		if cfg.AIOps.ChatRatePerMinute < 1 {
+			failures = append(failures, errors.New("AIOPS_CHAT_RATE_PER_MINUTE must be positive"))
+		}
 	}
 	return errors.Join(failures...)
 }

@@ -17,7 +17,7 @@ flowchart TD
 
 先确认页面是 Latest 还是 Historical。历史快照里的 Pending 不会因为当前集群已恢复而变化。
 
-任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg 共 11 项环境自检）。环境层问题（磁盘满、回环不可用、端口冲突）会伪装成业务故障，先排除环境再查链路。
+任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查环境自检）。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。
 
 ## 2. 快速信息包
 
@@ -168,6 +168,10 @@ kubectl -n hello-k8s-ai-system get --raw \
 
 依次区分：Clock desired/applied 是否一致、observedGeneration 是否等于 generation、同步数是否等于总数、目标 Instance 字段是否正确、Simulator 是否已经经过下一真实 Tick。Clock Ready 只表示字段收敛；指标才证明运行进程已经读取。倍速变化不应改变 Pod UID，若发生 rollout，检查是否有人把 timeScale 注入了 Deployment template。
 
+部署脚本报「SimulationClock 配置收敛」超时：先确认是否存在 SimulationClock CR（kubectl get simulationclock）。干净环境无 CR 时脚本按 CR 存在性跳过该检查；若仍等待说明脚本版本过旧，更新后重跑。
+
+干净环境断言中 /replay 若含历史快照（保留的 PostgreSQL PVC 数据），脚本仅警告不失败：业务 CR 为空即视为数据面干净。
+
 ## 8. Score 为 0 / Traffic 不合理
 
 Score 可能为 0：
@@ -298,3 +302,5 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **MAP 门禁豁免（2026-08-19 起）**：纯测试文件（`*_test.go`、`*.test.ts(x)`、`*.spec.ts(x)`）不改变行为契约，豁免文档同步要求；行为变更必然同时触碰非测试代码，门禁仍会生效。
 - **链接/行数限制**：所有 Markdown 链接必须指向现有文件；README 等有行数上限，超限需精简内容。
 - **本地与 CI 差异**：CI 用 PR base 计算 diff（`DOCS_CHECK_BASE`），本地默认 `HEAD~1`；合并前 base 变化时可能需要在分支内先同步目标文档再推。
+- **派生文件漂移（多会话工作树）**：`hack/gen-docs.py` 只统计 git 已跟踪的 `change-history/` 条目（未提交目录不会混入 README 时间线段与 `docs/status.md`）。若 `docs-sync-check` 仍报差异：先确认工作树无未提交变更（含其它会话的批次），再 `make docs-sync` 生成后一并提交；不要把未提交条目对应的链接提交进去。
+- **CHANGE_HISTORY 门禁**：非文档源码改动（后端/前端/脚本/CI/测试）必须新增 `change-history/YYYY-MM-DD-*/README.md`，或在提交信息引用既有条目（`change-history: <条目名>`）。修复方式：补条目后重新提交；小改动并入大条目时在提交信息写引用即可。纯文档提交（`docs/`、`change-history/`、根文档）豁免。

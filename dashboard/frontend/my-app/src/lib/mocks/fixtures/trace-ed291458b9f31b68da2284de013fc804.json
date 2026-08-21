@@ -1,0 +1,58 @@
+{
+  "data": {
+    "traceId": "ed291458b9f31b68da2284de013fc804",
+    "spans": [
+      {
+        "spanId": "a6fa3d5995d459b3",
+        "service": "hello-k8s-ai-simulator",
+        "operation": "HTTP GET",
+        "startTime": "2026-08-18T03:59:59.072299Z",
+        "durationMs": 1.741,
+        "status": "ok",
+        "attributes": {
+          "deployment.environment.name": "docker-desktop",
+          "host.name": "simulator-tenant-core-model-lite-node-2cae4795e0f0-77858c9bw2fr",
+          "http.request.method": "GET",
+          "http.response.status_code": 200,
+          "k8s.cluster.name": "docker-desktop",
+          "k8s.namespace.name": "hello-k8s-ai-system",
+          "k8s.node.name": "desktop-worker",
+          "k8s.pod.name": "simulator-tenant-core-model-lite-node-2cae4795e0f0-77858c9bw2fr",
+          "network.protocol.version": "2.0",
+          "otel.scope.name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+          "otel.scope.version": "0.70.0",
+          "platform.model.name": "model-lite",
+          "platform.simulator_instance.name": "tenant-core-model-lite",
+          "platform.tenant.name": "tenant-core",
+          "process.command_args": "[\"/simulator\"]",
+          "process.executable.name": "simulator",
+          "process.executable.path": "/simulator",
+          "process.owner": "nonroot",
+          "process.pid": 1,
+          "process.runtime.description": "go version go1.26.6 linux/amd64",
+          "process.runtime.name": "go",
+          "process.runtime.version": "go1.26.6",
+          "server.address": "10.96.0.1",
+          "service.instance.id": "simulator-tenant-core-model-lite-node-2cae4795e0f0-77858c9bw2fr",
+          "service.version": "dev",
+          "span.kind": "client",
+          "telemetry.sdk.language": "go",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.45.0",
+          "url.full": "https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/hello-k8s-ai-system/leases/simulator-reporter-tenant-core-model-lite"
+        },
+        "events": []
+      }
+    ],
+    "entityLinks": []
+  },
+  "meta": {
+    "requestId": "9d8e1d2fef5fbb504ee8a485f87967ff",
+    "servedAt": "2026-08-20T00:48:22.885601694Z",
+    "partial": false,
+    "warnings": [],
+    "sourceVersions": {
+      "jaeger": "2026-08-20T00:48:22.885595216Z"
+    }
+  }
+}
