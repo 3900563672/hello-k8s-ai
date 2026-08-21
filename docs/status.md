@@ -7,8 +7,8 @@
 
 ## 最近变更
 
+- 2026-08-21 [WSL/Docker 僵尸进程锁 vhdx 识别 + 系统服务卡死处置边界（崩溃重启清场）](../change-history/2026-08-21-wsl-zombie-lock-host-restart/README.md)
+- 2026-08-21 [WSL/Docker 安全重启 SOP + doctor 宿主残留检查（固化排查链路）](../change-history/2026-08-21-wsl-docker-restart-sop/README.md)
+- 2026-08-21 [沉淀「事故 vs bug」复盘——系统级故障先存档证据、后追源码路径](../change-history/2026-08-21-incident-vs-bug-lesson/README.md)
 - 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](../change-history/2026-08-21-frontend-redesign-merge/README.md)
 - 2026-08-21 [变更总览：环境一键自愈 make env-up（重启后一条命令恢复联调）](../change-history/2026-08-21-env-up/README.md)
-- 2026-08-21 [变更总览：E2E 双触发并行 flake 修复（push 限 main + go test 超时放宽）](../change-history/2026-08-21-e2e-trigger-fix/README.md)
-- 2026-08-21 [变更总览：AIOps 提示词与上下文工程——Schema 契约、Token 预算、温度分层与对话持久化（#112 全阶段）](../change-history/2026-08-21-aiops-prompt-engineering/README.md)
-- 2026-08-21 [变更总览：AIOps 运行时开关（面板启用/停用分析入队）](../change-history/2026-08-21-aiops-panel-toggle/README.md)
