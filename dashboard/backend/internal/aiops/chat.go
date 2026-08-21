@@ -241,6 +241,24 @@ func (service *Service) ConfigureLLM(baseURL, apiKey, model string) {
 	}
 }
 
+// QuotaStatus 返回日配额用量与上限（#134）：0 上限 = 未启用配额；面板展示剩余额度。
+func (service *Service) QuotaStatus(ctx context.Context) (model.AIOpsQuotaStatus, error) {
+	if service.config.DailyMaxCalls <= 0 && service.config.DailyMaxTokens <= 0 {
+		return model.AIOpsQuotaStatus{Enabled: false}, nil
+	}
+	calls, tokens, err := service.database.SumAIOpsUsageSince(ctx, time.Now().Add(-24*time.Hour))
+	if err != nil {
+		return model.AIOpsQuotaStatus{}, fmt.Errorf("query aiops quota: %w", err)
+	}
+	return model.AIOpsQuotaStatus{
+		Enabled:    true,
+		CallsUsed:  calls,
+		CallsMax:   service.config.DailyMaxCalls,
+		TokensUsed: tokens,
+		TokensMax:  service.config.DailyMaxTokens,
+	}, nil
+}
+
 // Settings 返回当前配置掩码状态。
 func (service *Service) Settings() SettingsState {
 	service.configMu.Lock()

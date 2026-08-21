@@ -9,6 +9,8 @@ import type {
     AIOpsCommandEnvelope,
     AIOpsJobStatus,
     AIOpsJobsEnvelope,
+    AIOpsLimits,
+    AIOpsQuotaEnvelope,
     AIOpsSettingsEnvelope,
     AIOpsWindowLevel,
     AIOpsWindowsEnvelope,
@@ -41,6 +43,11 @@ export function fetchAIOpsTemplates(): Promise<unknown> {
     return apiRequest('/aiops/templates')
 }
 
+/** 意图执行硬限制（峰值 QPS/倍速/波形），确认面板提示条展示。 */
+export function fetchAIOpsLimits(): Promise<{ data: AIOpsLimits }> {
+    return apiRequest<{ data: AIOpsLimits }>('/aiops/limits')
+}
+
 /** 一句话意图：解析并落库 parsed，返回命令（含 commandId 与解析结果）。 */
 export function createAIOpsCommand(rawInput: string): Promise<AIOpsCommandEnvelope> {
     return apiRequest<AIOpsCommandEnvelope>('/aiops/commands', {
@@ -57,11 +64,24 @@ export function confirmAIOpsCommand(commandId: string): Promise<AIOpsCommandEnve
     )
 }
 
-/** 查询意图命令（含解析结果与执行 steps）。 */
+/** 查询意图命令（含解析结果与执行 steps；#134 起附带 applied 生效参数与波形）。 */
 export function fetchAIOpsCommand(commandId: string): Promise<AIOpsCommandEnvelope> {
     return apiRequest<AIOpsCommandEnvelope>(
         `/aiops/commands/${encodeURIComponent(commandId)}`,
     )
+}
+
+/** 停止执行中的波形调度（#134）：QPS 归零 + 恢复倍速 + 状态 stopped。 */
+export function stopAIOpsCommand(commandId: string): Promise<AIOpsCommandEnvelope> {
+    return apiRequest<AIOpsCommandEnvelope>(
+        `/aiops/commands/${encodeURIComponent(commandId)}/stop`,
+        { method: 'POST' },
+    )
+}
+
+/** 日配额用量与上限（#134：面板显示剩余额度）。 */
+export function fetchAIOpsQuota(): Promise<AIOpsQuotaEnvelope> {
+    return apiRequest<AIOpsQuotaEnvelope>('/aiops/quota')
 }
 
 /** L3/L4 窗口/日总结列表。 */

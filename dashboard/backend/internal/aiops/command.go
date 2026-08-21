@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops/prompts"
@@ -74,6 +75,7 @@ var TemplateCatalog = []TemplateEntry{
 	{ID: "preset-orchestrator-conservative", Name: "保守稳定策略", Kind: TemplateOrchestrator, Description: "120s 扩容冷却，240s 缩容冷却，最多 4 副本"},
 	// 流量模板（前端 PRESET_TRAFFIC_TEMPLATES）
 	{ID: "preset-traffic-steady", Name: "平稳 10 QPS", Kind: TemplateTraffic, Description: "5 分钟平稳 10 QPS 的基准流量"},
+	{ID: "preset-traffic-tidal-2h", Name: "2 小时潮汐", Kind: TemplateTraffic, Description: "2 小时潮汐：峰值 50 QPS，30 分钟周期正弦涨落"},
 	{ID: "preset-traffic-spike", Name: "脉冲峰值", Kind: TemplateTraffic, Description: "前 2 分钟无流量，随后 1 分钟冲到 50 QPS 并维持，再回落"},
 	{ID: "preset-traffic-ramp", Name: "渐进斜坡", Kind: TemplateTraffic, Description: "5 分钟从 0 线性爬坡到 25 QPS"},
 }
@@ -109,9 +111,110 @@ type TemplateSelections struct {
 	TrafficIDs      []string `json:"trafficIds,omitempty"`
 }
 
-// TrafficIntent 是流量自由设计（目标 QPS；曲线数据由前端确认时携带）。
+// 流量形状与上限（防 AI 把流量设得离谱打爆环境）。
+const (
+	MaxTrafficQPS      = 200 // 单命令流量峰值上限（QPS）
+	MaxSimulationRate  = 100 // 倍速上限
+	DefaultTidalPeriod = 30  // 潮汐默认周期（分钟）
+	DefaultPeakQPS     = 20  // 用户未给数字时 AI 的默认峰值（QPS）
+)
+
+// AIOpsLimits 是意图执行的硬限制与能力（单一事实源）：解析校验与前端提示共用，
+// 通过 GET /api/v1/aiops/limits 暴露，保证用户在任何入口都能看到"为什么流量是这样"（#134）。
+type AIOpsLimits struct {
+	MaxTrafficQPS             int      `json:"maxTrafficQPS"`             // 单命令峰值 QPS 上限（超限自动钳制并在 applied 中说明）
+	MaxSimulationRate         int      `json:"maxSimulationRate"`         // 倍速上限（超限自动钳制并在 applied 中说明）
+	TrafficShapes             []string `json:"trafficShapes"`             // 支持的流量波形（AI 按意图描绘，无需手画）
+	DefaultTidalPeriodMinutes int      `json:"defaultTidalPeriodMinutes"` // 潮汐默认周期（分钟）
+	DefaultPeakQPS            int      `json:"defaultPeakQPS"`            // 用户未给数字时 AI 的默认峰值
+	DefaultRate               int      `json:"defaultRate"`               // 未指定倍速时的默认值
+	TrafficRequiresTenant     bool     `json:"trafficRequiresTenant"`     // 写流量必须指定目标租户
+	UnlimitedDuration         bool     `json:"unlimitedDuration"`         // 模拟时长不设上限（用户/AI 说了算）
+	SupportsStop              bool     `json:"supportsStop"`              // 执行中可随时停止（QPS 归零）
+}
+
+// Limits 返回当前意图执行的硬限制与能力（与 ValidateCommandIntent/NormalizeTrafficIntent 共用同一组常量）。
+func Limits() AIOpsLimits {
+	return AIOpsLimits{
+		MaxTrafficQPS:             MaxTrafficQPS,
+		MaxSimulationRate:         MaxSimulationRate,
+		TrafficShapes:             []string{string(TrafficShapeSteady), string(TrafficShapeTidal), string(TrafficShapeSpike), string(TrafficShapeRamp)},
+		DefaultTidalPeriodMinutes: DefaultTidalPeriod,
+		DefaultPeakQPS:            DefaultPeakQPS,
+		DefaultRate:               1,
+		TrafficRequiresTenant:     true,
+		UnlimitedDuration:         true,
+		SupportsStop:              true,
+	}
+}
+
+// TrafficShape 是流量波形：steady 固定 / tidal 潮汐 / spike 脉冲 / ramp 斜坡。
+type TrafficShape string
+
+const (
+	TrafficShapeSteady TrafficShape = "steady"
+	TrafficShapeTidal  TrafficShape = "tidal"
+	TrafficShapeSpike  TrafficShape = "spike"
+	TrafficShapeRamp   TrafficShape = "ramp"
+)
+
+func validTrafficShape(shape string) bool {
+	switch TrafficShape(shape) {
+	case "", TrafficShapeSteady, TrafficShapeTidal, TrafficShapeSpike, TrafficShapeRamp:
+		return true
+	}
+	return false
+}
+
+// TrafficIntent 是流量自由设计：steady 用 QPS；tidal/spike/ramp 用 PeakQPS（+PeriodMinutes）。
+// 波形由执行端调度器按模拟时间推进（倍速下墙钟 = 模拟时长/倍速）。
 type TrafficIntent struct {
-	QPS *int `json:"qps,omitempty"`
+	QPS           *int   `json:"qps,omitempty"`           // 固定流量（平稳场景）
+	Shape         string `json:"shape,omitempty"`         // steady|tidal|spike|ramp，默认 steady
+	PeakQPS       *int   `json:"peakQps,omitempty"`       // 曲线峰值（潮汐/脉冲/斜坡用）
+	PeriodMinutes *int   `json:"periodMinutes,omitempty"` // 潮汐周期（分钟），默认 30
+}
+
+// TrafficShapeQPS 计算给定模拟时刻的波形 QPS（供执行端调度器与测试使用）。
+// elapsed 为模拟时间（分钟）；periodMinutes 为潮汐周期（分钟，<=0 用默认 30）。
+// 值域保证 [max(1, peak/5), peak]。
+func TrafficShapeQPS(elapsedMinutes float64, shape TrafficShape, peak, periodMinutes int) int {
+	if peak < 1 {
+		return 0
+	}
+	base := max(1, peak/5)
+	switch shape {
+	case TrafficShapeTidal:
+		period := periodMinutes
+		if period <= 0 {
+			period = DefaultTidalPeriod
+		}
+		phase := 2 * math.Pi * elapsedMinutes / float64(period)
+		value := float64(base) + float64(peak-base)*(0.5+0.5*math.Sin(phase))
+		return int(math.Round(value))
+	case TrafficShapeRamp:
+		// 斜坡：线性 0 → peak，到达峰值后维持
+		rampMinutes := periodMinutes
+		if rampMinutes <= 0 {
+			rampMinutes = DefaultTidalPeriod
+		}
+		if elapsedMinutes >= float64(rampMinutes) {
+			return peak
+		}
+		return int(math.Round(float64(peak) * elapsedMinutes / float64(rampMinutes)))
+	case TrafficShapeSpike:
+		// 脉冲：前 80% 时间低水位，后 20% 时间峰值
+		duration := periodMinutes
+		if duration <= 0 {
+			duration = DefaultTidalPeriod
+		}
+		if elapsedMinutes >= float64(duration)*0.8 {
+			return peak
+		}
+		return base
+	default: // steady
+		return peak
+	}
 }
 
 // commandSystemPrompt 用模板目录渲染命令意图解析提示词（#112 提示词工程化）。
@@ -168,13 +271,176 @@ func ValidateCommandIntent(intent *CommandIntent) error {
 			return fmt.Errorf("节点名不能为空")
 		}
 	}
-	if intent.Traffic != nil && intent.Traffic.QPS != nil && *intent.Traffic.QPS < 0 {
-		return fmt.Errorf("QPS 不能为负数")
+	if intent.Traffic != nil {
+		if intent.Traffic.QPS != nil && *intent.Traffic.QPS < 1 {
+			return fmt.Errorf("固定流量 QPS 必须为正整数（当前 %d）", *intent.Traffic.QPS)
+		}
+		if intent.Traffic.PeakQPS != nil && *intent.Traffic.PeakQPS < 1 {
+			return fmt.Errorf("峰值 QPS 必须为正整数（当前 %d）", *intent.Traffic.PeakQPS)
+		}
+		if !validTrafficShape(intent.Traffic.Shape) {
+			return fmt.Errorf("流量形状 %q 不支持（支持 steady/tidal/spike/ramp）", intent.Traffic.Shape)
+		}
+		if intent.Traffic.PeriodMinutes != nil && *intent.Traffic.PeriodMinutes < 1 {
+			return fmt.Errorf("潮汐周期必须为正整数分钟")
+		}
+		if intent.TargetTenant == "" {
+			return fmt.Errorf("写流量必须指定目标租户 targetTenant")
+		}
 	}
-	if intent.Rate != nil && *intent.Rate < 0 {
-		return fmt.Errorf("倍速不能为负数")
+	if intent.Rate != nil && *intent.Rate < 1 {
+		return fmt.Errorf("倍速必须为正整数（当前 %d）", *intent.Rate)
 	}
+	// 超上限与缺省值不在此拒绝（#134）：由 NormalizeTrafficIntent 钳制/补默认并返回 applied 说明，
+	// 让用户看到"要求 500 → 生效 200（超上限）"而不是解析失败。
 	return nil
+}
+
+// TrafficPoint 是 AI 描绘波形的采样点：X 为模拟秒，Y 为 QPS。
+type TrafficPoint struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// AppliedValue 记录一个执行字段的请求值→生效值及原因（#134：限制必须可见）。
+type AppliedValue struct {
+	Field     string `json:"field"`
+	Requested *int   `json:"requested,omitempty"`
+	Effective int    `json:"effective"`
+	Reason    string `json:"reason"` // ok | clamped-to-max | defaulted
+}
+
+// TrafficApplied 是命令的生效参数与 AI 描绘的波形（由 parsed 动态重算，不落库）。
+type TrafficApplied struct {
+	Values           []AppliedValue `json:"values"`
+	Curve            []TrafficPoint `json:"curve"`
+	WallClockSeconds int            `json:"wallClockSeconds"`
+}
+
+// NormalizeTrafficIntent 把意图数值收敛到可执行范围（#134）：
+// 超上限钳制（500 QPS → 200）、缺省补默认（未给峰值 → 20；未给倍速 → 1；非稳态未给时长 → 一个周期），
+// 就地修改 intent（执行端直接用生效值），返回 applied 记录（请求值→生效值+原因）与 AI 描绘的波形曲线。
+// 结构非法（负数/坏形状/缺租户）由 ValidateCommandIntent 前置拒绝。
+func NormalizeTrafficIntent(intent *CommandIntent) (*TrafficApplied, error) {
+	if intent == nil || intent.Traffic == nil {
+		return nil, nil
+	}
+	traffic := intent.Traffic
+	shape := TrafficShape(strings.TrimSpace(traffic.Shape))
+	if shape == "" {
+		shape = TrafficShapeSteady
+		traffic.Shape = string(shape)
+	}
+	applied := &TrafficApplied{Values: []AppliedValue{}}
+	add := func(field string, requested *int, effective int, reason string) {
+		applied.Values = append(applied.Values, AppliedValue{Field: field, Requested: requested, Effective: effective, Reason: reason})
+	}
+
+	// 峰值：稳态用 qps，非稳态用 peakQps；缺省默认 20；超上限钳制到 MaxTrafficQPS。
+	peak := 0
+	if shape == TrafficShapeSteady {
+		if traffic.QPS != nil {
+			peak = *traffic.QPS
+		} else {
+			peak = DefaultPeakQPS
+			traffic.QPS = &peak
+			add("peakQps", nil, peak, "defaulted")
+		}
+		if peak > MaxTrafficQPS {
+			requested := peak
+			peak = MaxTrafficQPS
+			traffic.QPS = &peak
+			add("peakQps", &requested, peak, "clamped-to-max")
+		}
+	} else {
+		if traffic.PeakQPS != nil {
+			peak = *traffic.PeakQPS
+		} else {
+			peak = DefaultPeakQPS
+			traffic.PeakQPS = &peak
+			add("peakQps", nil, peak, "defaulted")
+		}
+		if peak > MaxTrafficQPS {
+			requested := peak
+			peak = MaxTrafficQPS
+			traffic.PeakQPS = &peak
+			add("peakQps", &requested, peak, "clamped-to-max")
+		}
+	}
+
+	// 周期：非稳态缺省默认 DefaultTidalPeriod。
+	period := DefaultTidalPeriod
+	if shape != TrafficShapeSteady {
+		if traffic.PeriodMinutes != nil && *traffic.PeriodMinutes >= 1 {
+			period = *traffic.PeriodMinutes
+		} else {
+			traffic.PeriodMinutes = &period
+			add("periodMinutes", nil, period, "defaulted")
+		}
+	}
+
+	// 时长：不设上限（用户/AI 说了算，前端可见进度、随时可停）；非稳态缺省跑一个周期。
+	if intent.DurationMinutes <= 0 && shape != TrafficShapeSteady {
+		duration := period
+		intent.DurationMinutes = duration
+		add("durationMinutes", nil, duration, "defaulted")
+	}
+
+	// 倍速：缺省 1；超上限钳制到 MaxSimulationRate。
+	rate := 1
+	if intent.Rate == nil {
+		intent.Rate = &rate
+		add("rate", nil, rate, "defaulted")
+	} else {
+		rate = *intent.Rate
+		if rate > MaxSimulationRate {
+			requested := rate
+			rate = MaxSimulationRate
+			intent.Rate = &rate
+			add("rate", &requested, rate, "clamped-to-max")
+		}
+	}
+
+	// 墙钟：模拟时长/倍速（用户看到"还要等多久"）。
+	wallSeconds := 0
+	if intent.DurationMinutes > 0 {
+		wallSeconds = max(1, intent.DurationMinutes*60/rate)
+	}
+	applied.WallClockSeconds = wallSeconds
+
+	// AI 描绘波形：curve 即生效曲线（前端预览与运行插值共用）。
+	curveDuration := intent.DurationMinutes
+	if curveDuration <= 0 {
+		curveDuration = DefaultTidalPeriod
+	}
+	applied.Curve = GenerateTrafficCurve(shape, peak, period, curveDuration)
+	return applied, nil
+}
+
+// GenerateTrafficCurve 按形状参数生成波形采样点（自适应粒度，≤约 121 点）：
+// 30 分钟内 1 分钟粒度、6 小时内 5 分钟、24 小时内 15 分钟、更长 30 分钟。
+func GenerateTrafficCurve(shape TrafficShape, peak, periodMinutes, durationMinutes int) []TrafficPoint {
+	if durationMinutes <= 0 {
+		durationMinutes = DefaultTidalPeriod
+	}
+	stepSeconds := 60
+	switch {
+	case durationMinutes > 24*60:
+		stepSeconds = 30 * 60
+	case durationMinutes > 6*60:
+		stepSeconds = 15 * 60
+	case durationMinutes > 60:
+		stepSeconds = 5 * 60
+	}
+	durationSeconds := durationMinutes * 60
+	points := make([]TrafficPoint, 0, durationSeconds/stepSeconds+1)
+	for seconds := 0; seconds <= durationSeconds; seconds += stepSeconds {
+		points = append(points, TrafficPoint{X: seconds, Y: TrafficShapeQPS(float64(seconds)/60, shape, peak, periodMinutes)})
+	}
+	if last := points[len(points)-1]; last.X != durationSeconds {
+		points = append(points, TrafficPoint{X: durationSeconds, Y: TrafficShapeQPS(float64(durationMinutes), shape, peak, periodMinutes)})
+	}
+	return points
 }
 
 // ParseCommand 是 Service 层的意图解析入口：LLM 解析 + 目录校验（M2，#94）。

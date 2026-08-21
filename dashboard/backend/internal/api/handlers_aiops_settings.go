@@ -50,3 +50,16 @@ func (server *Server) handleUpdateAIOpsSettings(writer http.ResponseWriter, requ
 	server.logger.Info("AIOps LLM settings updated via panel", "model", model, "baseURLChanged", baseURL != "", "enabledChanged", payload.Enabled != nil)
 	writeData(writer, request, http.StatusOK, server.aiops.Settings(), false, nil, nil)
 }
+
+// handleGetAIOpsQuota 返回日配额用量与上限（#134：页面显示剩余额度，被拒前先知道）。
+func (server *Server) handleGetAIOpsQuota(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireAIOps(writer, request) {
+		return
+	}
+	status, err := server.aiops.QuotaStatus(request.Context())
+	if err != nil {
+		writeProblem(writer, request, http.StatusInternalServerError, "QUOTA_QUERY_FAILED", err.Error(), false, nil)
+		return
+	}
+	writeData(writer, request, http.StatusOK, status, false, nil, nil)
+}

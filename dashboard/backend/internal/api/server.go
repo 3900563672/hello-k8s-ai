@@ -3,6 +3,7 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"sync"
 
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/clock"
@@ -44,22 +45,27 @@ type Server struct {
 	clock      *clock.Clock
 	events     *EventBus
 	aiops      *aiops.Service
+
+	// trafficStopMu/trafficStops 是 AIOps 波形调度器的停止信号注册表（#134）。
+	trafficStopMu sync.Mutex
+	trafficStops  map[string]chan struct{}
 }
 
 func NewServer(dependencies Dependencies) *Server {
 	return &Server{
-		config:     dependencies.Config,
-		logger:     dependencies.Logger,
-		cache:      dependencies.Cache,
-		aggregator: dependencies.Aggregator,
-		gateway:    dependencies.Gateway,
-		store:      dependencies.Store,
-		prometheus: dependencies.Prometheus,
-		jaeger:     dependencies.Jaeger,
-		grafana:    dependencies.Grafana,
-		clock:      dependencies.Clock,
-		events:     dependencies.Events,
-		aiops:      dependencies.AIOps,
+		config:       dependencies.Config,
+		logger:       dependencies.Logger,
+		cache:        dependencies.Cache,
+		aggregator:   dependencies.Aggregator,
+		gateway:      dependencies.Gateway,
+		store:        dependencies.Store,
+		prometheus:   dependencies.Prometheus,
+		jaeger:       dependencies.Jaeger,
+		grafana:      dependencies.Grafana,
+		clock:        dependencies.Clock,
+		events:       dependencies.Events,
+		aiops:        dependencies.AIOps,
+		trafficStops: make(map[string]chan struct{}),
 	}
 }
 
@@ -103,9 +109,12 @@ func (server *Server) Handler() http.Handler {
 		mux.HandleFunc("GET /api/v1/aiops/analyses", server.handleListAIOpsAnalyses)
 		mux.HandleFunc("GET /api/v1/aiops/analyses/{id}", server.handleGetAIOpsAnalysis)
 		mux.HandleFunc("GET /api/v1/aiops/templates", server.handleListAIOpsTemplates)
+		mux.HandleFunc("GET /api/v1/aiops/limits", server.handleGetAIOpsLimits)
 		mux.HandleFunc("POST /api/v1/aiops/commands", server.handleCreateAIOpsCommand)
 		mux.HandleFunc("GET /api/v1/aiops/commands/{id}", server.handleGetAIOpsCommand)
 		mux.HandleFunc("POST /api/v1/aiops/commands/{id}/confirm", server.handleConfirmAIOpsCommand)
+		mux.HandleFunc("POST /api/v1/aiops/commands/{id}/stop", server.handleStopAIOpsCommand)
+		mux.HandleFunc("GET /api/v1/aiops/quota", server.handleGetAIOpsQuota)
 		mux.HandleFunc("GET /api/v1/aiops/windows", server.handleListAIOpsWindows)
 		mux.HandleFunc("GET /api/v1/aiops/alerts", server.handleListAIOpsAlerts)
 		mux.HandleFunc("POST /api/v1/aiops/chat", server.handleAIOpsChat)
