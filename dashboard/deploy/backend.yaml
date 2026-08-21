@@ -74,6 +74,18 @@ spec:
         #       key: admin-token
         - name: LOG_LEVEL
           value: info
+        - name: AIOPS_ENABLED
+          value: "false"
+        - name: AIOPS_OPENAI_BASE_URL
+          value: https://api.openai.com/v1
+        - name: AIOPS_MODEL
+          value: gpt-4o-mini
+        # AIOPS_OPENAI_API_KEY 启用 AIOps 时必填，从 Secret 注入：
+        # - name: AIOPS_OPENAI_API_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: hello-k8s-ai-dashboard-aiops
+        #       key: openai-api-key
         - name: SNAPSHOT_INTERVAL
           value: 30s
         - name: SNAPSHOT_RETENTION

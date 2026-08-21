@@ -97,6 +97,7 @@ Backend informer 读取 core/v1 Event，限制/聚合后用于 Overview。关键
 
 事件要写入可靠存储并定义 retention/privacy；不要只增加日志字符串。
 
+
 ## 8. 排障方法
 
 从“意图”向“结果”追：
@@ -110,3 +111,7 @@ Backend informer 读取 core/v1 Event，限制/聚合后用于 Overview。关键
 7. SSE/Frontend network/query cache：页面是否 refetch。
 
 不要先看页面颜色就猜 Controller 故障。
+
+## 9. AIOps 分析事件（M0+M1）
+
+切面 complete/fail 时 Backend 将分析任务入队（`aiops_analyses`，幂等）；AIOps worker 按状态机推进（pending→running→aggregating→completed/failed），L1 实体总结与 L2 分数写入 `aiops_*` 表。该链路异步、只读切面数据，不阻塞实验生命周期；分析失败在 `error_text` 记录并落 failed 状态，前端可展示。

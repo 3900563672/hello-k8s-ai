@@ -136,6 +136,7 @@ Frontend 在已有 Clock 尚未收敛时禁用第二次提交，防止用户连�
 - Clock 对象不存在时，Controller 会创建 1x；Backend 专用接口也能以用户选择的 rate 创建默认对象。
 - Backend server/actual/logical time 仍是权威 UTC；`simulationTime` 仍为空。
 
+
 ## 9. 未来完整逻辑时间
 
 若要实现 pause、Seek、分支或确定性 replay，仍需单独设计：
@@ -150,3 +151,7 @@ Frontend 在已有 Clock 尚未收敛时禁用第二次提交，防止用户连�
 | Observability | 同时记录 actual 与 simulation timestamp |
 
 现有 `SimulationClock` 只解决动态加速 Simulator 引擎，不应扩展解释为上述能力已经完成。
+
+## 10. AIOps 异步分析链
+
+AIOps 分析（#93）在实验终态后异步执行，与时间域无关：不推进模拟时钟、不阻塞 replay；分析进度/分数只读 `aiops_analyses`。前端轮询展示，不做本地推断。

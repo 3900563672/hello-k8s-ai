@@ -124,6 +124,16 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 
 `/experiments` 是切面的生命周期入口（issue #51）：实验创建后为 `pending`（配置快照已定格），开始后进入 `running` 由后台混合采样器持续写入 `segment_events` / `segment_metrics` / `trace_index.segment_id`，完成后封存为不可变归档。写接口走既有写认证与幂等链路；详情接口在存储不可用时返回 503，不降级为假数据。
 
+
+### AIOps（M0+M1，#93）
+
+| Method | Path | 参数/语义 |
+| --- | --- | --- |
+| GET | `/aiops/analyses` | 分析列表；`status=pending|running|aggregating|completed|failed`、`limit` 1..200。 |
+| GET | `/aiops/analyses/{id}` | 单条分析（主记录 + L1 实体总结）；`?segmentId=` 按切面查询。 |
+
+`AIOPS_ENABLED=false`（默认）时返回 404 `AI_OPS_DISABLED`；持久化存储不可用返回 503。分析由实验 complete/fail 自动入队，状态机与进度见 Backend 架构第 13 节。
+
 ### Stream
 
 | Method | Path | 语义 |

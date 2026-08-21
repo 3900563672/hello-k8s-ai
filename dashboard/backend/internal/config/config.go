@@ -18,6 +18,7 @@ type Config struct {
 	Jaeger      ProviderConfig
 	Grafana     ProviderConfig
 	Persistence PersistenceConfig
+	AIOps       AIOpsConfig
 	LogLevel    slog.Level
 	ClusterName string
 	Environment string
@@ -79,6 +80,20 @@ type PersistenceConfig struct {
 	SegmentBurstReplicaDelta  int
 	SegmentErrorRateThreshold float64
 	SegmentTTFTThresholdMS    float64
+}
+
+// AIOpsConfig 智能分析层配置；AIOps 默认关闭，开启时必须提供 API Key。
+type AIOpsConfig struct {
+	Enabled              bool
+	OpenAIBaseURL        string
+	OpenAIAPIKey         string
+	Model                string
+	Timeout              time.Duration
+	MaxTokensPerCall     int
+	MaxCallsPerAnalysis  int
+	MaxEntitiesPerCall   int
+	PollInterval         time.Duration
+	StaleRequeueInterval time.Duration
 }
 
 func Load() (Config, error) {
@@ -150,6 +165,18 @@ func Load() (Config, error) {
 			SegmentErrorRateThreshold: decimal("SEGMENT_ERROR_RATE_THRESHOLD", 0.05),
 			SegmentTTFTThresholdMS:    decimal("SEGMENT_TTFT_THRESHOLD_MS", 2000),
 		},
+		AIOps: AIOpsConfig{
+			Enabled:              boolean("AIOPS_ENABLED", false),
+			OpenAIBaseURL:        env("AIOPS_OPENAI_BASE_URL", "https://api.openai.com/v1"),
+			OpenAIAPIKey:         env("AIOPS_OPENAI_API_KEY", ""),
+			Model:                env("AIOPS_MODEL", "gpt-4o-mini"),
+			Timeout:              duration("AIOPS_TIMEOUT", 60*time.Second),
+			MaxTokensPerCall:     integer("AIOPS_MAX_TOKENS_PER_CALL", 2000),
+			MaxCallsPerAnalysis:  integer("AIOPS_MAX_CALLS_PER_ANALYSIS", 8),
+			MaxEntitiesPerCall:   integer("AIOPS_MAX_ENTITIES_PER_CALL", 20),
+			PollInterval:         duration("AIOPS_POLL_INTERVAL", 5*time.Second),
+			StaleRequeueInterval: duration("AIOPS_STALE_REQUEUE_INTERVAL", 10*time.Minute),
+		},
 		LogLevel:    *logLevel,
 		ClusterName: env("K8S_CLUSTER_NAME", "default"),
 		Environment: env("DEPLOYMENT_ENVIRONMENT", "development"),
@@ -189,6 +216,17 @@ func (cfg Config) validate() error {
 	}
 	if cfg.Persistence.SegmentTTFTThresholdMS <= 0 {
 		failures = append(failures, errors.New("SEGMENT_TTFT_THRESHOLD_MS must be positive"))
+	}
+	if cfg.AIOps.Enabled && strings.TrimSpace(cfg.AIOps.OpenAIAPIKey) == "" {
+		failures = append(failures, errors.New("AIOPS_OPENAI_API_KEY is required when AIOPS_ENABLED=true"))
+	}
+	if cfg.AIOps.Enabled {
+		if cfg.AIOps.MaxTokensPerCall < 256 {
+			failures = append(failures, errors.New("AIOPS_MAX_TOKENS_PER_CALL must be at least 256"))
+		}
+		if cfg.AIOps.MaxCallsPerAnalysis < 1 || cfg.AIOps.MaxEntitiesPerCall < 1 {
+			failures = append(failures, errors.New("AIOPS_MAX_CALLS_PER_ANALYSIS and AIOPS_MAX_ENTITIES_PER_CALL must be positive"))
+		}
 	}
 	return errors.Join(failures...)
 }

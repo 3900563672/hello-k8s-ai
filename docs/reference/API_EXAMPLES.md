@@ -246,6 +246,20 @@ curl -N -H 'Accept: text/event-stream' "$API/stream"
 
 收到事件后调用 REST refetch。不要把 SSE 当历史日志，也不要依赖 Last-Event-ID 精确重放。
 
+
+## 12.1 AIOps 分析（M0+M1，#93）
+
+```bash
+# 列表（AIOPS_ENABLED=false 时返回 404 AI_OPS_DISABLED）
+curl -sS "$API/aiops/analyses?limit=10"
+curl -sS "$API/aiops/analyses?status=completed&limit=10"
+# 详情：主记录 + L1 实体总结；支持按切面查询
+curl -sS "$API/aiops/analyses/<analysisId>"
+curl -sS "$API/aiops/analyses?segmentId=<segmentId>"
+```
+
+分析由实验 complete/fail 自动入队，状态机 pending→running→aggregating→completed/failed；`l1Done/l1Total` 为进度。`scores` 含 goal/stability/efficiency/anomaly/overall/verdict/reason。
+
 ## 13. 错误处理脚本规则
 
 - 同时检查 HTTP status 和 envelope 的 `error.code`/`meta.partial`。

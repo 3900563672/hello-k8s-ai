@@ -83,10 +83,10 @@ DEMO_ENABLED=true make cluster-up  # 需要演示数据时显式开启
 最近 5 条变更（完整时间线见 [change-history/README.md](change-history/README.md)）：
 
 - 2026-08-21 [变更总览：前端重构合入主仓库（覆盖 dashboard/frontend/my-app）](change-history/2026-08-21-frontend-redesign-merge/README.md)
+- 2026-08-21 [变更总览：AIOps 分层总结后端骨架（M0+M1，Fixes #93）](change-history/2026-08-21-aiops-l1l2-backend/README.md)
 - 2026-08-21 [变更总览：AIOps 前端 M4——AI 洞察分区与契约先行（#98 前端部分）](change-history/2026-08-21-aiops-frontend-m4/README.md)
 - 2026-08-20 [浏览器自动化与人工分工经验沉淀（Notion 中枢搭建复盘）](change-history/2026-08-20-notion-agent-collab-lesson/README.md)
 - 2026-08-20 [默认不截图：预览交给用户、验证用 DOM 断言](change-history/2026-08-20-no-screenshot-preview-rule/README.md)
-- 2026-08-20 [前端重构第四轮：设计打磨 + 配置样例数据 + 模板加载真实 bug（#101）](change-history/2026-08-20-frontend-redesign-round4/README.md)
 
 <!-- docs-sync:timeline-end -->
 

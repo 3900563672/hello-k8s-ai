@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/aiops"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/api"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/clock"
 	"github.com/3900563672/hello-k8s-ai/dashboard/backend/internal/config"
@@ -31,6 +32,7 @@ type App struct {
 	clock      *clock.Clock
 	httpServer *http.Server
 	sampler    *segment.Sampler
+	aiops      *aiops.Service
 }
 
 func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, error) {
@@ -78,10 +80,15 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 		ErrorRateThreshold: cfg.Persistence.SegmentErrorRateThreshold,
 		TTFTThresholdMS:    cfg.Persistence.SegmentTTFTThresholdMS,
 	}, database, prometheusClient, aggregator, logger)
+	var aiopsService *aiops.Service
+	if cfg.AIOps.Enabled && database.Available() {
+		aiopsService = aiops.NewService(cfg.AIOps, database, aiops.NewOpenAI(cfg.AIOps, logger), logger)
+	}
 	apiServer := api.NewServer(api.Dependencies{
 		Config: cfg, Logger: logger, Cache: cacheState, Aggregator: aggregator,
 		Gateway: gateway, Store: database, Prometheus: prometheusClient,
 		Jaeger: jaegerClient, Grafana: cfg.Grafana, Clock: clockState, Events: eventBus,
+		AIOps: aiopsService,
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTP.Address,
@@ -95,7 +102,7 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 	return &App{
 		config: cfg, logger: logger, database: database, recorder: recorder,
 		cache: cacheState, aggregator: aggregator, clock: clockState, httpServer: httpServer,
-		sampler: segmentSampler,
+		sampler: segmentSampler, aiops: aiopsService,
 	}, nil
 }
 
@@ -114,6 +121,13 @@ func (application *App) Run(ctx context.Context) error {
 		}()
 		go application.runSnapshots(ctx)
 		go application.runSegmentSampler(ctx)
+		if application.aiops != nil {
+			go func() {
+				if err := application.aiops.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
+					errorsChannel <- fmt.Errorf("run AIOps worker: %w", err)
+				}
+			}()
+		}
 	}
 	go func() {
 		application.logger.Info("Dashboard Backend HTTP server started", "address", application.httpServer.Addr)

@@ -172,9 +172,20 @@ DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 
 - SSE 不使用普通 write timeout；其他请求受配置 timeout 中间件约束。
 - 冲突、幂等键重用但 payload 不同、未知 Kind、非法历史窗口必须是可区分错误。
 
+
 ## 12. 扩展规则
 
 - 新页面先定义 Read Model，再决定来源；不要直接把 unstructured CR 暴露给 React。
 - 新 metric 先加入服务端 catalog 与单位/维度，再开放 API。
 - 新 mutation 先确认字段所有者、RBAC、dry-run、幂等、审计、冲突和恢复语义。
 - 新 DB 表先写数据所有权、保留、备份和删除策略；不要用表绕过 Kubernetes。
+## 13. AIOps 智能分析层（#92/#93，M0+M1）
+
+- 模块 `internal/aiops/`：Service（worker 轮询 pending 分析）+ OpenAI 兼容 LLM Provider（json_object 强制、429/5xx 重试、4xx 不重试、预算硬限制）+ 硬指标打分/规则兜底。
+- 触发：实验 complete/fail 时 `EnqueueAnalysis(segmentID)`，`aiops_analyses.segment_id` 唯一保证幂等。
+- 状态机：`pending → running(L1) → aggregating(L2) → completed/failed`，`l1_done/l1_total` 进度落库（前端可显示）。
+- L1 全量覆盖：实体批量一次 LLM 调用（固定 JSON schema），LLM 失败用规则兜底补齐，单实体失败不影响其它。
+- L2 混合打分：硬指标（错误率/TTFT p95/QPS 达成/事件数/重启数）规则先算，LLM 基于 L1 摘要 + 硬指标出分；分维度 goal/stability/efficiency/anomaly + overall + verdict + reason。
+- 预算：单次分析 LLM 调用 ≤ `AIOPS_MAX_CALLS_PER_ANALYSIS`（默认 8）、单次 ≤ `AIOPS_MAX_TOKENS_PER_CALL`；启动回收 stale（`AIOPS_STALE_REQUEUE_INTERVAL` 默认 10min）。
+- 单向依赖：只读 segments 数据 + 写 `aiops_*` 表，不反向依赖其它模块。
+
