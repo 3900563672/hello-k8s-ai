@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-21 | E2E 双触发并行 flake 修复：push 限 main + go test 超时放宽 | P1 | [查看记录](2026-08-21-e2e-trigger-fix/README.md) |
 | 2026-08-21 | AIOps 运行时开关：面板启用/停用分析入队 + 历史数据清理 | P1 | [查看记录](2026-08-21-aiops-panel-toggle/README.md) |
 | 2026-08-19 | WSL GitHub 代理配置沉淀：检测脚本 + 蒸馏规则 | P1 | [查看记录](2026-08-19-wsl-github-proxy/README.md) |
 | 2026-08-20 | 前端重构第四轮：设计打磨 + 配置样例数据 + 模板加载真实 bug（#101） | P2 | [查看记录](2026-08-20-frontend-redesign-round4/README.md) |
