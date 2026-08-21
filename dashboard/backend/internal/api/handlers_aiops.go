@@ -118,3 +118,64 @@ func nonNilAIOpsEntitySummaries(summaries []model.AIOpsEntitySummary) []model.AI
 	}
 	return summaries
 }
+
+// handleListAIOpsWindows 列出窗口/日总结（level=L3|L4，按窗口开始时间倒序）。
+func (server *Server) handleListAIOpsWindows(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireAIOps(writer, request) {
+		return
+	}
+	level := strings.TrimSpace(request.URL.Query().Get("level"))
+	if level == "" {
+		level = string(model.AIOpsWindowL3)
+	}
+	if level != string(model.AIOpsWindowL3) && level != string(model.AIOpsWindowL4) {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_AI_OPS_WINDOW_LEVEL",
+			"level 必须是 L3 或 L4。", false, nil)
+		return
+	}
+	limit := queryInteger(request, "limit", 50)
+	if limit < 1 || limit > aiopsListMaxLimit {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_LIMIT",
+			"limit must be between 1 and 200.", false, nil)
+		return
+	}
+	summaries, err := server.store.ListAIOpsWindowSummaries(request.Context(), level, limit)
+	if err != nil {
+		server.writeExperimentStoreError(writer, request, "查询 AIOps 窗口总结失败", err)
+		return
+	}
+	writeData(writer, request, http.StatusOK, nonNilAIOpsWindowSummaries(summaries), false, nil, nil)
+}
+
+// handleListAIOpsAlerts 列出警戒（按触发时间倒序）。
+func (server *Server) handleListAIOpsAlerts(writer http.ResponseWriter, request *http.Request) {
+	if !server.requireAIOps(writer, request) {
+		return
+	}
+	limit := queryInteger(request, "limit", 50)
+	if limit < 1 || limit > aiopsListMaxLimit {
+		writeProblem(writer, request, http.StatusBadRequest, "INVALID_LIMIT",
+			"limit must be between 1 and 200.", false, nil)
+		return
+	}
+	alerts, err := server.store.ListAIOpsAlerts(request.Context(), limit)
+	if err != nil {
+		server.writeExperimentStoreError(writer, request, "查询 AIOps 警戒失败", err)
+		return
+	}
+	writeData(writer, request, http.StatusOK, nonNilAIOpsAlerts(alerts), false, nil, nil)
+}
+
+func nonNilAIOpsWindowSummaries(summaries []model.AIOpsWindowSummary) []model.AIOpsWindowSummary {
+	if summaries == nil {
+		return []model.AIOpsWindowSummary{}
+	}
+	return summaries
+}
+
+func nonNilAIOpsAlerts(alerts []model.AIOpsAlert) []model.AIOpsAlert {
+	if alerts == nil {
+		return []model.AIOpsAlert{}
+	}
+	return alerts
+}

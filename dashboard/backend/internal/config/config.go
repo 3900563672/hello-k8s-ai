@@ -94,6 +94,10 @@ type AIOpsConfig struct {
 	MaxEntitiesPerCall   int
 	PollInterval         time.Duration
 	StaleRequeueInterval time.Duration
+	WindowInterval       time.Duration
+	WindowGranularity    time.Duration
+	AlertThreshold       int
+	AlertConsecutive     int
 }
 
 func Load() (Config, error) {
@@ -176,6 +180,10 @@ func Load() (Config, error) {
 			MaxEntitiesPerCall:   integer("AIOPS_MAX_ENTITIES_PER_CALL", 20),
 			PollInterval:         duration("AIOPS_POLL_INTERVAL", 5*time.Second),
 			StaleRequeueInterval: duration("AIOPS_STALE_REQUEUE_INTERVAL", 10*time.Minute),
+			WindowInterval:       duration("AIOPS_WINDOW_INTERVAL", 15*time.Minute),
+			WindowGranularity:    duration("AIOPS_WINDOW_GRANULARITY", 2*time.Hour),
+			AlertThreshold:       integer("AIOPS_ALERT_THRESHOLD", 40),
+			AlertConsecutive:     integer("AIOPS_ALERT_CONSECUTIVE", 3),
 		},
 		LogLevel:    *logLevel,
 		ClusterName: env("K8S_CLUSTER_NAME", "default"),
@@ -223,6 +231,12 @@ func (cfg Config) validate() error {
 	if cfg.AIOps.Enabled {
 		if cfg.AIOps.MaxTokensPerCall < 256 {
 			failures = append(failures, errors.New("AIOPS_MAX_TOKENS_PER_CALL must be at least 256"))
+		}
+		if cfg.AIOps.WindowGranularity < time.Minute {
+			failures = append(failures, errors.New("AIOPS_WINDOW_GRANULARITY must be at least 1m"))
+		}
+		if cfg.AIOps.AlertThreshold < 0 || cfg.AIOps.AlertThreshold > 100 || cfg.AIOps.AlertConsecutive < 1 {
+			failures = append(failures, errors.New("AIOPS_ALERT_THRESHOLD must be 0-100 and AIOPS_ALERT_CONSECUTIVE must be positive"))
 		}
 		if cfg.AIOps.MaxCallsPerAnalysis < 1 || cfg.AIOps.MaxEntitiesPerCall < 1 {
 			failures = append(failures, errors.New("AIOPS_MAX_CALLS_PER_ANALYSIS and AIOPS_MAX_ENTITIES_PER_CALL must be positive"))

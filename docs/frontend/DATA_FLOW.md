@@ -129,6 +129,8 @@ Backend 的 SSE channel 每客户端有有限缓冲，慢客户端可能错过�
 
 切面实验 complete/fail 后，后端自动入队 AIOps 分析（`aiops_analyses`），状态机与 L1 进度可轮询；L2 分数/理由与 L1 实体总结经 `/aiops/analyses` 读取。前端只展示后端状态机结果，不做本地推断；`AIOPS_ENABLED=false` 时接口 404，前端显示未启用空态。
 
+M2 意图执行（#94）：AI 面板一句话 → `POST /aiops/commands` 返回解析预览（模板 id/流量/倍速/目标租户），用户确认后 `POST /aiops/commands/{id}/confirm` 执行；确认前不产生任何写操作。M3（#95）：`/aiops/windows`（L3/L4）与 `/aiops/alerts` 轮询展示窗口认知与警戒。
+
 ## 7. Traffic 叠加应用到真实命令
 
 当前链路：
@@ -154,4 +156,4 @@ flowchart LR
 - `src/lib/mocks/fixtures/` 保存 GET 端点真实响应快照，`scripts/record-fixtures.mjs` 幂等重录；manifest.json 记录来源与大小，供审计。
 - dev:mock 由 `plugins/mock-fixtures.ts`（vite `--mode mock` 插件）拦截 `/api/v1` GET 返回 fixtures，写请求 405（只读）；快照空数组用 `dev-fixtures/` 样例补齐（meta.devSamples），不写控制面。
 - overview 与 trace detail 分属不同录制窗口时 traceId 可能不匹配；dev:mock 对缺失 detail 用摘要合成单 span 兜底，生产 API 不做该处理。
-- AIOps 契约演示数据：`aiops-analyses.json`（支持 `?status=` 过滤）、`aiops-analysis-ana-20260821-0001.json`、`aiops-alerts.json`、`aiops-windows.json`（meta.warnings 标注"契约演示数据"）；实体名与 overview fixtures 的 Pod/Node 名对齐，用于气泡外圈分级演示。后端 M2/M3 就绪后删除对应 fixture，组件逻辑不变。
+- AIOps 契约演示数据已删除（后端 M2/M3 就绪，真实模式返回真实数据；dev:mock 下 aiops 接口 404，组件显示未启用/空态）。

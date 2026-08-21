@@ -71,7 +71,7 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 
 ### AIOps 可选配置（M0+M1，#93）
 
-`AIOPS_ENABLED` 默认 false：不启动 worker、不注册路由、不触发入队。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。预算/轮询参数：`AIOPS_POLL_INTERVAL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_STALE_REQUEUE_INTERVAL`。关闭即完全停用，不影响其它功能。
+`AIOPS_ENABLED` 默认 false：不启动 worker、不注册路由、不触发入队。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。预算/轮询参数：`AIOPS_POLL_INTERVAL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_STALE_REQUEUE_INTERVAL`。M3 时间聚合（#95）可选参数：`AIOPS_WINDOW_INTERVAL`（默认 15m）、`AIOPS_WINDOW_GRANULARITY`（默认 2h）、`AIOPS_ALERT_THRESHOLD`（默认 40）、`AIOPS_ALERT_CONSECUTIVE`（默认 3）。关闭即完全停用，不影响其它功能。
 
 ## 5. 工作负载与存储
 

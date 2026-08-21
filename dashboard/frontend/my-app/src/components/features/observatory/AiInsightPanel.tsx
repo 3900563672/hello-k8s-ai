@@ -9,6 +9,7 @@ import {
     XCircle,
 } from 'lucide-react'
 import { useAIOpsAnalysisBySegment, useAIOpsAnalyses } from '@/api/queries/aiopsQueries'
+import { CommandInput } from '@/components/features/observatory/CommandInput'
 import { cn } from '@/lib/utils'
 import type {
     AIOpsAnalysis,
@@ -207,7 +208,9 @@ export function AiInsightPanel() {
     }
 
     return (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="space-y-4">
+            <CommandInput />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2 px-1">
                     <span className="text-[11px] font-medium text-[#5A6778]">最近分析（15s 轮询）</span>
@@ -345,6 +348,7 @@ export function AiInsightPanel() {
                         )}
                     </div>
                 )}
+                </div>
             </div>
         </div>
     )

@@ -127,3 +127,134 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 	}
 	t.Cleanup(cleanup)
 }
+
+// TestAIOpsCommandStoreLifecycle 验证 aiops_commands 表：创建 → 状态推进 → 读取。
+// 与 TestAIOpsStoreLifecycle 同 DB 门控。
+func TestAIOpsCommandStoreLifecycle(t *testing.T) {
+	databaseURL := os.Getenv("TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL integration test")
+	}
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	cfg := config.DatabaseConfig{
+		URL:            databaseURL,
+		Required:       true,
+		ConnectTimeout: 10 * time.Second,
+		MaxConnections: 5,
+		MinConnections: 1,
+	}
+	ctx := context.Background()
+	database, err := OpenPostgres(ctx, cfg, logger)
+	if err != nil {
+		t.Fatalf("open postgres: %v", err)
+	}
+	defer database.Close()
+	if err := database.Migrate(ctx); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	parsed, _ := json.Marshal(map[string]any{"sceneType": "突发流量高峰"})
+	steps, _ := json.Marshal([]map[string]string{{"step": "set-traffic", "status": "done"}})
+	command := model.AIOpsCommand{
+		CommandID: "cmd-test-1",
+		RawInput:  "美国时间 9 点开始，持续 2 小时，突发流量高峰",
+		Parsed:    parsed,
+		Status:    string(model.AIOpsCommandParsed),
+		Steps:     steps,
+	}
+	if err := database.CreateAIOpsCommand(ctx, command); err != nil {
+		t.Fatalf("create command: %v", err)
+	}
+	if err := database.UpdateAIOpsCommand(ctx, command.CommandID, string(model.AIOpsCommandDone), steps, ""); err != nil {
+		t.Fatalf("update command: %v", err)
+	}
+	loaded, err := database.GetAIOpsCommand(ctx, command.CommandID)
+	if err != nil {
+		t.Fatalf("get command: %v", err)
+	}
+	if loaded.Status != string(model.AIOpsCommandDone) || loaded.RawInput != command.RawInput {
+		t.Fatalf("unexpected command: %+v", loaded)
+	}
+	t.Cleanup(func() {
+		_, _ = database.pool.Exec(ctx, `DELETE FROM aiops_commands WHERE command_id=$1`, command.CommandID)
+	})
+}
+
+// TestAIOpsWindowAlertStoreLifecycle 验证 aiops_window_summaries 与 aiops_alerts 读写（同 DB 门控）。
+func TestAIOpsWindowAlertStoreLifecycle(t *testing.T) {
+	databaseURL := os.Getenv("TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL integration test")
+	}
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	cfg := config.DatabaseConfig{
+		URL:            databaseURL,
+		Required:       true,
+		ConnectTimeout: 10 * time.Second,
+		MaxConnections: 5,
+		MinConnections: 1,
+	}
+	ctx := context.Background()
+	database, err := OpenPostgres(ctx, cfg, logger)
+	if err != nil {
+		t.Fatalf("open postgres: %v", err)
+	}
+	defer database.Close()
+	if err := database.Migrate(ctx); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	now := time.Now().UTC()
+	windowStart := now.Truncate(2 * time.Hour)
+	window := model.AIOpsWindowSummary{
+		WindowID:    "L3-test-" + now.Format("150405"),
+		Level:       string(model.AIOpsWindowL3),
+		WindowStart: windowStart,
+		WindowEnd:   windowStart.Add(2 * time.Hour),
+		Scores:      json.RawMessage(`{"overall":60,"trend":"stable"}`),
+	}
+	if err := database.UpsertAIOpsWindowSummary(ctx, window); err != nil {
+		t.Fatalf("upsert window: %v", err)
+	}
+	// 幂等重写。
+	if err := database.UpsertAIOpsWindowSummary(ctx, window); err != nil {
+		t.Fatalf("re-upsert window: %v", err)
+	}
+	windows, err := database.ListAIOpsWindowSummaries(ctx, string(model.AIOpsWindowL3), 10)
+	if err != nil {
+		t.Fatalf("list windows: %v", err)
+	}
+	found := false
+	for _, item := range windows {
+		if item.WindowID == window.WindowID {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("window %s not found", window.WindowID)
+	}
+
+	analysisID := "window-alert-analysis"
+	alert := model.AIOpsAlert{
+		AlertID:        "alert-test-" + now.Format("150405"),
+		Rule:           "consecutive-low-score",
+		Severity:       "warning",
+		TriggeredAt:    now,
+		AnalysisID:     &analysisID,
+		Interpretation: json.RawMessage(`{"summary":"低分"}`),
+	}
+	if err := database.CreateAIOpsAlert(ctx, alert); err != nil {
+		t.Fatalf("create alert: %v", err)
+	}
+	alerts, err := database.ListAIOpsAlerts(ctx, 10)
+	if err != nil {
+		t.Fatalf("list alerts: %v", err)
+	}
+	if len(alerts) == 0 || alerts[0].AnalysisID == nil || *alerts[0].AnalysisID != analysisID {
+		t.Fatalf("unexpected alerts: %+v", alerts)
+	}
+	t.Cleanup(func() {
+		_, _ = database.pool.Exec(ctx, `DELETE FROM aiops_window_summaries WHERE window_id=$1`, window.WindowID)
+		_, _ = database.pool.Exec(ctx, `DELETE FROM aiops_alerts WHERE alert_id=$1`, alert.AlertID)
+	})
+}

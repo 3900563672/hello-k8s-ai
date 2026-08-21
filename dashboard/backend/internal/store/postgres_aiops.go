@@ -188,3 +188,150 @@ func (database *Postgres) ListAIOpsEntitySummaries(ctx context.Context, analysis
 	}
 	return summaries, nil
 }
+
+// CreateAIOpsCommand 记录一句话意图的解析结果（status=parsed，#94 M2）。
+func (database *Postgres) CreateAIOpsCommand(ctx context.Context, command model.AIOpsCommand) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_commands (command_id, raw_input, parsed, status, steps)
+		VALUES ($1, $2, $3, $4, $5)`,
+		command.CommandID, command.RawInput, command.Parsed, command.Status, command.Steps)
+	if err != nil {
+		return fmt.Errorf("insert aiops command: %w", err)
+	}
+	return nil
+}
+
+// GetAIOpsCommand 读取一条意图命令。
+func (database *Postgres) GetAIOpsCommand(ctx context.Context, commandID string) (*model.AIOpsCommand, error) {
+	row := database.pool.QueryRow(ctx, `
+		SELECT command_id, raw_input, parsed, status, steps, error_text, created_at, updated_at
+		FROM aiops_commands WHERE command_id=$1`, commandID)
+	var command model.AIOpsCommand
+	if err := row.Scan(&command.CommandID, &command.RawInput, &command.Parsed, &command.Status,
+		&command.Steps, &command.Error, &command.CreatedAt, &command.UpdatedAt); err != nil {
+		return nil, fmt.Errorf("get aiops command: %w", err)
+	}
+	return &command, nil
+}
+
+// UpdateAIOpsCommand 推进意图命令状态机，记录执行步骤与错误文本。
+func (database *Postgres) UpdateAIOpsCommand(ctx context.Context, commandID, status string, steps json.RawMessage, errorText string) error {
+	_, err := database.pool.Exec(ctx, `
+		UPDATE aiops_commands SET status=$2, steps=$3, error_text=$4, updated_at=clock_timestamp()
+		WHERE command_id=$1`, commandID, status, steps, errorText)
+	if err != nil {
+		return fmt.Errorf("update aiops command: %w", err)
+	}
+	return nil
+}
+
+// UpsertAIOpsWindowSummary 幂等写入窗口/日总结（window_id 唯一，失败重试可覆盖修正）。
+func (database *Postgres) UpsertAIOpsWindowSummary(ctx context.Context, summary model.AIOpsWindowSummary) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_window_summaries (window_id, level, window_start, window_end, scores, summary)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT (window_id) DO UPDATE SET
+			scores=EXCLUDED.scores, summary=EXCLUDED.summary, created_at=clock_timestamp()`,
+		summary.WindowID, summary.Level, summary.WindowStart, summary.WindowEnd, summary.Scores, summary.Summary)
+	if err != nil {
+		return fmt.Errorf("upsert aiops window summary: %w", err)
+	}
+	return nil
+}
+
+// ListAIOpsWindowSummaries 按层级倒序列出窗口/日总结。
+func (database *Postgres) ListAIOpsWindowSummaries(ctx context.Context, level string, limit int) ([]model.AIOpsWindowSummary, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT window_id, level, window_start, window_end, scores, summary, created_at
+		FROM aiops_window_summaries WHERE level=$1
+		ORDER BY window_start DESC LIMIT $2`, level, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops window summaries: %w", err)
+	}
+	defer rows.Close()
+	var summaries []model.AIOpsWindowSummary
+	for rows.Next() {
+		var summary model.AIOpsWindowSummary
+		if err := rows.Scan(&summary.WindowID, &summary.Level, &summary.WindowStart,
+			&summary.WindowEnd, &summary.Scores, &summary.Summary, &summary.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops window summary: %w", err)
+		}
+		summaries = append(summaries, summary)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops window summaries: %w", err)
+	}
+	return summaries, nil
+}
+
+// ListAIOpsAnalysesInWindow 列出窗口内已完成的切面分析（L3 聚合输入：只读 L2 结果）。
+func (database *Postgres) ListAIOpsAnalysesInWindow(ctx context.Context, start, end time.Time) ([]model.AIOpsAnalysis, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT analysis_id, segment_id, status, l1_total, l1_done, scores, summary, error_text, created_at, updated_at
+		FROM aiops_analyses
+		WHERE status='completed' AND created_at >= $1 AND created_at < $2
+		ORDER BY created_at ASC`, start, end)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops analyses in window: %w", err)
+	}
+	defer rows.Close()
+	var analyses []model.AIOpsAnalysis
+	for rows.Next() {
+		var analysis model.AIOpsAnalysis
+		if err := rows.Scan(&analysis.AnalysisID, &analysis.SegmentID, &analysis.Status,
+			&analysis.L1Total, &analysis.L1Done, &analysis.Scores, &analysis.Summary,
+			&analysis.Error, &analysis.CreatedAt, &analysis.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops analysis in window: %w", err)
+		}
+		analyses = append(analyses, analysis)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops analyses in window: %w", err)
+	}
+	return analyses, nil
+}
+
+// CreateAIOpsAlert 写入一条警戒；同 rule+analysis_id 重复触发幂等（见 alerts.go 生成规则）。
+func (database *Postgres) CreateAIOpsAlert(ctx context.Context, alert model.AIOpsAlert) error {
+	_, err := database.pool.Exec(ctx, `
+		INSERT INTO aiops_alerts (alert_id, rule, severity, analysis_id, interpretation)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (alert_id) DO NOTHING`,
+		alert.AlertID, alert.Rule, alert.Severity, alert.AnalysisID, alert.Interpretation)
+	if err != nil {
+		return fmt.Errorf("insert aiops alert: %w", err)
+	}
+	return nil
+}
+
+// ListAIOpsAlerts 按触发时间倒序列出警戒。
+func (database *Postgres) ListAIOpsAlerts(ctx context.Context, limit int) ([]model.AIOpsAlert, error) {
+	rows, err := database.pool.Query(ctx, `
+		SELECT alert_id, rule, severity, triggered_at, analysis_id, interpretation, acked_at
+		FROM aiops_alerts ORDER BY triggered_at DESC LIMIT $1`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list aiops alerts: %w", err)
+	}
+	defer rows.Close()
+	var alerts []model.AIOpsAlert
+	for rows.Next() {
+		var alert model.AIOpsAlert
+		var analysisID *string
+		var ackedAt *time.Time
+		if err := rows.Scan(&alert.AlertID, &alert.Rule, &alert.Severity, &alert.TriggeredAt,
+			&analysisID, &alert.Interpretation, &ackedAt); err != nil {
+			return nil, fmt.Errorf("scan aiops alert: %w", err)
+		}
+		if analysisID != nil {
+			alert.AnalysisID = analysisID
+		}
+		if ackedAt != nil {
+			alert.AckedAt = ackedAt
+		}
+		alerts = append(alerts, alert)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate aiops alerts: %w", err)
+	}
+	return alerts, nil
+}
