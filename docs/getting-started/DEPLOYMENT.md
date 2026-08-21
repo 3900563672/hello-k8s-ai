@@ -68,6 +68,11 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 | 7 | 验证完整数据链路 | 任一硬门失败则生成诊断 |
 | 8 | 启动端口转发 | 端口冲突只警告，不推翻已成功部署 |
 
+
+### AIOps 可选配置（M0+M1，#93）
+
+`AIOPS_ENABLED` 默认 false：不启动 worker、不注册路由、不触发入队。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。预算/轮询参数：`AIOPS_POLL_INTERVAL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_STALE_REQUEUE_INTERVAL`。关闭即完全停用，不影响其它功能。
+
 ## 5. 工作负载与存储
 
 | 工作负载 | 镜像 | 存储 |

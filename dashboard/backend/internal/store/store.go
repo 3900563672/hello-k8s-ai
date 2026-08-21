@@ -81,6 +81,17 @@ type Store interface {
 	ListSegmentEvents(context.Context, string, int) ([]SegmentEvent, error)
 	ListSegmentMetrics(context.Context, string, int) ([]MetricBucket, error)
 	ListSegmentTraces(context.Context, string) ([]model.TraceSummary, error)
+	CreateAIOpsAnalysis(context.Context, model.AIOpsAnalysis) error
+	ClaimAIOpsAnalysis(context.Context, string) (bool, error)
+	RequeueStaleAIOpsAnalyses(context.Context, time.Time) (int, error)
+	UpdateAIOpsAnalysisProgress(context.Context, string, string, int, int, string) error
+	CompleteAIOpsAnalysis(context.Context, string, json.RawMessage, json.RawMessage) error
+	FailAIOpsAnalysis(context.Context, string, string) error
+	GetAIOpsAnalysis(context.Context, string) (*model.AIOpsAnalysis, error)
+	GetAIOpsAnalysisBySegment(context.Context, string) (*model.AIOpsAnalysis, error)
+	ListAIOpsAnalyses(context.Context, int, string) ([]model.AIOpsAnalysis, error)
+	UpsertAIOpsEntitySummaries(context.Context, string, []model.AIOpsEntitySummary) error
+	ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error)
 	Prune(context.Context, time.Time) error
 	Close()
 	Available() bool
@@ -146,6 +157,37 @@ func (Disabled) ListSegmentMetrics(context.Context, string, int) ([]MetricBucket
 	return nil, ErrUnavailable
 }
 func (Disabled) ListSegmentTraces(context.Context, string) ([]model.TraceSummary, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) CreateAIOpsAnalysis(context.Context, model.AIOpsAnalysis) error {
+	return ErrUnavailable
+}
+func (Disabled) ClaimAIOpsAnalysis(context.Context, string) (bool, error) {
+	return false, ErrUnavailable
+}
+func (Disabled) RequeueStaleAIOpsAnalyses(context.Context, time.Time) (int, error) {
+	return 0, ErrUnavailable
+}
+func (Disabled) UpdateAIOpsAnalysisProgress(context.Context, string, string, int, int, string) error {
+	return ErrUnavailable
+}
+func (Disabled) CompleteAIOpsAnalysis(context.Context, string, json.RawMessage, json.RawMessage) error {
+	return ErrUnavailable
+}
+func (Disabled) FailAIOpsAnalysis(context.Context, string, string) error { return ErrUnavailable }
+func (Disabled) GetAIOpsAnalysis(context.Context, string) (*model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) GetAIOpsAnalysisBySegment(context.Context, string) (*model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) ListAIOpsAnalyses(context.Context, int, string) ([]model.AIOpsAnalysis, error) {
+	return nil, ErrUnavailable
+}
+func (Disabled) UpsertAIOpsEntitySummaries(context.Context, string, []model.AIOpsEntitySummary) error {
+	return ErrUnavailable
+}
+func (Disabled) ListAIOpsEntitySummaries(context.Context, string) ([]model.AIOpsEntitySummary, error) {
 	return nil, ErrUnavailable
 }
 func (Disabled) Prune(context.Context, time.Time) error { return ErrUnavailable }

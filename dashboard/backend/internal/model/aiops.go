@@ -1,0 +1,64 @@
+package model
+
+import (
+	"encoding/json"
+	"time"
+)
+
+// AIOps 分析状态机（总纲 #92/#93）：pending → running(L1) → aggregating(L2) → completed/failed。
+type AIOpsAnalysisStatus string
+
+const (
+	AIOpsPending     AIOpsAnalysisStatus = "pending"
+	AIOpsRunning     AIOpsAnalysisStatus = "running"
+	AIOpsAggregating AIOpsAnalysisStatus = "aggregating"
+	AIOpsCompleted   AIOpsAnalysisStatus = "completed"
+	AIOpsFailed      AIOpsAnalysisStatus = "failed"
+)
+
+// AIOpsClassification 是 L1 实体总结的分类（前端以颜色区分：优质/可疑/问题）。
+type AIOpsClassification string
+
+const (
+	AIOpsHealthy AIOpsClassification = "healthy"
+	AIOpsSuspect AIOpsClassification = "suspect"
+	AIOpsProblem AIOpsClassification = "problem"
+)
+
+// AIOpsAnalysis 是 aiops_analyses 表的一行：一次切面的 L1/L2 分析主记录。
+type AIOpsAnalysis struct {
+	AnalysisID string          `json:"analysisId"`
+	SegmentID  string          `json:"segmentId"`
+	Status     string          `json:"status"`
+	L1Total    int             `json:"l1Total"`
+	L1Done     int             `json:"l1Done"`
+	Scores     json.RawMessage `json:"scores,omitempty"`
+	Summary    json.RawMessage `json:"summary,omitempty"`
+	Error      string          `json:"error,omitempty"`
+	CreatedAt  time.Time       `json:"createdAt"`
+	UpdatedAt  time.Time       `json:"updatedAt"`
+}
+
+// AIOpsEntitySummary 是 aiops_entity_summaries 表的一行：L1 单实体总结。
+type AIOpsEntitySummary struct {
+	SummaryID      string    `json:"summaryId"`
+	AnalysisID     string    `json:"analysisId"`
+	EntityKind     string    `json:"entityKind"`
+	EntityName     string    `json:"entityName"`
+	Classification string    `json:"classification"`
+	Phenomenon     string    `json:"phenomenon"`
+	IssueFlag      bool      `json:"issueFlag"`
+	Conclusion     string    `json:"conclusion"`
+	CreatedAt      time.Time `json:"createdAt"`
+}
+
+// AIOpsScores 是 L2 打分的分维度结构（goal 目标达成 / stability 稳定性 / efficiency 效率 / anomaly 异常）。
+type AIOpsScores struct {
+	Goal       int    `json:"goal"`
+	Stability  int    `json:"stability"`
+	Efficiency int    `json:"efficiency"`
+	Anomaly    int    `json:"anomaly"`
+	Overall    int    `json:"overall"`
+	Verdict    string `json:"verdict"`
+	Reason     string `json:"reason"`
+}

@@ -76,6 +76,19 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 - key 已存在但 fingerprint 不同则冲突。
 - pending 的崩溃恢复语义需结合实现与测试继续加强。
 
+
+### AIOps 表（`005_aiops.sql`，M0+M1；M2/M3 启用其余）
+
+| 表 | 作用 |
+| --- | --- |
+| `aiops_analyses` | 切面分析主记录：状态机 + L1 进度 + `scores`/`summary` JSONB。 |
+| `aiops_entity_summaries` | L1 实体总结（analysis_id + entity_kind/entity_name 唯一）。 |
+| `aiops_window_summaries` | L3/L4 时间聚合（M3 启用，level 字段区分）。 |
+| `aiops_alerts` | 持续低分警戒（M3 启用）。 |
+| `aiops_commands` | 意图执行记录（M2 启用，状态机 parsed→confirmed→gate→executing→verified→done/rejected/failed）。 |
+
+写入方只有 `internal/aiops/`（worker）；API 只读。数据所有权见 FIELD_OWNERSHIP/总纲 #92：分析结果不反向驱动 Controller。
+
 ## 4. 写入路径
 
 ### Segment Sampler

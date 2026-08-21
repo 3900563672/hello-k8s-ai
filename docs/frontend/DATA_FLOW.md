@@ -124,6 +124,11 @@ Backend 的 SSE channel 每客户端有有限缓冲，慢客户端可能错过�
 | idempotent replay | 接受 Backend 已缓存响应，可提示命令未重复执行。 |
 | SSE 断开 | 显示连接退化，依靠轮询并自动重连。 |
 
+
+## 6.1 AIOps 分析异步链（#93）
+
+切面实验 complete/fail 后，后端自动入队 AIOps 分析（`aiops_analyses`），状态机与 L1 进度可轮询；L2 分数/理由与 L1 实体总结经 `/aiops/analyses` 读取。前端只展示后端状态机结果，不做本地推断；`AIOPS_ENABLED=false` 时接口 404，前端显示未启用空态。
+
 ## 7. Traffic 叠加应用到真实命令
 
 当前链路：
