@@ -68,7 +68,7 @@ export function TemplateLibraryDialog<T>({
                                                 {template.preset && (
                                                     <Badge
                                                         variant="outline"
-                                                        className="h-[18px] shrink-0 border-[#5B8CFF]/25 bg-[#5B8CFF]/10 px-1.5 text-[9px] font-medium text-[#8CB8F8]"
+                                                        className="h-[18px] shrink-0 border-[#5B8CFF]/25 bg-[#5B8CFF]/10 px-1.5 text-[13px] font-medium text-[#8CB8F8]"
                                                     >
                                                         预置
                                                     </Badge>

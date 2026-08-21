@@ -448,7 +448,7 @@ export function TimelineChart({ variant, className = '' }: TimelineChartProps) {
                 aria-label="时间切面分布；滚轮缩放，拖动平移，点击选择回放时间"
             />
             {snapshots.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-dashed border-white/[0.08] bg-white/[0.015] text-[11px] text-[#596579]">
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-dashed border-white/[0.08] bg-white/[0.015] text-[14px] text-[#596579]">
                     当前时间范围内没有可回放切面
                 </div>
             )}

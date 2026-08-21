@@ -36,7 +36,7 @@ const columns: ColumnDef<Tenant>[] = [
         cell: ({ row }) => (
             <Badge
                 variant="outline"
-                className={`h-5 rounded px-1.5 text-[10px] font-semibold ${priorityColor[row.original.priority]}`}
+                className={`h-5 rounded px-1.5 text-[12px] font-semibold ${priorityColor[row.original.priority]}`}
             >
                 {row.original.priority}
             </Badge>

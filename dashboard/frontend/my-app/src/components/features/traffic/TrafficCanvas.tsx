@@ -232,7 +232,7 @@ export function TrafficCanvas({ className = '' }: TrafficCanvasProps) {
                             {viewMode === 'total' ? <Layers3 className="h-4 w-4" /> : viewMode === 'compare' ? <Activity className="h-4 w-4" /> : <MousePointer2 className="h-4 w-4" />}
                         </div>
                         <div className="text-sm font-medium text-[#DDE6F2]">{chartState.emptyTitle}</div>
-                        <div className="mt-1.5 text-[11px] leading-5 text-[#657184]">{chartState.emptyDescription}</div>
+                        <div className="mt-1.5 text-[14px] leading-5 text-[#657184]">{chartState.emptyDescription}</div>
                     </div>
                 </div>
             )}

@@ -6,3 +6,5 @@ vite.config.js
 vite.config.d.ts
 .DS_Store
 *.log
+__pycache__/
+*.pyc

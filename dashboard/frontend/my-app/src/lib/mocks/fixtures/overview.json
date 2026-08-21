@@ -4190,7 +4190,7 @@
           ],
           "containers": [],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -4247,7 +4247,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -4304,7 +4304,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -4361,7 +4361,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -4417,7 +4417,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -4469,7 +4469,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -4521,7 +4521,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -4573,7 +4573,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -4625,7 +4625,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -4677,7 +4677,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -4729,7 +4729,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -4781,7 +4781,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -4837,7 +4837,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -4889,7 +4889,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -4941,7 +4941,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -4993,7 +4993,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5045,7 +5045,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -5097,7 +5097,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -5149,7 +5149,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5201,7 +5201,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -5253,7 +5253,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -5305,7 +5305,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5357,7 +5357,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -5409,7 +5409,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -5461,7 +5461,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5513,7 +5513,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -5565,7 +5565,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -5617,7 +5617,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5669,7 +5669,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -5721,7 +5721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -5773,7 +5773,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5825,7 +5825,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -5877,7 +5877,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -5929,7 +5929,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -5981,7 +5981,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6033,7 +6033,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -6085,7 +6085,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -6141,7 +6141,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6193,7 +6193,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -6245,7 +6245,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -6297,7 +6297,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6349,7 +6349,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -6401,7 +6401,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -6453,7 +6453,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6505,7 +6505,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -6561,7 +6561,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -6613,7 +6613,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6665,7 +6665,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -6721,7 +6721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -6773,7 +6773,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6825,7 +6825,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -6877,7 +6877,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -6933,7 +6933,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -6985,7 +6985,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7037,7 +7037,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -7089,7 +7089,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -7141,7 +7141,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7193,7 +7193,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -7245,7 +7245,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -7297,7 +7297,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7349,7 +7349,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -7401,7 +7401,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -7453,7 +7453,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7505,7 +7505,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -7557,7 +7557,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -7609,7 +7609,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7661,7 +7661,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -7713,7 +7713,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -7765,7 +7765,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7817,7 +7817,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -7873,7 +7873,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -7925,7 +7925,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -7977,7 +7977,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8029,7 +8029,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -8081,7 +8081,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -8133,7 +8133,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8185,7 +8185,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -8237,7 +8237,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -8293,7 +8293,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8345,7 +8345,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -8397,7 +8397,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -8449,7 +8449,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8501,7 +8501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -8553,7 +8553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -8605,7 +8605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8657,7 +8657,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -8709,7 +8709,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -8761,7 +8761,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8813,7 +8813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -8869,7 +8869,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -8921,7 +8921,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -8973,7 +8973,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9025,7 +9025,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -9081,7 +9081,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -9133,7 +9133,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9185,7 +9185,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -9237,7 +9237,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -9289,7 +9289,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9341,7 +9341,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -9393,7 +9393,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -9449,7 +9449,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9501,7 +9501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -9553,7 +9553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -9609,7 +9609,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9661,7 +9661,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -9713,7 +9713,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -9765,7 +9765,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9821,7 +9821,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -9873,7 +9873,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -9925,7 +9925,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -9977,7 +9977,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10033,7 +10033,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -10085,7 +10085,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -10137,7 +10137,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10189,7 +10189,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -10241,7 +10241,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -10293,7 +10293,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10349,7 +10349,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -10405,7 +10405,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -10457,7 +10457,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10509,7 +10509,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -10561,7 +10561,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -10617,7 +10617,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10669,7 +10669,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -10721,7 +10721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -10777,7 +10777,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10829,7 +10829,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -10881,7 +10881,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -10933,7 +10933,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -10985,7 +10985,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11037,7 +11037,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -11089,7 +11089,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -11141,7 +11141,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11193,7 +11193,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -11245,7 +11245,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -11297,7 +11297,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11349,7 +11349,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -11401,7 +11401,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -11453,7 +11453,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11505,7 +11505,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -11561,7 +11561,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -11613,7 +11613,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11665,7 +11665,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -11717,7 +11717,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -11769,7 +11769,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11821,7 +11821,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -11873,7 +11873,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -11925,7 +11925,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -11977,7 +11977,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12029,7 +12029,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -12081,7 +12081,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -12133,7 +12133,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12185,7 +12185,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -12237,7 +12237,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -12289,7 +12289,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12341,7 +12341,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -12397,7 +12397,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -12449,7 +12449,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12501,7 +12501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -12553,7 +12553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -12605,7 +12605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12657,7 +12657,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -12709,7 +12709,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -12761,7 +12761,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12813,7 +12813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -12865,7 +12865,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -12917,7 +12917,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -12969,7 +12969,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13021,7 +13021,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -13073,7 +13073,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -13129,7 +13129,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13181,7 +13181,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -13233,7 +13233,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -13285,7 +13285,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13337,7 +13337,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -13389,7 +13389,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -13441,7 +13441,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13493,7 +13493,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -13545,7 +13545,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -13597,7 +13597,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13649,7 +13649,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -13701,7 +13701,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -13753,7 +13753,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13805,7 +13805,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -13857,7 +13857,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -13913,7 +13913,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -13965,7 +13965,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14017,7 +14017,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -14069,7 +14069,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -14121,7 +14121,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14173,7 +14173,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -14225,7 +14225,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -14277,7 +14277,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14329,7 +14329,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -14381,7 +14381,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -14433,7 +14433,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14485,7 +14485,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -14537,7 +14537,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -14589,7 +14589,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14641,7 +14641,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -14693,7 +14693,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -14745,7 +14745,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14797,7 +14797,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -14849,7 +14849,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -14901,7 +14901,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -14957,7 +14957,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15013,7 +15013,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -15065,7 +15065,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -15121,7 +15121,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15173,7 +15173,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -15225,7 +15225,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -15277,7 +15277,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15329,7 +15329,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -15385,7 +15385,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -15437,7 +15437,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15489,7 +15489,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -15541,7 +15541,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -15593,7 +15593,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15645,7 +15645,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -15701,7 +15701,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -15753,7 +15753,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15805,7 +15805,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -15857,7 +15857,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -15909,7 +15909,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -15961,7 +15961,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16013,7 +16013,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -16065,7 +16065,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -16117,7 +16117,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16169,7 +16169,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -16221,7 +16221,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -16277,7 +16277,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16333,7 +16333,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -16385,7 +16385,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -16437,7 +16437,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16489,7 +16489,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -16541,7 +16541,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -16593,7 +16593,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16645,7 +16645,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -16697,7 +16697,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -16749,7 +16749,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16801,7 +16801,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -16853,7 +16853,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -16905,7 +16905,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -16957,7 +16957,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17009,7 +17009,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17061,7 +17061,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -17113,7 +17113,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17165,7 +17165,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17217,7 +17217,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -17269,7 +17269,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17321,7 +17321,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17373,7 +17373,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -17425,7 +17425,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17477,7 +17477,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17529,7 +17529,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -17581,7 +17581,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17633,7 +17633,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17685,7 +17685,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -17737,7 +17737,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17789,7 +17789,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17841,7 +17841,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -17893,7 +17893,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -17945,7 +17945,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -17997,7 +17997,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18049,7 +18049,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -18101,7 +18101,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -18153,7 +18153,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18205,7 +18205,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -18257,7 +18257,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -18309,7 +18309,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18361,7 +18361,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -18413,7 +18413,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -18469,7 +18469,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18521,7 +18521,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -18573,7 +18573,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -18625,7 +18625,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18677,7 +18677,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -18729,7 +18729,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -18781,7 +18781,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18833,7 +18833,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -18885,7 +18885,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -18941,7 +18941,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -18993,7 +18993,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19045,7 +19045,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -19097,7 +19097,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -19149,7 +19149,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19201,7 +19201,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -19253,7 +19253,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -19305,7 +19305,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19357,7 +19357,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -19409,7 +19409,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -19461,7 +19461,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19513,7 +19513,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -19565,7 +19565,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -19617,7 +19617,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19669,7 +19669,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -19721,7 +19721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -19773,7 +19773,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19825,7 +19825,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -19877,7 +19877,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -19929,7 +19929,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -19981,7 +19981,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20033,7 +20033,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -20085,7 +20085,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -20137,7 +20137,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20189,7 +20189,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -20241,7 +20241,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -20293,7 +20293,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20345,7 +20345,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -20397,7 +20397,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -20449,7 +20449,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20501,7 +20501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -20553,7 +20553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -20605,7 +20605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20657,7 +20657,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -20709,7 +20709,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -20761,7 +20761,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20813,7 +20813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -20865,7 +20865,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -20917,7 +20917,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -20969,7 +20969,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21021,7 +21021,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -21073,7 +21073,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -21125,7 +21125,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21177,7 +21177,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -21229,7 +21229,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -21281,7 +21281,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21333,7 +21333,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -21385,7 +21385,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -21441,7 +21441,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21493,7 +21493,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -21545,7 +21545,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -21597,7 +21597,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21649,7 +21649,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -21701,7 +21701,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -21753,7 +21753,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21805,7 +21805,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -21857,7 +21857,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -21909,7 +21909,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -21961,7 +21961,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22013,7 +22013,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -22065,7 +22065,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -22117,7 +22117,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22169,7 +22169,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -22221,7 +22221,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -22273,7 +22273,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22325,7 +22325,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -22377,7 +22377,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -22429,7 +22429,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22481,7 +22481,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -22533,7 +22533,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -22589,7 +22589,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22645,7 +22645,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -22697,7 +22697,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -22749,7 +22749,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22801,7 +22801,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -22853,7 +22853,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -22905,7 +22905,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -22957,7 +22957,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23009,7 +23009,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -23061,7 +23061,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -23113,7 +23113,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23165,7 +23165,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -23217,7 +23217,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -23273,7 +23273,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23325,7 +23325,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -23377,7 +23377,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -23429,7 +23429,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23481,7 +23481,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -23533,7 +23533,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -23585,7 +23585,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23637,7 +23637,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -23689,7 +23689,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -23745,7 +23745,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23797,7 +23797,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -23849,7 +23849,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -23901,7 +23901,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -23953,7 +23953,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24005,7 +24005,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24057,7 +24057,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -24109,7 +24109,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24161,7 +24161,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24213,7 +24213,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -24265,7 +24265,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24317,7 +24317,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24369,7 +24369,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -24421,7 +24421,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24473,7 +24473,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24525,7 +24525,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -24577,7 +24577,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24629,7 +24629,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24681,7 +24681,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -24733,7 +24733,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24785,7 +24785,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24837,7 +24837,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -24889,7 +24889,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -24941,7 +24941,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -24993,7 +24993,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25045,7 +25045,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -25097,7 +25097,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -25149,7 +25149,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25201,7 +25201,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -25253,7 +25253,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -25305,7 +25305,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25357,7 +25357,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -25409,7 +25409,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -25461,7 +25461,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25513,7 +25513,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -25565,7 +25565,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -25617,7 +25617,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25669,7 +25669,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -25721,7 +25721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -25773,7 +25773,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25825,7 +25825,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -25877,7 +25877,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -25929,7 +25929,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -25981,7 +25981,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26033,7 +26033,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -26089,7 +26089,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -26141,7 +26141,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26193,7 +26193,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -26245,7 +26245,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -26301,7 +26301,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26353,7 +26353,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -26405,7 +26405,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -26457,7 +26457,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26509,7 +26509,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -26565,7 +26565,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -26617,7 +26617,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26669,7 +26669,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -26721,7 +26721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -26773,7 +26773,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26829,7 +26829,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -26885,7 +26885,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -26937,7 +26937,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -26989,7 +26989,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27041,7 +27041,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -27093,7 +27093,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -27145,7 +27145,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27197,7 +27197,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -27249,7 +27249,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -27301,7 +27301,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27353,7 +27353,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -27409,7 +27409,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -27461,7 +27461,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27513,7 +27513,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -27565,7 +27565,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -27617,7 +27617,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27669,7 +27669,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -27721,7 +27721,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -27777,7 +27777,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27833,7 +27833,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -27885,7 +27885,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -27937,7 +27937,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -27989,7 +27989,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28041,7 +28041,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -28093,7 +28093,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -28145,7 +28145,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28201,7 +28201,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -28253,7 +28253,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -28305,7 +28305,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28357,7 +28357,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -28413,7 +28413,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -28465,7 +28465,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28517,7 +28517,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -28569,7 +28569,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -28621,7 +28621,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28673,7 +28673,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -28725,7 +28725,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -28777,7 +28777,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28833,7 +28833,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -28885,7 +28885,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -28937,7 +28937,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -28989,7 +28989,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29041,7 +29041,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -29093,7 +29093,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -29145,7 +29145,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29197,7 +29197,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -29249,7 +29249,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -29305,7 +29305,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29361,7 +29361,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -29413,7 +29413,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -29465,7 +29465,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29517,7 +29517,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -29569,7 +29569,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -29621,7 +29621,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29673,7 +29673,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -29729,7 +29729,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -29781,7 +29781,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29833,7 +29833,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -29885,7 +29885,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -29941,7 +29941,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -29997,7 +29997,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30049,7 +30049,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -30101,7 +30101,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -30153,7 +30153,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30205,7 +30205,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -30257,7 +30257,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -30313,7 +30313,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30365,7 +30365,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -30417,7 +30417,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -30469,7 +30469,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30525,7 +30525,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -30577,7 +30577,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -30629,7 +30629,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30681,7 +30681,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -30737,7 +30737,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -30789,7 +30789,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30841,7 +30841,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -30893,7 +30893,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -30945,7 +30945,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -30997,7 +30997,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31049,7 +31049,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -31101,7 +31101,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -31153,7 +31153,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31205,7 +31205,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -31257,7 +31257,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -31309,7 +31309,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31361,7 +31361,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -31413,7 +31413,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -31465,7 +31465,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31517,7 +31517,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -31569,7 +31569,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -31621,7 +31621,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31673,7 +31673,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -31725,7 +31725,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -31777,7 +31777,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31829,7 +31829,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -31881,7 +31881,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -31933,7 +31933,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -31985,7 +31985,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32037,7 +32037,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -32089,7 +32089,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -32141,7 +32141,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32193,7 +32193,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -32245,7 +32245,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -32297,7 +32297,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32349,7 +32349,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -32401,7 +32401,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -32453,7 +32453,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32505,7 +32505,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -32557,7 +32557,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -32609,7 +32609,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32661,7 +32661,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -32713,7 +32713,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -32765,7 +32765,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32817,7 +32817,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -32869,7 +32869,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -32921,7 +32921,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -32973,7 +32973,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33029,7 +33029,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -33081,7 +33081,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -33133,7 +33133,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33185,7 +33185,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -33237,7 +33237,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -33289,7 +33289,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33341,7 +33341,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -33393,7 +33393,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -33445,7 +33445,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33501,7 +33501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -33553,7 +33553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -33605,7 +33605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33657,7 +33657,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -33709,7 +33709,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -33761,7 +33761,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33813,7 +33813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -33865,7 +33865,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -33917,7 +33917,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -33973,7 +33973,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34025,7 +34025,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -34077,7 +34077,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -34129,7 +34129,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34181,7 +34181,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -34233,7 +34233,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -34285,7 +34285,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34337,7 +34337,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -34389,7 +34389,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -34445,7 +34445,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34501,7 +34501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -34553,7 +34553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -34605,7 +34605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34661,7 +34661,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -34713,7 +34713,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -34765,7 +34765,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34817,7 +34817,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -34873,7 +34873,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -34925,7 +34925,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -34977,7 +34977,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35029,7 +35029,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -35081,7 +35081,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -35133,7 +35133,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35185,7 +35185,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -35237,7 +35237,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -35289,7 +35289,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35345,7 +35345,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -35397,7 +35397,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -35449,7 +35449,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35501,7 +35501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -35553,7 +35553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -35605,7 +35605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35657,7 +35657,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -35709,7 +35709,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -35761,7 +35761,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35813,7 +35813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -35865,7 +35865,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -35917,7 +35917,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -35969,7 +35969,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36021,7 +36021,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -36073,7 +36073,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -36125,7 +36125,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36177,7 +36177,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -36229,7 +36229,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -36281,7 +36281,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36333,7 +36333,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -36385,7 +36385,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -36441,7 +36441,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36497,7 +36497,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -36549,7 +36549,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -36601,7 +36601,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36653,7 +36653,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -36705,7 +36705,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -36757,7 +36757,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36813,7 +36813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -36865,7 +36865,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -36917,7 +36917,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -36969,7 +36969,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37021,7 +37021,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -37073,7 +37073,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -37125,7 +37125,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37177,7 +37177,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -37229,7 +37229,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -37281,7 +37281,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37333,7 +37333,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -37385,7 +37385,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -37437,7 +37437,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37489,7 +37489,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -37541,7 +37541,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -37593,7 +37593,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37645,7 +37645,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -37697,7 +37697,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -37749,7 +37749,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37801,7 +37801,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -37853,7 +37853,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -37905,7 +37905,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -37957,7 +37957,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38009,7 +38009,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38061,7 +38061,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -38113,7 +38113,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38165,7 +38165,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38217,7 +38217,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -38269,7 +38269,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38321,7 +38321,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38373,7 +38373,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -38425,7 +38425,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38477,7 +38477,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38529,7 +38529,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -38581,7 +38581,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38633,7 +38633,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38685,7 +38685,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -38737,7 +38737,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38789,7 +38789,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38841,7 +38841,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -38893,7 +38893,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -38945,7 +38945,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -38997,7 +38997,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39049,7 +39049,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -39101,7 +39101,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -39153,7 +39153,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39205,7 +39205,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -39257,7 +39257,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -39309,7 +39309,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39361,7 +39361,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -39413,7 +39413,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -39465,7 +39465,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39517,7 +39517,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -39569,7 +39569,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -39621,7 +39621,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39673,7 +39673,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -39725,7 +39725,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -39777,7 +39777,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39829,7 +39829,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -39881,7 +39881,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -39933,7 +39933,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -39985,7 +39985,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40037,7 +40037,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -40089,7 +40089,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -40141,7 +40141,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40193,7 +40193,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -40245,7 +40245,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -40297,7 +40297,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40349,7 +40349,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -40401,7 +40401,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -40453,7 +40453,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40505,7 +40505,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -40557,7 +40557,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -40609,7 +40609,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40661,7 +40661,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -40713,7 +40713,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -40765,7 +40765,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40817,7 +40817,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -40869,7 +40869,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -40921,7 +40921,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -40973,7 +40973,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41025,7 +41025,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -41077,7 +41077,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -41129,7 +41129,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41181,7 +41181,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -41233,7 +41233,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -41285,7 +41285,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41337,7 +41337,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -41389,7 +41389,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -41441,7 +41441,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41493,7 +41493,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -41545,7 +41545,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -41597,7 +41597,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41649,7 +41649,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -41701,7 +41701,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -41753,7 +41753,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41805,7 +41805,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -41857,7 +41857,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -41909,7 +41909,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -41961,7 +41961,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42013,7 +42013,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -42065,7 +42065,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -42117,7 +42117,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42169,7 +42169,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -42221,7 +42221,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -42273,7 +42273,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42325,7 +42325,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -42377,7 +42377,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -42429,7 +42429,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42481,7 +42481,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -42533,7 +42533,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -42585,7 +42585,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42637,7 +42637,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -42689,7 +42689,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -42741,7 +42741,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42793,7 +42793,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -42845,7 +42845,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -42897,7 +42897,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -42949,7 +42949,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43001,7 +43001,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43053,7 +43053,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -43105,7 +43105,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43157,7 +43157,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43209,7 +43209,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -43261,7 +43261,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43313,7 +43313,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43365,7 +43365,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -43417,7 +43417,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43469,7 +43469,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43521,7 +43521,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -43573,7 +43573,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43625,7 +43625,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43677,7 +43677,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -43729,7 +43729,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43781,7 +43781,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43833,7 +43833,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -43885,7 +43885,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -43937,7 +43937,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -43989,7 +43989,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44041,7 +44041,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -44093,7 +44093,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -44145,7 +44145,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44197,7 +44197,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -44249,7 +44249,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -44301,7 +44301,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44353,7 +44353,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -44405,7 +44405,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -44457,7 +44457,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44509,7 +44509,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -44561,7 +44561,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -44613,7 +44613,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44665,7 +44665,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -44717,7 +44717,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -44773,7 +44773,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44825,7 +44825,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -44877,7 +44877,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -44929,7 +44929,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -44981,7 +44981,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45033,7 +45033,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -45085,7 +45085,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -45137,7 +45137,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45189,7 +45189,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -45241,7 +45241,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -45293,7 +45293,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45345,7 +45345,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -45397,7 +45397,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -45449,7 +45449,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45501,7 +45501,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -45553,7 +45553,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -45605,7 +45605,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45657,7 +45657,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -45709,7 +45709,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -45761,7 +45761,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45813,7 +45813,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -45865,7 +45865,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -45917,7 +45917,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -45969,7 +45969,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -46026,7 +46026,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-chat",
           "model": "model-lite"
         },
         {
@@ -46083,7 +46083,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-vision",
           "model": "model-lite"
         },
         {
@@ -46140,7 +46140,7 @@
             }
           ],
           "simulatorInstance": "tenant-core-model-lite",
-          "tenant": "tenant-core",
+          "tenant": "tenant-search",
           "model": "model-lite"
         },
         {
@@ -46164,7 +46164,7 @@
           ],
           "containers": [],
           "simulatorInstance": "tenant-sample-model-sample",
-          "tenant": "tenant-sample",
+          "tenant": "tenant-chat",
           "model": "model-sample"
         },
         {

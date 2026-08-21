@@ -7,6 +7,11 @@ import {
     RouteErrorBoundary,
 } from '@/components/shared/feedback/RouteFallbacks'
 
+const ObservatoryPage = lazy(() =>
+    import('@/components/features/observatory/ObservatoryPage').then((module) => ({
+        default: module.ObservatoryPage,
+    })),
+)
 const ConfigPage = lazy(() =>
     import('@/components/features/config/ConfigPage').then((module) => ({
         default: module.ConfigPage,
@@ -15,16 +20,6 @@ const ConfigPage = lazy(() =>
 const TrafficPage = lazy(() =>
     import('@/components/features/traffic/TrafficPage').then((module) => ({
         default: module.TrafficPage,
-    })),
-)
-const DataOverviewPage = lazy(() =>
-    import('@/components/features/trace/DataOverviewPage').then((module) => ({
-        default: module.DataOverviewPage,
-    })),
-)
-const MonitorPage = lazy(() =>
-    import('@/components/features/monitor/MonitorPage').then((module) => ({
-        default: module.MonitorPage,
     })),
 )
 const GuidePage = lazy(() =>
@@ -43,11 +38,12 @@ export const router = createBrowserRouter([
         element: <MainLayout />,
         errorElement: <RouteErrorBoundary />,
         children: [
-            { index: true, element: <Navigate to="/config" replace /> },
+            { index: true, element: <Navigate to="/observatory" replace /> },
+            { path: 'observatory', element: deferred(<ObservatoryPage />) },
             { path: 'config', element: deferred(<ConfigPage />) },
             { path: 'traffic', element: deferred(<TrafficPage />) },
-            { path: 'trace', element: deferred(<DataOverviewPage />) },
-            { path: 'monitor', element: deferred(<MonitorPage />) },
+            { path: 'trace', element: <Navigate to="/observatory" replace /> },
+            { path: 'monitor', element: <Navigate to="/observatory" replace /> },
             { path: 'guide', element: deferred(<GuidePage />) },
             { path: '*', element: <NotFoundPage /> },
         ],
