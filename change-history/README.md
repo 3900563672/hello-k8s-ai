@@ -19,6 +19,7 @@
 | --- | --- | --- | --- |
 | 2026-08-21 | 后端覆盖率门禁落地（#142/#143）：5 核心包达标 + CI 硬 gate | P1 | [查看记录](2026-08-21-backend-coverage-gate/README.md) |
 | 2026-08-21 | Dashboard 前端测试批量补齐：api/queries/hooks/组件层（PR #144） | P1 | [查看记录](2026-08-21-frontend-test-coverage-batch2/README.md) |
+| 2026-08-21 | Dashboard 前端测试第 4 批：trace/traffic/observatory 大页面 + 路由布局（PR #144） | P1 | [查看记录](2026-08-21-frontend-trace-traffic-pages-tests/README.md) |
 | 2026-08-21 | AIOps 流量波形根因治理：AI 描绘波形 + 限制可见 + 时长自由可停止（#134） | P1 | [查看记录](2026-08-21-aiops-waveform-rootcause/README.md) |
 | 2026-08-21 | AIOps 流量形状与上限：潮汐/脉冲/斜坡波形 + 峰值/倍速防打爆 | P1 | [查看记录](2026-08-21-aiops-traffic-shape/README.md) |
 | 2026-08-21 | AIOps 模板预置：10 模型 + 10 租户 + 10 节点（空环境待命） | P1 | [查看记录](2026-08-21-aiops-template-seed/README.md) |

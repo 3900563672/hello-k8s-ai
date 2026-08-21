@@ -98,7 +98,7 @@ const baseSegment: SegmentOverviewData = {
     freshness: {},
 }
 
-const segmentQuery = vi.fn(() => ({
+const segmentQuery = vi.fn((_query: unknown) => ({
     data: {
         data: baseSegment,
         meta: { warnings: ['部分指标缺失'] },

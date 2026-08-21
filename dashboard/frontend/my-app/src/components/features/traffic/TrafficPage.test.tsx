@@ -52,6 +52,8 @@ const overlay: OverlayInstance = {
     effectiveAt: '2026-01-01T00:00:00.000Z',
     snapshotId: null,
     enabled: true,
+    color: '#6DA6FF',
+    createdAt: '2026-01-01T00:00:00.000Z',
 }
 
 describe('TrafficPage', () => {

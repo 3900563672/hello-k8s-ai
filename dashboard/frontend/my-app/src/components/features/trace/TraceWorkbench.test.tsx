@@ -62,7 +62,7 @@ const segmentData: SegmentOverviewData = {
     freshness: { prometheus: { state: 'ready', observedAt: 'x' } },
 }
 
-const segmentQuery = vi.fn(() => ({ data: { data: segmentData, meta: { warnings: [] } } }))
+const segmentQuery = vi.fn((_query: unknown) => ({ data: { data: segmentData, meta: { warnings: [] } } }))
 
 vi.mock('@/api/queries/traceQueries', () => ({
     useSegment: (query: unknown) => segmentQuery(query),

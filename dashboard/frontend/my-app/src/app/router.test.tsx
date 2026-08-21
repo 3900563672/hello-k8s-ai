@@ -10,7 +10,6 @@ describe('app router', () => {
         expect(paths).toEqual(
             expect.arrayContaining(['observatory', 'config', 'traffic', 'guide']),
         )
-        const redirects = root.children!.filter((child) => child.element && typeof child.element === 'object')
         // index/trace/monitor 重定向到 observatory
         expect(paths).toContain('*')
     })

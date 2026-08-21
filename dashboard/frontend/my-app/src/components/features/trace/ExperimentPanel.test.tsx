@@ -11,6 +11,7 @@ const records: ExperimentRecord[] = [
         name: '扩容验证-20x',
         status: 'running',
         createdAt: '2026-08-21T00:00:00.000Z',
+        updatedAt: '2026-08-21T00:01:30.000Z',
         startedAt: '2026-08-21T00:01:00.000Z',
     },
     {
@@ -18,6 +19,7 @@ const records: ExperimentRecord[] = [
         tenant: 'tenant-b',
         name: '缩容验证',
         status: 'completed',
+        updatedAt: '2026-08-21T00:03:00.000Z',
         createdAt: '2026-08-20T00:00:00.000Z',
     },
 ]
