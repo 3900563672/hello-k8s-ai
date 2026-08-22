@@ -161,4 +161,4 @@ flowchart LR
 
 ## 7. 测试替身与数据流验证
 
-`src/test/setup.ts` 与 `src/test/queryUtils.tsx` 提供测试脚手架：setup 打桩浏览器 API，queryUtils 封装渲染入口；组件/查询测试通过 `vi.mock` 替换 api client 验证各链路数据流，与 `dev:mock` 插件（真实 API 录制，见 vite `--mode mock`）互补，分别覆盖单元与联调两个层面。
+`src/test/setup.ts` 与 `src/test/queryUtils.tsx` 提供测试脚手架：setup 打桩浏览器 API（含 rAF/scrollIntoView），queryUtils 封装渲染入口；组件/查询测试通过 `vi.mock` 替换 api client 验证各链路数据流（页面级测试见 `src/components/features/*/*Page.test.tsx`，覆盖 loading/error/空态/交互状态机），与 `dev:mock` 插件（真实 API 录制，见 vite `--mode mock`）互补，分别覆盖单元与联调两个层面。

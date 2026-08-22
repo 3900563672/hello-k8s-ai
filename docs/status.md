@@ -8,7 +8,7 @@
 ## 最近变更
 
 - 2026-08-22 [变更总览：WSL 概率挂死根因修复——autoMemoryReclaim 配置失效 + doctor 动态阈值（#181）](../change-history/2026-08-22-wsl-rootcause-fix/README.md)
+- 2026-08-22 [变更总览：Dashboard 前端测试第 7 批（DrawCanvas 交互状态机全覆盖 + 发现清空重做嵌套 bug #185）](../change-history/2026-08-22-frontend-drawcanvas-tests/README.md)
+- 2026-08-22 [变更总览：Dashboard 前端测试第 8 批（CommandInput / TrafficPage / AiChatWidget / 路由补测，累计 471 用例）](../change-history/2026-08-22-frontend-batch8/README.md)
 - 2026-08-21 [WSL/Docker 僵尸进程锁 vhdx 识别 + 系统服务卡死处置边界（崩溃重启清场）](../change-history/2026-08-21-wsl-zombie-lock-host-restart/README.md)
 - 2026-08-21 [WSL/Docker 安全重启 SOP + doctor 宿主残留检查（固化排查链路）](../change-history/2026-08-21-wsl-docker-restart-sop/README.md)
-- 2026-08-21 [README 新增 AI×Human 协作立场声明（统一人设）](../change-history/2026-08-21-readme-ai-collab-stance/README.md)
-- 2026-08-21 [沉淀「事故 vs bug」复盘——系统级故障先存档证据、后追源码路径](../change-history/2026-08-21-incident-vs-bug-lesson/README.md)
