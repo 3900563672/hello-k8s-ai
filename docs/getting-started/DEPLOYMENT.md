@@ -127,7 +127,7 @@ PVC 数据在节点容器 `/var` named volume（Docker 数据盘 vhdx），WSL/D
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
 | Backend | `/configuration` 返回 `tenant-sample` |
 | Frontend | Service 代理返回页面 HTML |
-| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
+| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查，其中 WSL VM 内存告警阈值动态读取 `.wslconfig` 上限，见 `hack/wsl-vm-cap.ps1`）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
 
 | 文档 | `make docs-check`（全仓库文档门禁：MAP 映射 / 链接 / front-matter / change-history 门禁）；`make docs-sync-check`（README 时间线段、`docs/status.md`、`llms.txt`、所有权表必须与已提交内容一致） |
 

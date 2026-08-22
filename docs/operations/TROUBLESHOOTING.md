@@ -17,7 +17,7 @@ flowchart TD
 
 先确认页面是 Latest 还是 Historical。历史快照里的 Pending 不会因为当前集群已恢复而变化。
 
-任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 9 类检查环境自检（含宿主 VM 残留））。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。
+任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 9 类检查环境自检（含宿主 VM 残留））。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。WSL VM 内存 WARN 阈值由 `hack/wsl-vm-cap.ps1` 动态读取 `.wslconfig` 上限（当前 16GB → 15.5GB 告警），出现内存 WARN 时按 `make cluster-down` 减负载或调大 `.wslconfig` 后重启 WSL。
 
 环境故障确认后，一键自愈与拉起联调用 make env-up（#109）：apiserver 不可达自动 docker restart control-plane、Kind 节点 PV tmpfs 遮罩自动 umount 并重建 PVC 工作负载、port-forward / 本地后端 / 前端 vite 幂等拉起（密钥从集群 Secret 注入 .runtime/，不入库）。
 

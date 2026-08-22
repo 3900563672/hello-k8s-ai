@@ -123,8 +123,12 @@ else
   fi
   VMMEM_MB=$(powershell.exe -NoProfile -Command "(Get-Process vmmemWSL -ErrorAction SilentlyContinue).WorkingSet64/1MB" 2>/dev/null | tr -d '\r' | tail -1)
   if [[ "$VMMEM_MB" =~ ^[0-9.]+$ ]]; then
-    if awk -v f="$VMMEM_MB" 'BEGIN{exit !(f > 11500)}'; then
-      warn "WSL VM 内存 ${VMMEM_MB}MB（>11.5GB，接近 12GB 上限）"
+    # WSL VM 内存上限动态读取 .wslconfig 的 [wsl2] memory=（2026-08-22 起 16GB，避免硬编码再次漂移）
+    WSL_CAP_MB=$(powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$ROOT_DIR/hack/wsl-vm-cap.ps1" 2>/dev/null | tr -d '\r' | tail -1)
+    if [[ ! "$WSL_CAP_MB" =~ ^[0-9.]+$ ]]; then WSL_CAP_MB=16; fi
+    WARN_MB=$(awk -v c="$WSL_CAP_MB" 'BEGIN{printf "%.0f", c*1024-512}')
+    if awk -v f="$VMMEM_MB" -v w="$WARN_MB" 'BEGIN{exit !(f > w)}'; then
+      warn "WSL VM 内存 ${VMMEM_MB}MB（>$(awk -v w="$WARN_MB" 'BEGIN{printf "%.1f", w/1024}')GB，接近 ${WSL_CAP_MB}GB 上限）"
     else
       ok "WSL VM 内存 ${VMMEM_MB}MB"
     fi
