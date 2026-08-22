@@ -14,7 +14,7 @@ func TestProtectionMapWrappersAndBranches(t *testing.T) {
 	collector := &PerformanceCollectorReconciler{}
 	instance := &platformv1.SimulatorInstance{Spec: platformv1.SimulatorInstanceSpec{TenantRef: platformv1.ObjectRef{Name: "tenant-a"}}}
 	requests := collector.mapInstanceToTenant(ctx, instance)
-	if len(requests) != 1 || requests[0].NamespacedName.Name != "tenant-a" {
+	if len(requests) != 1 || requests[0].Name != "tenant-a" {
 		t.Fatalf("mapInstanceToTenant = %#v, want tenant-a", requests)
 	}
 	if requests := collector.mapInstanceToTenant(ctx, &platformv1.Tenant{}); len(requests) != 0 {
@@ -24,7 +24,7 @@ func TestProtectionMapWrappersAndBranches(t *testing.T) {
 	// mapPerformanceToTenant：正常 / 类型不匹配 / 空租户引用。
 	performance := &platformv1.TenantPerformance{Spec: platformv1.TenantPerformanceSpec{TenantRef: platformv1.ObjectRef{Name: "tenant-b"}}}
 	requests = collector.mapPerformanceToTenant(ctx, performance)
-	if len(requests) != 1 || requests[0].NamespacedName.Name != "tenant-b" {
+	if len(requests) != 1 || requests[0].Name != "tenant-b" {
 		t.Fatalf("mapPerformanceToTenant = %#v, want tenant-b", requests)
 	}
 	if requests := collector.mapPerformanceToTenant(ctx, &platformv1.SimulatorInstance{}); len(requests) != 0 {
