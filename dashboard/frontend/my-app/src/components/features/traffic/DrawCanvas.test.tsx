@@ -278,7 +278,7 @@ describe('DrawCanvas 撤销/重做/清空/快捷键', () => {
         expect(screen.getByText('100%')).toBeInTheDocument()
     })
 
-    it('清空曲线后重做按钮可用，撤销按钮禁用', () => {
+    it('清空曲线后重做/撤销按钮均禁用（清空即清空 redo 栈，#185）', () => {
         const { canvas, container } = renderCanvas()
         drawStroke(canvas, [
             [100, 300],
@@ -289,7 +289,7 @@ describe('DrawCanvas 撤销/重做/清空/快捷键', () => {
         expect(container.textContent).toContain('0 采样点')
         expect(screen.getByTitle('清空曲线')).toBeDisabled()
         expect(screen.getByTitle('撤销 (Ctrl/⌘ Z)')).toBeDisabled()
-        expect(screen.getByTitle('重做 (Ctrl/⌘ Shift Z)')).toBeEnabled()
+        expect(screen.getByTitle('重做 (Ctrl/⌘ Shift Z)')).toBeDisabled()
     })
 })
 
