@@ -44,6 +44,16 @@ func (response *bufferedResponse) Write(body []byte) (int, error) {
 	return response.body.Write(body)
 }
 
+// isStreamingRequest 识别 SSE 流式端点：流式响应不能进 bufferedResponse（会丢 Flusher
+// 导致 handler 内 writer.(http.Flusher) 断言失败，线上 AIOps 对话即因此不可用）。
+func isStreamingRequest(request *http.Request) bool {
+	if strings.Contains(request.Header.Get("Accept"), "text/event-stream") {
+		return true
+	}
+	path := request.URL.Path
+	return path == "/api/v1/aiops/chat" || path == "/api/v1/stream"
+}
+
 func idempotencyMiddleware(
 	database store.Store,
 	maxBodyBytes int64,
@@ -99,6 +109,21 @@ func idempotencyMiddleware(
 				panic(recovered)
 			}
 		}()
+
+		// SSE 流式端点：响应不能缓冲（Flusher 断言依赖真实 writer），直接透传；
+		// 幂等占位照常保留（防并发重放），完成记录只存状态码 + 占位标记。
+		if isStreamingRequest(request) {
+			next.ServeHTTP(writer, request)
+			completeContext, cancel := context.WithTimeout(context.WithoutCancel(request.Context()), 3*time.Second)
+			err = database.CompleteIdempotency(
+				completeContext, key, requestHash, http.StatusOK, []byte(`{"streamed":true}`),
+			)
+			cancel()
+			if err != nil {
+				logger.Error("Could not complete streaming command idempotency record", "key", key, "error", err)
+			}
+			return
+		}
 
 		response := newBufferedResponse()
 		next.ServeHTTP(response, request)
