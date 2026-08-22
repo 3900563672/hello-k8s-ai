@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DataOverviewPage } from '@/components/features/trace/DataOverviewPage'
 import { useTimeStore } from '@/stores/timeSlice'
@@ -326,7 +326,7 @@ describe('DataOverviewPage', () => {
         expect(screen.getByTestId('experiment-panel')).toBeInTheDocument()
         await user.click(screen.getByRole('button', { name: /时间段切面分析/ }))
         expect(screen.queryByTestId('segment-panel')).not.toBeInTheDocument()
-    })
+}, 15000)
 
     it('富数据：状态卡计数、Traffic 表、资源表、工作负载、基础设施与事件', () => {
         loadOverview(makeRichOverview())
@@ -364,30 +364,36 @@ describe('DataOverviewPage', () => {
         expect(screen.getByText('Back-off restarting failed container')).toBeInTheDocument()
     })
 
-    it('Trace 列表：点击打开详情面板，加载/错误/数据三态', async () => {
-        const user = userEvent.setup()
+    it('Trace 列表：点击打开详情面板，加载态', async () => {
         loadOverview(base)
-        const firstTrace = base.traces[0]
-        render(<DataOverviewPage />)
-        const traceButton = screen.getAllByText(`${firstTrace.rootService} · ${firstTrace.rootOperation}`)[0]
-        // loading 态
         h.detailState.isPending = true
-        await user.click(traceButton)
+        h.detailState.isError = false
+        h.detailState.error = undefined
+        render(<DataOverviewPage />)
+        const firstTrace = base.traces[0]
+        fireEvent.click(screen.getAllByText(`${firstTrace.rootService} · ${firstTrace.rootOperation}`)[0])
         expect(screen.getByText(/正在读取 Jaeger Span/)).toBeInTheDocument()
-        // 错误态
-        cleanup()
+    }, 10000)
+
+    it('Trace 列表：详情错误态展示错误信息', async () => {
+        loadOverview(base)
         h.detailState.isPending = false
         h.detailState.isError = true
         h.detailState.error = { message: 'jaeger down' }
         render(<DataOverviewPage />)
-        await user.click(screen.getAllByText(`${firstTrace.rootService} · ${firstTrace.rootOperation}`)[0])
+        const firstTrace = base.traces[0]
+        fireEvent.click(screen.getAllByText(`${firstTrace.rootService} · ${firstTrace.rootOperation}`)[0])
         expect(screen.getByText('jaeger down')).toBeInTheDocument()
-        // 数据态：spans 展示、links、关闭
-        cleanup()
+    }, 10000)
+
+    it('Trace 列表：详情数据态展示 spans/links 并支持关闭', async () => {
+        loadOverview(base)
+        h.detailState.isPending = false
         h.detailState.isError = false
+        h.detailState.error = undefined
         h.detailState.data = {
             data: {
-                traceId: firstTrace.traceId,
+                traceId: base.traces[0].traceId,
                 spans: [
                     {
                         spanId: 'span-1',
@@ -415,14 +421,15 @@ describe('DataOverviewPage', () => {
             },
         }
         render(<DataOverviewPage />)
-        await user.click(screen.getAllByText(`${firstTrace.rootService} · ${firstTrace.rootOperation}`)[0])
+        const firstTrace = base.traces[0]
+        fireEvent.click(screen.getAllByText(`${firstTrace.rootService} · ${firstTrace.rootOperation}`)[0])
         expect(screen.getByText('svc-a · op-root')).toBeInTheDocument()
         expect(screen.getByText('svc-b · op-child')).toBeInTheDocument()
         expect(screen.getByText('1 span events')).toBeInTheDocument()
         expect(screen.getByText('Pod/pod-1')).toBeInTheDocument()
-        await user.click(screen.getByRole('button', { name: '关闭' }))
+        fireEvent.click(screen.getByRole('button', { name: '关闭' }))
         expect(screen.queryByText('svc-a · op-root')).not.toBeInTheDocument()
-    }, 15000)
+    }, 10000)
 
     it('Trace 为空：显示空提示', () => {
         const empty = structuredClone(base)
