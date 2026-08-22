@@ -65,12 +65,12 @@
 
 ## 3.5 宿主内存预算与治理（31.4GB 机器，2026-08-17 实测）
 
-- **总预算**：物理 31.4GB。WSL2 VM 上限 12GB（`.wslconfig`，见 docs/lessons/process-host-sleep-freeze.md），Windows 侧进程约 17-20GB。
-- **VM 内固定开销（实测）**：Docker Desktop 内置 K8s 每节点容器（kubelet/containerd/kindnet）约 0.8-1.2GB，`KubernetesNodesCount=10` 时 **10 节点 ≈ 8-10GB**，加上可观测组件（Prometheus/Jaeger/Collector/Grafana/Backend/PG ≈ 2-3GB），VM 已接近 12GB 上限，**几乎没给模拟器负载留空间**。
+- **总预算**：物理 31.4GB。WSL2 VM 上限 16GB（`.wslconfig`，2026-08-22 起；此前 12GB 时 `autoMemoryReclaim` 误放 `[wsl2]` 段失效、顶格概率挂死，见 issue #181），Windows 侧进程约 17-20GB。
+- **VM 内固定开销（实测）**：Docker Desktop 内置 K8s 每节点容器（kubelet/containerd/kindnet）约 0.8-1.2GB，`KubernetesNodesCount=10` 时 **10 节点 ≈ 8-10GB**，加上可观测组件（Prometheus/Jaeger/Collector/Grafana/Backend/PG ≈ 2-3GB），VM 有 16GB 上限（医生脚本按 `.wslconfig` 动态告警），仍需给模拟器负载留空间。
 - **结论**：日常开发必须缩减节点数（10→4~5，省 4-6GB）后才谈得上跑负载；缩减前先备份 CRD/CR/PVC（改节点数可能重置内置 K8s，见 Issue #29 待办）。
-- **负载预算公式**：`可跑模拟负载 = 12GB - 节点开销(节点数×~1GB) - 可观测 2.5GB - 系统余量 1GB`。例：5 节点 → 12 - 5 - 2.5 - 1 ≈ 3.5GB 余量，约等于 30-50 个模拟器 Pod（每个 ~50-80MB）；10 节点 → 余量 < 0，必爆。
+- **负载预算公式**：`可跑模拟负载 = 16GB - 节点开销(节点数×~1GB) - 可观测 2.5GB - 系统余量 1GB`。例：5 节点 → 16 - 5 - 2.5 - 1 ≈ 7.5GB 余量，约等于 30-50 个模拟器 Pod（每个 ~50-80MB）；10 节点 → 余量 < 0，必爆。
 - **长跑后强制清理（硬步骤）**：长时运行/大负载测试结束后必须：① `make cluster-down`；② 删除长跑 `TenantModelPolicy`（自动删除 SimulatorInstance 与模拟器 Deployment；`replicas=0` 不是停止态，Orchestrator 会按流量扩容，见 docs/lessons/deploy-cluster-down-revive.md）；③ 确认 `kubectl get pods -n hello-k8s-ai-system` 只剩系统组件（≤8 个）；④ Windows 侧确认空闲内存 ≥ 5GB。
-- **内存告警阈值（建议）**：`vmmemWSL > 11GB` 或 Windows 空闲内存 < 2GB 时停止新增负载并清理（本轮后接入 preflight 检查）。
+- **内存告警阈值**：`hack/doctor.sh` 按 `.wslconfig` 上限动态告警（当前 16GB → `vmmemWSL > 15.5GB` WARN）；Windows 空闲内存 < 3GB WARN / < 1GB FAIL。
 ## 4. 长时运行验收清单（2026-08-17 14:00-18:00 已完成）
 
 > 状态：已完成（13:29-18:14 实跑，产物 `.runtime/longrun/2026-08-17/`，summary 已按 20 轮口径重生成）。执行规范先读 `hack/night-run/README.md` 与 `docs/agents/WORKFLOW.md` 4.2 节。
