@@ -35,12 +35,13 @@ for i in $(seq 1 "$COUNT"); do
   NAME="预生成演示 $i ($STAMP)"
   CREATE="$(curl -sf --max-time 10 -X POST "$API/experiments" \
     -H 'Content-Type: application/json' \
+    -H "Idempotency-Key: preseed-create-$i-$STAMP" \
     -d "{\"tenant\":\"$TENANT\",\"name\":\"$NAME\"}")" || { echo "创建实验 $i 失败"; exit 1; }
-  SEG="$(jq -r '.data.segmentId' <<<"$CREATE")"
+  SEG="$(jq -r '.data.segment.segmentId' <<<"$CREATE")"
   [[ -n "$SEG" && "$SEG" != "null" ]] || { echo "创建实验 $i 响应异常"; exit 1; }
-  curl -sf --max-time 10 -X POST "$API/experiments/$SEG/start" >/dev/null \
+  curl -sf --max-time 10 -X POST "$API/experiments/$SEG/start" -H "Idempotency-Key: preseed-start-$SEG" >/dev/null \
     || { echo "开始实验 $SEG 失败"; exit 1; }
-  curl -sf --max-time 10 -X POST "$API/experiments/$SEG/complete" >/dev/null \
+  curl -sf --max-time 10 -X POST "$API/experiments/$SEG/complete" -H "Idempotency-Key: preseed-complete-$SEG" >/dev/null \
     || { echo "完成实验 $SEG 失败"; exit 1; }
   echo "  已创建并完成: $SEG"
 done
