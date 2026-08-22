@@ -115,7 +115,12 @@ export async function streamAIOpsChat(
 ): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/aiops/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+        headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        // chat 是命令通道（幂等中间件要求 Idempotency-Key）；每次消息唯一 key，避免命中缓存占位
+        'Idempotency-Key': `chat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    },
         body: JSON.stringify({ message, sessionId }),
     })
     if (!response.ok) {

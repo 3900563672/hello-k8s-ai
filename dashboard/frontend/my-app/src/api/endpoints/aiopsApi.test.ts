@@ -139,6 +139,8 @@ describe('aiopsApi', () => {
         expect(String(url)).toContain('/aiops/chat')
         expect(init?.method).toBe('POST')
         expect(JSON.parse(String(init?.body))).toEqual({ message: 'hi', sessionId: 's1' })
+        expect(String(init?.headers?.['Idempotency-Key'] ?? '')).toMatch(/^chat-/)
+        // 每次调用 key 不同（Date.now 前缀），避免幂等占位命中
     })
 
     it('streamAIOpsChat 忽略坏行与非法 JSON，跨 chunk 拼接', async () => {

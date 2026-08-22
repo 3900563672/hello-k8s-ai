@@ -87,7 +87,7 @@ sequenceDiagram
 | AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/analyses?segmentId=`、`/aiops/jobs` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止；异步任务（`/aiops/jobs` 独立接口）10s 轮询；任务卡片显示「已试 N 次」与失败原因 |
 | 警戒（AlertList） | `/aiops/alerts` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
 | 窗口总结（WindowSummaryPanel） | `/aiops/windows` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
-| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE）、`GET /aiops/chat/messages`、`GET/POST /aiops/settings` | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储；回答同时落库服务端 `aiops_chat_messages`（#112 阶段 D，可追溯引用来源）；打开面板时拉取历史回填空会话（失败静默降级）；设置面板含 AI 分析开关（`enabled`，关闭后不入队新分析）；429 → 展示配额/限流提示；流式请求经幂等中间件透传（不缓冲，保留 Flusher） |
+| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE）、`GET /aiops/chat/messages`、`GET/POST /aiops/settings` | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储；回答同时落库服务端 `aiops_chat_messages`（#112 阶段 D，可追溯引用来源）；打开面板时拉取历史回填空会话（失败静默降级）；设置面板含 AI 分析开关（`enabled`，关闭后不入队新分析）；429 → 展示配额/限流提示；流式请求经幂等中间件透传（不缓冲，保留 Flusher）；chat 请求带每次唯一的 `Idempotency-Key`（命令通道要求，避免命中占位） |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
 
 编排策略表单字段与 CRD/Backend 白名单一致：含 scaleUpCooldownSeconds、scaleDownCooldownSeconds、min/maxReplicas、maxScaleUpBatch（扩容步长）与 allowScaleToZero。
