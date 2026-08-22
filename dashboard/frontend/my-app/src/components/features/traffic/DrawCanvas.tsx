@@ -569,7 +569,10 @@ export function DrawCanvas({ onSave, onCancel }: DrawCanvasProps) {
 
     const clearCurve = useCallback(() => {
         setStrokes((current) => {
-            if (current.length > 0) setRedoStack(current)
+            if (current.length === 0) return current
+            // 清空不可重做：redo 栈是单笔粒度，整批清空混入会让重做把整个
+            // strokes 数组当作单笔恢复，导致笔数/采样点错乱（#185）。
+            setRedoStack([])
             return []
         })
     }, [])
