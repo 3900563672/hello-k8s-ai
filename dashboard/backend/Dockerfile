@@ -2,6 +2,8 @@ FROM golang:1.26 AS builder
 
 ARG TARGETOS=linux
 ARG TARGETARCH
+ARG GOPROXY=https://proxy.golang.org,direct
+ENV GOPROXY=${GOPROXY}
 
 WORKDIR /workspace
 COPY go.mod go.sum ./
