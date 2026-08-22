@@ -73,7 +73,7 @@ Kind 节点容器内无法访问宿主代理，所有清单镜像必须使用 `i
 
 `AIOPS_ENABLED` 默认 false：不启动 worker、不触发分析入队；`/aiops/settings` 路由始终注册，保证面板能重新打开运行时开关。开启需同时提供 `AIOPS_OPENAI_API_KEY`（Secret 注入，backend.yaml 含示例注释）。核心参数：`AIOPS_MODEL`、`AIOPS_OPENAI_BASE_URL`、`AIOPS_TIMEOUT`、`AIOPS_MAX_TOKENS_PER_CALL`、`AIOPS_MAX_CALLS_PER_ANALYSIS`、`AIOPS_MAX_ATTEMPTS_PER_ANALYSIS`、`AIOPS_POLL_INTERVAL`、`AIOPS_STALE_REQUEUE_INTERVAL`；M3 时间聚合（#95）：`AIOPS_WINDOW_INTERVAL`（默认 15m）、`AIOPS_WINDOW_GRANULARITY`（默认 2h）、`AIOPS_ALERT_THRESHOLD`（默认 40）、`AIOPS_ALERT_CONSECUTIVE`（默认 3）；对话浮窗（#110）：`AIOPS_CHAT_MODELS`、`AIOPS_CHAT_MAX_MESSAGE_LEN`（默认 4000）、`AIOPS_CHAT_RATE_PER_MINUTE`（默认 6）。运行时开关由面板 `POST /aiops/settings` 控制（仅服务端内存，重启恢复部署级配置）。关闭即完全停用，不影响其它功能。日配额保护（#124）：`AIOPS_DAILY_MAX_CALLS`（默认 300 次/24h）与 `AIOPS_DAILY_MAX_TOKENS`（默认 200 万/24h）超限时对话 429、分析不再入队。演示预生成：开启后可用 `bash hack/aiops-preseed.sh [数量]` 批量创建并完成切面实验，自动产出 AI 分析历史（见 [AIOPS_OVERVIEW](../aiops/AIOPS_OVERVIEW.md) 第 8 节）。
 模板预置：`bash hack/aiops-templates-seed.sh` 幂等创建 10 模型 + 10 租户（qps=0 空环境）+ 10 节点及关系策略，模板 id 与 AIOps 模板目录一一对应，AI 一句话起实验前建议先跑一次。完整参数见 [CONFIGURATION_REFERENCE](../reference/CONFIGURATION_REFERENCE.md) 第 11 节。
-一键启用：`bash hack/aiops-enable.sh`（#136）在 `make cluster-up` 后快速打开 AIOps 并接入 DeepSeek——Key 读 `.runtime/aiops.env`（或环境变量 `AIOPS_OPENAI_API_KEY`，不落盘仓库），写入 Deployment env 并自动验证 `/aiops/settings`；幂等可重复执行。
+一键启用（#136）：`make cluster-up` 部署结束后若检测到 `.runtime/aiops.env` 会自动恢复 AIOps（enabled=true + DeepSeek + Key），并在部署输出中打印 AIOps 状态（enabled/keyConfigured）；无 `.runtime/aiops.env` 时保持关闭并提示运行 `bash hack/aiops-enable.sh`。手动恢复同样可用 `bash hack/aiops-enable.sh`——Key 读 `.runtime/aiops.env`（或环境变量 `AIOPS_OPENAI_API_KEY`，不落盘仓库），写入 Deployment env 并自动验证 `/aiops/settings`；幂等可重复执行。
 
 ## 5. 工作负载与存储
 
@@ -127,7 +127,7 @@ PVC 数据在节点容器 `/var` named volume（Docker 数据盘 vhdx），WSL/D
 | Database | Backend ready，`/replay` 返回 `snapshot-*` |
 | Backend | `/configuration` 返回 `tenant-sample` |
 | Frontend | Service 代理返回页面 HTML |
-| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
+| 环境 | `make doctor` 环境自检通过（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 8 类检查，其中 WSL VM 内存告警阈值动态读取 `.wslconfig` 上限，见 `hack/wsl-vm-cap.ps1`）；`make preflight` 通过（含 WSL 回环探针 `hack/wsl-loopback-probe`：单轮语义（新端口注册时延测量 + Windows 侧 curl 校验 + dmesg 计数），非 WSL 自动跳过） |
 
 | 文档 | `make docs-check`（全仓库文档门禁：MAP 映射 / 链接 / front-matter / change-history 门禁）；`make docs-sync-check`（README 时间线段、`docs/status.md`、`llms.txt`、所有权表必须与已提交内容一致） |
 
@@ -175,5 +175,6 @@ Controller 还会按 SimulatorInstance 动态创建 `simulator-<instance>` Deplo
 ## 6. 测试与覆盖率门禁（#142）
 
 - `make coverage`：后端覆盖率硬 gate（`hack/coverage-check.py`），CI 同款命令并自带 postgres service（store 集成测试）。
+- 无测试文件/无覆盖率产出的包按 0% 计为 FAIL（不再 SKIP 豁免，2026-08-22 起）；仅 `store`（DB_GATED）在缺 `TEST_DATABASE_URL` 时显示 `SKIP-DB` 警告不红。
 - `hack/cover-gaps.py`：输出各包未覆盖函数清单（`go tool cover -func` 风格），用于定位补测缺口。
 - 前端：`npm run test:coverage`（vitest v8 + jsdom），阈值见 `vitest.config.ts`（防回退基线，目标抬升跟踪 #143）。

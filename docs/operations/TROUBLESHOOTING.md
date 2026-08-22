@@ -17,7 +17,7 @@ flowchart TD
 
 先确认页面是 Latest 还是 Historical。历史快照里的 Pending 不会因为当前集群已恢复而变化。
 
-任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 9 类检查环境自检（含宿主 VM 残留））。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。
+任何排障先跑 `make doctor`（磁盘 / Docker 引擎 / WSL 回环 / 端口冲突 / 内存 / tmpfs / dmesg / kind apiserver 共 9 类检查环境自检（含宿主 VM 残留））。环境层问题（磁盘满、回环不可用、端口冲突、kind apiserver 不可达）会伪装成业务故障，先排除环境再查链路。WSL VM 内存 WARN 阈值由 `hack/wsl-vm-cap.ps1` 动态读取 `.wslconfig` 上限（当前 16GB → 15.5GB 告警），出现内存 WARN 时按 `make cluster-down` 减负载或调大 `.wslconfig` 后重启 WSL。
 
 环境故障确认后，一键自愈与拉起联调用 make env-up（#109）：apiserver 不可达自动 docker restart control-plane、Kind 节点 PV tmpfs 遮罩自动 umount 并重建 PVC 工作负载、port-forward / 本地后端 / 前端 vite 幂等拉起（密钥从集群 Secret 注入 .runtime/，不入库）。
 
@@ -312,7 +312,8 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **对话返回 429**：`DAILY_QUOTA_EXCEEDED` 表示当日次数/token 配额用尽（`AIOPS_DAILY_MAX_CALLS` / `AIOPS_DAILY_MAX_TOKENS`，默认 300 次/200 万 token 每 24h）；`CHAT_RATE_LIMITED` 是会话级限流（默认 6 次/分钟），前端会展示对应可读文案。
 - **分析一直为 0**：检查 AIOps 开关（面板设置或 `AIOPS_ENABLED`）、Key 是否有效、日配额是否用尽；后端日志关键字 `enqueue analysis failed` / `quota`。
 - **一句话起实验被拒（节点/租户不存在）**：先跑 `bash hack/aiops-templates-seed.sh` 预置模板 CR（节点校验同时接受真实 Node 与 WorkerNode CR），再重新解析执行。
-- **重新部署后 AIOps 开关/Provider 丢失（#136）**：`make cluster-up` 会重置 Deployment env 到默认（`AIOPS_ENABLED=false`、OpenAI 默认）。执行 `bash hack/aiops-enable.sh` 一键恢复（Key 读 `.runtime/aiops.env`），完成后用 `/api/v1/aiops/settings` 验证；`hack/aiops-enable.sh` 亦可用于任何需要重新启用的场景。
+- **重新部署后 AIOps 开关/Provider 丢失（#136）**：`make cluster-up` 会重置 Deployment env 到默认（`AIOPS_ENABLED=false`、OpenAI 默认）。已修复：部署结束后若 `.runtime/aiops.env` 存在会自动恢复并输出状态；未自动恢复时执行 `bash hack/aiops-enable.sh`（Key 读 `.runtime/aiops.env`），完成后用 `/api/v1/aiops/settings` 验证。
+- **Dashboard 8080 打不开 / 部署后端口转发丢失（#137）**：pod 滚动重建会导致旧 port-forward 进程退出。已修复：`start_port_forward` 复用检查增加 HTTP 探活，探测失败自动重建；仍异常时执行 `rm -f .runtime/port-forward-dashboard.pid && make cluster-open`。
 
 ## 18. 文档门禁检查失败（docs-check）
 
@@ -328,6 +329,6 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 
 ## 覆盖率门禁与文档检查（#142）
 
-- `make coverage` 运行后端覆盖率硬 gate（`hack/coverage-check.py`）：核心包低于阈值即失败；`store` 包需 `TEST_DATABASE_URL`（未设置显示 `SKIP-DB`，警告不红）。CI 的 coverage job 自带 postgres:17-alpine service，store 始终为硬 gate。
+- `make coverage` 运行后端覆盖率硬 gate（`hack/coverage-check.py`）：核心包低于阈值即失败；无测试文件/无覆盖率产出的包按 0% 计 FAIL（2026-08-22 起不再豁免）；仅 `store` 包需 `TEST_DATABASE_URL`（未设置显示 `SKIP-DB`，警告不红）。CI 的 coverage job 自带 postgres:17-alpine service，store 始终为硬 gate。
 - `docs-check` 根目录白名单包含 `AI_COORDINATION.md`（多会话协作公告板）；新增根级 Markdown 需同步白名单（`hack/check-docs.py` 的 `ROOT_MD_WHITELIST`）与本文档。
 - 门禁失败先看报错类型：`MAP 门禁` = 源码改动需同步对应映射文档（见 `docs/MAP.yaml`）；`CHANGE_HISTORY 门禁` = 非文档源码改动需新增或引用 change-history 条目；`生成物新鲜度` = 需 `make docs-sync` 后提交派生文件。

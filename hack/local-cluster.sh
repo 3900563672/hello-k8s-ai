@@ -586,9 +586,17 @@ start_port_forward() {
   if [[ -f "$pid_file" ]]; then
     pid="$(<"$pid_file")"
     args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    # 进程在且目标端口真实在监听才算"已在运行"；否则清理残留 PID 文件并重建。
+    # 进程在 + 端口真实监听 + HTTP 探活通过才算"已在运行"；否则清理残留 PID 文件并重建。
+    # #137：pod 滚动重建后旧转发进程退出，仅端口探测会在半开窗口误判复用。
+    local http_ok=0
+    if command -v curl >/dev/null 2>&1; then
+      if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:$local_port/"; then
+        http_ok=1
+      fi
+    fi
     if [[ "$args" == *"port-forward"* && "$args" == *"$service"* ]] &&
-      (exec 3<>"/dev/tcp/127.0.0.1/$local_port") 2>/dev/null; then
+      (exec 3<>"/dev/tcp/127.0.0.1/$local_port") 2>/dev/null &&
+      { [[ "$http_ok" -eq 1 ]] || ! command -v curl >/dev/null 2>&1; }; then
       log "$key 端口转发已在运行（PID $pid）。"
       return 0
     fi
@@ -644,6 +652,29 @@ stop_port_forwards() {
     fi
     rm -f -- "$pid_file"
   done
+}
+
+apply_aiops_config() {
+  # #136：部署后自动恢复 AIOps 配置并输出状态提示（.runtime/aiops.env 存在即自动启用）。
+  if [[ -f .runtime/aiops.env ]]; then
+    log "检测到 .runtime/aiops.env：自动启用 AIOps（#136 自动恢复）..."
+    if bash hack/aiops-enable.sh; then
+      log "AIOps 自动启用完成"
+    else
+      warn "AIOps 自动启用失败，可手动运行 bash hack/aiops-enable.sh"
+    fi
+  else
+    log "未检测到 .runtime/aiops.env：AIOps 保持关闭。启用：bash hack/aiops-enable.sh"
+  fi
+  local settings enabled keyed
+  settings="$(service_proxy hello-k8s-ai-dashboard-backend http /api/v1/aiops/settings 2>/dev/null || true)"
+  if [[ -n "$settings" ]]; then
+    enabled="$(printf '%s' "$settings" | sed -n 's/.*"enabled":\([a-z]*\).*/\1/p')"
+    keyed="$(printf '%s' "$settings" | sed -n 's/.*"keyConfigured":\([a-z]*\).*/\1/p')"
+    log "AIOps 状态：enabled=$enabled keyConfigured=$keyed"
+  else
+    warn "AIOps 状态接口不可达（稍后可用 make cluster-status 复查）"
+  fi
 }
 
 print_urls() {
@@ -739,6 +770,9 @@ run_up() {
 
   step "启动本地访问端口"
   open_ports
+
+  step "AIOps 配置恢复与状态提示（#136）"
+  apply_aiops_config
 
   printf '\n[hello-k8s-ai] 完整系统部署并验收通过。\n'
   log "部署日志：$LOG_FILE"

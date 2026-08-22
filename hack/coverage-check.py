@@ -94,8 +94,13 @@ def main():
     for pkg, threshold in sorted(THRESHOLDS.items(), key=lambda x: (x[0] != "github.com/3900563672/hello-k8s-ai/internal/controller", x[0])):
         pct = covers.get(pkg)
         if pct is None:
-            skipped.append(pkg)
-            rows.append((pkg, "N/A", threshold, "SKIP"))
+            if pkg in DB_GATED and os.environ.get("TEST_DATABASE_URL", "") == "":
+                rows.append((pkg, "N/A", threshold, "SKIP-DB"))
+                skipped.append(pkg)
+                continue
+            # 无测试文件/未产出覆盖率 → 视为 0%，低于任何阈值（2026-08-22 起不再豁免）
+            rows.append((pkg, 0.0, threshold, "FAIL"))
+            failed.append((pkg, 0.0, threshold))
             continue
         if pkg in DB_GATED and os.environ.get("TEST_DATABASE_URL", "") == "":
             rows.append((pkg, pct, threshold, "SKIP-DB"))
@@ -112,7 +117,7 @@ def main():
         pct_s = "%.1f" % pct if isinstance(pct, float) else pct
         print("%-90s %8s %8s %6s" % (pkg, pct_s, "%.1f" % threshold, status))
 
-    print("\n汇总: %d 包 gate, %d 通过, %d 失败, %d 跳过(缺 DB/无测试)" % (
+    print("\n汇总: %d 包 gate, %d 通过, %d 失败, %d 跳过(缺 DB)" % (
         len(rows), len(rows) - len(failed) - len(skipped), len(failed), len(skipped)))
     if failed:
         print("\nFAIL: 以下包未达阈值（issue #142 目标）:")
