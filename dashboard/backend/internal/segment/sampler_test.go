@@ -3,6 +3,7 @@ package segment
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"sync"
@@ -146,6 +147,11 @@ type fakeSegmentStore struct {
 	events     []model.SegmentEvent
 	buckets    []store.MetricBucket
 	flushCalls int
+
+	listSegmentsErr error
+	listEventsErr   error
+	recordErr       error
+	appendErr       error
 }
 
 func (fake *fakeSegmentStore) Available() bool { return true }
@@ -153,6 +159,9 @@ func (fake *fakeSegmentStore) Available() bool { return true }
 func (fake *fakeSegmentStore) ListSegments(_ context.Context, _ int, status string) ([]model.SegmentRecord, error) {
 	fake.mu.Lock()
 	defer fake.mu.Unlock()
+	if fake.listSegmentsErr != nil {
+		return nil, fake.listSegmentsErr
+	}
 	var records []model.SegmentRecord
 	for _, record := range fake.segments {
 		if record.Status == status {
@@ -165,6 +174,9 @@ func (fake *fakeSegmentStore) ListSegments(_ context.Context, _ int, status stri
 func (fake *fakeSegmentStore) ListResourceEvents(_ context.Context, since time.Time, _ int) ([]model.ResourceChange, error) {
 	fake.mu.Lock()
 	defer fake.mu.Unlock()
+	if fake.listEventsErr != nil {
+		return nil, fake.listEventsErr
+	}
 	var changes []model.ResourceChange
 	for _, change := range fake.changes {
 		if !change.OccurredAt.Before(since) {
@@ -177,6 +189,9 @@ func (fake *fakeSegmentStore) ListResourceEvents(_ context.Context, since time.T
 func (fake *fakeSegmentStore) RecordSegmentEvent(_ context.Context, event model.SegmentEvent) error {
 	fake.mu.Lock()
 	defer fake.mu.Unlock()
+	if fake.recordErr != nil {
+		return fake.recordErr
+	}
 	fake.events = append(fake.events, event)
 	return nil
 }
@@ -184,16 +199,23 @@ func (fake *fakeSegmentStore) RecordSegmentEvent(_ context.Context, event model.
 func (fake *fakeSegmentStore) AppendSegmentMetrics(_ context.Context, _ string, buckets []store.MetricBucket) error {
 	fake.mu.Lock()
 	defer fake.mu.Unlock()
+	if fake.appendErr != nil {
+		return fake.appendErr
+	}
 	fake.buckets = append(fake.buckets, buckets...)
 	return nil
 }
 
 // fakeMetricSource 按 query 区间过滤返回指标点，模拟 Prometheus 行为。
 type fakeMetricSource struct {
-	series map[string][]model.MetricPoint
+	series   map[string][]model.MetricPoint
+	queryErr error
 }
 
 func (fake *fakeMetricSource) QueryRange(_ context.Context, query prometheusprovider.Query) (model.MetricResult, error) {
+	if fake.queryErr != nil {
+		return model.MetricResult{}, fake.queryErr
+	}
 	result := model.MetricResult{MetricID: query.MetricID, Start: query.Start, End: query.End}
 	for _, point := range fake.series[query.MetricID] {
 		if !point.Time.Before(query.Start) && !point.Time.After(query.End) {
@@ -343,5 +365,126 @@ func TestSamplerThresholdEventsTriggerAlerts(t *testing.T) {
 	}
 	if eventTypes[model.SegmentEventAlert] != 1 {
 		t.Fatalf("alert events = %d, want 1", eventTypes[model.SegmentEventAlert])
+	}
+}
+
+func TestRunExecutesTicksUntilCancelled(t *testing.T) {
+	now := time.Now().UTC()
+	ctx, cancel := context.WithCancel(context.Background())
+	database := &fakeSegmentStore{
+		segments: []model.SegmentRecord{{
+			SegmentID: "run-segment", Tenant: "tenant-a", Name: "run",
+			Status: string(model.SegmentRunning),
+		}},
+		changes: []model.ResourceChange{{
+			EventID: "evt-run", OccurredAt: now.Add(-20 * time.Second), Operation: "update",
+			Ref:     model.ResourceRef{Kind: "Orchestrator", Name: "tenant-a"},
+			Payload: json.RawMessage(`{"status":{"lastScaling":{"action":"ScaleUp","instanceName":"tenant-a-model-a","oldReplicas":2,"newReplicas":6}}}`),
+		}},
+	}
+	sampler := New(Config{
+		BaselineInterval: 30 * time.Second, BurstInterval: 5 * time.Millisecond,
+		QuiescenceWindow: 60 * time.Second, BurstReplicaDelta: 5,
+		ErrorRateThreshold: 0.05, TTFTThresholdMS: 2000,
+	}, database, &fakeMetricSource{}, &fakeSnapshotSource{}, testLogger())
+
+	done := make(chan struct{})
+	go func() {
+		sampler.Run(ctx)
+		close(done)
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		database.mu.Lock()
+		events := len(database.events)
+		database.mu.Unlock()
+		if events > 0 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("Run did not execute any tick")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Run did not stop after cancel")
+	}
+}
+
+func TestTickSurvivesListErrors(t *testing.T) {
+	database := &fakeSegmentStore{listSegmentsErr: errors.New("db down")}
+	sampler := New(Config{BurstInterval: time.Second}, database, &fakeMetricSource{}, &fakeSnapshotSource{}, testLogger())
+	sampler.tick(context.Background()) // 不应 panic
+
+	database.listSegmentsErr = nil
+	database.segments = []model.SegmentRecord{{
+		SegmentID: "seg-ok", Tenant: "tenant-a", Name: "ok",
+		Status: string(model.SegmentRunning),
+	}}
+	sampler.tick(context.Background())
+	if sampler.Active() != 1 {
+		t.Fatalf("active = %d, want 1", sampler.Active())
+	}
+}
+
+func TestSampleSurvivesSourceErrors(t *testing.T) {
+	now := time.Date(2026, time.August, 18, 8, 0, 30, 0, time.UTC)
+	ctx := context.Background()
+	database := &fakeSegmentStore{
+		segments: []model.SegmentRecord{{
+			SegmentID: "err-segment", Tenant: "tenant-a", Name: "err",
+			Status: string(model.SegmentRunning),
+		}},
+		listEventsErr: errors.New("list events failed"),
+		recordErr:     errors.New("record failed"),
+		appendErr:     errors.New("append failed"),
+	}
+	previousMinute := now.Add(-time.Minute).Truncate(time.Minute)
+	metricSource := &fakeMetricSource{
+		queryErr: errors.New("query failed"),
+		series: map[string][]model.MetricPoint{
+			"simulator.errorRate": {{Time: previousMinute.Add(30 * time.Second), Value: 0.2}},
+		},
+	}
+	sampler := New(Config{
+		BaselineInterval: 30 * time.Second, BurstInterval: 5 * time.Second,
+		QuiescenceWindow: 60 * time.Second, BurstReplicaDelta: 5,
+		ErrorRateThreshold: 0.05, TTFTThresholdMS: 2000,
+	}, database, metricSource, &fakeSnapshotSource{replicas: map[string]int{"tenant-a-model-a": 2}}, testLogger())
+
+	sampler.syncActive(ctx, database.segments, now)
+	sampler.sample(ctx, sampler.active["err-segment"], now)
+	if sampler.active["err-segment"].lastSample.IsZero() {
+		t.Fatal("sample must update lastSample even when sources fail")
+	}
+}
+
+func TestFlushSegmentOnAppendError(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, time.August, 18, 8, 0, 0, 0, time.UTC)
+	database := &fakeSegmentStore{appendErr: errors.New("append failed")}
+	sampler := New(Config{}, database, &fakeMetricSource{}, &fakeSnapshotSource{}, testLogger())
+	state := &activeSegment{
+		record: model.SegmentRecord{SegmentID: "flush-err"},
+		buckets: map[string]*bucketAccumulator{
+			"m|k": {metricName: "simulator.ttft", start: now, end: now.Add(time.Minute), seen: map[int64]struct{}{}},
+		},
+	}
+	sampler.flushSegment(ctx, state, now) // 不应 panic
+}
+
+func TestPercentileEdges(t *testing.T) {
+	if got := percentile(nil, 0.95); got != 0 {
+		t.Fatalf("percentile(empty) = %v, want 0", got)
+	}
+	if got := percentile([]float64{42}, 0.95); got != 42 {
+		t.Fatalf("percentile(single) = %v, want 42", got)
+	}
+	if got := percentile([]float64{1, 2, 3}, 0); got != 1 {
+		t.Fatalf("percentile(p=0) = %v, want 1", got)
 	}
 }

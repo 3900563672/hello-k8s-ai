@@ -85,7 +85,7 @@ Controller 不读该数据库。DB 恢复到旧备份不会回滚 Kubernetes；K
 | `aiops_entity_summaries` | L1 实体总结（analysis_id + entity_kind/entity_name 唯一）。 |
 | `aiops_window_summaries` | L3/L4 时间聚合（M3 启用，level 字段区分）。 |
 | `aiops_alerts` | 持续低分警戒（M3 启用）。 |
-| `aiops_commands` | 意图执行记录（M2 启用，状态机 parsed→confirmed→gate→executing→verified→done/rejected/failed）。 |
+| `aiops_commands` | 意图执行记录（M2 启用，状态机 parsed→confirmed→gate→executing→verified→done/rejected/failed）。读侧 `ListAIOpsCommands` 的 `LIMIT` 使用参数绑定（`$1`），不拼接用户输入。 |
 | `aiops_audit_log` | 同步对话调用审计（#110 阶段四：模型/耗时/消息长度/token 用量/结果，009 迁移补 prompt/completion 列）；日配额统计源（`SumAIOpsUsageSince` 按 created_at 聚合 24h 次数与 token）。 |
 | `aiops_jobs` | 异步任务队列（#110 阶段一：segment 唯一、status/attempts/last_error/起止时间，SKIP LOCKED 认领）。 |
 | `aiops_chat_messages` | 对话问答对（#112 阶段 D，010 迁移：session_id + role + content + 引用的 window/alert/command ID JSONB，按会话倒序检索最近 N 条）。API 读侧 `GET /aiops/chat/messages` 按时间正序返回最近 N 条（limit 1..200，默认 50）。 |

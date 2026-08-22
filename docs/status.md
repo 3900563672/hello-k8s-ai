@@ -11,4 +11,4 @@
 - 2026-08-21 [WSL/Docker 安全重启 SOP + doctor 宿主残留检查（固化排查链路）](../change-history/2026-08-21-wsl-docker-restart-sop/README.md)
 - 2026-08-21 [README 新增 AI×Human 协作立场声明（统一人设）](../change-history/2026-08-21-readme-ai-collab-stance/README.md)
 - 2026-08-21 [沉淀「事故 vs bug」复盘——系统级故障先存档证据、后追源码路径](../change-history/2026-08-21-incident-vs-bug-lesson/README.md)
-- 2026-08-21 [变更总览：时间回放与视窗 NaN 健壮性修复（Fixes #140/#141）](../change-history/2026-08-21-frontend-replay-viewport-fixes/README.md)
+- 2026-08-21 [变更总览：Dashboard 前端测试体系从零搭建（vitest + Testing Library）](../change-history/2026-08-21-frontend-vitest-testing/README.md)

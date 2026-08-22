@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
@@ -38,8 +39,9 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 		t.Fatalf("migrate: %v", err)
 	}
 
+	suffix := fmt.Sprintf("-%d", time.Now().UnixNano())
 	segment := SegmentRecord{
-		SegmentID: "aiops-test-segment",
+		SegmentID: "aiops-test-segment" + suffix,
 		Tenant:    "default",
 		Name:      "aiops-integration",
 		Status:    string(model.SegmentCompleted),
@@ -49,7 +51,7 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 	}
 
 	first := model.AIOpsAnalysis{
-		AnalysisID: "aiops-test-1",
+		AnalysisID: "aiops-test-1" + suffix,
 		SegmentID:  segment.SegmentID,
 		Status:     string(model.AIOpsPending),
 	}
@@ -58,7 +60,7 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 	}
 	// 同切面重复入队幂等：不产生第二条。
 	if err := database.CreateAIOpsAnalysis(ctx, model.AIOpsAnalysis{
-		AnalysisID: "aiops-test-dup",
+		AnalysisID: "aiops-test-dup" + suffix,
 		SegmentID:  segment.SegmentID,
 		Status:     string(model.AIOpsPending),
 	}); err != nil {
@@ -100,9 +102,9 @@ func TestAIOpsStoreLifecycle(t *testing.T) {
 		t.Fatalf("update progress: %v", err)
 	}
 	summaries := []model.AIOpsEntitySummary{
-		{SummaryID: "aiops-sum-1", AnalysisID: first.AnalysisID, EntityKind: "Pod", EntityName: "pod-a",
+		{SummaryID: "aiops-sum-1" + suffix, AnalysisID: first.AnalysisID, EntityKind: "Pod", EntityName: "pod-a",
 			Classification: string(model.AIOpsProblem), Phenomenon: "restart", IssueFlag: true, Conclusion: "异常"},
-		{SummaryID: "aiops-sum-2", AnalysisID: first.AnalysisID, EntityKind: "Node", EntityName: "node-1",
+		{SummaryID: "aiops-sum-2" + suffix, AnalysisID: first.AnalysisID, EntityKind: "Node", EntityName: "node-1",
 			Classification: string(model.AIOpsHealthy), Conclusion: "正常"},
 	}
 	if err := database.UpsertAIOpsEntitySummaries(ctx, first.AnalysisID, summaries); err != nil {
@@ -197,7 +199,7 @@ func TestAIOpsCommandStoreLifecycle(t *testing.T) {
 	parsed, _ := json.Marshal(map[string]any{"sceneType": "突发流量高峰"})
 	steps, _ := json.Marshal([]map[string]string{{"step": "set-traffic", "status": "done"}})
 	command := model.AIOpsCommand{
-		CommandID: "cmd-test-1",
+		CommandID: "cmd-test-1-" + fmt.Sprintf("%d", time.Now().UnixNano()),
 		RawInput:  "美国时间 9 点开始，持续 2 小时，突发流量高峰",
 		Parsed:    parsed,
 		Status:    string(model.AIOpsCommandParsed),
@@ -246,9 +248,13 @@ func TestAIOpsWindowAlertStoreLifecycle(t *testing.T) {
 	}
 
 	now := time.Now().UTC()
+	// 清掉历史 L3-test 残留，保证重复运行可查（ORDER BY window_start DESC LIMIT 10）。
+	if _, err := database.pool.Exec(ctx, `DELETE FROM aiops_window_summaries WHERE window_id LIKE 'L3-test-%'`); err != nil {
+		t.Fatalf("clean window leftovers: %v", err)
+	}
 	windowStart := now.Truncate(2 * time.Hour)
 	window := model.AIOpsWindowSummary{
-		WindowID:    "L3-test-" + now.Format("150405"),
+		WindowID:    "L3-test-" + fmt.Sprintf("%d", now.UnixNano()),
 		Level:       string(model.AIOpsWindowL3),
 		WindowStart: windowStart,
 		WindowEnd:   windowStart.Add(2 * time.Hour),
@@ -275,7 +281,24 @@ func TestAIOpsWindowAlertStoreLifecycle(t *testing.T) {
 		t.Fatalf("window %s not found", window.WindowID)
 	}
 
-	analysisID := "window-alert-analysis"
+	analysisID := "window-alert-analysis-" + fmt.Sprintf("%d", time.Now().UnixNano())
+	// alerts 通过 FK 引用 aiops_analyses（后者再经 segments FK），先建前置数据。
+	alertSegment := SegmentRecord{
+		SegmentID: "window-alert-segment-" + fmt.Sprintf("%d", time.Now().UnixNano()),
+		Tenant:    "default",
+		Name:      "window-alert-integration",
+		Status:    string(model.SegmentCompleted),
+	}
+	if err := database.CreateSegment(ctx, alertSegment); err != nil {
+		t.Fatalf("create alert segment: %v", err)
+	}
+	if err := database.CreateAIOpsAnalysis(ctx, model.AIOpsAnalysis{
+		AnalysisID: analysisID,
+		SegmentID:  alertSegment.SegmentID,
+		Status:     string(model.AIOpsCompleted),
+	}); err != nil {
+		t.Fatalf("create alert analysis: %v", err)
+	}
 	alert := model.AIOpsAlert{
 		AlertID:        "alert-test-" + now.Format("150405"),
 		Rule:           "consecutive-low-score",

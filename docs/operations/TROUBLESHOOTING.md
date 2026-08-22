@@ -325,3 +325,9 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 - **本地与 CI 差异**：CI 用 PR base 计算 diff（`DOCS_CHECK_BASE`），本地默认 `HEAD~1`；合并前 base 变化时可能需要在分支内先同步目标文档再推。
 - **派生文件漂移（多会话工作树）**：`hack/gen-docs.py` 只统计 git 已跟踪的 `change-history/` 条目（未提交目录不会混入 README 时间线段与 `docs/status.md`）。若 `docs-sync-check` 仍报差异：先确认工作树无未提交变更（含其它会话的批次），再 `make docs-sync` 生成后一并提交；不要把未提交条目对应的链接提交进去。
 - **CHANGE_HISTORY 门禁**：非文档源码改动（后端/前端/脚本/CI/测试）必须新增 `change-history/YYYY-MM-DD-*/README.md`，或在提交信息引用既有条目（`change-history: <条目名>`）。修复方式：补条目后重新提交；小改动并入大条目时在提交信息写引用即可。纯文档提交（`docs/`、`change-history/`、根文档）豁免。
+
+## 覆盖率门禁与文档检查（#142）
+
+- `make coverage` 运行后端覆盖率硬 gate（`hack/coverage-check.py`）：核心包低于阈值即失败；`store` 包需 `TEST_DATABASE_URL`（未设置显示 `SKIP-DB`，警告不红）。CI 的 coverage job 自带 postgres:17-alpine service，store 始终为硬 gate。
+- `docs-check` 根目录白名单包含 `AI_COORDINATION.md`（多会话协作公告板）；新增根级 Markdown 需同步白名单（`hack/check-docs.py` 的 `ROOT_MD_WHITELIST`）与本文档。
+- 门禁失败先看报错类型：`MAP 门禁` = 源码改动需同步对应映射文档（见 `docs/MAP.yaml`）；`CHANGE_HISTORY 门禁` = 非文档源码改动需新增或引用 change-history 条目；`生成物新鲜度` = 需 `make docs-sync` 后提交派生文件。

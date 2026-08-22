@@ -13,8 +13,8 @@
 | 会话名 | 角色 | 工作区 / 分支 | 写权限范围 | 当前任务 | 状态 |
 | --- | --- | --- | --- | --- | --- |
 | hello-k8s-ai-fixer | 协调者 + 修复 | `/root/hello-k8s-ai-fix`（git worktree）；分支 `codex/fix-replay-viewport-2026-08-21` | `dashboard/frontend/my-app/src/components/shared/TimeTravelBar/timelineMath.ts`、`src/stores/timeSlice.ts`、这两个文件的测试中 #140/#141 相关断言、本文件、对应 change-history | 修复 #140/#141 | 2026-08-21 进行中 |
-| hello-k8s-ai-frontend-tests | 前端测试 | `/root/hello-k8s-ai` 主工作区；分支 `codex/frontend-tests`（未提交文件） | `dashboard/frontend/my-app` 测试脚手架（vitest 配置、`src/test/`、各 `*.test.ts(x)`）、`.github/workflows/test.yml` | #142/#143 前端测试补齐 | 2026-08-21 进行中 |
-| （后端测试会话，请补登记） | 后端测试 | 待登记 | `dashboard/backend/` 测试、`hack/cover-gaps.py`、`hack/coverage-check.py` | #142 后端覆盖率 | 待登记 |
+| hello-k8s-ai-frontend-tests | 前端测试 | `/root/hello-k8s-ai` 主工作区；分支 `codex/frontend-tests` | `dashboard/frontend/my-app` 测试脚手架（vitest 配置、`src/test/`、各 `*.test.ts(x)`）、`.github/workflows/test.yml` | #142/#143 前端测试补齐 | 2026-08-21 已交付（并入 PR #144） |
+| hello-k8s-ai-backend-tests | 后端测试 | `/root/hello-k8s-ai` 主工作区；分支 `codex/frontend-tests` | `dashboard/backend/` 测试、`hack/cover-gaps.py`、`hack/coverage-check.py`、`.github/workflows/test.yml` 的 coverage job、`Makefile` 的 `coverage` target | #142 后端覆盖率 + 门禁（5 包全绿） | 2026-08-21 已交付（并入 PR #144） |
 
 ## 3. 工作区规则（防踩踏）
 
@@ -42,6 +42,6 @@
 
 ## 6. 协调待办（给所有会话）
 
-- [ ] frontend-tests：收到本文件后在 §2 更新/确认自己的行；#140/#141 断言移交 fixer（§4），其余测试文件继续。
-- [ ] 后端测试会话：登记身份/工作区/范围。
+- [x] frontend-tests：本文件 §2 行已更新；#140/#141 断言移交 fixer（§4），其余测试已并入 PR #144。
+- [x] 后端测试会话：登记身份/工作区/范围（已登记并在 PR #144 交付）。
 - [ ] 任一 PR 合入 main 时把本文件同步进仓库（谁先合谁带）。
