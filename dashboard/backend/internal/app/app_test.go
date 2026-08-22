@@ -32,13 +32,15 @@ func TestSnapshotHasBusinessData(t *testing.T) {
 		t.Fatal("empty snapshot should have no business data")
 	}
 	cases := []struct {
-		name    string
-		mutate  func(*model.Configuration)
+		name   string
+		mutate func(*model.Configuration)
 	}{
 		{"Models", func(c *model.Configuration) { c.Models = []model.PlatformResource{platformResource("m")} }},
 		{"WorkerNodes", func(c *model.Configuration) { c.WorkerNodes = []model.PlatformResource{platformResource("w")} }},
 		{"Tenants", func(c *model.Configuration) { c.Tenants = []model.PlatformResource{platformResource("t")} }},
-		{"TenantModel", func(c *model.Configuration) { c.Policies.TenantModel = []model.PlatformResource{platformResource("tm")} }},
+		{"TenantModel", func(c *model.Configuration) {
+			c.Policies.TenantModel = []model.PlatformResource{platformResource("tm")}
+		}},
 		{"TenantNode", func(c *model.Configuration) { c.Policies.TenantNode = []model.PlatformResource{platformResource("tn")} }},
 		{"ModelNode", func(c *model.Configuration) { c.Policies.ModelNode = []model.PlatformResource{platformResource("mn")} }},
 		{"Orchestrators", func(c *model.Configuration) { c.Orchestrators = []model.PlatformResource{platformResource("o")} }},
