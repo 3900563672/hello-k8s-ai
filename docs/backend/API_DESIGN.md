@@ -172,6 +172,7 @@ PATCH 修改的是 Tenant 总请求 QPS。Traffic Controller 再写各 Simulator
 - 相同 key + 不同 payload 必须拒绝，防止误重用。
 - 默认记录保留约 24 小时。
 - 命令完成记录写失败时立即释放占位，避免同一 key 被 pending 卡满保留期；重放依赖 Kubernetes apply 幂等语义。
+- SSE 流式请求（`/aiops/chat`、`/stream`，或 `Accept: text/event-stream`）不缓冲响应，直接透传真实 writer（缓冲层无 `http.Flusher`，会破坏流式）；幂等占位照常保留防并发重放，完成后记录 `{"streamed":true}` 占位响应。
 
 ### 批量应用
 

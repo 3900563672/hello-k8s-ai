@@ -144,6 +144,6 @@ Historical 模式、Backend 写能力不可用、Kubernetes cache 未连接、�
 
 ## 7. 测试体系（#142/#143）
 
-- vitest + jsdom + Testing Library（react/jest-dom/user-event）；`src/test/setup.ts` 打桩浏览器 API（matchMedia/ResizeObserver 等），`src/test/queryUtils.tsx` 封装带 router/query-client 的渲染与查询辅助。
+- vitest + jsdom + Testing Library（react/jest-dom/user-event）；`src/test/setup.ts` 打桩浏览器 API（matchMedia/ResizeObserver/rAF/pointer capture/scrollIntoView 等），`src/test/queryUtils.tsx` 封装带 router/query-client 的渲染与查询辅助。
 - `npm run test:coverage` 为 CI 门禁（v8 覆盖率阈值见 `vitest.config.ts`，防回退基线；目标抬升跟踪 #143）。
-- 测试分布：组件测试在 `src/components/**/*.test.tsx`，纯逻辑测试在 `src/lib`、`src/api`、`src/stores` 对应 `*.test.ts`；`src/test/` 为脚手架目录，不参与覆盖率统计。
+- 测试分布：组件测试在 `src/components/**/*.test.tsx`，纯逻辑测试在 `src/lib`、`src/api`、`src/stores` 对应 `*.test.ts`；`src/test/` 为脚手架目录，不参与覆盖率统计。截至 2026-08-21 共 85 文件 / 423 用例，整体 stmts 70.97%（页面级：DataOverviewPage 91.35%、ConfigPage 68.27%）。

@@ -170,6 +170,7 @@ DB 必需时不可用会导致 readiness 失败；即使配置可选，mutation 
 - 参数/JSON 错误为客户端错误；provider timeout 可形成 partial；cache/required DB 不可用影响 readiness。
 - Panic recovery 返回内部错误并记录；安全 headers 和显式 CORS origin 生效。
 - SSE 不使用普通 write timeout；其他请求受配置 timeout 中间件约束。
+- SSE 流式端点（`/api/v1/aiops/chat`、`/api/v1/stream` 或 `Accept: text/event-stream`）在幂等中间件中透传真实 writer（不缓冲，缓冲层无 Flusher 会破坏流式）；幂等占位保留，完成后记录 `{"streamed":true}` 占位响应。
 - 冲突、幂等键重用但 payload 不同、未知 Kind、非法历史窗口必须是可区分错误。
 
 

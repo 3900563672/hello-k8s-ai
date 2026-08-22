@@ -4,6 +4,8 @@
 FROM golang:1.26 AS builder-base
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
+ARG GOPROXY=https://proxy.golang.org,direct
+ENV GOPROXY=${GOPROXY}
 WORKDIR /workspace
 
 # 先复制依赖描述，最大化利用 Docker layer cache。

@@ -87,7 +87,7 @@ sequenceDiagram
 | AI 洞察（AiInsightPanel） | `/aiops/analyses[?status]`、`/aiops/analyses?segmentId=`、`/aiops/jobs` | 无（只读；M2 意图执行接入后加写） | 列表 15s 轮询；详情进行中 10s 轮询、完成/失败后停止；异步任务（`/aiops/jobs` 独立接口）10s 轮询；任务卡片显示「已试 N 次」与失败原因 |
 | 警戒（AlertList） | `/aiops/alerts` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
 | 窗口总结（WindowSummaryPanel） | `/aiops/windows` | 无 | 30s 轮询；M3 未启用时后端 404 → 显示未接入空态 |
-| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE）、`GET /aiops/chat/messages`、`GET/POST /aiops/settings` | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储；回答同时落库服务端 `aiops_chat_messages`（#112 阶段 D，可追溯引用来源）；打开面板时拉取历史回填空会话（失败静默降级）；设置面板含 AI 分析开关（`enabled`，关闭后不入队新分析）；429 → 展示配额/限流提示 |
+| AI 助手浮窗（AiChatWidget） | `POST /aiops/chat`（SSE）、`GET /aiops/chat/messages`、`GET/POST /aiops/settings` | 无（只读回答；密钥只在服务端） | 按需流式；404 → 显示未启用提示；会话本地存储；回答同时落库服务端 `aiops_chat_messages`（#112 阶段 D，可追溯引用来源）；打开面板时拉取历史回填空会话（失败静默降级）；设置面板含 AI 分析开关（`enabled`，关闭后不入队新分析）；429 → 展示配额/限流提示；流式请求经幂等中间件透传（不缓冲，保留 Flusher） |
 | Global stream | `/stream` | 无 | EventSource 重连 + REST resync |
 
 编排策略表单字段与 CRD/Backend 白名单一致：含 scaleUpCooldownSeconds、scaleDownCooldownSeconds、min/maxReplicas、maxScaleUpBatch（扩容步长）与 allowScaleToZero。
@@ -161,4 +161,4 @@ flowchart LR
 
 ## 7. 测试替身与数据流验证
 
-`src/test/setup.ts` 与 `src/test/queryUtils.tsx` 提供测试脚手架：setup 打桩浏览器 API，queryUtils 封装渲染入口；组件/查询测试通过 `vi.mock` 替换 api client 验证各链路数据流，与 `dev:mock` 插件（真实 API 录制，见 vite `--mode mock`）互补，分别覆盖单元与联调两个层面。
+`src/test/setup.ts` 与 `src/test/queryUtils.tsx` 提供测试脚手架：setup 打桩浏览器 API（含 rAF/scrollIntoView），queryUtils 封装渲染入口；组件/查询测试通过 `vi.mock` 替换 api client 验证各链路数据流（页面级测试见 `src/components/features/*/*Page.test.tsx`，覆盖 loading/error/空态/交互状态机），与 `dev:mock` 插件（真实 API 录制，见 vite `--mode mock`）互补，分别覆盖单元与联调两个层面。

@@ -257,7 +257,7 @@ build_project_images() {
     shift
     log "构建 $label"
     if ! retry 2 env DOCKER_BUILDKIT=1 "$CONTAINER_TOOL" build \
-      --platform "$TARGET_PLATFORM" "$@"; then
+      --platform "$TARGET_PLATFORM" --build-arg "GOPROXY=${DOCKER_GOPROXY:-https://goproxy.cn,direct}" "$@"; then
       fail "构建 $label 失败"
     fi
   }

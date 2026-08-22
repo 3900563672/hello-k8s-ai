@@ -176,5 +176,6 @@ Controller 还会按 SimulatorInstance 动态创建 `simulator-<instance>` Deplo
 
 - `make coverage`：后端覆盖率硬 gate（`hack/coverage-check.py`），CI 同款命令并自带 postgres service（store 集成测试）。
 - 无测试文件/无覆盖率产出的包按 0% 计为 FAIL（不再 SKIP 豁免，2026-08-22 起）；仅 `store`（DB_GATED）在缺 `TEST_DATABASE_URL` 时显示 `SKIP-DB` 警告不红。
+- 本地镜像构建：`Dockerfile` 支持 `GOPROXY` build-arg 注入（默认 `https://proxy.golang.org,direct`，CI 不变）；`make docker-build-manager/simulator` 与 `hack/local-cluster.sh` 默认走 `https://goproxy.cn,direct`（校园网/受限网络可用），可用 `DOCKER_GOPROXY` 覆盖。
 - `hack/cover-gaps.py`：输出各包未覆盖函数清单（`go tool cover -func` 风格），用于定位补测缺口。
 - 前端：`npm run test:coverage`（vitest v8 + jsdom），阈值见 `vitest.config.ts`（防回退基线，目标抬升跟踪 #143）。
