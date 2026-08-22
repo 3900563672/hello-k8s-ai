@@ -32,3 +32,30 @@
 ## 回滚
 
 - git revert 本批提交；删除 `hack/coverage-check.py`/`hack/cover-gaps.py`、`Makefile` coverage target、test.yml coverage job 与前端 `test:coverage` 步骤。
+
+---
+
+## 二期（2026-08-22）：封堵门禁漏洞 + 0 覆盖包补齐 + 真实 DB 集成
+
+### 为什么做二期
+
+- 用户验收发现：覆盖率门禁存在漏洞——**无测试文件的包被 SKIP 而非 FAIL**，等于 0% 也能过门禁；同时 cmd/server、internal/app、providers/httputil 三个包当时为 0% 覆盖。
+- 用户要求"合并 → 修门禁漏洞 → 补测试 → 跑集成 → 加保护"。
+
+### 二期改动
+
+1. hack/coverage-check.py：无覆盖率产出（无测试文件）的包从 SKIP 改为 **FAIL（按 0% 计）**；仅 store（DB_GATED）在缺 TEST_DATABASE_URL 时保留 SKIP-DB 警告不红。
+2. 三个 0 覆盖包补齐测试（本机实测，带真实 PostgreSQL）：
+   - dashboard/backend/internal/providers/httputil：92.0%（阈值 30）——NewClient 配置、ParseBaseURL 校验、Resolve 语义、GetJSON 成功/404/坏 JSON/截断。
+   - dashboard/backend/cmd/server：75.0%（阈值 30）——子进程模式验证 LOG_LEVEL 非法退出码 2、DATABASE_URL 不可达退出码 1。
+   - dashboard/backend/internal/app：33.7%（阈值 30）——snapshotHasBusinessData、resourceStateRecords 全资源类、openDatabase 错误路径 + 真实 Postgres 成功路径（TestOpenDatabaseWithRealPostgres，设 TEST_DATABASE_URL 时运行）。
+3. openDatabase 真实 DB 用例要求显式 MaxConnections/MinConnections（pgxpool MaxSize must be >= 1）。
+
+### 二期验证
+
+- 带 TEST_DATABASE_URL 全量 go test ./... 15 包全绿；hack/coverage-check.py 15 包 gate 全 OK（store 68.9% >= 40 实测）。
+- 本地 PostgreSQL：容器 hello-k8s-ai-pg-test（postgres:17-alpine）。
+
+### 剩余（保护项）
+
+- 薄余量包保护测试：readmodel 80.7%/阈 80、api 51.0%/阈 50、kubernetes 44.8%/阈 40、controller 61.2%/阈 60 —— 见 #142/#143 跟踪。
