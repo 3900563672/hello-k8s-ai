@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DataOverviewPage } from '@/components/features/trace/DataOverviewPage'
+
+// CI runner 上该大页面用例渲染较慢（v8 coverage 下实测可到 5s+），文件级放宽超时避免 flake
+vi.setConfig({ testTimeout: 15000 })
 import { useTimeStore } from '@/stores/timeSlice'
 import overviewFixture from '@/lib/mocks/fixtures/overview.json'
 import type { BackendResource, KubernetesCondition, ModelSpec, NodeSpec, OrchestratorSpec, TenantSpec } from '@/types/config.types'
@@ -244,7 +247,7 @@ describe('DataOverviewPage', () => {
     })
 
     it('错误态：显示错误信息，重试触发 refetch', async () => {
-        const user = userEvent.setup()
+        const user = userEvent.setup({ delay: null })
         h.overviewState.isError = true
         h.overviewState.error = { message: 'backend unreachable' }
         render(<DataOverviewPage />)
@@ -288,7 +291,7 @@ describe('DataOverviewPage', () => {
     })
 
     it('历史模式：显示 PostgreSQL Snapshot 徽标，回到最新状态调用 store action', async () => {
-        const user = userEvent.setup()
+        const user = userEvent.setup({ delay: null })
         const returnSpy = vi.spyOn(useTimeStore.getState(), 'returnToLatest').mockImplementation(() => undefined)
         useTimeStore.setState({ mode: 'historical', timestamp: '2026-08-20T00:00:00.000Z' })
         loadOverview(base)
@@ -300,7 +303,7 @@ describe('DataOverviewPage', () => {
     })
 
     it('刷新按钮：点击调用 refetch，isFetching 时禁用', async () => {
-        const user = userEvent.setup()
+        const user = userEvent.setup({ delay: null })
         loadOverview(base)
         render(<DataOverviewPage />)
         const refresh = screen.getByRole('button', { name: /刷新/ })
@@ -313,7 +316,7 @@ describe('DataOverviewPage', () => {
     })
 
     it('CollapsibleSection：默认展开/收起行为与切换', async () => {
-        const user = userEvent.setup()
+        const user = userEvent.setup({ delay: null })
         loadOverview(base)
         render(<DataOverviewPage />)
         // 集群状态 defaultOpen：内部内容可见
