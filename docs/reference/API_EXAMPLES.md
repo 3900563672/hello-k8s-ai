@@ -290,6 +290,7 @@ curl -sS "$API/aiops/alerts?limit=10"
 
 ```bash
 # 流式回答：事件为 data: {json}（lifecycle/tool/text），curl -N 关闭缓冲；回答成功后服务端落库 aiops_chat_messages
+# 流式端点走幂等透传：响应不缓冲（保留 Flusher），占位完成后记录 {"streamed":true}；带 Idempotency-Key 仍可防并发重放
 curl -sS -N -X POST "$API/aiops/chat" -H 'Content-Type: application/json' \
   -d '{"message":"当前集群什么情况？","sessionId":"demo-session"}'
 
