@@ -195,11 +195,13 @@ run: vet ## 本地跑 controller
 # manager 被放在 Dockerfile 最后，保证误用 `docker build .` 时默认也得到 Controller 镜像。
 # Makefile 内所有正式构建仍显式指定 --target，避免依赖 Dockerfile 阶段顺序。
 .PHONY: docker-build
+DOCKER_GOPROXY ?= https://goproxy.cn,direct
+
 docker-build: docker-build-manager ## 兼容旧命令；始终构建 manager 镜像
 
 .PHONY: docker-build-manager
 docker-build-manager: ## 构建 manager 镜像并校验入口和 /manager 二进制
-	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) --target manager -f $(ROOT_DOCKERFILE) -t $(MANAGER_IMG) .
+	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) --build-arg GOPROXY=$(DOCKER_GOPROXY) --target manager -f $(ROOT_DOCKERFILE) -t $(MANAGER_IMG) .
 	@entrypoint="$$( $(CONTAINER_TOOL) image inspect --format '{{json .Config.Entrypoint}}' $(MANAGER_IMG) )"; \
 		test "$$entrypoint" = '["/manager"]' || { echo "manager 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
 		cid="$$( $(CONTAINER_TOOL) create $(MANAGER_IMG) )"; \
@@ -209,7 +211,7 @@ docker-build-manager: ## 构建 manager 镜像并校验入口和 /manager 二进
 
 .PHONY: docker-build-simulator
 docker-build-simulator: ## 构建 simulator 镜像并校验入口和 /simulator 二进制
-	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) --target simulator -f $(ROOT_DOCKERFILE) -t $(SIMULATOR_IMG) .
+	$(BUILD_CMD) $(DOCKER_BUILD_CACHE) --build-arg GOPROXY=$(DOCKER_GOPROXY) --target simulator -f $(ROOT_DOCKERFILE) -t $(SIMULATOR_IMG) .
 	@entrypoint="$$( $(CONTAINER_TOOL) image inspect --format '{{json .Config.Entrypoint}}' $(SIMULATOR_IMG) )"; \
 		test "$$entrypoint" = '["/simulator"]' || { echo "simulator 镜像 ENTRYPOINT 异常：$$entrypoint"; exit 1; }; \
 		cid="$$( $(CONTAINER_TOOL) create $(SIMULATOR_IMG) )"; \
