@@ -96,6 +96,7 @@ TanStack Query 拥有配置数据和 mutations；表单由 react-hook-form/Zod�
 - SimulatorInstance 分配 QPS、replicas、availableReplicas、score/performance/phase。
 - TenantPerformance / TenantRuntime 摘要（取决于 DTO）。
 - 页面内模板、画布和 Overlay 草稿。
+- 画布交互：撤销/重做以单笔为粒度；「清空曲线」是不可重做的整批操作，清空后 redo 历史失效（重做按钮禁用）。
 
 ### API 来源
 
