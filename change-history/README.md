@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-21 | Dashboard 前端测试第 5/6 批：App/弹窗/时间轴 + DataOverviewPage/ConfigPage（PR #144） | P1 | [查看记录](2026-08-21-frontend-remaining-pages-tests/README.md) |
 | 2026-08-21 | 后端覆盖率门禁落地（#142/#143）：5 核心包达标 + CI 硬 gate | P1 | [查看记录](2026-08-21-backend-coverage-gate/README.md) |
 | 2026-08-21 | Dashboard 前端测试批量补齐：api/queries/hooks/组件层（PR #144） | P1 | [查看记录](2026-08-21-frontend-test-coverage-batch2/README.md) |
 | 2026-08-21 | Dashboard 前端测试第 4 批：trace/traffic/observatory 大页面 + 路由布局（PR #144） | P1 | [查看记录](2026-08-21-frontend-trace-traffic-pages-tests/README.md) |
