@@ -331,4 +331,5 @@ Prometheus：先 `/targets`，再 raw metric，再 PromQL，再 Backend metricId
 
 - `make coverage` 运行后端覆盖率硬 gate（`hack/coverage-check.py`）：核心包低于阈值即失败；无测试文件/无覆盖率产出的包按 0% 计 FAIL（2026-08-22 起不再豁免）；仅 `store` 包需 `TEST_DATABASE_URL`（未设置显示 `SKIP-DB`，警告不红）。CI 的 coverage job 自带 postgres:17-alpine service，store 始终为硬 gate。
 - `docs-check` 根目录白名单包含 `AI_COORDINATION.md`（多会话协作公告板）；新增根级 Markdown 需同步白名单（`hack/check-docs.py` 的 `ROOT_MD_WHITELIST`）与本文档。
+- 本地 `docker build` 卡在 `go mod download`：容器内默认 `proxy.golang.org` 在受限网络不可达，用 `DOCKER_GOPROXY=https://goproxy.cn,direct make docker-build-manager`（或 `make cluster-up`）重试；确认 `gcr.io/distroless/static:nonroot` 本地有缓存（`gcr.m.daocloud.io` 可代拉后手动 tag）。
 - 门禁失败先看报错类型：`MAP 门禁` = 源码改动需同步对应映射文档（见 `docs/MAP.yaml`）；`CHANGE_HISTORY 门禁` = 非文档源码改动需新增或引用 change-history 条目；`生成物新鲜度` = 需 `make docs-sync` 后提交派生文件。
