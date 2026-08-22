@@ -17,6 +17,7 @@
 
 | 日期 | 主题 | 级别 | 入口 |
 | --- | --- | --- | --- |
+| 2026-08-22 | Dashboard 前端测试第 8 批：CommandInput/TrafficPage/AiChatWidget/路由补测（PR #184） | P1 | [查看记录](2026-08-22-frontend-batch8/README.md) |
 | 2026-08-22 | Dashboard 前端测试第 7 批：DrawCanvas 交互状态机全覆盖（PR #184，发现 #185） | P1 | [查看记录](2026-08-22-frontend-drawcanvas-tests/README.md) |
 | 2026-08-21 | Dashboard 前端测试第 5/6 批：App/弹窗/时间轴 + DataOverviewPage/ConfigPage（PR #144） | P1 | [查看记录](2026-08-21-frontend-remaining-pages-tests/README.md) |
 | 2026-08-21 | 后端覆盖率门禁落地（#142/#143）：5 核心包达标 + CI 硬 gate | P1 | [查看记录](2026-08-21-backend-coverage-gate/README.md) |
